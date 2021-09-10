@@ -6,6 +6,8 @@ PyFLP creates an object from an FLP. You can edit it and save it back also. *Ple
 ```Python
 from pyflp.parser import ProjectParser
 project = ProjectParser().parse("/path/to/efelpee.flp")
+
+# Use ProjectParser(verbose=True) if you want to see logs
 ```
 
 ## More about FLP format
