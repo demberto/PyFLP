@@ -1,0 +1,11 @@
+Repair utils.buflen_to_varint()
+Playlist parsing logic
+Misc.start_date parse logic raises OverflowError
+repr() for FLObject subclasses
+Remove EventID enum
+Move arrangement.save() code to Arrangement itself
+OVerride parse in Arrangement
+Implement FLP_Ctrl_Init_RecChan
+max_count - required or not?
+FLObject._changes boolean
+Fix tests
