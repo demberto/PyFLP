@@ -7,11 +7,11 @@ from typing import (
     ValuesView
 )
 
-from utils import (
+from pyflp.utils import (
     FLVersion,
     DATA_TEXT_EVENTS
 )
-from event import (
+from pyflp.event import (
     Event,
     ByteEvent,
     WordEvent,
@@ -19,7 +19,7 @@ from event import (
     TextEvent,
     DataEvent
 )
-from enums import (
+from pyflp.enums import (
     BYTE,
     DWORD,
     TEXT,

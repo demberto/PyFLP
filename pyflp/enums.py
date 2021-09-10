@@ -1,6 +1,6 @@
 import enum
 
-from utils import *
+from pyflp.utils import *
 
 class EventID(enum.IntEnum):
     """Unparsed/unimplemented/TODO events"""

@@ -1,9 +1,9 @@
 import enum
 from typing import Optional, ValuesView
 
-from flobject.flobject import *
-from utils import *
-from bytesioex import (
+from pyflp.flobject.flobject import *
+from pyflp.utils import *
+from pyflp.bytesioex import (
     BytesIOEx,
     UInt,
     Bool,

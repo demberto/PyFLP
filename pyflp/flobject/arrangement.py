@@ -1,11 +1,11 @@
 import enum
 from typing import List, Optional
 
-from flobject.timemarker import TimeMarker, TimeMarkerEventID
-from flobject.playlist import Playlist, PlaylistEventID
-from flobject.track import Track, TrackEventID
-from flobject.flobject import *
-from utils import *
+from pyflp.flobject.timemarker import TimeMarker, TimeMarkerEventID
+from pyflp.flobject.playlist import Playlist, PlaylistEventID
+from pyflp.flobject.track import Track, TrackEventID
+from pyflp.flobject.flobject import *
+from pyflp.utils import *
 
 class ArrangementEventID(enum.IntEnum):
     Name = TEXT + 49

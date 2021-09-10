@@ -1,11 +1,11 @@
 import abc
-from typing import Union, final
+from typing import Union
 
-from utils import (
+from pyflp.utils import (
     DATA_TEXT_EVENTS,
     buflen_to_varint
 )
-from enums import (
+from pyflp.enums import (
     EventID,
     WORD,
     DWORD,
@@ -169,14 +169,12 @@ class DWordEvent(Event):
 class _VariableSizedEvent(Event):
     """Implements Event.size and Event.to_raw() for TextEvent and DataEvent"""
     
-    @final
     @property
     def size(self) -> int:
         if self.data:
             return 1 + len(buflen_to_varint(self.data)) + len(self.data)
         return 2
 
-    @final
     def to_raw(self) -> bytes:
         id = int.to_bytes(self.id, 1, 'little')
         length = buflen_to_varint(self.data) if self.data else b'\x00'

@@ -1,9 +1,9 @@
 import enum
 from typing import Optional
 
-from bytesioex import BytesIOEx
-from flobject.flobject import *
-from utils import *
+from pyflp.bytesioex import BytesIOEx
+from pyflp.flobject.flobject import *
+from pyflp.utils import *
 
 @enum.unique
 class PlaylistEventID(enum.IntEnum):

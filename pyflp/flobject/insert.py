@@ -5,10 +5,10 @@ from typing import (
     Union
 )
 
-from flobject.flobject import *
-from flobject.insertslot import InsertSlot, InsertSlotEventID
-from utils import *
-from bytesioex import BytesIOEx
+from pyflp.flobject.flobject import *
+from pyflp.flobject.insertslot import InsertSlot, InsertSlotEventID
+from pyflp.utils import *
+from pyflp.bytesioex import BytesIOEx
 
 @enum.unique
 class InsertEventID(enum.IntEnum):

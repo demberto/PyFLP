@@ -1,19 +1,18 @@
 import logging
-import os
 import pathlib
 from typing import List, Union
 
-from flobject.flobject import FLObject
-from flobject.arrangement import Arrangement, ArrangementEventID
-from flobject.misc import MiscEventID
-from flobject.insert import Insert, InsertEventID
-from flobject.channel import Channel, ChannelEventID
-from flobject.pattern import Pattern, PatternEventID
-from flobject.playlist import PlaylistEventID
-from flobject.track import Track, TrackEventID
-from flobject.filterchannel import FilterChannel, FilterChannelEventID
-from flobject.timemarker import TimeMarker, TimeMarkerEventID
-from event import (
+from pyflp.flobject.flobject import FLObject
+from pyflp.flobject.arrangement import Arrangement, ArrangementEventID
+from pyflp.flobject.misc import MiscEventID
+from pyflp.flobject.insert import Insert, InsertEventID
+from pyflp.flobject.channel import Channel, ChannelEventID
+from pyflp.flobject.pattern import Pattern, PatternEventID
+from pyflp.flobject.playlist import PlaylistEventID
+from pyflp.flobject.track import Track, TrackEventID
+from pyflp.flobject.filterchannel import FilterChannel, FilterChannelEventID
+from pyflp.flobject.timemarker import TimeMarker, TimeMarkerEventID
+from pyflp.event import (
     ByteEvent,
     DWordEvent,
     DataEvent,
@@ -21,8 +20,8 @@ from event import (
     TextEvent,
     WordEvent
 )
-from flobject.insertslot import InsertSlotEventID
-from utils import (
+from pyflp.flobject.insertslot import InsertSlotEventID
+from pyflp.utils import (
     BYTE,
     DATA,
     DATA_TEXT_EVENTS,
@@ -31,8 +30,8 @@ from utils import (
     WORD,
     FLVersion
 )
-from project import Project
-from bytesioex import BytesIOEx
+from pyflp.project import Project
+from pyflp.bytesioex import BytesIOEx
 
 logging.basicConfig()
 log = logging.getLogger(__name__)

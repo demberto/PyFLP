@@ -1,8 +1,8 @@
 import enum
 from typing import Optional
 
-from flobject.flobject import *
-from utils import *
+from pyflp.flobject.flobject import *
+from pyflp.utils import *
 
 @enum.unique
 class InsertSlotEventID(enum.IntEnum):

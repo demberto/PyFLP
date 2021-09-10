@@ -3,9 +3,9 @@ import dataclasses
 import datetime
 from typing import Optional
 
-from flobject.flobject import *
-from bytesioex import BytesIOEx
-from utils import *
+from pyflp.flobject.flobject import *
+from pyflp.bytesioex import BytesIOEx
+from pyflp.utils import *
 
 @enum.unique
 class PanningLaw(enum.IntEnum):

@@ -1,8 +1,8 @@
 import enum
 from typing import Optional, Union
 
-from flobject.flobject import *
-from utils import *
+from pyflp.flobject.flobject import *
+from pyflp.utils import *
 
 class ChannelKind(enum.IntEnum):
     Sampler = 0

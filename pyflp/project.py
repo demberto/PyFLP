@@ -6,18 +6,18 @@ import pathlib
 import zipfile
 from typing import List, Set, Union
 
-from event import Event
-from flobject.misc import Misc
-from flobject.playlist import Playlist
-from flobject.pattern import Pattern
-from flobject.channel import Channel
-from flobject.arrangement import Arrangement
-from flobject.track import Track
-from flobject.insert import Insert
-from bytesioex import BytesIOEx
-from flobject.filterchannel import FilterChannel
-from flobject.timemarker import TimeMarker
-from flobject.channel import ChannelKind
+from pyflp.event import Event
+from pyflp.flobject.misc import Misc
+from pyflp.flobject.playlist import Playlist
+from pyflp.flobject.pattern import Pattern
+from pyflp.flobject.channel import Channel
+from pyflp.flobject.arrangement import Arrangement
+from pyflp.flobject.track import Track
+from pyflp.flobject.insert import Insert
+from pyflp.bytesioex import BytesIOEx
+from pyflp.flobject.filterchannel import FilterChannel
+from pyflp.flobject.timemarker import TimeMarker
+from pyflp.flobject.channel import ChannelKind
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
