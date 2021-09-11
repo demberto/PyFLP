@@ -40,7 +40,7 @@ class MiscEventID(enum.IntEnum):
     DataPath = TEXT + 10
     Genre = TEXT + 14
     Artists = TEXT + 15
-    SaveTimestamp = DATA + 28
+    SaveTimestamp = DATA + 29
 
 @dataclasses.dataclass
 class Misc(FLObject):

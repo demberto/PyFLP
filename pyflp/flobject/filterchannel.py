@@ -1,9 +1,11 @@
 import enum
-from typing import Optional
+from typing import Optional, ValuesView
 
-from pyflp.flobject.flobject import *
-from pyflp.utils import *
+from pyflp.flobject.flobject import FLObject
+from pyflp.event import Event, TextEvent
+from pyflp.utils import TEXT
 
+@enum.unique
 class FilterChannelEventID(enum.IntEnum):
     Name = TEXT + 39
 

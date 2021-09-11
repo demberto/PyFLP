@@ -1,5 +1,6 @@
 import logging
 import pathlib
+from pyflp.enums import EventID, InsertParamEventID
 from typing import List, Union
 
 from pyflp.flobject.flobject import FLObject
@@ -8,7 +9,7 @@ from pyflp.flobject.misc import MiscEventID
 from pyflp.flobject.insert import Insert, InsertEventID
 from pyflp.flobject.channel import Channel, ChannelEventID
 from pyflp.flobject.pattern import Pattern, PatternEventID
-from pyflp.flobject.playlist import PlaylistEventID
+from pyflp.flobject.playlist import Playlist, PlaylistEventID
 from pyflp.flobject.track import Track, TrackEventID
 from pyflp.flobject.filterchannel import FilterChannel, FilterChannelEventID
 from pyflp.flobject.timemarker import TimeMarker, TimeMarkerEventID
@@ -58,6 +59,7 @@ class ProjectParser:
             FLObject._verbose = True
             log.setLevel(logging.DEBUG if self._verbose else logging.WARNING)
         self._channel_count = 0
+        self._uses_arrangements = False
     
     def _parse_flhd(self):
         assert self.r.read(4) == b'FLhd'
@@ -70,6 +72,7 @@ class ProjectParser:
         self._project.misc.channel_count = channel_count
         ppq = self.r.read_uint16()
         self._project.misc.ppq = ppq
+        Playlist.ppq = ppq
     
     def _parse_fldt(self):
         assert self.r.read(4) == b'FLdt'
@@ -79,7 +82,7 @@ class ProjectParser:
         loop = True
         while loop:
             id = self.r.read_uint8()
-            # log.debug(f"Discovered event, id: {id}")
+            log.debug(f"Discovered event, id: {id}")
             if id != None:
                 if id in range(BYTE, WORD):
                     self._event_store.append(ByteEvent(id, self.r.read(1)))
@@ -173,7 +176,6 @@ class ProjectParser:
 
         # Step 2: Build an object model - Assign and parse events
         _cur_parse_mode = 'channel'
-        _uses_arrangements = False
         for ev in self._event_store:
             # Misc events
             if ev.id in MiscEventID.__members__.values():
@@ -189,11 +191,11 @@ class ProjectParser:
             
             # Detect arrangement use, switch to appropriate parse logic
             elif ev.id == ArrangementEventID.Index:
-                _uses_arrangements = True
+                self._uses_arrangements = True
                 self._parse_arrangement(ev)
             elif ev.id in ProjectParser._arrangement_events:
                 # Arrangements are used, route all events to arrangement
-                if _uses_arrangements:
+                if self._uses_arrangements:
                     self._parse_arrangement(ev)
                 elif ev.id in TrackEventID.__members__.values():
                     self._parse_track(ev)
@@ -213,8 +215,72 @@ class ProjectParser:
                 # log.debug(f" Insert event {ev.id}, index: {ev.index}")
                 self._parse_insert(ev)
             
+            # Dreadful event, idk how to implement property setters for this
+            elif ev.id == EventID.InsertParams:
+                if not len(ev.data) % 12 == 0:
+                    log.error(f"Cannot parse {ev.id.name}, skipping it. \
+                                This should not happen, contact me!")
+                    self._project._unparsed_events.append(ev)
+                    continue
+                data = BytesIOEx(ev.data)
+                while True:
+                    u1 = data.read_int32()              # 4
+                    if not u1:
+                        break
+                    id = data.read_uint8()              # 5
+                    data.seek(1, 1)                     # 6
+                    channel_data = data.read_uint16()   # 8
+                    message_data = data.read_int32()    # 12
+                    
+                    slot_id = channel_data & 0x3F
+                    insert_id = (channel_data >> 6) & 0x7F
+                    insert_type = channel_data >> 13    # TODO
+                    insert = self._project.inserts[insert_id]
+                    
+                    log.debug(f"Insert param event, id: {id}")
+                    if id == InsertParamEventID.SlotEnabled:
+                        insert.slots[slot_id].enabled = True if message_data != 0 else False
+                    elif id == InsertParamEventID.SlotMix:
+                        insert.slots[slot_id].mix = message_data
+                    elif id == InsertParamEventID.Volume:
+                        insert.volume = message_data
+                    elif id == InsertParamEventID.Pan:
+                        insert.pan = message_data
+                    elif id == InsertParamEventID.StereoSeparation:
+                        insert.stereo_separation = message_data
+                    elif id == InsertParamEventID.LowLevel:
+                        insert.eq.low_level = message_data
+                    elif id == InsertParamEventID.BandLevel:
+                        insert.eq.band_level = message_data
+                    elif id == InsertParamEventID.HighLevel:
+                        insert.eq.high_level = message_data
+                    elif id == InsertParamEventID.LowFreq:
+                        insert.eq.low_freq = message_data
+                    elif id == InsertParamEventID.BandFreq:
+                        insert.eq.band_freq = message_data
+                    elif id == InsertParamEventID.HighFreq:
+                        insert.eq.high_freq = message_data
+                    elif id == InsertParamEventID.LowQ:
+                        insert.eq.low_q = message_data
+                    elif id == InsertParamEventID.BandQ:
+                        insert.eq.band_q = message_data
+                    elif id == InsertParamEventID.HighQ:
+                        insert.eq.high_q = message_data
+                    elif id in range(InsertParamEventID.SendLevelStart, Insert.max_count + 1):
+                        route_id = id - InsertParamEventID.SendLevelStart
+                        insert.route_volumes[route_id] = message_data
+                    else:
+                        log.info(f"New insert param event ID discovered: {id}, contact me!")
+            
             # Unimplemented events - these will not get parsed
             else:
-                # log.info(f"Event {ev.id}, index: {ev.index} not implemented")
+                log.info(f"Event {ev.id}, index: {ev.index} not implemented")
                 self._project._unparsed_events.append(ev)
+        
+        # Now dispatch all playlist events to tracks if arrangements are not used
+        # If arrangements are used Arrangment handles after all tracks are parsed
+        if not self._uses_arrangements:
+            for idx, track in enumerate(self._project.tracks):
+                track.items = self._project.playlist.playlist_events[idx]
+            
         return self._project

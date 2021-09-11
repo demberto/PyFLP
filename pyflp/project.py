@@ -51,6 +51,15 @@ class Project:
             ret.add(channel.target_insert)
 
     def create_zip(self, path: Union[str, pathlib.Path] = ''):
+        """Equivalent to a "ZIP looped package" in FL Studio.
+
+        Args:
+            path (Union[str, pathlib.Path], optional): The path to save the ZIP to. Defaults to ''.
+
+        Raises:
+            AttributeError: When path is default and Project was created from a stream
+        """
+        
         # Init
         if isinstance(path, str):
             if not path:

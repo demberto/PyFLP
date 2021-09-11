@@ -1,12 +1,10 @@
 import abc
+import enum
 from typing import Union
 
 from pyflp.utils import (
     DATA_TEXT_EVENTS,
-    buflen_to_varint
-)
-from pyflp.enums import (
-    EventID,
+    buflen_to_varint,
     WORD,
     DWORD,
     TEXT,
@@ -31,7 +29,7 @@ class Event(abc.ABC):
         """Used by Project.save(). Overriden by _VariabledSizedEvent"""
         return int.to_bytes(self.id, 1, 'little') + self.data
     
-    def __init__(self, id: Union[EventID, int], data: bytes):
+    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         self.id = id
         self.data = data
         self.index = Event._count
@@ -79,7 +77,7 @@ class ByteEvent(Event):
     def to_bool(self) -> bool:
         return self.to_int8() != 0
     
-    def __init__(self, id: EventID, data: bytes):
+    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         if not id < WORD:
             raise ValueError(f"Exepcted 0-63; got {id}")
         super().__init__(id, data)
@@ -120,7 +118,7 @@ class WordEvent(Event):
     def to_int16(self) -> int:
         return int.from_bytes(self.data, 'little', signed=True)
     
-    def __init__(self, id: EventID, data: bytes):
+    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         if id not in range(WORD, DWORD):
             raise ValueError(f"Exepcted 64-127; got {id}")
         super().__init__(id, data)
@@ -161,7 +159,7 @@ class DWordEvent(Event):
     def to_int32(self) -> int:
         return int.from_bytes(self.data, 'little', signed=True)
 
-    def __init__(self, id: EventID, data: bytes):
+    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         if id not in range(DWORD, TEXT):
             raise ValueError(f"Exepcted 128-191; got {id}")
         super().__init__(id, data)
@@ -208,7 +206,7 @@ class TextEvent(_VariableSizedEvent):
             return self.data.decode('utf-16', errors='ignore').strip('\0')
         return self.data.decode('ascii', errors='ignore').strip('\0')
 
-    def __init__(self, id: EventID, data: bytes):
+    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         if id not in range(TEXT, DATA) and id not in DATA_TEXT_EVENTS:
             raise ValueError(f"Unexpected ID: {id}")
         super().__init__(id, data)
@@ -233,7 +231,7 @@ class DataEvent(_VariableSizedEvent):
             raise TypeError(f"Expected a bytes object; got a {type(new_bytes)} object")
         self.data = new_bytes
 
-    def __init__(self, id: EventID, data: bytes):
+    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         if id < DATA:
             raise ValueError(f"Expected an event ID from 209 to 255; got {id}")
         super().__init__(id, data)

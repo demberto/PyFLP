@@ -1,8 +1,21 @@
 import enum
-from typing import Optional
+from typing import (
+    Optional,
+    ValuesView
+)
 
-from pyflp.flobject.flobject import *
-from pyflp.utils import *
+from pyflp.flobject.flobject import FLObject
+from pyflp.event import (
+    Event,
+    WordEvent,
+    DWordEvent,
+    TextEvent
+)
+from pyflp.utils import (
+    WORD,
+    DWORD,
+    TEXT
+)
 
 @enum.unique
 class PatternEventID(enum.IntEnum):

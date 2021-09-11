@@ -1,8 +1,14 @@
 import enum
-from typing import Optional
+from typing import Optional, ValuesView
 
-from pyflp.flobject.flobject import *
-from pyflp.utils import *
+from pyflp.flobject.flobject import FLObject
+from pyflp.event import (
+    Event,
+    ByteEvent,
+    DWordEvent,
+    TextEvent
+)
+from pyflp.utils import DWORD, TEXT
 
 @enum.unique
 class TimeMarkerEventID(enum.IntEnum):

@@ -4,6 +4,7 @@ from typing import (
     Optional,
     Union
 )
+import dataclasses
 
 from pyflp.flobject.flobject import *
 from pyflp.flobject.insertslot import InsertSlot, InsertSlotEventID
@@ -12,25 +13,44 @@ from pyflp.bytesioex import BytesIOEx
 
 @enum.unique
 class InsertEventID(enum.IntEnum):
-    Parameters = DATA + 27
+    Parameters = DATA + 28
     Color = DWORD + 21
     Name = TEXT + 12
     Icon = WORD + 31
-    Routing = DATA + 26
+    Routing = DATA + 27
     Output = DWORD + 19
     Input = DWORD + 26
 
 class InsertFlags(enum.IntFlag):
-    None_ = 0x00
-    ReversePolarity = 0x01
-    SwapLeftRight = 0x02
-    U1 = 0x04
-    Enabled = 0x08
-    AllowThreadedProcessing = 0x10
-    U2 = 0x20
-    DockMiddle = 0x40
-    DockRight = 0x80
-    ShowSeperator = 0x0400
+    None_                       = 0
+    ReversePolarity             = 1 << 0
+    SwapLeftRight               = 1 << 1
+    U2                          = 1 << 2
+    Enabled                     = 1 << 3
+    DisableThreadedProcessing   = 1 << 4
+    U5                          = 1 << 5
+    DockMiddle                  = 1 << 6
+    DockRight                   = 1 << 7
+    U8                          = 1 << 8
+    U9                          = 1 << 9
+    ShowSeperator               = 1 << 10
+    Lock                        = 1 << 11
+    Solo                        = 1 << 12
+    U13                         = 1 << 13
+    U14                         = 1 << 14
+    U15                         = 1 << 15
+
+@dataclasses.dataclass(init=False)
+class InsertEQ:
+    low_level: int
+    band_level: int
+    high_level: int
+    low_freq: int
+    band_freq: int
+    high_freq: int
+    low_q: int
+    band_q: int
+    high_q: int
 
 class Insert(FLObject):
     _count = 0
@@ -101,6 +121,54 @@ class Insert(FLObject):
     @slots.setter
     def slots(self, value: List[InsertSlot]):
         self._slots = value
+    
+    @property
+    def enabled(self) -> Optional[bool]:
+        return getattr(self, '_enabled', None)
+    
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = value
+    
+    @property
+    def volume(self) -> Optional[int]:
+        return getattr(self, '_volume', None)
+
+    @volume.setter
+    def volume(self, value: int):
+        self._volume = value
+    
+    @property
+    def pan(self) -> Optional[int]:
+        return getattr(self, '_pan', None)
+    
+    @pan.setter
+    def pan(self, value: int):
+        self._pan = value
+    
+    @property
+    def stereo_separation(self) -> Optional[int]:
+        return getattr(self, '_stereo_separation', None)
+    
+    @stereo_separation.setter
+    def stereo_separation(self, value: int):
+        self._stereo_separation = value
+    
+    @property
+    def eq(self) -> Optional[InsertEQ]:
+        return getattr(self, '_eq', None)
+    
+    @eq.setter
+    def eq(self, value: InsertEQ):
+        self._eq = value
+        
+    @property
+    def route_volumes(self) -> List[int]:
+        return getattr(self, '_route_volumes', [])
+
+    @route_volumes.setter
+    def route_volumes(self, value: List[int]):
+        self._route_volumes = value
 
     def parse(self, event: Event) -> None:
         if event.id == InsertSlotEventID.Index:
@@ -165,6 +233,8 @@ class Insert(FLObject):
         InsertSlot._count = 0
         self._slots: List[InsertSlot] = []
         self._cur_slot = InsertSlot()
+        self._eq = InsertEQ()
+        self._route_volumes = [int] * Insert.max_count
         Insert._count += 1
         assert Insert._count <= Insert.max_count, f"Insert count: {self._count}"
         self._log.info(f"__init__(), count: {self._count}")

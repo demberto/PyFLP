@@ -4,7 +4,7 @@ BYTE = 0
 WORD = 64
 DWORD = 128
 TEXT = 192
-DATA = 209
+DATA = 208
 
 DATA_TEXT_EVENTS = (
     TEXT + 49,  # Arrangement.name
@@ -14,16 +14,15 @@ DATA_TEXT_EVENTS = (
 
 def buflen_to_varint(buffer: bytes) -> bytes:
     ret = bytearray()
-    loop = True
     buflen = len(buffer)
-    while loop:
+    while True:
         towrite = buflen & 0x7F
         buflen >>= 7
         if buflen > 0:
             towrite |= 0x80
         ret.append(towrite)
         if buflen <= 0:
-            loop = False
+            break
     return bytes(ret)
 
 @dataclasses.dataclass

@@ -7,10 +7,10 @@ from pyflp.utils import *
 @enum.unique
 class InsertSlotEventID(enum.IntEnum):
     DefaultName = TEXT + 9
-    PluginNew = DATA + 3    # VST/Native plugin <-> Host wrapper data, windows pos of plugin etc, currently selected plugin wrapper page; minimized, closed or not
+    PluginNew = DATA + 4    # VST/Native plugin <-> Host wrapper data, windows pos of plugin etc, currently selected plugin wrapper page; minimized, closed or not
     Icon = DWORD + 27
     Color = DWORD
-    Data = DATA + 4         # Plugin preset data, this is what uses the most space typically
+    Data = DATA + 5         # Plugin preset data, this is what uses the most space typically
     Index = WORD + 34       # FL 12.3+, TODO: Looks like it used for storing index but not probably
 
 class InsertSlot(FLObject):
@@ -51,6 +51,23 @@ class InsertSlot(FLObject):
     def index(self, value: int):
         assert value in range(0, InsertSlot.max_count + 1)
         self.setprop('index', value)
+    
+    @property
+    def enabled(self) -> Optional[bool]:
+        return getattr(self, '_enabled', None)
+    
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = value
+
+    @property
+    def mix(self) -> Optional[int]:
+        """Dry/Wet mix"""
+        return getattr(self, '_mix', None)
+
+    @mix.setter
+    def mix(self, value: int):
+        self._mix = value
 
     def _parse_word_event(self, event: WordEvent) -> None:
         if event.id == InsertSlotEventID.Index:

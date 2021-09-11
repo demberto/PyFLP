@@ -1,12 +1,31 @@
 import enum
-from typing import Optional, Union
+from typing import (
+    Optional,
+    Union,
+    ValuesView
+)
 
-from pyflp.flobject.flobject import *
-from pyflp.utils import *
+from pyflp.flobject.flobject import FLObject
+from pyflp.event import(
+    Event,
+    ByteEvent,
+    WordEvent,
+    DWordEvent,
+    TextEvent,
+    DataEvent
+)
+from pyflp.flobject.insert import Insert
+from pyflp.utils import (
+    WORD,
+    DWORD,
+    TEXT,
+    DATA
+)
 
 class ChannelKind(enum.IntEnum):
     Sampler = 0
-    Audio = 2
+    Audio = 2       # MIDI Out is also categorized as this for some reason
+    Layer = 3
     Instrument = 4
     Automation = 5
 
@@ -55,14 +74,14 @@ class ChannelEventID(enum.IntEnum):
     #FineTune = DWORD + 14
     #SamplerFlags = DWORD + 15
     #LayerFlags = DWORD + 16
-    #FilterChannelNum = DWORD + 17
+    FilterChannelNum = DWORD + 17
     #AUSampleRate = DWORD + 25
     Icon = DWORD + 27
     Name = TEXT
     SamplePath = TEXT + 4
     #GeneratorName = TEXT + 9
-    #Delay = DATA
-    Data = DATA + 4
+    #Delay = DATA + 1
+    PluginData = DATA + 5
 
 class Channel(FLObject):
     _count = 0
@@ -93,11 +112,12 @@ class Channel(FLObject):
     
     @property
     def target_insert(self) -> Optional[int]:
+        """Allowed values: -1 to Insert.max_count"""
         return getattr(self, '_target_insert', None)
     
     @target_insert.setter
     def target_insert(self, value: int):
-        assert value in range(-2, 126)
+        assert value in range(-1, Insert.max_count)
         self.setprop('target_insert', value)
     
     @property
@@ -155,6 +175,14 @@ class Channel(FLObject):
     @sample_path.setter
     def sample_path(self, value: str):
         self.setprop('sample_path', value)
+
+    @property
+    def filter_channel(self) -> Optional[int]:
+        return getattr(self, '_filter_channel', None)
+    
+    @filter_channel.setter
+    def filter_channel(self, value: int):
+        self.setprop('filter_channel', value)
     
     def _parse_byte_event(self, event: ByteEvent):
         if event.id == ChannelEventID.Enabled:
@@ -188,6 +216,9 @@ class Channel(FLObject):
         elif event.id == ChannelEventID.Icon:
             self._events['icon'] = event
             self._icon = event.to_uint32()
+        elif event.id == ChannelEventID.FilterChannelNum:
+            self._events['filter_channel'] = event
+            self._filter_channel = event.to_int32()
     
     def _parse_text_event(self, event: TextEvent):
         if event.id == ChannelEventID.Name:
@@ -198,7 +229,7 @@ class Channel(FLObject):
             self._sample_path = event.to_str()
     
     def _parse_data_event(self, event: DataEvent) -> None:
-        if event.id == ChannelEventID.Data:
+        if event.id == ChannelEventID.PluginData:
             self._events['data'] = event
             self._data = event.data
     

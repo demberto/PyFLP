@@ -1,8 +1,10 @@
 import enum
-from typing import Optional, ValuesView
+from typing import List, Optional, ValuesView
 
-from pyflp.flobject.flobject import *
-from pyflp.utils import *
+from pyflp.flobject.flobject import FLObject
+from pyflp.event import DataEvent, TextEvent, Event
+from pyflp.flobject.playlist import _PlaylistItem
+from pyflp.utils import TEXT, DATA
 from pyflp.bytesioex import (
     BytesIOEx,
     UInt,
@@ -13,7 +15,7 @@ from pyflp.bytesioex import (
 @enum.unique
 class TrackEventID(enum.IntEnum):
     Name = TEXT + 47
-    Data = DATA + 29
+    Data = DATA + 30
 
 # No need for getattr in properties, they are automatically set to None if not found
 class Track(FLObject):
@@ -177,6 +179,14 @@ class Track(FLObject):
         self._events_data.seek(47)
         self._events_data.write(Bool.pack(value))
         self._locked = value
+    
+    @property
+    def items(self) -> List[_PlaylistItem]:
+        return getattr(self, '_items', [])
+    
+    @items.setter
+    def items(self, value: List[_PlaylistItem]):
+        self._items = value
     
     def _parse_text_event(self, event: TextEvent):
         if event.id == TrackEventID.Name:
