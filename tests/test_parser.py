@@ -1,7 +1,7 @@
 """This doesn't work yet :("""
 
 import unittest
-from pyflp.parser import ProjectParser
+from pyflp import ProjectParser
 
 class TestParser(unittest.TestCase):
     def null_test(self) -> bool:
