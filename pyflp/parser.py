@@ -279,8 +279,9 @@ class ProjectParser:
         
         # Now dispatch all playlist events to tracks if arrangements are not used
         # If arrangements are used Arrangment handles after all tracks are parsed
-        if not self._uses_arrangements:
+        # Playlist can be empty as well
+        if not self._uses_arrangements and self._project.playlist._playlist_events:
             for idx, track in enumerate(self._project.tracks):
-                track.items = self._project.playlist.playlist_events[idx]
+                track.items = self._project.playlist._playlist_events[idx]
             
         return self._project

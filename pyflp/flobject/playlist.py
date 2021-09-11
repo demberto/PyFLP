@@ -56,18 +56,12 @@ class Playlist(FLObject):
         self.setprop('window_width', value)
     
     @property
-    def playlist_events(self) -> Dict[int, List[_PlaylistItem]]:
-        return getattr(self, '_playlist_events', {})
+    def _playlist_events(self) -> Dict[int, List[_PlaylistItem]]:
+        return getattr(self, '_playlist_events_value', {})
 
-    @playlist_events.setter
-    def playlist_events(self, value: Dict[int, List[_PlaylistItem]]):
-        self._playlist_events = value
-    
-    @playlist_events.deleter
-    def playlist_events(self, value: Dict[int, List[_PlaylistItem]]):
-        """Called by ProjectParser after playlist events have been dispatched to tracks."""
-        self._log.debug("_playlist_events.fdel() called")
-        del self._playlist_events
+    @_playlist_events.setter
+    def _playlist_events(self, value: Dict[int, List[_PlaylistItem]]):
+        self._playlist_events_value = value
     
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == PlaylistEventID.WindowHeight:
@@ -109,9 +103,8 @@ class Playlist(FLObject):
                     start_offset = int(self._events_data.read_float() * Playlist.ppq)    # 28
                     end_offset = int(self._events_data.read_float() * Playlist.ppq)      # 32
                     
-                    # Cannot access tracks from here, 
-                    # ProjectParser must assign self._events to tracks
-                    # and delete _playlist_events from here
+                    # Cannot access tracks from here, ProjectParser
+                    # or Arrangement must assign self._events to tracks
                     track_events.append(
                         ChannelPlaylistItem(
                             position,

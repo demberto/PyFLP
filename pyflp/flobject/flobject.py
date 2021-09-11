@@ -51,6 +51,7 @@ class FLObject(abc.ABC):
         # Dump value to event store if event exists
         event = self._events.get(name)
         if event:
+            self._log.info(f"Dumping value {value} to {repr(event)}")
             event.dump(value)
         else:
             self._log.error(f"'{name}' not present in events dict")
