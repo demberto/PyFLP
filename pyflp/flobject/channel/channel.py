@@ -14,6 +14,7 @@ from pyflp.event import(
     TextEvent,
     DataEvent
 )
+from pyflp.flobject.plugin import Plugin
 from pyflp.flobject.insert import Insert
 from pyflp.utils import (
     WORD,
@@ -81,7 +82,7 @@ class ChannelEventID(enum.IntEnum):
     SamplePath = TEXT + 4
     #GeneratorName = TEXT + 9
     #Delay = DATA + 1
-    PluginData = DATA + 5
+    Plugin = DATA + 5
 
 class Channel(FLObject):
     _count = 0
@@ -184,6 +185,14 @@ class Channel(FLObject):
     def filter_channel(self, value: int):
         self.setprop('filter_channel', value)
     
+    @property
+    def plugin(self) -> Optional[Plugin]:
+        return getattr(self, '_plugin', None)
+    
+    @plugin.setter
+    def plugin(self, value: Plugin):
+        self._plugin = value
+    
     def _parse_byte_event(self, event: ByteEvent):
         if event.id == ChannelEventID.Enabled:
             self._events['enabled'] = event
@@ -229,12 +238,14 @@ class Channel(FLObject):
             self._sample_path = event.to_str()
     
     def _parse_data_event(self, event: DataEvent) -> None:
-        if event.id == ChannelEventID.PluginData:
-            self._events['data'] = event
-            self._data = event.data
+        if event.id == ChannelEventID.Plugin:
+            self._events['plugin'] = event
+            self._plugin = Plugin()
+            self._plugin.parse(event)
     
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info("save() called")
+        self.plugin.save()
         return super().save()
 
     def __init__(self):

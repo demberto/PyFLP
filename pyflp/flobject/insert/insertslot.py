@@ -1,8 +1,21 @@
 import enum
-from typing import Optional
+from typing import Optional, ValuesView
 
-from pyflp.flobject.flobject import *
-from pyflp.utils import *
+from pyflp.flobject.flobject import FLObject
+from pyflp.event import (
+    Event,
+    WordEvent,
+    DWordEvent,
+    TextEvent,
+    DataEvent
+)
+from pyflp.flobject.plugin import *
+from pyflp.utils import (
+    WORD,
+    DWORD,
+    TEXT,
+    DATA
+)
 
 @enum.unique
 class InsertSlotEventID(enum.IntEnum):
@@ -10,7 +23,7 @@ class InsertSlotEventID(enum.IntEnum):
     PluginNew = DATA + 4    # VST/Native plugin <-> Host wrapper data, windows pos of plugin etc, currently selected plugin wrapper page; minimized, closed or not
     Icon = DWORD + 27
     Color = DWORD
-    Data = DATA + 5         # Plugin preset data, this is what uses the most space typically
+    Plugin = DATA + 5         # Plugin preset data, this is what uses the most space typically
     Index = WORD + 34       # FL 12.3+, TODO: Looks like it used for storing index but not probably
 
 class InsertSlot(FLObject):
@@ -68,6 +81,14 @@ class InsertSlot(FLObject):
     @mix.setter
     def mix(self, value: int):
         self._mix = value
+    
+    @property
+    def plugin(self) -> Optional[Plugin]:
+        return getattr(self, '_plugin', None)
+    
+    @plugin.setter
+    def plugin(self, value: Plugin):
+        self._plugin = value
 
     def _parse_word_event(self, event: WordEvent) -> None:
         if event.id == InsertSlotEventID.Index:
@@ -90,27 +111,29 @@ class InsertSlot(FLObject):
     def _parse_data_event(self, event: DataEvent):
         if event.id == InsertSlotEventID.PluginNew:
             self._events['new'] = event
-            self._new = event.data
+            self._new_data = event.data
             # TODO: Parsing similar to ChannelEventID.New, infact they are same events
-        elif event.id == InsertSlotEventID.Data:
-            self._events['data'] = event
-            self._data = event.data
+        elif event.id == InsertSlotEventID.Plugin:
+            self._events['plugin'] = event
+            if self._default_name == "Fruity soft clipper":
+                self._plugin = FSoftClipper()
+            self._plugin.parse(event)
     
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.debug("save() called")
         _new_event = self._events.get('new')
         if _new_event:
             self._log.info(f"{InsertSlotEventID.PluginNew.name} new size: {len(self._new)} bytes")
-            _new_event.dump(self._new)
+            _new_event.dump(self._new_data)
         else:
             self._log.error(f"{InsertSlotEventID.PluginNew.name} doesn't exist, setting it is useless")
         
         _data_event = self._events.get('data')
         if _data_event:
-            self._log.info(f"{InsertSlotEventID.Data.name} new size: {len(self._data)} bytes")
-            _data_event.dump(self._data)
+            self._log.info(f"{InsertSlotEventID.Plugin.name} new size: {len(self._data)} bytes")
+            # _data_event.dump(self._plugin.save()) TODO
         else:
-            self._log.error(f"{InsertSlotEventID.Data.name} doesn't exist, setting it is useless")
+            self._log.error(f"{InsertSlotEventID.Plugin.name} doesn't exist, setting it is useless")
         
         return super().save()
     
@@ -120,6 +143,7 @@ class InsertSlot(FLObject):
 
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info("save() called")
+        self.plugin.save()
         return super().save()
     
     def __init__(self):

@@ -8,16 +8,13 @@ from typing import List, Set, Union
 
 from pyflp.event import Event
 from pyflp.flobject.misc import Misc
-from pyflp.flobject.playlist import Playlist
 from pyflp.flobject.pattern import Pattern
-from pyflp.flobject.channel import Channel
+from pyflp.flobject.channel import *
+from pyflp.flobject.channel.channel import ChannelKind
 from pyflp.flobject.arrangement import Arrangement
-from pyflp.flobject.track import Track
 from pyflp.flobject.insert import Insert
 from pyflp.bytesioex import BytesIOEx
 from pyflp.flobject.filterchannel import FilterChannel
-from pyflp.flobject.timemarker import TimeMarker
-from pyflp.flobject.channel import ChannelKind
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -28,15 +25,10 @@ class Project:
 
     save_path: pathlib.Path = dataclasses.field(init=False)
     misc: Misc = dataclasses.field(default_factory=Misc, init=False)
-    playlist: Playlist = dataclasses.field(default_factory=Playlist, init=False)
     patterns: List[Pattern] = dataclasses.field(default_factory=list, init=False)
     filterchannels: List[FilterChannel] = dataclasses.field(default_factory=list, init=False)
     channels: List[Channel] = dataclasses.field(default_factory=list, init=False)
     arrangements: List[Arrangement] = dataclasses.field(default_factory=list, init=False)
-    timemarkers: List[TimeMarker] = dataclasses.field(default_factory=list, init=False)
-
-    # Kept as a list purposely, before arrangements, only used tracks were dumped
-    tracks: List[Track] = dataclasses.field(default_factory=list, init=False)
     
     # Kept as a list as tuple doesn't support item assignment, might convert to preallocated list later
     inserts: List[Insert] = dataclasses.field(default_factory=list, init=False)
@@ -200,7 +192,6 @@ class Project:
 
         # Begin the save process: Stream init
         stream = io.BytesIO()
-        a = bytearray()
         
         # Header
         header = b'FLhd' \

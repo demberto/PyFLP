@@ -2,13 +2,26 @@ import enum
 from typing import (
     List,
     Optional,
-    Union
+    Union,
+    ValuesView
 )
 import dataclasses
 
-from pyflp.flobject.flobject import *
-from pyflp.flobject.insertslot import InsertSlot, InsertSlotEventID
-from pyflp.utils import *
+from pyflp.event import (
+    Event,
+    WordEvent,
+    DWordEvent,
+    TextEvent,
+    DataEvent
+)
+from pyflp.flobject.flobject import FLObject
+from pyflp.flobject.insert.insertslot import InsertSlot, InsertSlotEventID
+from pyflp.utils import (
+    WORD,
+    DWORD,
+    TEXT,
+    DATA
+)
 from pyflp.bytesioex import BytesIOEx
 
 @enum.unique
@@ -54,7 +67,7 @@ class InsertEQ:
 
 class Insert(FLObject):
     _count = 0
-    max_count = 1	# Will be a given a value by ProjectParser
+    max_count = 0	# Will be a given a value by ProjectParser
 
     @property
     def name(self) -> Optional[str]:
@@ -168,6 +181,7 @@ class Insert(FLObject):
 
     @route_volumes.setter
     def route_volumes(self, value: List[int]):
+        assert len(value) == Insert.max_count
         self._route_volumes = value
 
     def parse(self, event: Event) -> None:

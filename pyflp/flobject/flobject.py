@@ -9,7 +9,12 @@ from typing import (
 
 from pyflp.utils import (
     FLVersion,
-    DATA_TEXT_EVENTS
+    DATA_TEXT_EVENTS,
+    BYTE,
+    DWORD,
+    TEXT,
+    DATA,
+    WORD
 )
 from pyflp.event import (
     Event,
@@ -18,13 +23,6 @@ from pyflp.event import (
     DWordEvent,
     TextEvent,
     DataEvent
-)
-from pyflp.enums import (
-    BYTE,
-    DWORD,
-    TEXT,
-    DATA,
-    WORD
 )
 
 class FLObject(abc.ABC):
@@ -100,4 +98,5 @@ class FLObject(abc.ABC):
         self._events: Dict[str, Event] = {}
         self._log = logging.getLogger(self.__class__.__name__)
         self._log.setLevel(logging.DEBUG if FLObject._verbose else logging.WARNING)
+        self._log.info("__init__() called")
         super().__init__()

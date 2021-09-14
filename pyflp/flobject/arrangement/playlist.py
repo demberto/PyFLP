@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, ValuesView
 from pyflp.bytesioex import BytesIOEx
 from pyflp.event import DWordEvent, DataEvent, Event
 from pyflp.flobject.flobject import FLObject
-from pyflp.utils import DWORD, DATA
+from pyflp.utils import DATA
 
 @enum.unique
 class PlaylistEventID(enum.IntEnum):
@@ -14,8 +14,6 @@ class PlaylistEventID(enum.IntEnum):
     #_LoopEndBar = WORD + 26
     #_Item = DWORD + 1
     Events = DATA + 25
-    WindowHeight = DWORD + 5
-    WindowWidth = DWORD + 6
 
 @dataclasses.dataclass
 class _PlaylistItem(abc.ABC):
@@ -37,23 +35,7 @@ class PatternPlaylistItem(_PlaylistItem):
 class Playlist(FLObject):
     _count = 0
     ppq = 0
-    # TODO: max_count = 1 if not self._uses_arrangements
-    
-    @property
-    def window_height(self) -> Optional[int]:
-        return getattr(self, '_window_height', None)
-
-    @window_height.setter
-    def window_height(self, value: int):
-        self.setprop('window_height', value)
-    
-    @property
-    def window_width(self) -> Optional[int]:
-        return getattr(self, '_window_width', None)
-
-    @window_width.setter
-    def window_width(self, value: int):
-        self.setprop('window_width', value)
+    # TODO: max_count
     
     @property
     def _playlist_events(self) -> Dict[int, List[_PlaylistItem]]:
@@ -63,17 +45,11 @@ class Playlist(FLObject):
     def _playlist_events(self, value: Dict[int, List[_PlaylistItem]]):
         self._playlist_events_value = value
     
-    def _parse_dword_event(self, event: DWordEvent):
-        if event.id == PlaylistEventID.WindowHeight:
-            self._events['window_height'] = event
-            self._window_height = event.to_uint32()
-        elif event.id == PlaylistEventID.WindowWidth:
-            self._events['window_width'] = event
-            self._window_width = event.to_uint32()
-    
     def _parse_data_event(self, event: DataEvent):
         if event.id == PlaylistEventID.Events:
             self._events['playlist_events'] = event
+            
+            # Validation
             if not len(event.data) % 32 == 0:
                 self._log.error("Cannot parse these playlist events, contact me!")
             self._events_data = BytesIOEx(event.data)
@@ -95,7 +71,7 @@ class Playlist(FLObject):
                 muted =  True if (item_flags & 0x2000) > 0 else False
                 
                 # Init the list if not
-                track_events = self._playlist_events[track]
+                track_events = self._playlist_events.get(track)
                 if not track_events:
                     track_events = []
                 

@@ -1,9 +1,9 @@
 import enum
 from typing import List, Optional, ValuesView
 
-from pyflp.flobject.timemarker import TimeMarker, TimeMarkerEventID
-from pyflp.flobject.playlist import Playlist, PlaylistEventID
-from pyflp.flobject.track import Track, TrackEventID
+from pyflp.flobject.arrangement.timemarker import TimeMarker, TimeMarkerEventID
+from pyflp.flobject.arrangement.playlist import Playlist, PlaylistEventID
+from pyflp.flobject.arrangement.track import Track, TrackEventID
 from pyflp.flobject.flobject import FLObject
 from pyflp.event import (
     Event,
@@ -100,14 +100,6 @@ class Arrangement(FLObject):
             self._cur_track = Track()
             self._cur_track.parse(event)
             self._tracks.append(self._cur_track)
-            self._cur_track_idx += 1
-
-        if self._cur_track_idx == 499:
-            self._log.debug("Assigning playlist events to tracks")
-            # The playlist can be empty
-            if self.playlist._playlist_events:
-                for idx, track in enumerate(self.tracks):
-                    track.items = self.playlist._playlist_events[idx]
     
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info("save() called")
@@ -118,6 +110,5 @@ class Arrangement(FLObject):
         Arrangement._count += 1
         self._log.info(f"__init__(), count: {self._count}")
         self._tracks = []
-        self._cur_track_idx = 0
         self._playlist = Playlist()
         self._timemarkers = list()

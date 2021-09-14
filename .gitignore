@@ -139,3 +139,4 @@ cython_debug/
 
 # Until testing doesn't work, I will use main.py
 main.py
+tests/assets/*.flp
