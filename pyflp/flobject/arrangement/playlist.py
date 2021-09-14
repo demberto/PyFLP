@@ -1,10 +1,15 @@
 import enum
 import abc
 import dataclasses
-from typing import Dict, List, Optional, ValuesView
+from typing import (
+    Dict,
+    List,
+    Optional,
+    ValuesView
+)
 
 from pyflp.bytesioex import BytesIOEx
-from pyflp.event import DWordEvent, DataEvent, Event
+from pyflp.event import DataEvent, Event
 from pyflp.flobject.flobject import FLObject
 from pyflp.utils import DATA
 

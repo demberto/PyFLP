@@ -44,8 +44,8 @@ class ChannelEventID(enum.IntEnum):
     #Fx = WORD + 5
     #FadeStereo = WORD + 6
     #CutOff = WORD + 7
-    #Vol = WORD + 8
-    #Pan = WORD + 9
+    Volume = WORD + 8
+    Pan = WORD + 9
     #PreAmp = WORD + 10
     #Decay = WORD + 11
     #Attack = WORD + 12
@@ -102,6 +102,22 @@ class Channel(FLObject):
     @index.setter
     def index(self, value: int):
         self.setprop('index', value)
+    
+    @property
+    def volume(self) -> Optional[int]:
+        return getattr(self, '_volume', None)
+    
+    @volume.setter
+    def volume(self, value: int):
+        self.setprop('volume', value)
+    
+    @property
+    def pan(self) -> Optional[int]:
+        return getattr(self, '_pan', None)
+    
+    @pan.setter
+    def pan(self, value: int):
+        self.setprop('pan', value)
     
     @property
     def color(self) -> Optional[int]:
@@ -214,7 +230,13 @@ class Channel(FLObject):
         if event.id == ChannelEventID.New:
             self._events['index'] = event
             self._index = event.to_uint16()
-
+        elif event.id == ChannelEventID.Volume:
+            self._events['volume'] = event
+            self._volume = event.to_uint16()
+        elif event.id == ChannelEventID.Pan:
+            self._events['pan'] = event
+            self._pan = event.to_int16()
+            
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == ChannelEventID.Color:
             self._events['color'] = event

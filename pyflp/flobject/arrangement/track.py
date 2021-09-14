@@ -3,7 +3,7 @@ from typing import List, Optional, ValuesView
 
 from pyflp.flobject.flobject import FLObject
 from pyflp.event import DataEvent, TextEvent, Event
-from pyflp.flobject.playlist import _PlaylistItem
+from pyflp.flobject.arrangement.playlist import _PlaylistItem
 from pyflp.utils import TEXT, DATA
 from pyflp.bytesioex import (
     BytesIOEx,
