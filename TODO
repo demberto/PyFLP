@@ -1,7 +1,0 @@
-Misc.start_date parse logic raises OverflowError
-repr() for FLObject subclasses
-max_count - required or not?
-FLObject._changes boolean
-Fix module import errors in tests
-Use the same event system used in other FLObjects for Plugin but make the save() recombine it into 1 event
-Instead of creating objects in a single go, create them in multiple layers of parsing. I think this is what FL does also

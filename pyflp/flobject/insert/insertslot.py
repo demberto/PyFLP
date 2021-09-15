@@ -1,4 +1,5 @@
 import enum
+from pyflp.flobject.plugin.notebook_2 import FNoteBook2
 from typing import Optional, ValuesView
 
 from pyflp.flobject.flobject import FLObject
@@ -112,15 +113,21 @@ class InsertSlot(FLObject):
         if event.id == InsertSlotEventID.PluginNew:
             self._events['new'] = event
             self._new_data = event.data
-            # TODO: Parsing similar to ChannelEventID.New, infact they are same events
+            # TODO: Parsing similar to ChannelEventID.New (same event IDs)
         elif event.id == InsertSlotEventID.Plugin:
             self._events['plugin'] = event
             if self._default_name == "Fruity soft clipper":
                 self._plugin = FSoftClipper()
-            self._plugin.parse(event)
+            elif self._default_name == "Fruty NoteBook 2":
+                self._plugin = FNoteBook2()
+            elif self._default_name == "Fruity Wrapper":
+                self._plugin = VSTPlugin()
+            
+            if hasattr(self, '_plugin'):
+                self._plugin.parse(event)
     
     def save(self) -> Optional[ValuesView[Event]]:
-        self._log.debug("save() called")
+        self._log.debug(f"save() called, count: {self._count}")
         _new_event = self._events.get('new')
         if _new_event:
             self._log.info(f"{InsertSlotEventID.PluginNew.name} new size: {len(self._new)} bytes")
@@ -143,11 +150,12 @@ class InsertSlot(FLObject):
 
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info("save() called")
-        self.plugin.save()
+        if hasattr(self, '_plugin'):
+            self.plugin.save()
         return super().save()
     
     def __init__(self):
         super().__init__()
         InsertSlot._count += 1
-        self._log.info(f"__init__(), count: {self._count}")
-        assert InsertSlot._count <= InsertSlot.max_count, f"InsertSlot count: {InsertSlot._count}"
+        assert InsertSlot._count <= InsertSlot.max_count, \
+            f"InsertSlot count: {InsertSlot._count} exceeds max_count: {InsertSlot.max_count}"

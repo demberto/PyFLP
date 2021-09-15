@@ -1,6 +1,5 @@
 import enum
 import io
-from pyflp.bytesioex import BytesIOEx
 from typing import (
     List,
     Optional,
@@ -91,7 +90,7 @@ class Pattern(FLObject):
     def _parse_data_event(self, event: DataEvent):
         if event.id == PatternEventID.Notes:
             self._events['notes'] = event
-            if not event.data % Pattern.NOTE_SIZE == 0:
+            if not len(event.data) % Pattern.NOTE_SIZE == 0:
                 self._log.error(f"Cannot parse pattern notes, size % {Pattern.NOTE_SIZE} != 0, contact me!")
             self._notes_data = io.BytesIO(event.data)
             while True:
@@ -103,20 +102,25 @@ class Pattern(FLObject):
                 self._notes.append(note)
     
     def save(self) -> Optional[ValuesView[Event]]:
-        self._log.info("save() called")
+        self._log.info(f"save() called {self.idx}")
         notes = self.notes
         notes_event = self._events.get('notes')
         if notes and notes_event:
             self._notes_data = io.BytesIO()
-            for idx, note in enumerate(notes):
-                self._log.debug(f"Saving pattern note {idx}")
+            for i, note in enumerate(notes):
+                self._log.debug(f"Saving pattern note {i + 1}")
                 self._notes_data.write(note.save())
-        self._notes_data.seek(0)
-        notes_event.dump(self._notes_data.read())
+            self._notes_data.seek(0)
+            notes_event.dump(self._notes_data.read())
         return super().save()
+    
+    def is_empty(self) -> bool:
+        """Whether pattern has notes"""
+        return 'notes' in self._events
     
     def __init__(self):
         super().__init__()
         self.idx = Pattern._count
         Pattern._count += 1
         self._log.info(f"__init__(), index: {self.idx}, count: {self._count}")
+        self._notes: List[Note] = []

@@ -194,7 +194,8 @@ class Insert(FLObject):
             InsertSlotEventID.Color,
             InsertSlotEventID.Icon,
             InsertSlotEventID.PluginNew,
-            InsertSlotEventID.Data
+            InsertSlotEventID.Plugin,
+            InsertSlotEventID.DefaultName
         ):
             self._cur_slot.parse(event)
         else:
@@ -220,10 +221,6 @@ class Insert(FLObject):
         if event.id == InsertEventID.Name:
             self._events['name'] = event
             self._name = event.to_str()
-        elif event.id == InsertSlotEventID.DefaultName:
-            # Slot is not empty
-            self._cur_slot = InsertSlot()
-            self._cur_slot.parse(event)
     
     def _parse_data_event(self, event: DataEvent):
         if event.id == InsertEventID.Parameters:
@@ -248,8 +245,7 @@ class Insert(FLObject):
         self._slots: List[InsertSlot] = []
         self._cur_slot = InsertSlot()
         self._eq = InsertEQ()
-        self._route_volumes = [int] * Insert.max_count
+        self._route_volumes = [int()] * Insert.max_count
         Insert._count += 1
         assert Insert._count <= Insert.max_count, f"Insert count: {self._count}"
-        self._log.info(f"__init__(), count: {self._count}")
         self.idx = Insert._count - 2

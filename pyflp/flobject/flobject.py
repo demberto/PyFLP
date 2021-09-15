@@ -98,5 +98,5 @@ class FLObject(abc.ABC):
         self._events: Dict[str, Event] = {}
         self._log = logging.getLogger(self.__class__.__name__)
         self._log.setLevel(logging.DEBUG if FLObject._verbose else logging.WARNING)
-        self._log.info("__init__() called")
+        self._log.info(f"__init__() called, count: {self._count}")
         super().__init__()

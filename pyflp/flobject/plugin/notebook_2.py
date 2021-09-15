@@ -1,6 +1,6 @@
-from typing import List, Optional, ValuesView
+from typing import List, Optional
 from pyflp.flobject.plugin.plugin import EffectPlugin
-from pyflp.event import Event, DataEvent
+from pyflp.event import DataEvent
 
 class FNoteBook2(EffectPlugin):
     # 0,0,0,0 4b

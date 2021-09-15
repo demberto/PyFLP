@@ -7,6 +7,8 @@ from pyflp.flobject.flobject import FLObject
 
 class Plugin(FLObject, abc.ABC):
     """Represents a native or VST2/VST3 effect or instrument"""
+    
+    # Not actually used by subclasses but provided for syntax highlighting below
     def _parse_data_event(self, event: DataEvent) -> None:
         self._events['data'] = event
         self._data = BytesIOEx(event.data)

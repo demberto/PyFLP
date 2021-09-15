@@ -112,10 +112,9 @@ class Playlist(FLObject):
                     )
     
     def save(self) -> Optional[ValuesView[Event]]:
-        self._log.info("save() called")
+        self._log.info(f"save() called, count: {self._count}")
         return super().save()
     
     def __init__(self):
         super().__init__()
-        self._log.info("__init__()")
         self._playlist_events: Dict[int, List[_PlaylistItem]] = {}

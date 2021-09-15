@@ -34,11 +34,16 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 class Parser:
-    _insert_events = []
+    INSERT_EVENTS = []
     for events in(InsertEventID.__members__.values(),
-        InsertSlotEventID.__members__.values()
-    ):
-        _insert_events.extend(events)
+                  InsertSlotEventID.__members__.values()):
+        INSERT_EVENTS.extend(events)
+        
+    ARRANGEMENT_EVENTS = []
+    for events in (ArrangementEventID.__members__.values(),
+                   TrackEventID.__members__.values(),
+                   PlaylistEventID.__members__.values()):
+        ARRANGEMENT_EVENTS.extend(events)
     
     def __init__(self, verbose: bool = False) -> None:
         self._event_store: List[Event] = list()
@@ -48,7 +53,9 @@ class Parser:
             log.setLevel(logging.DEBUG if self._verbose else logging.WARNING)
 
         self._channel_count = 0
-        self._uses_arrangements = False
+        
+        # Appended to an arrangement when it is created
+        self._timemarkers: List[TimeMarker] = list()
     
     def _parse_flhd(self):
         assert self.r.read(4) == b'FLhd'
@@ -100,8 +107,15 @@ class Parser:
 
     def _parse_pattern(self, ev: Event):
         if ev.id == PatternEventID.New:
-            self._cur_pattern = Pattern()
-            self._project.patterns.append(self._cur_pattern)
+            # Occurs twice, once with the note events only and later again
+            # for metadata (name, color and a few undiscovered properties)
+            # New patterns can occur for metadata as well; they are empty.
+            ev: WordEvent = ev      # For syntax highlighting below
+            index = ev.to_uint16()
+            existing = tuple(pattern.index for pattern in self._project.patterns)
+            if index not in existing:
+                self._cur_pattern = Pattern()
+                self._project.patterns.append(self._cur_pattern)
         self._cur_pattern.parse(ev)
     
     def _parse_insert(self, ev: Event):
@@ -116,8 +130,8 @@ class Parser:
             self._project.arrangements.append(self._cur_arrangement)
             
             # Assumes that all timemarker events occur before arrangement event occurs
-            self._cur_arrangement.timemarkers = self._project.timemarkers
-            self._project.timemarkers = []
+            self._cur_arrangement.timemarkers = self._timemarkers
+            self._timemarkers = []
         self._cur_arrangement.parse(ev)
 
     def _parse_filterchannel(self, ev: Event):
@@ -129,7 +143,7 @@ class Parser:
     def _parse_timemarker(self, ev: Event):
         if ev.id == TimeMarkerEventID.Position:
             self._cur_timemarker = TimeMarker()
-            self._project.timemarkers.append(self._cur_timemarker)
+            self._timemarkers.append(self._cur_timemarker)
         self._cur_timemarker.parse(ev)
     
     def parse(self, flp: Union[str, pathlib.Path, bytes]) -> Project:
@@ -165,38 +179,20 @@ class Parser:
         # TODO: Parse in multiple layers
         _cur_parse_mode = 'channel'
         for ev in self._event_store:
-            # Misc events
-            if ev.id in MiscEventID.__members__.values():
-                self._project.misc.parse(ev)
-            
-            # Filter channel events
-            elif ev.id in FilterChannelEventID.__members__.values():
-                self._parse_filterchannel(ev)
-            
-            # Channel events
-            elif ev.id in ChannelEventID.__members__.values() and _cur_parse_mode == 'channel':
-                self._parse_channel(ev)
-        
-            # Timemarker events
-            elif ev.id in TimeMarkerEventID.__members__.values():
-                self._parse_timemarker(ev)
-            
-            # Arrangement events (include tracks)
-            elif ev.id in (ArrangementEventID.__members__.values(),
-                           TrackEventID.__members__.values(),
-                           PlaylistEventID.__members__.values()):
-                self._parse_arrangement(ev)
+            if ev.id in MiscEventID.__members__.values(): self._project.misc.parse(ev)
+            elif ev.id in FilterChannelEventID.__members__.values(): self._parse_filterchannel(ev)
+            elif ev.id in PatternEventID.__members__.values(): self._parse_pattern(ev)
+            elif ev.id in ChannelEventID.__members__.values() and _cur_parse_mode == 'channel': self._parse_channel(ev)
+            elif ev.id in TimeMarkerEventID.__members__.values(): self._parse_timemarker(ev)
+            elif ev.id in Parser.ARRANGEMENT_EVENTS: self._parse_arrangement(ev)
             
             # Insert events, change parse mode
             # Parsing will not happen correctly if this event is not present,
             # or inserts and channel events are mixed together
             elif ev.id == InsertEventID.Parameters:
-                log.debug(f"New insert found, index: {ev.index}")
                 _cur_parse_mode = 'insert'
                 self._parse_insert(ev)
-            elif ev.id in Parser._insert_events and _cur_parse_mode == 'insert':
-                log.debug(f"Insert event {ev.id}, index: {ev.index}")
-                self._parse_insert(ev)
+            elif ev.id in Parser.INSERT_EVENTS and _cur_parse_mode == 'insert': self._parse_insert(ev)
             
             # Dreadful event, idk how to implement property setters for this
             elif ev.id == InsertParamsEvent.ID:
@@ -215,7 +211,9 @@ class Parser:
         # dump only used tracks even while using arrangements. This is not the case anymore
         for arrangement in self._project.arrangements:
             for idx, track in enumerate(arrangement.tracks):
-                track.items = arrangement.playlist._playlist_events[idx]
+                items = arrangement.playlist._playlist_events.get(idx)
+                if items:
+                    track.items = items
             arrangement.playlist._playlist_events = {}
             
         return self._project

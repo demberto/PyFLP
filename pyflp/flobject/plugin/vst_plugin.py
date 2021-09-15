@@ -2,11 +2,11 @@ import dataclasses
 import enum
 from typing import List, Optional, ValuesView
 
-from pyflp.event import Event
 from pyflp.flobject.plugin.plugin import Plugin
-from pyflp.event import DataEvent
-from pyflp.utils import DATA
+from pyflp.event import DataEvent, Event
 from pyflp.bytesioex import BytesIOEx
+
+PLUGIN_VST = 10
 
 @enum.unique
 class PluginChunkEventID(enum.IntEnum):
@@ -33,8 +33,6 @@ class PluginIOInfo:
 class VSTPlugin(Plugin):
     """Parses a VST2/3 plugin (including Waveshells) data 
     (ChannelEventID.PluginData & InsertSlotEventID.PluginData event)"""
-    
-    ID = DATA + 5
     
     @property
     def midi_in_port(self) -> Optional[int]:
@@ -164,37 +162,29 @@ class VSTPlugin(Plugin):
     def vendor(self, value: str):
         assert value.isascii()
     
-    def save(self) -> Optional[ValuesView[Event]]:
-        self._plugin_data.seek(0)
-        self._events['plugin'].dump(self._plugin_data.read())
-        return super().save()
-
     def _parse_data_event(self, event: DataEvent) -> None:
-        if event.id == VSTPlugin.ID:
-            self._events['plugin'] = event
-            self._plugin_data = BytesIOEx(event.data)
-            self._kind = self._plugin_data.read_int32()
-            if not self._kind == 10:
-                # Not a VST plugin
-                return
+        self._events['data'] = event
+        self._data = BytesIOEx(event.data)
+        self._kind = self._data.read_int32()
+        if not self._kind == PLUGIN_VST:
+            return
+        
+        while True:
+            event_id = self._data.read_int32()
+            if not event_id:
+                break
+            length = self._data.read_uint64()
+            data = self._data.read(length)
             
-            # Here we go again
-            while True:
-                event_id = self._plugin_data.read_int32()
-                if not event_id:
-                    break
-                length = self._plugin_data.read_uint64()
-                data = self._plugin_data.read(length)
-                
-                if event_id == PluginChunkEventID.Vendor:
-                    self._vendor = data.decode('ascii')
-                elif event_id == PluginChunkEventID.PluginPath:
-                    self._plugin_path = data.decode('ascii')
-                elif event_id == PluginChunkEventID.Name:
-                    self._name = data.decode('ascii')
-                elif event_id == PluginChunkEventID.VSTFourCC:
-                    self._vst_fourcc = data.decode('ascii')
-                elif event_id == PluginChunkEventID.State:
-                    self._data = data
-                else:
-                    self._log.info(f"Unparsed plugin chunk event ID {event_id} found")
+            if event_id == PluginChunkEventID.Vendor:
+                self._vendor = data.decode('ascii')
+            elif event_id == PluginChunkEventID.PluginPath:
+                self._plugin_path = data.decode('ascii')
+            elif event_id == PluginChunkEventID.Name:
+                self._name = data.decode('ascii')
+            elif event_id == PluginChunkEventID.VSTFourCC:
+                self._vst_fourcc = data.decode('ascii')
+            elif event_id == PluginChunkEventID.State:
+                self._data = data
+            else:
+                self._log.info(f"Unparsed plugin chunk event ID {event_id} found")

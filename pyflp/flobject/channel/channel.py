@@ -207,6 +207,7 @@ class Channel(FLObject):
     
     @plugin.setter
     def plugin(self, value: Plugin):
+        assert self._kind == ChannelKind.Instrument, "Channel kind must be ChannelKind.Instrument to assign a plugin to it"
         self._plugin = value
     
     def _parse_byte_event(self, event: ByteEvent):
@@ -267,7 +268,9 @@ class Channel(FLObject):
     
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info("save() called")
-        self.plugin.save()
+        if hasattr(self, '_plugin'):
+            # Present only for ChannelKind.Instrument
+            self.plugin.save()
         return super().save()
 
     def __init__(self):

@@ -3,6 +3,7 @@ import io
 import os
 import logging
 import pathlib
+from pyflp.flobject.arrangement.timemarker import TimeMarker
 import zipfile
 from typing import List, Set, Union
 
