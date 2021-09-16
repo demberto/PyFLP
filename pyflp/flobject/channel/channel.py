@@ -1,5 +1,6 @@
 import enum
 from typing import (
+    List,
     Optional,
     Union,
     ValuesView
@@ -61,7 +62,7 @@ class ChannelEventID(enum.IntEnum):
     #Dot = WORD + 27
     #DotRel = WORD + 32
     #DotShift = WORD + 28
-    #Layer = WORD + 30
+    Layer = WORD + 30
     #Swing = WORD + 33
     Color = DWORD
     #Echo = DWORD + 2
@@ -86,7 +87,9 @@ class ChannelEventID(enum.IntEnum):
 
 class Channel(FLObject):
     _count = 0
+    max_count = 0
     
+    #region Properties
     @property
     def name(self) -> Optional[str]:
         return getattr(self, '_name', None)
@@ -209,6 +212,17 @@ class Channel(FLObject):
     def plugin(self, value: Plugin):
         assert self._kind == ChannelKind.Instrument, "Channel kind must be ChannelKind.Instrument to assign a plugin to it"
         self._plugin = value
+    
+    @property
+    def children(self) -> List[int]:
+        return getattr(self, '_children', [])
+    
+    @children.setter
+    def children(self, value: List[int]):
+        for child in value:
+            assert child <= Channel
+        self._children = value
+    #endregion
     
     def _parse_byte_event(self, event: ByteEvent):
         if event.id == ChannelEventID.Enabled:

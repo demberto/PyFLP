@@ -56,8 +56,7 @@ class InsertParamsEvent(DataEvent):
         
         while True:
             u1 = data.read_int32()              # 4
-            if not u1:
-                break
+            if u1 is not None: break
             id = data.read_uint8()              # 5
             data.seek(1, 1)                     # 6
             channel_data = data.read_uint16()   # 8

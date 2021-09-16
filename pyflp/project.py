@@ -35,7 +35,7 @@ class Project:
     def __post_init__(self):
         log.setLevel(logging.DEBUG if self._verbose else logging.WARNING)
     
-    # Utilities
+    #region Utilities
     def used_insert_nums(self) -> Set[int]:
         """Returns a `Set` of used `Insert` indexes."""
         ret = set()
@@ -79,8 +79,9 @@ class Project:
         
                     # Add samples to ZIP
                     archive.write(os.fspath(sample_path))
+    #endregion
     
-    # Save logic
+    #region Save logic
     def _save_state(self) -> List[Event]:
         """Calls `save()` for all `FLObject`s and returns a sorted list of the received events
 
@@ -99,97 +100,47 @@ class Project:
         if self._unparsed_events:
             event_store.extend(self._unparsed_events)
 
-        # Channels
-        if not self.channels:
-            log.error("No channels found in self.channels")
-        for channel in self.channels:
-            channel_events = channel.save()
-            if channel_events:
-                event_store.extend(channel_events)
-            else:
-                log.error(f"No events found for channel {repr(channel)}")
-
-        # Patterns
-        if not self.channels:
-            log.info("No patterns found in self.patterns")
-        for pattern in self.patterns:
-            pattern_events = pattern.save()
-            if pattern_events:
-                event_store.extend(pattern_events)
-            else:
-                log.error(f"No events found for pattern {repr(pattern)}")
-
-        # Arrangements
-        if not self.arrangements:
-            log.error("No arrangements found in self.arrangements")
-        for arrangement in self.arrangements:
-            arr_name = getattr(arrangement, 'name', None)
-            arrangement_events = arrangement.save()
-            if arrangement_events:
-                event_store.extend(arrangement_events)
-
-                # Playlists
-                playlist_events = arrangement.playlist.save()
-                if playlist_events:
-                    event_store.extend(playlist_events)
-                else:
-                    log.error(f"No playlist event found in arrangement '{arr_name}'")
-
-                # Timemarkers
-                if not arrangement.timemarkers:
-                    log.info(f"No timemarkers found in arrangement '{arr_name}'")
-                for timemarker in arrangement.timemarkers:
-                    timemarker_events = timemarker.save()
-                    if timemarker_events:
-                        event_store.extend(timemarker_events)
-                    else:
-                        log.error(f"No timemarker events found in arrangement '{arr_name}'")
-
-                # Tracks
-                if arrangement.tracks:
-                    for track in arrangement.tracks:
-                        track_index = getattr(track, 'index', None)
-                        track_events = track.save()
-                        if track_events:
-                            event_store.extend(track_events)
-                        else:
-                            log.error(f"No events found for track no.{track_index} in arrangement '{arr_name}'")
-                else:
-                    log.error(f"No tracks found in arrangement '{arr_name}'")
-            else:
-                log.error(f"No events found for arrangement '{arr_name}'")
-
-        # Inserts
-        if not self.inserts:
-            log.error("No inserts found in self.inserts")
-        for insert in self.inserts:
-            insert_index = getattr(insert, 'idx', None)
-            log.debug(f"Saving insert no.{insert_index}")
-            insert_events = insert.save()
-            if insert_events:
-                event_store.extend(insert_events)
-                
-                # Insert slots
-                for slot in insert.slots:
-                    slot_num = getattr(slot, 'index', None)
-                    slot_events = slot.save()
-                    if slot_events:
-                        event_store.extend(slot_events)
-                    else:
-                        log.error(f"No events found for slot no.{slot_num}")
-            else:
-                log.error(f"No events found for insert no.{insert_index}")
-
-        # Filter channels
+        #region Filter channels
         if not self.filterchannels:
             log.error("No filter channels found in self.inserts")
         for filter in self.filterchannels:
             filter_events = filter.save()
             if filter_events:
                 event_store.extend(filter_events)
+        #endregion
+        
+        #region Channels
+        if not self.channels:
+            log.error("No channels found in self.channels")
+        for channel in self.channels:
+            event_store.extend(channel.save())
+        #endregion
+
+        #region Patterns
+        if not self.channels:
+            log.info("No patterns found in self.patterns")
+        for pattern in self.patterns:
+            event_store.extend(pattern.save())
+        #endregion
+
+        #region Arrangements
+        if not self.arrangements:
+            log.error("No arrangements found in self.arrangements")
+        for arrangement in self.arrangements:
+            event_store.extend(arrangement.save())
+        #endregion
+
+        #region Inserts
+        if not self.inserts:
+            log.error("No inserts found in self.inserts")
+        for insert in self.inserts:
+            event_store.extend(insert.save())
+        #endregion
 
         # Sort the events in ascending order w.r.t index
         event_store.sort(key=lambda event: event.index)
+        
+        return event_store
     
     def get_stream(self) -> bytes:
         """Converts the list of events received from `self._save_state()` and headers into a single stream.
@@ -259,7 +210,6 @@ class Project:
                 if save_path_bak.exists():
                     save_path_bak.unlink()
                 save_path.rename(save_path_bak)
-        assert save_path.is_file(), "Save path must be a file location"
         
         stream = self.get_stream()
         with open(save_path, 'wb') as fp:
@@ -271,3 +221,4 @@ class Project:
                 if save_path == self.save_path:
                     save_path_bak.rename(self.save_path)
                 raise e
+    #endregion

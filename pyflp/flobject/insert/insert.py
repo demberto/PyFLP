@@ -2,8 +2,7 @@ import enum
 from typing import (
     List,
     Optional,
-    Union,
-    ValuesView
+    Union
 )
 import dataclasses
 
@@ -27,12 +26,13 @@ from pyflp.bytesioex import BytesIOEx
 @enum.unique
 class InsertEventID(enum.IntEnum):
     Parameters = DATA + 28
-    Color = DWORD + 21
-    Name = TEXT + 12
-    Icon = WORD + 31
+    # Slot events come here
     Routing = DATA + 27
-    Output = DWORD + 19
     Input = DWORD + 26
+    Output = DWORD + 19
+    Color = DWORD + 21
+    Icon = WORD + 31
+    Name = TEXT + 12
 
 class InsertFlags(enum.IntFlag):
     None_                       = 0
@@ -69,8 +69,10 @@ class Insert(FLObject):
     _count = 0
     max_count = 0	# Will be a given a value by ProjectParser
 
+    #region Properties
     @property
     def name(self) -> Optional[str]:
+        """Name of the insert. Event not stored if name not set."""
         return getattr(self, '_name', None)
     
     @name.setter
@@ -79,6 +81,9 @@ class Insert(FLObject):
     
     @property
     def routing(self) -> Optional[bytes]:
+        """An order collection of booleans, representing how this `Insert` is routed.
+        So if the sequence is [0, 1, 1, 0, ...], then this `Insert` is routed to Insert 2, 3.
+        """
         return getattr(self, '_routing', None)
     
     @routing.setter
@@ -87,6 +92,7 @@ class Insert(FLObject):
     
     @property
     def icon(self) -> Optional[int]:
+        """Icon of the insert. Default event is stored."""
         return getattr(self, '_icon', None)
     
     @icon.setter
@@ -111,6 +117,7 @@ class Insert(FLObject):
     
     @property
     def color(self) -> Optional[int]:
+        """Color of the insert. Default event stored."""
         return getattr(self, '_color', None)
     
     @color.setter
@@ -119,16 +126,18 @@ class Insert(FLObject):
     
     @property
     def flags(self) -> Union[InsertFlags, int, None]:
+        """Stored in a `InsertEventID.Parameters` event."""
         return getattr(self, '_flags', None)
     
     @flags.setter
     def flags(self, value: Union[InsertFlags, int]):
         self._parameters_data.seek(0)
         self._parameters_data.write(value.to_bytes(4, 'little'))
-        self._events['parameters'].dump(self._parameters_data.read())
+        self._flags = value
     
     @property
     def slots(self) -> List[InsertSlot]:
+        """Holds :class:`InsertSlot`s (empty and used)."""
         return getattr(self, '_slots', [])
 
     @slots.setter
@@ -137,6 +146,7 @@ class Insert(FLObject):
     
     @property
     def enabled(self) -> Optional[bool]:
+        """Whether :class:`Insert` is enabled in the mixer."""
         return getattr(self, '_enabled', None)
     
     @enabled.setter
@@ -145,6 +155,7 @@ class Insert(FLObject):
     
     @property
     def volume(self) -> Optional[int]:
+        """Fader value"""
         return getattr(self, '_volume', None)
 
     @volume.setter
@@ -169,6 +180,7 @@ class Insert(FLObject):
     
     @property
     def eq(self) -> Optional[InsertEQ]:
+        """3-band post EQ"""
         return getattr(self, '_eq', None)
     
     @eq.setter
@@ -177,13 +189,27 @@ class Insert(FLObject):
         
     @property
     def route_volumes(self) -> List[int]:
+        """Like :param:`routing`, stores an ordered collection of route volumes"""
         return getattr(self, '_route_volumes', [])
 
     @route_volumes.setter
     def route_volumes(self, value: List[int]):
         assert len(value) == Insert.max_count
         self._route_volumes = value
+    
+    @property
+    def locked(self) -> Optional[bool]:
+        return getattr(self, '_locked', None)
 
+    @locked.setter
+    def locked(self, value: bool):
+        self._parameters_data.seek(4)
+        v = 1 if value else 0
+        self._parameters_data.write(v.to_bytes(4, 'little'))
+        self._locked = value
+    #endregion
+
+    #region Parsing logic
     def parse(self, event: Event) -> None:
         if event.id == InsertSlotEventID.Index:
             self._cur_slot.parse(event)
@@ -227,17 +253,29 @@ class Insert(FLObject):
             self._events['parameters'] = event
             self._parameters_data = BytesIOEx(event.data)
             self._flags = InsertFlags(self._parameters_data.read_uint32())
-            # 8 more bytes
+            self._locked = self._parameters_data.read_int32()
+            # 4 more bytes
         elif event.id == InsertEventID.Routing:
             self._events['routing'] = event
             self._routing = event.data
+    #endregion
 
-    def save(self) -> Optional[ValuesView[Event]]:
+    def save(self) -> Optional[List[Event]]:
+        # Insert data events
         self._log.info("save() called")
-        self._events['routing'].dump(self._routing)
+        routing_ev = self._events.get('routing')
+        if routing_ev:
+            routing_ev.dump(self._routing)
         self._parameters_data.seek(0)
         self._events['parameters'].dump(self._parameters_data.read())
-        return super().save()
+        
+        # Insert slot events
+        events = list(super().save())
+        if self.slots:
+            for slot in self.slots:
+                events.extend(slot.save())
+        
+        return events
     
     def __init__(self):
         super().__init__()

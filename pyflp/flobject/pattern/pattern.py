@@ -36,20 +36,23 @@ class PatternEventID(enum.IntEnum):
 
 class Pattern(FLObject):
     _count = 0
-    NOTE_SIZE = 24
+    _parse_metadata = False     # Assuming metadata comes after note events
     
+    NOTE_SIZE = 24
+
+    #region Properties
     @property
     def name(self) -> Optional[str]:
         return getattr(self, '_name', None)
-    
+
     @name.setter
     def name(self, value: str):
         self.setprop('name', value)
-    
+
     @property
     def color(self) -> Optional[int]:
         return getattr(self, '_color', None)
-    
+
     @color.setter
     def color(self, value: int):
         self.setprop('color', value)
@@ -57,26 +60,33 @@ class Pattern(FLObject):
     @property
     def index(self) -> Optional[int]:
         return getattr(self, '_index', None)
-    
+
     @index.setter
     def index(self, value: int):
         self.setprop('index', value)
-    
+        self._events['index (metadata)'].dump(value)
+
     @property
     def notes(self) -> List[Note]:
         return getattr(self, '_notes', [])
-    
+
     @notes.setter
     def notes(self, value: List[Note]):
         for note in value:
             pass
         self._notes = value
-    
+    #endregion
+
+    #region Parsing logic
     def _parse_word_event(self, event: WordEvent):
         if event.id == PatternEventID.New:
-            self._events['index'] = event
-            self._index = event.to_uint16()
-    
+            if Pattern._parse_metadata:
+                self._events['index (metadata)'] = event
+            else:
+                self._events['index'] = event
+                self._index = event.to_uint16()
+
+
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == PatternEventID.Color:
             self._events['color'] = event
@@ -86,7 +96,7 @@ class Pattern(FLObject):
         if event.id == PatternEventID.Name:
             self._events['name'] = event
             self._name = event.to_str()
-    
+
     def _parse_data_event(self, event: DataEvent):
         if event.id == PatternEventID.Notes:
             self._events['notes'] = event
@@ -100,7 +110,8 @@ class Pattern(FLObject):
                 note = Note()
                 note.parse(data)
                 self._notes.append(note)
-    
+    #endregion
+
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info(f"save() called {self.idx}")
         notes = self.notes
@@ -113,11 +124,13 @@ class Pattern(FLObject):
             self._notes_data.seek(0)
             notes_event.dump(self._notes_data.read())
         return super().save()
-    
+
+    #region Utility methods
     def is_empty(self) -> bool:
         """Whether pattern has notes"""
         return 'notes' in self._events
-    
+    #endregion
+
     def __init__(self):
         super().__init__()
         self.idx = Pattern._count

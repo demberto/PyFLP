@@ -7,6 +7,5 @@
         "test_*.py"
     ],
     "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true,
-    "restructuredtext.confPath": "${workspaceFolder}\\docs"
+    "python.testing.unittestEnabled": true
 }

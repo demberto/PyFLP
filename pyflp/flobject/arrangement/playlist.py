@@ -40,7 +40,7 @@ class PatternPlaylistItem(_PlaylistItem):
 class Playlist(FLObject):
     _count = 0
     ppq = 0
-    # TODO: max_count
+    max_count = 1
     
     @property
     def _playlist_events(self) -> Dict[int, List[_PlaylistItem]]:

@@ -58,45 +58,68 @@ class Parser:
         self._timemarkers: List[TimeMarker] = list()
     
     def _parse_flhd(self):
+        """Parses header chunk."""
+        
+        # Magic number
         assert self.r.read(4) == b'FLhd'
+        
+        # Header size (always 6)
         assert self.r.read_uint32() == 6
+        
+        # Format, TODO enum
         format = self.r.read_int16()
         assert format == 0
         self._project.misc.format = format
+        
+        # Channel count
         channel_count = self.r.read_uint16()
         assert channel_count in range(1, 1000)
         self._project.misc.channel_count = channel_count
+        Channel.max_count = channel_count
+        
+        # PPQ
         ppq = self.r.read_uint16()
         self._project.misc.ppq = ppq
         Playlist.ppq = ppq
     
     def _parse_fldt(self):
+        """Parses data chunk header."""
+        
+        # Magic number
         assert self.r.read(4) == b'FLdt'
+        
+        # Combined size of all events
         self._chunklen = self.r.read_uint32()
     
     def _build_event_store(self):
-        loop = True
-        while loop:
+        """Gathers all events into a single list."""
+        
+        while True:
             id = self.r.read_uint8()
+            if id is None:
+                break
+            
             log.debug(f"Discovered event, id: {id}")
-            if id != None:
-                if id in range(BYTE, WORD):
-                    self._event_store.append(ByteEvent(id, self.r.read(1)))
-                elif id in range(WORD, DWORD):
-                    self._event_store.append(WordEvent(id, self.r.read(2)))
-                elif id in range(DWORD, TEXT):
-                    self._event_store.append(DWordEvent(id, self.r.read(4)))
-                else:
-                    varint = self.r.read_varint()
-                    if id in range(TEXT, DATA) or id in DATA_TEXT_EVENTS:
-                        self._event_store.append(TextEvent(id, self.r.read(varint)))
-                    else:
-                        self._event_store.append(DataEvent(id, self.r.read(varint)))
+            if id in range(BYTE, WORD):
+                self._event_store.append(ByteEvent(id, self.r.read(1)))
+            elif id in range(WORD, DWORD):
+                self._event_store.append(WordEvent(id, self.r.read(2)))
+            elif id in range(DWORD, TEXT):
+                self._event_store.append(DWordEvent(id, self.r.read(4)))
             else:
-                loop = False
+                varint = self.r.read_varint()
+                if id in range(TEXT, DATA) or id in DATA_TEXT_EVENTS:
+                    self._event_store.append(TextEvent(id, self.r.read(varint)))
+                else:
+                    self._event_store.append(DataEvent(id, self.r.read(varint)))
+
         log.info(f"Event store built; contains {len(self._event_store)} events")
 
     def _parse_channel(self, ev: Event):
+        """Creates and appends :class:`Channel` objects to :class:`Project`.
+        Dispatches :class:`ChannelEventID` events for parsing.
+        """
+        
         if ev.id == ChannelEventID.New:
             self._channel_count += 1
             if self._channel_count > self._project.misc.channel_count:
@@ -106,6 +129,10 @@ class Parser:
         self._cur_channel.parse(ev)
 
     def _parse_pattern(self, ev: Event):
+        """Creates and appends :class:`Pattern` objects to :class:`Project`.
+        Dispatches :class:`PatternEventID` events for parsing.
+        """
+        
         if ev.id == PatternEventID.New:
             # Occurs twice, once with the note events only and later again
             # for metadata (name, color and a few undiscovered properties)
@@ -119,22 +146,35 @@ class Parser:
         self._cur_pattern.parse(ev)
     
     def _parse_insert(self, ev: Event):
+        """Creates and appends :class:`Insert` objects to :class:`Project`.
+        Dispatches :class:`InsertEventID` and :class:`InsertSlotEventID` events for parsing.
+        """
+        
         if ev.id == InsertEventID.Parameters:
             self._cur_insert = Insert()
             self._project.inserts.append(self._cur_insert)
         self._cur_insert.parse(ev)
     
     def _parse_arrangement(self, ev: Event):
+        """Creates and appends :class:`Arrangement` objects to :class:`Project`.
+        Dispatches :class:`ArrangementEventID`, :class:`PlaylistEventID` and
+        :class:`TrackEventID` events for parsing.
+        """
+        
         if ev.id == ArrangementEventID.Index:
             self._cur_arrangement = Arrangement()
             self._project.arrangements.append(self._cur_arrangement)
             
-            # Assumes that all timemarker events occur before arrangement event occurs
+            # Assumes that all timemarker events occur before this event occurs
             self._cur_arrangement.timemarkers = self._timemarkers
             self._timemarkers = []
         self._cur_arrangement.parse(ev)
 
     def _parse_filterchannel(self, ev: Event):
+        """Creates and appends :class:`FilterChannel` objects to :class:`Project`.
+        Dispatches :class:`FilterChannelEventID` events for parsing.
+        """
+        
         if ev.id == FilterChannelEventID.Name:
             self._cur_filterchannel = FilterChannel()
             self._project.filterchannels.append(self._cur_filterchannel)

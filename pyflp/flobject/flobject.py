@@ -34,18 +34,20 @@ class FLObject(abc.ABC):
     3. Set _count = 0
     4. Set max_count wherever applicable 
     """
+    
     _count = 0
-    fl_version: FLVersion = None	# Set by ProjectParser and can be modified by Misc.version
-    _verbose = False                # Set by ProjectParser._verbose
+    fl_version: FLVersion = None	# Set by Parser and can be modified by Misc.version
+    _verbose = False                # Set by Parser._verbose
     
     def setprop(self, name: str, value: Any):
         """Reduces property setter boilerplate.
-        Don't use this for properties derived from data events!
+        Don't use this for :class:`DataEvent` properties!
         
         Args:
             name (str): Name of the property
             value (Any): Value to assign to property and dump in event store
         """
+        
         # Dump value to event store if event exists
         event = self._events.get(name)
         if event:
@@ -56,6 +58,7 @@ class FLObject(abc.ABC):
         # Assign value for use by getattr()
         setattr(self, '_' + name, value)
 
+    #region Parsing logic
     def parse(self, event: Event) -> None:
         """Adds and parses and event from the event store.
 
@@ -88,8 +91,10 @@ class FLObject(abc.ABC):
     
     def _parse_data_event(self, event: DataEvent) -> None:
         pass
+    #endregion
 
     def save(self) -> Optional[ValuesView[Event]]:
+        """Dumps :class:`DataEvent` property values to their events and returns local dictionary containing events"""
         return self._events.values()
     
     def __init__(self):

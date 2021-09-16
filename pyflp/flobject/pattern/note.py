@@ -3,6 +3,9 @@ from typing import Optional
 from pyflp.bytesioex import BytesIOEx
 
 class Note:
+    """Represents a MIDI event (note) in a :type:`Pattern`."""
+    
+    #region Properties
     @property
     def position(self) -> Optional[int]:
         return getattr(self, '_position', None)
@@ -123,6 +126,7 @@ class Note:
         self._data.seek(23)
         self._data.write_uint8(value)
         self._mod_y = value
+    #endregion
     
     def parse(self, data: bytes) -> None:
         assert len(data) == 24

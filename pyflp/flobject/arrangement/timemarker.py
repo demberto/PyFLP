@@ -79,7 +79,6 @@ class TimeMarker(FLObject):
         return super().save()
     
     def __init__(self):
-        super().__init__()
         self.idx = TimeMarker._count
         TimeMarker._count += 1
-        self._log.info(f"__init__(), index: {self.idx}, count: {self._count}")
+        super().__init__()

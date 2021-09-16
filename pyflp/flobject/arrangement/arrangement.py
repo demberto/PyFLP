@@ -1,5 +1,5 @@
 import enum
-from typing import List, Optional, ValuesView
+from typing import List, Optional
 
 from pyflp.flobject.arrangement.timemarker import TimeMarker, TimeMarkerEventID
 from pyflp.flobject.arrangement.playlist import Playlist, PlaylistEventID
@@ -14,6 +14,7 @@ from pyflp.event import (
 )
 from pyflp.utils import TEXT, WORD
 
+@enum.unique
 class ArrangementEventID(enum.IntEnum):
     Name = TEXT + 49
     Index = WORD + 35
@@ -21,6 +22,7 @@ class ArrangementEventID(enum.IntEnum):
 class Arrangement(FLObject):
     _count = 0
     
+    #region Properties
     @property
     def name(self) -> Optional[str]:
         return getattr(self, '_name', None)
@@ -64,7 +66,9 @@ class Arrangement(FLObject):
             assert timemarker.denominator % 4 == 0
             assert timemarker.numerator in range(1, 17)
         self._timemarkers = value
+    #endregion
 
+    #region Parsing logic
     def parse(self, event: Event) -> None:
         if event.id in PlaylistEventID.__members__.values():
             self._playlist.parse(event)
@@ -100,15 +104,34 @@ class Arrangement(FLObject):
             self._cur_track = Track()
             self._cur_track.parse(event)
             self._tracks.append(self._cur_track)
+    #endregion
     
-    def save(self) -> Optional[ValuesView[Event]]:
-        self._log.info("save() called")
-        return super().save()
+    def save(self) -> Optional[List[Event]]:
+        self._log.info(f"save() called, count: {self._count}")
+        events = list(super().save())
+        
+        if hasattr(self, '_playlist'):
+            events.extend(self.playlist.save())
+        else:
+            self._log.error(f"No playlist events found for arrangement {self._index}")
+        
+        if self.timemarkers:
+            for timemarker in self.timemarkers:
+                events.extend(timemarker.save())
+        else:
+            self._log.info(f"No timemarker events found for arrangement {self._index}")
+        
+        if self.tracks:
+            for track in self.tracks:
+                events.extend(track.save())
+        else:
+            self._log.error(f"No track events found for arrangement {self._index}")
+        
+        return events
     
     def __init__(self):
-        super().__init__()
         Arrangement._count += 1
-        self._log.info(f"__init__(), count: {self._count}")
+        super().__init__()
         self._tracks = []
         self._playlist = Playlist()
-        self._timemarkers = list()
+        self._timemarkers = []

@@ -1,5 +1,4 @@
 import enum
-import dataclasses
 import datetime
 from typing import Optional
 
@@ -62,6 +61,7 @@ class Misc(FLObject):
     _count = 0
     max_count = 1
 
+    #region Properties
     @property
     def ppq(self) -> Optional[int]:
         """Pulses Per Quarter"""
@@ -262,7 +262,9 @@ class Misc(FLObject):
     @panning_law.setter
     def panning_law(self, value: PanningLaw):
         self.setprop('panning_law', value)
+    #endregion
 
+    #region Parsing logic
     def _parse_byte_event(self, event: ByteEvent):
         if event.id == MiscEventID.LoopActive:
             self._events['loop_active'] = event
@@ -330,6 +332,7 @@ class Misc(FLObject):
             # self._start_date = datetime.datetime(1899, 12, 30) + datetime.timedelta(microseconds=self._savetimestamp.read_uint64())
             self._start_date = self._savetimestamp_data.read_uint64()
             self._work_time = datetime.timedelta(microseconds=self._savetimestamp_data.read_uint64())
+    #endregion
 
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info("save() called")

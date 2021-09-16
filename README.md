@@ -1,5 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/pyflp/badge/?version=latest)](https://pyflp.readthedocs.io/en/latest/?badge=latest)
-![GitHub](https://img.shields.io/github/license/demberto/pyflp)
+![PyPI - License](https://img.shields.io/pypi/l/pyflp)
 ![PyPI](https://img.shields.io/pypi/v/pyflp?color=blue)
 
 # PyFLP

@@ -31,6 +31,7 @@ class InsertSlot(FLObject):
     _count = 0      # Resets everytime a new instance of Insert is created
     max_count = 10  # TODO: Older versions had 8, maybe lesser as well
 
+    #region Property
     @property
     def default_name(self) -> Optional[str]:
         """'Fruity Wrapper' for VST/AU plugins. Actual name for native plugins."""
@@ -90,7 +91,17 @@ class InsertSlot(FLObject):
     @plugin.setter
     def plugin(self, value: Plugin):
         self._plugin = value
+    
+    @property
+    def new(self) -> Optional[bytes]:
+        return getattr(self, '_new', None)
 
+    @new.setter
+    def new(self, value: bytes):
+        self._new = value
+    #endregion
+
+    #region Parsing logic
     def _parse_word_event(self, event: WordEvent) -> None:
         if event.id == InsertSlotEventID.Index:
             self._events['index'] = event
@@ -112,47 +123,39 @@ class InsertSlot(FLObject):
     def _parse_data_event(self, event: DataEvent):
         if event.id == InsertSlotEventID.PluginNew:
             self._events['new'] = event
-            self._new_data = event.data
+            self._new = event.data
             # TODO: Parsing similar to ChannelEventID.New (same event IDs)
         elif event.id == InsertSlotEventID.Plugin:
             self._events['plugin'] = event
             if self._default_name == "Fruity soft clipper":
                 self._plugin = FSoftClipper()
-            elif self._default_name == "Fruty NoteBook 2":
+            elif self._default_name == "Fruity NoteBook 2":
                 self._plugin = FNoteBook2()
+            elif self._default_name == "Fruity Balance":
+                self._plugin = FBalance()
             elif self._default_name == "Fruity Wrapper":
                 self._plugin = VSTPlugin()
             
             if hasattr(self, '_plugin'):
                 self._plugin.parse(event)
+    #endregion
     
     def save(self) -> Optional[ValuesView[Event]]:
-        self._log.debug(f"save() called, count: {self._count}")
-        _new_event = self._events.get('new')
-        if _new_event:
-            self._log.info(f"{InsertSlotEventID.PluginNew.name} new size: {len(self._new)} bytes")
-            _new_event.dump(self._new_data)
-        else:
-            self._log.error(f"{InsertSlotEventID.PluginNew.name} doesn't exist, setting it is useless")
+        self._log.debug(f"save() called, index: {self._index}")
         
-        _data_event = self._events.get('data')
-        if _data_event:
-            self._log.info(f"{InsertSlotEventID.Plugin.name} new size: {len(self._data)} bytes")
-            # _data_event.dump(self._plugin.save()) TODO
-        else:
-            self._log.error(f"{InsertSlotEventID.Plugin.name} doesn't exist, setting it is useless")
+        new_event = self._events.get('new')
+        if new_event:
+            self._log.info(f"{InsertSlotEventID.PluginNew.name} new size: {len(self._new)} bytes")
+            new_event.dump(self._new)
+        
+        if hasattr(self, '_plugin'):
+            self.plugin.save()
         
         return super().save()
     
     def is_used(self) -> bool:
         """Whether a slot is used or empty. Decided by the presence of `InsertSlotEventID.New` event"""
         return True if self._events.get('new') else False
-
-    def save(self) -> Optional[ValuesView[Event]]:
-        self._log.info("save() called")
-        if hasattr(self, '_plugin'):
-            self.plugin.save()
-        return super().save()
     
     def __init__(self):
         super().__init__()
