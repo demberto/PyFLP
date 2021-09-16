@@ -1,6 +1,6 @@
 # How does the parser work?
 
-*I recommend you to read [More about FLP Format](doc/flp-format.md) before this.*
+*I recommend you to read [More about FLP Format](flp-format.md) before this.*
 
 Since, FLP is an event-based binary format, we need to work with data types of C *(Delphi actually, because FL is written in Delphi, but Delphi's basic data types aren't different from C's data types)*. Python provides a nice way to read these types through the `struct` module. I made my own extension of `io.BytesIO` class named [`BytesIOEx`](../pyflp/bytesioex.py) which is inspired by C#'s `BinaryReader` and `BinaryWriter`. The extension `read_*` and `write_*` just convert raw bytes into a data type.
 

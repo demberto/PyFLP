@@ -12,6 +12,20 @@ class PanningLaw(enum.IntEnum):
     Circular = 0
     Triangular = 1
 
+VALID_PPQS = (
+    24,
+    48,
+    72,
+    96,
+    120,
+    144,
+    168,
+    192,
+    384,
+    768,
+    960
+)
+
 @enum.unique
 class MiscEventID(enum.IntEnum):
     Version = TEXT + 7
@@ -42,15 +56,43 @@ class MiscEventID(enum.IntEnum):
     Artists = TEXT + 15
     SaveTimestamp = DATA + 29
 
-@dataclasses.dataclass
 class Misc(FLObject):
-    ppq: int = dataclasses.field(init=False)
-    format: int = dataclasses.field(init=False)
-    channel_count: int = dataclasses.field(init=False)
-    
+    """Used for storing one time events, which don't fall into any other category"""
+
     _count = 0
     max_count = 1
 
+    @property
+    def ppq(self) -> Optional[int]:
+        """Pulses Per Quarter"""
+        return getattr(self, '_ppq', None)
+
+    @ppq.setter
+    def ppq(self, value: int):
+        assert value in VALID_PPQS, \
+            f"Invalid PPQ; expected one from {VALID_PPQS}; got {value}"
+        self._ppq = value
+        # TODO: How to change?
+    
+    @property
+    def format(self) -> Optional[int]:
+        return getattr(self, '_format', None)
+
+    @format.setter
+    def format(self, value: int):
+        self._format = value
+        # TODO: How to change?
+    
+    @property
+    def channel_count(self) -> Optional[int]:
+        """Total number of channels in the rack."""
+        return getattr(self, '_channel_count', None)
+
+    @channel_count.setter
+    def channel_count(self, value: int):
+        self._channel_count = value
+        # TODO: How to change?
+    
     @property
     def loop_active(self) -> Optional[bool]:
         """Whether a portion of the song is selected."""
@@ -126,6 +168,7 @@ class Misc(FLObject):
     # TODO: Use pathlib.Path instead of str
     @property
     def data_path(self) -> Optional[str]:
+        """Project settings -> Data folder"""
         return getattr(self, '_data_path', None)
 
     @data_path.setter
@@ -213,7 +256,7 @@ class Misc(FLObject):
 
     @property
     def panning_law(self) -> Optional[PanningLaw]:
-        """Currently selected pattern number."""
+        """Project settings -> Advanced -> Panning law."""
         return getattr(self, '_panning_law', None)
 
     @panning_law.setter

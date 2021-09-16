@@ -3,7 +3,6 @@ import io
 import os
 import logging
 import pathlib
-from pyflp.flobject.arrangement.timemarker import TimeMarker
 import zipfile
 from typing import List, Set, Union
 
@@ -30,15 +29,15 @@ class Project:
     filterchannels: List[FilterChannel] = dataclasses.field(default_factory=list, init=False)
     channels: List[Channel] = dataclasses.field(default_factory=list, init=False)
     arrangements: List[Arrangement] = dataclasses.field(default_factory=list, init=False)
-    
-    # Kept as a list as tuple doesn't support item assignment, might convert to preallocated list later
     inserts: List[Insert] = dataclasses.field(default_factory=list, init=False)
     _unparsed_events: List[Event] = dataclasses.field(default_factory=list, init=False)
     
     def __post_init__(self):
         log.setLevel(logging.DEBUG if self._verbose else logging.WARNING)
     
+    # Utilities
     def used_insert_nums(self) -> Set[int]:
+        """Returns a `Set` of used `Insert` indexes."""
         ret = set()
         for channel in self.channels:
             ret.add(channel.target_insert)
@@ -81,18 +80,17 @@ class Project:
                     # Add samples to ZIP
                     archive.write(os.fspath(sample_path))
     
-    def get_stream(self) -> bytes:
-        """Retrieves events from the object model, sorts and serializes them into a single stream.
-        Typically used directly when Project was parsed from a stream, i.e. save_path is not set.
+    # Save logic
+    def _save_state(self) -> List[Event]:
+        """Calls `save()` for all `FLObject`s and returns a sorted list of the received events
 
         Returns:
-            bytes: The entire stream. Used by `save()`
+            List[Event]: [description]
         """
         
-        # Save event state
         event_store: List[Event] = []
 
-        # Misc events
+        # Misc
         misc_events = self.misc.save()
         if misc_events:
             event_store.extend(misc_events)
@@ -101,7 +99,7 @@ class Project:
         if self._unparsed_events:
             event_store.extend(self._unparsed_events)
 
-        # Channel events
+        # Channels
         if not self.channels:
             log.error("No channels found in self.channels")
         for channel in self.channels:
@@ -111,7 +109,7 @@ class Project:
             else:
                 log.error(f"No events found for channel {repr(channel)}")
 
-        # Pattern events
+        # Patterns
         if not self.channels:
             log.info("No patterns found in self.patterns")
         for pattern in self.patterns:
@@ -121,7 +119,7 @@ class Project:
             else:
                 log.error(f"No events found for pattern {repr(pattern)}")
 
-        # Arrangement events
+        # Arrangements
         if not self.arrangements:
             log.error("No arrangements found in self.arrangements")
         for arrangement in self.arrangements:
@@ -130,14 +128,14 @@ class Project:
             if arrangement_events:
                 event_store.extend(arrangement_events)
 
-                # Playlist events
+                # Playlists
                 playlist_events = arrangement.playlist.save()
                 if playlist_events:
                     event_store.extend(playlist_events)
                 else:
                     log.error(f"No playlist event found in arrangement '{arr_name}'")
 
-                # Timemarker events
+                # Timemarkers
                 if not arrangement.timemarkers:
                     log.info(f"No timemarkers found in arrangement '{arr_name}'")
                 for timemarker in arrangement.timemarkers:
@@ -147,7 +145,7 @@ class Project:
                     else:
                         log.error(f"No timemarker events found in arrangement '{arr_name}'")
 
-                # Track events
+                # Tracks
                 if arrangement.tracks:
                     for track in arrangement.tracks:
                         track_index = getattr(track, 'index', None)
@@ -161,7 +159,7 @@ class Project:
             else:
                 log.error(f"No events found for arrangement '{arr_name}'")
 
-        # Insert events
+        # Inserts
         if not self.inserts:
             log.error("No inserts found in self.inserts")
         for insert in self.inserts:
@@ -170,6 +168,8 @@ class Project:
             insert_events = insert.save()
             if insert_events:
                 event_store.extend(insert_events)
+                
+                # Insert slots
                 for slot in insert.slots:
                     slot_num = getattr(slot, 'index', None)
                     slot_events = slot.save()
@@ -190,7 +190,18 @@ class Project:
 
         # Sort the events in ascending order w.r.t index
         event_store.sort(key=lambda event: event.index)
+    
+    def get_stream(self) -> bytes:
+        """Converts the list of events received from `self._save_state()` and headers into a single stream.
+        Typically used directly when Project was parsed from a stream, i.e. save_path is not set.
 
+        Returns:
+            bytes: The stream. Used by `save()`
+        """
+
+        # Save event state
+        event_store = self._save_state()
+        
         # Begin the save process: Stream init
         stream = io.BytesIO()
         
@@ -248,7 +259,7 @@ class Project:
                 if save_path_bak.exists():
                     save_path_bak.unlink()
                 save_path.rename(save_path_bak)
-        # assert save_path.is_file(), "Save path must be a file location"
+        assert save_path.is_file(), "Save path must be a file location"
         
         stream = self.get_stream()
         with open(save_path, 'wb') as fp:
