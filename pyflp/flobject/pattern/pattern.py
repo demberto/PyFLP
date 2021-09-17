@@ -1,4 +1,3 @@
-import enum
 import io
 from typing import (
     List,
@@ -15,29 +14,14 @@ from pyflp.event import (
     DataEvent
 )
 from pyflp.flobject.pattern.note import Note
-from pyflp.utils import (
-    WORD,
-    DWORD,
-    TEXT,
-    DATA
-)
+from pyflp.flobject.pattern.event_id import PatternEventID
 
-@enum.unique
-class PatternEventID(enum.IntEnum):
-    New = WORD + 1
-    #_Data = WORD + 4
-    Color = DWORD + 22
-    Name = TEXT + 1
-    #_157 = DWORD + 29   # FL 12.5+
-    #_158 = DWORD + 30   # default: -1
-    #_164 = DWORD + 36   # default: 0
-    #Controllers = DATA + 15
-    Notes = DATA + 16
+__all__ = ['Pattern']
 
 class Pattern(FLObject):
     _count = 0
     _parse_metadata = False     # Assuming metadata comes after note events
-    
+
     NOTE_SIZE = 24
 
     #region Properties

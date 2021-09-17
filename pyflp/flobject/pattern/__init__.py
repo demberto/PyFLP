@@ -1,1 +1,2 @@
-from pyflp.flobject.pattern.pattern import Pattern, PatternEventID
+from pyflp.flobject.pattern.pattern import *
+from pyflp.flobject.pattern.event_id import *

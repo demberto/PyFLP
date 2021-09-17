@@ -1,4 +1,3 @@
-import enum
 import abc
 import dataclasses
 from typing import (
@@ -11,14 +10,9 @@ from typing import (
 from pyflp.bytesioex import BytesIOEx
 from pyflp.event import DataEvent, Event
 from pyflp.flobject.flobject import FLObject
-from pyflp.utils import DATA
+from pyflp.flobject.arrangement.event_id import PlaylistEventID
 
-@enum.unique
-class PlaylistEventID(enum.IntEnum):
-    #_LoopBar = WORD + 20
-    #_LoopEndBar = WORD + 26
-    #_Item = DWORD + 1
-    Events = DATA + 25
+__all__ = ['Playlist']
 
 @dataclasses.dataclass
 class _PlaylistItem(abc.ABC):
@@ -41,7 +35,8 @@ class Playlist(FLObject):
     _count = 0
     ppq = 0
     max_count = 1
-    
+
+    #region Properties
     @property
     def _playlist_events(self) -> Dict[int, List[_PlaylistItem]]:
         return getattr(self, '_playlist_events_value', {})
@@ -49,11 +44,13 @@ class Playlist(FLObject):
     @_playlist_events.setter
     def _playlist_events(self, value: Dict[int, List[_PlaylistItem]]):
         self._playlist_events_value = value
-    
+    #endregion
+
+    #region Parsing logic
     def _parse_data_event(self, event: DataEvent):
         if event.id == PlaylistEventID.Events:
             self._events['playlist_events'] = event
-            
+
             # Validation
             if not len(event.data) % 32 == 0:
                 self._log.error("Cannot parse these playlist events, contact me!")
@@ -74,16 +71,16 @@ class Playlist(FLObject):
                 item_flags = self._events_data.read_uint16()    # 20
                 self._events_data.seek(4, 1)                    # 24
                 muted =  True if (item_flags & 0x2000) > 0 else False
-                
+
                 # Init the list if not
                 track_events = self._playlist_events.get(track)
                 if not track_events:
                     track_events = []
-                
+
                 if pattern_id <= pattern_base:
                     start_offset = int(self._events_data.read_float() * Playlist.ppq)    # 28
                     end_offset = int(self._events_data.read_float() * Playlist.ppq)      # 32
-                    
+
                     # Cannot access tracks from here, ProjectParser
                     # or Arrangement must assign self._events to tracks
                     track_events.append(
@@ -99,7 +96,7 @@ class Playlist(FLObject):
                 else:
                     start_offset = self._events_data.read_int32()   # 28
                     end_offset = self._events_data.read_int32()     # 32
-                    
+
                     track_events.append(
                         PatternPlaylistItem(
                             position,
@@ -110,11 +107,12 @@ class Playlist(FLObject):
                             pattern_id - pattern_base - 1
                         )
                     )
-    
+    #endregion
+
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info(f"save() called, count: {self._count}")
         return super().save()
-    
+
     def __init__(self):
         super().__init__()
         self._playlist_events: Dict[int, List[_PlaylistItem]] = {}

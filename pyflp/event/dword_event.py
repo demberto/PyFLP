@@ -4,17 +4,19 @@ from typing import Union
 from pyflp.event.event import Event
 from pyflp.utils import DWORD, TEXT
 
+__all__ = ['DWordEvent']
+
 class DWordEvent(Event):
-    """Represents a 4 byte event
- 
+    """Represents a 4 byte event.
+
     Raises:
         ValueError & TypeError
     """
-    
+
     @property
     def size(self) -> int:
         return 5
-    
+
     def __repr__(self) -> str:
         return f"DWordEvent ID: {self.id} Data: {self.to_uint32()} (Index: {self.index})"
 
@@ -36,7 +38,7 @@ class DWordEvent(Event):
 
     def to_uint32(self) -> int:
         return int.from_bytes(self.data, 'little')
-    
+
     def to_int32(self) -> int:
         return int.from_bytes(self.data, 'little', signed=True)
 

@@ -2,18 +2,13 @@ import abc
 import enum
 from typing import Union
 
-from pyflp.utils import (
-    DATA_TEXT_EVENTS,
-    buflen_to_varint,
-    WORD,
-    DWORD,
-    TEXT,
-    DATA
-)
+from pyflp.utils import buflen_to_varint
+
+__all__ = ['Event', 'VariableSizedEvent']
 
 class Event(abc.ABC):
-    """Abstract base class which represents an event"""
-    
+    """Abstract base class which represents an event."""
+
     _count = 0
 
     @abc.abstractproperty
@@ -28,7 +23,7 @@ class Event(abc.ABC):
     def to_raw(self) -> bytes:
         """Used by Project.save(). Overriden by _VariabledSizedEvent"""
         return int.to_bytes(self.id, 1, 'little') + self.data
-    
+
     def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         self.id = id
         self.data = data
@@ -37,7 +32,7 @@ class Event(abc.ABC):
 
 class VariableSizedEvent(Event):
     """Implements Event.size and Event.to_raw() for TextEvent and DataEvent"""
-    
+
     @property
     def size(self) -> int:
         if self.data:

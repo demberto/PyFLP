@@ -1,10 +1,21 @@
 import enum
 import datetime
-from typing import Optional
+from typing import Optional, ValuesView
 
-from pyflp.flobject.flobject import *
+from pyflp.flobject.flobject import FLObject
 from pyflp.bytesioex import BytesIOEx
-from pyflp.utils import *
+from pyflp.utils import FLVersion
+from pyflp.event import (
+    WordEvent,
+    TextEvent,
+    DataEvent,
+    DWordEvent,
+    ByteEvent,
+    Event
+)
+from pyflp.flobject.misc.event_id import MiscEventID
+
+__all__ = ['Misc']
 
 @enum.unique
 class PanningLaw(enum.IntEnum):
@@ -24,36 +35,6 @@ VALID_PPQS = (
     768,
     960
 )
-
-@enum.unique
-class MiscEventID(enum.IntEnum):
-    Version = TEXT + 7
-    VersionBuild = DWORD + 31
-    LoopActive = 9
-    ShowInfo = 10
-    #Shuffle = 11
-    #_MainVol = 12
-    #_FitToSteps = 13
-    #TimeSigNum = 17
-    #TimeSigBeat = 18
-    PanningLaw = 23
-    #PlayTruncatedNotes = 30
-    #_Tempo = WORD + 2
-    CurrentPatternNum = WORD + 3
-    #_MainPitch = WORD + 16
-    #_TempoFine = WORD + 29
-    CurrentFilterChannelNum = DWORD + 18
-    #SongLoopPos = DWORD + 24
-    Tempo = DWORD + 28
-    Title = TEXT + 2
-    Comment = TEXT + 3
-    Url = TEXT + 5
-    _CommentRtf = TEXT + 6
-    RegName = TEXT + 8
-    DataPath = TEXT + 10
-    Genre = TEXT + 14
-    Artists = TEXT + 15
-    SaveTimestamp = DATA + 29
 
 class Misc(FLObject):
     """Used for storing one time events, which don't fall into any other category"""

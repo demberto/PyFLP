@@ -1,15 +1,14 @@
-import enum
 from typing import Optional, ValuesView
 
 from pyflp.flobject.flobject import FLObject
 from pyflp.event import Event, TextEvent
-from pyflp.utils import TEXT
+from pyflp.flobject.channel.event_id import FilterChannelEventID
 
-@enum.unique
-class FilterChannelEventID(enum.IntEnum):
-    Name = TEXT + 39
+__all__ = ['FilterChannel']
 
 class FilterChannel(FLObject):
+    """Channel display filter. Default: 'Unsorted', 'Audio' and 'Automation'."""
+    
     _count = 0
 
     @property

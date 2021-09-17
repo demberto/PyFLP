@@ -9,12 +9,11 @@ from typing import List, Set, Union
 from pyflp.event import Event
 from pyflp.flobject.misc import Misc
 from pyflp.flobject.pattern import Pattern
-from pyflp.flobject.channel import *
+from pyflp.flobject.channel import Channel, FilterChannel
 from pyflp.flobject.channel.channel import ChannelKind
 from pyflp.flobject.arrangement import Arrangement
 from pyflp.flobject.insert import Insert
 from pyflp.bytesioex import BytesIOEx
-from pyflp.flobject.filterchannel import FilterChannel
 
 logging.basicConfig()
 log = logging.getLogger(__name__)

@@ -32,7 +32,7 @@ class FLVersion:
     minor: int = dataclasses.field(init=False)
     revision: int = dataclasses.field(init=False)
     build: int = dataclasses.field(init=False)
-    
+
     def __post_init__(self):
         split = self.string.split('.')
         self.major = int(split[0])

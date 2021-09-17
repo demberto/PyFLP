@@ -4,11 +4,15 @@ from typing import List, Union
 
 from pyflp.flobject.flobject import FLObject
 from pyflp.flobject.misc import MiscEventID
-from pyflp.flobject.insert import *
-from pyflp.flobject.channel import Channel, ChannelEventID
+from pyflp.flobject.insert import Insert, InsertEventID
+from pyflp.flobject.channel import (
+    Channel,
+    ChannelEventID,
+    FilterChannel,
+    FilterChannelEventID
+)
 from pyflp.flobject.pattern import Pattern, PatternEventID
 from pyflp.flobject.arrangement import *
-from pyflp.flobject.filterchannel import FilterChannel, FilterChannelEventID
 from pyflp.event import (
     ByteEvent,
     DWordEvent,
@@ -34,17 +38,21 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 class Parser:
+    #region Insert events
     INSERT_EVENTS = []
     for events in(InsertEventID.__members__.values(),
                   InsertSlotEventID.__members__.values()):
         INSERT_EVENTS.extend(events)
-        
+    #endregion
+
+    #region Arrangement events
     ARRANGEMENT_EVENTS = []
     for events in (ArrangementEventID.__members__.values(),
                    TrackEventID.__members__.values(),
                    PlaylistEventID.__members__.values()):
         ARRANGEMENT_EVENTS.extend(events)
-    
+    #endregion
+
     def __init__(self, verbose: bool = False) -> None:
         self._event_store: List[Event] = list()
         self._verbose = verbose
@@ -53,52 +61,52 @@ class Parser:
             log.setLevel(logging.DEBUG if self._verbose else logging.WARNING)
 
         self._channel_count = 0
-        
+
         # Appended to an arrangement when it is created
         self._timemarkers: List[TimeMarker] = list()
-    
+
     def _parse_flhd(self):
         """Parses header chunk."""
-        
+
         # Magic number
         assert self.r.read(4) == b'FLhd'
-        
+
         # Header size (always 6)
         assert self.r.read_uint32() == 6
-        
+
         # Format, TODO enum
         format = self.r.read_int16()
         assert format == 0
         self._project.misc.format = format
-        
+
         # Channel count
         channel_count = self.r.read_uint16()
         assert channel_count in range(1, 1000)
         self._project.misc.channel_count = channel_count
         Channel.max_count = channel_count
-        
+
         # PPQ
         ppq = self.r.read_uint16()
         self._project.misc.ppq = ppq
         Playlist.ppq = ppq
-    
+
     def _parse_fldt(self):
         """Parses data chunk header."""
-        
+
         # Magic number
         assert self.r.read(4) == b'FLdt'
-        
+
         # Combined size of all events
         self._chunklen = self.r.read_uint32()
-    
+
     def _build_event_store(self):
         """Gathers all events into a single list."""
-        
+
         while True:
             id = self.r.read_uint8()
             if id is None:
                 break
-            
+
             log.debug(f"Discovered event, id: {id}")
             if id in range(BYTE, WORD):
                 self._event_store.append(ByteEvent(id, self.r.read(1)))
@@ -119,7 +127,7 @@ class Parser:
         """Creates and appends :class:`Channel` objects to :class:`Project`.
         Dispatches :class:`ChannelEventID` events for parsing.
         """
-        
+
         if ev.id == ChannelEventID.New:
             self._channel_count += 1
             if self._channel_count > self._project.misc.channel_count:
@@ -132,7 +140,7 @@ class Parser:
         """Creates and appends :class:`Pattern` objects to :class:`Project`.
         Dispatches :class:`PatternEventID` events for parsing.
         """
-        
+
         if ev.id == PatternEventID.New:
             # Occurs twice, once with the note events only and later again
             # for metadata (name, color and a few undiscovered properties)
@@ -144,27 +152,27 @@ class Parser:
                 self._cur_pattern = Pattern()
                 self._project.patterns.append(self._cur_pattern)
         self._cur_pattern.parse(ev)
-    
+
     def _parse_insert(self, ev: Event):
         """Creates and appends :class:`Insert` objects to :class:`Project`.
         Dispatches :class:`InsertEventID` and :class:`InsertSlotEventID` events for parsing.
         """
-        
+
         if ev.id == InsertEventID.Parameters:
             self._cur_insert = Insert()
             self._project.inserts.append(self._cur_insert)
         self._cur_insert.parse(ev)
-    
+
     def _parse_arrangement(self, ev: Event):
         """Creates and appends :class:`Arrangement` objects to :class:`Project`.
         Dispatches :class:`ArrangementEventID`, :class:`PlaylistEventID` and
         :class:`TrackEventID` events for parsing.
         """
-        
+
         if ev.id == ArrangementEventID.Index:
             self._cur_arrangement = Arrangement()
             self._project.arrangements.append(self._cur_arrangement)
-            
+
             # Assumes that all timemarker events occur before this event occurs
             self._cur_arrangement.timemarkers = self._timemarkers
             self._timemarkers = []
@@ -174,7 +182,7 @@ class Parser:
         """Creates and appends :class:`FilterChannel` objects to :class:`Project`.
         Dispatches :class:`FilterChannelEventID` events for parsing.
         """
-        
+
         if ev.id == FilterChannelEventID.Name:
             self._cur_filterchannel = FilterChannel()
             self._project.filterchannels.append(self._cur_filterchannel)
@@ -185,8 +193,11 @@ class Parser:
             self._cur_timemarker = TimeMarker()
             self._timemarkers.append(self._cur_timemarker)
         self._cur_timemarker.parse(ev)
-    
+
     def parse(self, flp: Union[str, pathlib.Path, bytes]) -> Project:
+        """Parses an FLP (stream or file), creates a :class:`Project` object and returns it."""
+        
+        #region Argument validation
         self._project = Project(self._verbose)
         if isinstance(flp, (pathlib.Path, str)):
             if isinstance(flp, pathlib.Path):
@@ -199,13 +210,15 @@ class Parser:
         else:
             raise TypeError(f"Cannot parse a file of type {type(flp)}. \
                 Only str, pathlib.Path or bytes objects are supported.")
-        
-        # Init: Verify header integrity and build event store
+        #endregion
+
+        #region Init: Verify header integrity and build event store
         self._parse_flhd()
         self._parse_fldt()
         self._build_event_store()
-        
-        # Step 1: Modify parsing logic based on FL Version
+        #endregion
+
+        #region Step 1: Modify parsing logic based on FL Version
         version_event: TextEvent = self._event_store[0]
         fl_version = FLVersion(version_event.to_str().strip('\0'))
         FLObject.fl_version = fl_version
@@ -214,8 +227,9 @@ class Parser:
             TextEvent.uses_unicode = True
         # TODO: This can be as less as 16. Also insert slots were once 8.
         Insert.max_count = 127 if version_float >= 12.89 else 104
+        #endregion
 
-        # Step 2: Build an object model - Assign and parse events
+        #region Step 2: Build an object model - Assign and parse events
         # TODO: Parse in multiple layers
         _cur_parse_mode = 'channel'
         for ev in self._event_store:
@@ -225,27 +239,28 @@ class Parser:
             elif ev.id in ChannelEventID.__members__.values() and _cur_parse_mode == 'channel': self._parse_channel(ev)
             elif ev.id in TimeMarkerEventID.__members__.values(): self._parse_timemarker(ev)
             elif ev.id in Parser.ARRANGEMENT_EVENTS: self._parse_arrangement(ev)
-            
-            # Insert events, change parse mode
-            # Parsing will not happen correctly if this event is not present,
-            # or inserts and channel events are mixed together
+
+            # Insert events, change _cur_parse_mode, as InsertSlotEventID shares event IDs
+            # with ChannelEventID. Parsing will not happen correctly if this event is not
+            # presnt, or inserts and channel events are mixed together.
             elif ev.id == InsertEventID.Parameters:
                 _cur_parse_mode = 'insert'
                 self._parse_insert(ev)
             elif ev.id in Parser.INSERT_EVENTS and _cur_parse_mode == 'insert': self._parse_insert(ev)
-            
+
             # Dreadful event, idk how to implement property setters for this
             elif ev.id == InsertParamsEvent.ID:
                 insert_params_ev = InsertParamsEvent(ev.data)
                 if not insert_params_ev.parse(self._project.inserts):
                     self._project._unparsed_events.append(ev)
-                pass
-            
+
             # Unimplemented events - these will not get parsed
             else:
                 log.info(f"Event {ev.id}, index: {ev.index} not implemented")
                 self._project._unparsed_events.append(ev)
-        
+        #endregion
+
+        #region Post-parse steps
         # Now dispatch all playlist events to track, Playlist can be empty as well
         # Cannot parse playlist events in arrangement, because certain FL versions
         # dump only used tracks even while using arrangements. This is not the case anymore
@@ -255,5 +270,6 @@ class Parser:
                 if items:
                     track.items = items
             arrangement.playlist._playlist_events = {}
-            
+        #endregion
+
         return self._project

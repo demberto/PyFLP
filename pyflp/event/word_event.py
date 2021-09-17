@@ -4,17 +4,19 @@ from typing import Union
 from pyflp.event.event import Event
 from pyflp.utils import WORD, DWORD
 
+__all__ = ['WordEvent']
+
 class WordEvent(Event):
-    """Represents a 2 byte event
- 
+    """Represents a 2 byte event.
+
     Raises:
         ValueError & TypeError
     """
-    
+
     @property
     def size(self) -> int:
         return 3
-    
+
     def __repr__(self) -> str:
         return f"WordEvent ID: {self.id} Data: {self.to_uint16()} (Index: {self.index})"
 
@@ -36,10 +38,10 @@ class WordEvent(Event):
 
     def to_uint16(self) -> int:
         return int.from_bytes(self.data, 'little')
-    
+
     def to_int16(self) -> int:
         return int.from_bytes(self.data, 'little', signed=True)
-    
+
     def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         if id not in range(WORD, DWORD):
             raise ValueError(f"Exepcted 64-127; got {id}")

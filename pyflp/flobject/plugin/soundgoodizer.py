@@ -2,7 +2,9 @@ from typing import Optional
 from pyflp.flobject.plugin.plugin import EffectPlugin
 from pyflp.event import DataEvent
 
-class SoundGoodizer(EffectPlugin):
+__all__ = ['Soundgoodizer']
+
+class Soundgoodizer(EffectPlugin):
     """Implements Soundgoodizer."""
     
     @property

@@ -2,17 +2,20 @@ from typing import List, Optional
 from pyflp.flobject.plugin.plugin import EffectPlugin
 from pyflp.event import DataEvent
 
+__all__ = ['FNoteBook2']
+
 class FNoteBook2(EffectPlugin):
     # 0,0,0,0 4b
     # current page number 4b
     # page number 4b - data length varint - text in utf16 for each page
     # 255, 255, 255, 255 4b
     # Editing enabled or disabled 1b
-    
+
+    #region Properties
     @property
     def pages(self) -> List[str]:
         return getattr(self, '_pages', [])
-    
+
     @pages.setter
     def pages(self, value: List[str]):
         self._data.seek(8)
@@ -22,7 +25,7 @@ class FNoteBook2(EffectPlugin):
             self._data.write_varint(len(wstr))
             self._data.write(wstr)              # NULL bytes are not appended at the end
         self._pages = value
-    
+
     @property
     def active_page_number(self) -> Optional[int]:
         return getattr(self, '_active_page_number', None)
@@ -33,7 +36,7 @@ class FNoteBook2(EffectPlugin):
         self._data.seek(4)
         self._data.write_uint32(value)
         self._active_page_number = value
-    
+
     @property
     def editable(self) -> Optional[bool]:
         return getattr(self, '_editable', None)
@@ -43,7 +46,8 @@ class FNoteBook2(EffectPlugin):
         self._data.seek(-1, 2)
         self._data.write_bool(value)
         self._editable = value
-    
+    #endregion
+
     def _parse_data_event(self, event: DataEvent) -> None:
         super()._parse_data_event(event)
         self._data.seek(4)
@@ -55,7 +59,7 @@ class FNoteBook2(EffectPlugin):
             size = self._data.read_varint()
             self._pages.append(self._data.read(size).decode('utf-16', errors='ignore'))
         self._editable = self._data.read_bool()
-    
+
     def __init__(self):
         self._pages = []
         super().__init__()

@@ -12,6 +12,8 @@ from pyflp.flobject.insert.insert import Insert
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
+__all__ = ['InsertParamsEvent']
+
 @enum.unique
 class InsertParamEventID(enum.IntEnum):
     """Events inside event, nice design IL"""
@@ -58,16 +60,17 @@ class InsertParamsEvent(DataEvent):
             u1 = data.read_int32()              # 4
             if u1 is not None: break
             id = data.read_uint8()              # 5
+            log.debug(f"Insert param event, id: {id}")
             data.seek(1, 1)                     # 6
             channel_data = data.read_uint16()   # 8
             message_data = data.read_int32()    # 12
+            log.debug(f"Insert param event data: {message_data}")
             
             slot_id = channel_data & 0x3F
             insert_id = (channel_data >> 6) & 0x7F
             insert_type = channel_data >> 13    # TODO
             insert = inserts[insert_id]
             
-            log.debug(f"Insert param event, id: {id}")
             if id == InsertParamEventID.SlotEnabled:
                 insert.slots[slot_id].enabled = True if message_data != 0 else False
             elif id == InsertParamEventID.SlotMix:

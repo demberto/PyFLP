@@ -1,9 +1,9 @@
 import dataclasses
 import enum
-from typing import List, Optional, ValuesView
+from typing import List, Optional
 
 from pyflp.flobject.plugin.plugin import Plugin
-from pyflp.event import DataEvent, Event
+from pyflp.event import DataEvent
 from pyflp.bytesioex import BytesIOEx
 
 PLUGIN_VST = 10
@@ -34,6 +34,7 @@ class VSTPlugin(Plugin):
     """Parses a VST2/3 plugin (including Waveshells) data 
     (ChannelEventID.PluginData & InsertSlotEventID.PluginData event)"""
     
+    #region Properties
     @property
     def midi_in_port(self) -> Optional[int]:
         return getattr(self, '_midi_in_port', None)
@@ -161,6 +162,7 @@ class VSTPlugin(Plugin):
     @vendor.setter
     def vendor(self, value: str):
         assert value.isascii()
+    #endregion
     
     def _parse_data_event(self, event: DataEvent) -> None:
         self._events['data'] = event

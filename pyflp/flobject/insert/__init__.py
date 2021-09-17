@@ -1,3 +1,4 @@
-from pyflp.flobject.insert.insert import Insert, InsertEventID
-from pyflp.flobject.insert.insertslot import InsertSlot, InsertSlotEventID
-from pyflp.flobject.insert.insert_params import InsertParamsEvent
+from pyflp.flobject.insert.insert import *
+from pyflp.flobject.insert.insertslot import *
+from pyflp.flobject.insert.insert_params import *
+from pyflp.flobject.insert.event_id import *
