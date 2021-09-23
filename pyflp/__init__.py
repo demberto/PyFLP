@@ -1,1 +1,1 @@
-from pyflp.parser import Parser  # Required or not?
+from pyflp.parser import *

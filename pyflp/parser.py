@@ -1,27 +1,10 @@
 import logging
+import zipfile
 import pathlib
 from typing import List, Union
 
-from pyflp.flobject.flobject import FLObject
-from pyflp.flobject.misc import MiscEventID
-from pyflp.flobject.insert import Insert, InsertEventID
-from pyflp.flobject.channel import (
-    Channel,
-    ChannelEventID,
-    FilterChannel,
-    FilterChannelEventID
-)
-from pyflp.flobject.pattern import Pattern, PatternEventID
-from pyflp.flobject.arrangement import *
-from pyflp.event import (
-    ByteEvent,
-    DWordEvent,
-    DataEvent,
-    Event,
-    TextEvent,
-    WordEvent
-)
-from pyflp.flobject.insert import *
+from pyflp.flobject import *
+from pyflp.event import *
 from pyflp.utils import (
     BYTE,
     DATA,
@@ -36,6 +19,8 @@ from pyflp.bytesioex import BytesIOEx
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+
+__all__ = ['Parser']
 
 class Parser:
     #region Insert events
@@ -195,7 +180,7 @@ class Parser:
         self._cur_timemarker.parse(ev)
 
     def parse(self, flp: Union[str, pathlib.Path, bytes]) -> Project:
-        """Parses an FLP (stream or file), creates a :class:`Project` object and returns it."""
+        """Parses an FLP (stream, ZipFile or file), creates a :class:`Project` object and returns it."""
         
         #region Argument validation
         self._project = Project(self._verbose)
@@ -273,3 +258,37 @@ class Parser:
         #endregion
 
         return self._project
+
+    def parse_zip(self, zip_file: Union[zipfile.ZipFile, str], name: str = '') -> Project:
+        """Parses an FLP inside a ZIP and returns a :class:`Project` object.
+
+        :param zip_file: The path to the ZIP file or a :class:`zipfile.ZipFile`
+        :param name: If the ZIP has multiple FLPs, you need to specify the name of the FLP to parse
+        """
+        
+        flp = None
+        
+        if isinstance(zip_file, str):
+            zip_file = zipfile.ZipFile(zip_file, 'r')
+        
+        if name == '':
+            # Find the file with .flp extension
+            flps = []
+            file_names = zip_file.namelist()
+            for file_name in file_names:
+                if file_name.endswith('.flp'):
+                    flps.append(file_name)
+            if not len(flps) == 1:
+                if not flps:
+                    error_str = "No FLP files found inside ZIP"
+                elif len(flps) > 1:
+                    error_str = "Optional parameter name cannot be default when more than one FLP exists in ZIP"
+                log.critical(error_str)
+                raise Exception(zip_file, error_str)
+            else:
+                name = flps[0]
+        
+        flp = zip_file.open(name, 'r').read()
+        log.info(f"FLP {name} found in ZIP")
+        
+        return self.parse(flp)

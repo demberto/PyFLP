@@ -7,12 +7,16 @@ import zipfile
 from typing import List, Set, Union
 
 from pyflp.event import Event
-from pyflp.flobject.misc import Misc
-from pyflp.flobject.pattern import Pattern
-from pyflp.flobject.channel import Channel, FilterChannel
+from pyflp.flobject import (
+    Misc,
+    Pattern,
+    Channel,
+    FilterChannel,
+    Arrangement,
+    Insert,
+    FLObject
+)
 from pyflp.flobject.channel.channel import ChannelKind
-from pyflp.flobject.arrangement import Arrangement
-from pyflp.flobject.insert import Insert
 from pyflp.bytesioex import BytesIOEx
 
 logging.basicConfig()
@@ -99,42 +103,15 @@ class Project:
         if self._unparsed_events:
             event_store.extend(self._unparsed_events)
 
-        #region Filter channels
-        if not self.filterchannels:
-            log.error("No filter channels found in self.inserts")
-        for filter in self.filterchannels:
-            filter_events = filter.save()
-            if filter_events:
-                event_store.extend(filter_events)
-        #endregion
-        
-        #region Channels
-        if not self.channels:
-            log.error("No channels found in self.channels")
-        for channel in self.channels:
-            event_store.extend(channel.save())
-        #endregion
-
-        #region Patterns
-        if not self.channels:
-            log.info("No patterns found in self.patterns")
-        for pattern in self.patterns:
-            event_store.extend(pattern.save())
-        #endregion
-
-        #region Arrangements
-        if not self.arrangements:
-            log.error("No arrangements found in self.arrangements")
-        for arrangement in self.arrangements:
-            event_store.extend(arrangement.save())
-        #endregion
-
-        #region Inserts
-        if not self.inserts:
-            log.error("No inserts found in self.inserts")
-        for insert in self.inserts:
-            event_store.extend(insert.save())
-        #endregion
+        for param in ('filterchannels', 'channels', 'patterns', 'arrangements', 'inserts'):
+            objs: List[FLObject] = getattr(self, param, None)
+            if objs is None:
+                log.error(f"self.{param} is empty or None")
+                continue
+            for obj in objs:
+                obj_events: List[Event] = list(obj.save())
+                if obj_events:
+                    event_store.extend(obj_events)
 
         # Sort the events in ascending order w.r.t index
         event_store.sort(key=lambda event: event.index)

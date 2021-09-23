@@ -13,7 +13,7 @@ from pyflp.event import (
     TextEvent,
     DataEvent
 )
-from pyflp.flobject.flobject import FLObject
+from pyflp.flobject import FLObject
 from pyflp.flobject.insert.event_id import InsertEventID, InsertSlotEventID
 from pyflp.flobject.insert.insertslot import InsertSlot
 from pyflp.bytesioex import BytesIOEx

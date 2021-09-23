@@ -5,7 +5,7 @@ import logging
 from typing import List
 
 from pyflp.bytesioex import BytesIOEx
-from pyflp.event import DataEvent
+from pyflp.event.data_event import DataEvent
 from pyflp.utils import DATA
 from pyflp.flobject.insert.insert import Insert
 
