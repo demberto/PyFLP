@@ -56,14 +56,13 @@ class Pattern(FLObject):
 
     @notes.setter
     def notes(self, value: List[Note]):
-        for note in value:
-            pass
         self._notes = value
     #endregion
 
     #region Parsing logic
     def _parse_word_event(self, event: WordEvent):
         if event.id == PatternEventID.New:
+            # TODO: Fix this
             if Pattern._parse_metadata:
                 self._events['index (metadata)'] = event
             else:
@@ -73,13 +72,11 @@ class Pattern(FLObject):
 
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == PatternEventID.Color:
-            self._events['color'] = event
-            self._color = event.to_uint32()
+            self.parse_uint32_prop(event, 'color')
 
     def _parse_text_event(self, event: TextEvent):
         if event.id == PatternEventID.Name:
-            self._events['name'] = event
-            self._name = event.to_str()
+            self.parse_str_prop(event, 'name')
 
     def _parse_data_event(self, event: DataEvent):
         if event.id == PatternEventID.Notes:
@@ -89,7 +86,7 @@ class Pattern(FLObject):
             self._notes_data = io.BytesIO(event.data)
             while True:
                 data = self._notes_data.read(Pattern.NOTE_SIZE)
-                if not data:
+                if data is None:
                     break
                 note = Note()
                 note.parse(data)
@@ -98,6 +95,8 @@ class Pattern(FLObject):
 
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info(f"save() called {self.idx}")
+        
+        # Note events
         notes = self.notes
         notes_event = self._events.get('notes')
         if notes and notes_event:
@@ -107,6 +106,9 @@ class Pattern(FLObject):
                 self._notes_data.write(note.save())
             self._notes_data.seek(0)
             notes_event.dump(self._notes_data.read())
+        
+        # TODO: Controller events
+        
         return super().save()
 
     #region Utility methods

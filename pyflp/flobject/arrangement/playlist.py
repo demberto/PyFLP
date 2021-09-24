@@ -32,7 +32,6 @@ class PatternPlaylistItem(_PlaylistItem):
     pattern: int    # TODO
 
 class Playlist(FLObject):
-    _count = 0
     ppq = 0
     max_count = 1
 

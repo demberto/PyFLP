@@ -1,4 +1,4 @@
-from pyflp.flobject.flobject import FLObject
+from pyflp.flobject.flobject import *
 from pyflp.flobject.channel import *
 from pyflp.flobject.arrangement import *
 from pyflp.flobject.insert import *

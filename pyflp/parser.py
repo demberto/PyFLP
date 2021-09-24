@@ -181,7 +181,7 @@ class Parser:
 
     def parse(self, flp: Union[str, pathlib.Path, bytes]) -> Project:
         """Parses an FLP (stream, ZipFile or file), creates a :class:`Project` object and returns it."""
-        
+
         #region Argument validation
         self._project = Project(self._verbose)
         if isinstance(flp, (pathlib.Path, str)):
@@ -265,12 +265,12 @@ class Parser:
         :param zip_file: The path to the ZIP file or a :class:`zipfile.ZipFile`
         :param name: If the ZIP has multiple FLPs, you need to specify the name of the FLP to parse
         """
-        
+
         flp = None
-        
+
         if isinstance(zip_file, str):
             zip_file = zipfile.ZipFile(zip_file, 'r')
-        
+
         if name == '':
             # Find the file with .flp extension
             flps = []
@@ -287,8 +287,8 @@ class Parser:
                 raise Exception(zip_file, error_str)
             else:
                 name = flps[0]
-        
+
         flp = zip_file.open(name, 'r').read()
         log.info(f"FLP {name} found in ZIP")
-        
+
         return self.parse(flp)

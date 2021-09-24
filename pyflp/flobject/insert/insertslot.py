@@ -1,6 +1,6 @@
 from typing import Optional, ValuesView
 
-from pyflp.flobject.flobject import FLObject
+from pyflp.flobject import FLObject
 from pyflp.event import (
     Event,
     WordEvent,
@@ -21,7 +21,6 @@ from pyflp.flobject.insert.event_id import InsertSlotEventID
 __all__ = ['InsertSlot']
 
 class InsertSlot(FLObject):
-    _count = 0      # Resets everytime a new instance of Insert is created
     max_count = 10  # TODO: Older versions had 8, maybe lesser as well
 
     #region Property
@@ -97,21 +96,17 @@ class InsertSlot(FLObject):
     #region Parsing logic
     def _parse_word_event(self, event: WordEvent) -> None:
         if event.id == InsertSlotEventID.Index:
-            self._events['index'] = event
-            self._index = event.to_uint16()
+            self.parse_uint16_prop(event, 'index')
 
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == InsertSlotEventID.Color:
-            self._events['color'] = event
-            self._color = event.to_uint32()
+            self.parse_uint32_prop(event, 'color')
         elif event.id == InsertSlotEventID.Icon:
-            self._events['icon'] = event
-            self._icon = event.to_uint32()
+            self.parse_uint32_prop(event, 'icon')
 
     def _parse_text_event(self, event: TextEvent):
         if event.id == InsertSlotEventID.DefaultName:
-            self._events['default_name'] = event
-            self._default_name = event.to_str()
+            self.parse_str_prop(event, 'default_name')
 
     def _parse_data_event(self, event: DataEvent):
         if event.id == InsertSlotEventID.PluginNew:
@@ -120,30 +115,31 @@ class InsertSlot(FLObject):
             # TODO: Parsing similar to ChannelEventID.New (same event IDs)
         elif event.id == InsertSlotEventID.Plugin:
             self._events['plugin'] = event
-            if self._default_name == "Fruity soft clipper":
+            
+            if self.default_name == "Fruity soft clipper":
                 self._plugin = FSoftClipper()
-            elif self._default_name == "Fruity NoteBook 2":
+            elif self.default_name == "Fruity NoteBook 2":
                 self._plugin = FNoteBook2()
-            elif self._default_name == "Fruity Balance":
+            elif self.default_name == "Fruity Balance":
                 self._plugin = FBalance()
-            elif self._default_name == "Soundgoodizer":
+            elif self.default_name == "Soundgoodizer":
                 self._plugin = Soundgoodizer()
-            elif self._default_name == "Fruity Wrapper":
+            elif self.default_name == "Fruity Wrapper":
                 self._plugin = VSTPlugin()
 
-            if hasattr(self, '_plugin'):
+            if self.plugin:
                 self._plugin.parse(event)
     #endregion
 
     def save(self) -> Optional[ValuesView[Event]]:
-        self._log.debug(f"save() called, index: {self._index}")
+        self._log.debug(f"save() called, index: {self.index}")
 
         new_event = self._events.get('new')
         if new_event:
-            self._log.info(f"{InsertSlotEventID.PluginNew.name} new size: {len(self._new)} bytes")
+            self._log.info(f"InsertSlotEventID.PluginNew new size: {len(self._new)} bytes")
             new_event.dump(self._new)
 
-        if hasattr(self, '_plugin'):
+        if self.plugin:
             self.plugin.save()
 
         return super().save()
@@ -156,6 +152,5 @@ class InsertSlot(FLObject):
 
     def __init__(self):
         super().__init__()
-        InsertSlot._count += 1
         assert InsertSlot._count <= InsertSlot.max_count, \
             f"InsertSlot count: {InsertSlot._count} exceeds max_count: {InsertSlot.max_count}"

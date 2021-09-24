@@ -22,21 +22,14 @@ project = ProjectParser().parse("/path/to/efelpee.flp")
 pip install pyflp
 ```
 
-## [More about FLP Format](doc/flp-format.md)
-
-## [How does it work?](doc/how-does-it-work.md)
-
-## Documentation
-Docs are available on [Read The Docs](pyflp.rtfd.io)
-
 ## Testing
 I have created a [null test](test_parser.py). More tests need to be added.
 
 ## Thanks
 
-**Monad.FLParser**: https://github.com/monadgroup/FLParser for providing up-to-date parsing logic and the idea of creating an object model
+[**Monad.FLParser**](https://github.com/monadgroup/FLParser) for providing up-to-date parsing logic and the idea of creating an object model
 
-**FLPEdit**: https://github.com/roadcrewworker I swear, this library would have remained a dream without this tool. A very helpful program for examining the event structure as it is present in an FLP and value of events. It is very unfortunate that the author has removed it.
+[**FLPEdit**](https://github.com/roadcrewworker) I swear, this library would have remained a dream without this tool. A very helpful program for examining the event structure as it is present in an FLP and value of events. It is very unfortunate that the author has removed it.
 
 ## Contributions
 

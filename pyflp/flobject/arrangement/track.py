@@ -14,7 +14,6 @@ from pyflp.bytesioex import (
 __all__ = ['Track']
 
 class Track(FLObject):
-    _count = 0
     max_count = 500 # TODO
 
     #region Properties
@@ -188,8 +187,7 @@ class Track(FLObject):
     #region Parsing logic
     def _parse_text_event(self, event: TextEvent):
         if event.id == TrackEventID.Name:
-            self._events['name'] = event
-            self._name = event.to_str()
+            self.parse_str_prop(event, 'name')
 
     def _parse_data_event(self, event: DataEvent):
         if event.id == TrackEventID.Data:
@@ -221,5 +219,3 @@ class Track(FLObject):
 
     def __init__(self):
         super().__init__()
-        Track._count += 1
-        self._log.info(f"__init__(), count: {self._count}")

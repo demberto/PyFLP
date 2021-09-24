@@ -8,7 +8,7 @@ from pyflp.flobject.flobject import FLObject
 __all__ = ['Plugin', 'EffectPlugin', 'GeneratorPlugin']
 
 class Plugin(FLObject, abc.ABC):
-    """Represents a native or VST2/VST3 effect or instrument"""
+    """Represents a native or VST2/VST3 effect or instrument."""
 
     # Not actually used by subclasses but provided for syntax highlighting below
     def _parse_data_event(self, event: DataEvent) -> None:
@@ -22,9 +22,11 @@ class Plugin(FLObject, abc.ABC):
         return super().save()
 
 class EffectPlugin(Plugin):
-    """Represents a native or VST2/VST3 effect. Used by :class:`InsertSlot`.:param:`plugin`."""
+    """Represents a native or VST2/VST3 effect.
+    Used by `pyflp.flobject.insert.insert_slot.InsertSlot.plugin`."""
     pass
 
 class GeneratorPlugin(Plugin):
-    """Represents a native or VST2/VST3 instrument. Used by :class:`Channel`.:param:`plugin`."""
+    """Represents a native or VST2/VST3 instrument.
+    Used by `pyflp.flobject.channel.channel.Channel.plugin`."""
     pass

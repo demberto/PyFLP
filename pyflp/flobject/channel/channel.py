@@ -2,8 +2,7 @@ import enum
 from typing import (
     List,
     Optional,
-    Union,
-    ValuesView
+    Union
 )
 
 from pyflp.flobject.flobject import FLObject
@@ -17,7 +16,8 @@ from pyflp.event import(
 )
 from pyflp.flobject.plugin import Plugin
 from pyflp.flobject.insert import Insert
-from pyflp.flobject.channel.event_id import ChannelEventID
+from pyflp.flobject.channel.event_id import ChannelEventID, ChannelFXEventID
+from pyflp.flobject.channel.channel_fx import ChannelFX
 
 __all__ = ['Channel']
 
@@ -29,20 +29,28 @@ class ChannelKind(enum.IntEnum):
     Automation = 5
 
 class Channel(FLObject):
-    _count = 0
     max_count = 0
 
     #region Properties
     @property
-    def name(self) -> Optional[str]:
-        return getattr(self, '_name', None)
+    def default_name(self) -> Optional[str]:
+        """Default name of the channel. Default event is stored.
+        The value of this depends on the type of `plugin`:
+        
+        * Native (stock) plugin: The name obtained from the plugin is stored.
+        * VST plugin (VSTi): 'Fruity Wrapper'.
+        
+        See `name` also.
+        """
+        return getattr(self, '_default_name', None)
 
-    @name.setter
-    def name(self, value: str):
-        self.setprop('name', value)
+    @default_name.setter
+    def default_name(self, value: str):
+        self.setprop('default_name', value)
 
     @property
     def index(self) -> Optional[int]:
+        """Index of the channel, should be no more than :attr:`Misc.channel_count`"""
         return getattr(self, '_index', None)
 
     @index.setter
@@ -51,6 +59,7 @@ class Channel(FLObject):
 
     @property
     def volume(self) -> Optional[int]:
+        """Volume of the channel. Default event is stored."""
         return getattr(self, '_volume', None)
 
     @volume.setter
@@ -59,6 +68,7 @@ class Channel(FLObject):
 
     @property
     def pan(self) -> Optional[int]:
+        """Panning of the channel. Default event is stored."""
         return getattr(self, '_pan', None)
 
     @pan.setter
@@ -67,6 +77,7 @@ class Channel(FLObject):
 
     @property
     def color(self) -> Optional[int]:
+        """Color of the channel. Default event is stored."""
         return getattr(self, '_color', None)
 
     @color.setter
@@ -75,7 +86,8 @@ class Channel(FLObject):
 
     @property
     def target_insert(self) -> Optional[int]:
-        """Allowed values: -1 to Insert.max_count"""
+        """The index of the :type:`Insert` the channel is routed to.
+        Allowed values: -1 to :attr:`Insert.max_count`."""
         return getattr(self, '_target_insert', None)
 
     @target_insert.setter
@@ -85,6 +97,7 @@ class Channel(FLObject):
 
     @property
     def kind(self) -> Union[ChannelKind, int, None]:
+        """Type of channel. See :type:`ChannelKind` for the various types."""
         return getattr(self, '_kind', None)
 
     @kind.setter
@@ -93,6 +106,7 @@ class Channel(FLObject):
 
     @property
     def enabled(self) -> Optional[bool]:
+        """Whether the channel is enabled in the channel rack."""
         return getattr(self, '_enabled', None)
 
     @enabled.setter
@@ -101,6 +115,8 @@ class Channel(FLObject):
 
     @property
     def locked(self) -> Optional[bool]:
+        """Whether the channel is locked in the channel rack.
+        Paired with the :attr:`~Channel.enabled`, it represents the actual state of the channel."""
         return getattr(self, '_locked', None)
 
     @locked.setter
@@ -109,6 +125,7 @@ class Channel(FLObject):
 
     @property
     def zipped(self) -> Optional[bool]:
+        """Whether the channel is zipped in the channel rack."""
         return getattr(self, '_zipped', None)
 
     @zipped.setter
@@ -125,6 +142,7 @@ class Channel(FLObject):
 
     @property
     def icon(self) -> Optional[int]:
+        """Icon of the channel."""
         return getattr(self, '_icon', None)
 
     @icon.setter
@@ -133,6 +151,9 @@ class Channel(FLObject):
 
     @property
     def sample_path(self) -> Optional[str]:
+        """The path to the sample file on the disk. Valid only if
+        :attr:`~Channel.kind` is :attr:`~ChannelKind.Sampler` or :attr:`~ChannelKind.Audio`."""
+        assert self._kind in (ChannelKind.Sampler, ChannelKind.Audio)
         return getattr(self, '_sample_path', None)
 
     @sample_path.setter
@@ -141,6 +162,7 @@ class Channel(FLObject):
 
     @property
     def filter_channel(self) -> Optional[int]:
+        """The channel display filter (a.k.a :type:`FilterChannel`) under which channel is grouped."""
         return getattr(self, '_filter_channel', None)
 
     @filter_channel.setter
@@ -149,6 +171,8 @@ class Channel(FLObject):
 
     @property
     def plugin(self) -> Optional[Plugin]:
+        """The :type:`Plugin` associated with the channel.
+        Valid only if :attr:`~Channel.kind` is :attr:`~ChannelKind.Instrument`."""
         return getattr(self, '_plugin', None)
 
     @plugin.setter
@@ -158,6 +182,9 @@ class Channel(FLObject):
 
     @property
     def children(self) -> List[int]:
+        """List of children :attr:`~Channel.index`es of a Layer.
+        Valid only if :attr:`~Channel.kind` is :attr:`~ChannelKind.Layer`."""
+        assert self._kind == ChannelKind.Layer, "Only Layer channels can have children."
         return getattr(self, '_children', [])
 
     @children.setter
@@ -165,58 +192,93 @@ class Channel(FLObject):
         for child in value:
             assert child <= Channel
         self._children = value
+    
+    @property
+    def fx(self) -> Optional[ChannelFX]:
+        return getattr(self, '_fx', None)
+
+    @fx.setter
+    def fx(self, value: ChannelFX):
+        self._fx = value
+    
+    @property
+    def name(self) -> Optional[str]:
+        """The value of this depends on the type of `plugin`:
+        
+        * Native (stock) plugin: User-given name. Default event is not stored.
+        * VST plugin (VSTi): The name obtained from the VST, or the user-given name.
+        Default event (i.e VST plugin name) is stored.
+        
+        See `default_name` also.
+        """
+        return getattr(self, '_name', None)
+
+    @name.setter
+    def name(self, value: str):
+        self.setprop('name', value)
     #endregion
 
     #region Parsing logic
+    def parse(self, event: Event) -> None:
+        if event.id in ChannelFXEventID.__members__.values():
+            if not hasattr(self, '_fx'):
+                self._fx = ChannelFX()
+            self._fx.parse(event)
+            return
+        return super().parse(event)
+    
     def _parse_byte_event(self, event: ByteEvent):
         if event.id == ChannelEventID.Enabled:
-            self._events['enabled'] = event
-            self._enabled = event.to_bool()
+            self.parse_bool_prop(event, 'enabled')
+        elif event.id == ChannelEventID._Vol:
+            self.parse_uint8_prop(event, 'volume')
+        elif event.id == ChannelEventID._Pan:
+            self.parse_int8_prop(event, 'pan')
         elif event.id == ChannelEventID.Kind:
             self._events['kind'] = event
-            self._kind = ChannelKind(event.to_uint8())
+            kind = event.to_uint8()
+            try:
+                self._kind = ChannelKind(kind)
+            except AttributeError:
+                self._kind = kind
+                self._log.error(f"Unknown channel kind {kind}; expected one of {ChannelKind.__members__}")
         elif event.id == ChannelEventID.Zipped:
-            self._events['zipped'] = event
-            self._zipped = event.to_bool()
+            self.parse_bool_prop(event, 'zipped')
         elif event.id == ChannelEventID.TargetInsert:
-            self._events['target_insert'] = event
-            self._target_insert = event.to_int8()
+            self.parse_int8_prop(event, 'target_insert')
         elif event.id == ChannelEventID.Locked:
-            self._events['locked'] = event
-            self._locked = event.to_bool()
+            self.parse_bool_prop(event, 'locked')
 
     def _parse_word_event(self, event: WordEvent):
         if event.id == ChannelEventID.New:
-            self._events['index'] = event
-            self._index = event.to_uint16()
+            self.parse_uint16_prop(event, 'index')
         elif event.id == ChannelEventID.Volume:
-            self._events['volume'] = event
-            self._volume = event.to_uint16()
+            self.parse_uint16_prop(event, 'volume')
         elif event.id == ChannelEventID.Pan:
-            self._events['pan'] = event
-            self._pan = event.to_int16()
+            self.parse_int16_prop(event, 'pan')
+        elif event.id == ChannelEventID.LayerChildren:
+            children_events: List[Event] = self._events.get('children', [])
+            children_events.append(event)
+            children: List[int] = getattr(self, '_children', [])
+            children.append(event.to_uint16())
 
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == ChannelEventID.Color:
-            self._events['color'] = event
-            self._color = event.to_uint32()
+            self.parse_uint32_prop(event, 'color')
         elif event.id == ChannelEventID.RootNote:
-            self._events['root_note'] = event
-            self._root_note = event.to_uint32()
+            self.parse_uint32_prop(event, 'root_note')
         elif event.id == ChannelEventID.Icon:
-            self._events['icon'] = event
-            self._icon = event.to_uint32()
+            self.parse_uint32_prop(event, 'icon')
         elif event.id == ChannelEventID.FilterChannelNum:
-            self._events['filter_channel'] = event
-            self._filter_channel = event.to_int32()
+            self.parse_int32_prop(event, 'filter_channel')
 
     def _parse_text_event(self, event: TextEvent):
-        if event.id == ChannelEventID.Name:
-            self._events['name'] = event
-            self._name = event.to_str()
+        if event.id == ChannelEventID.DefaultName:
+            self.parse_str_prop(event, 'default_name')
         elif event.id == ChannelEventID.SamplePath:
-            self._events['sample_path'] = event
-            self._sample_path = event.to_str()
+            self.parse_str_prop(event, 'sample_path')
+        elif event.id == ChannelEventID.GeneratorName:
+            self.parse_str_prop(event, 'name')
 
     def _parse_data_event(self, event: DataEvent) -> None:
         if event.id == ChannelEventID.Plugin:
@@ -225,14 +287,17 @@ class Channel(FLObject):
             self._plugin.parse(event)
     #endregion
 
-    def save(self) -> Optional[ValuesView[Event]]:
+    def save(self) -> Optional[List[Event]]:
         self._log.info("save() called")
-        if hasattr(self, '_plugin'):
+        event_store: List[Event] = super().save()
+        
+        if self.plugin:
             # Present only for ChannelKind.Instrument
-            self.plugin.save()
-        return super().save()
+            event_store.extend(self.plugin.save())
+        if self.fx:
+            event_store.extend(self.fx.save())
+        
+        return event_store
 
     def __init__(self):
-        Channel._count += 1
         super().__init__()
-        self._log.info(f"__init__(), count: {self._count}")

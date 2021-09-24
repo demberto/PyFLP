@@ -16,7 +16,6 @@ from pyflp.event import (
 __all__ = ['Arrangement']
 
 class Arrangement(FLObject):
-    _count = 0
 
     #region Properties
     @property
@@ -41,7 +40,9 @@ class Arrangement(FLObject):
 
     @tracks.setter
     def tracks(self, value: List[Track]):
-        assert len(value) == 500
+        if super().fl_version.as_float() >= 12.9:
+            if not len(value) == 500:
+                raise Exception("Number of tracks must be 500 when FL Studio version is greater than or equal to 12.9")
         self._tracks = value
 
     @property
@@ -67,20 +68,26 @@ class Arrangement(FLObject):
     #region Parsing logic
     def parse(self, event: Event) -> None:
         if event.id in PlaylistEventID.__members__.values():
+            if not hasattr(self, '_playlist'):
+                self._playlist = Playlist()
             self._playlist.parse(event)
         elif event.id in (
             TimeMarkerEventID.Numerator,
             TimeMarkerEventID.Denominator,
             TimeMarkerEventID.Name
         ):
-            self._cur_timemarker.parse(event)
+            if not hasattr(self, '_cur_timemarker'):
+                raise Exception(f"Got {event.id.name} event when timemarker did not get initialised.")
+            else:
+                self._cur_timemarker.parse(event)
+        elif event.id == TrackEventID.Name:
+            self._cur_track.parse(event)
         else:
             return super().parse(event)
 
     def _parse_word_event(self, event: WordEvent):
         if event.id == ArrangementEventID.Index:
-            self._events['index'] = event
-            self._index = event.to_uint16()
+            self.parse_uint16_prop(event, 'index')
 
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == TimeMarkerEventID.Position:
@@ -90,10 +97,7 @@ class Arrangement(FLObject):
 
     def _parse_text_event(self, event: TextEvent):
         if event.id == ArrangementEventID.Name:
-            self._events['name'] = event
-            self._name = event.to_str()
-        elif event.id == TrackEventID.Name:
-            self._cur_track.parse(event)
+            self.parse_str_prop(event, 'name')
 
     def _parse_data_event(self, event: DataEvent):
         if event.id == TrackEventID.Data:
@@ -126,8 +130,7 @@ class Arrangement(FLObject):
         return events
 
     def __init__(self):
-        Arrangement._count += 1
         super().__init__()
         self._tracks = []
-        self._playlist = Playlist()
+        Track._count = 0
         self._timemarkers = []

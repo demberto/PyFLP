@@ -1,6 +1,6 @@
 import enum
 import datetime
-from typing import Optional, ValuesView
+from typing import Optional, ValuesView, Tuple
 
 from pyflp.flobject.flobject import FLObject
 from pyflp.bytesioex import BytesIOEx
@@ -22,7 +22,7 @@ class PanningLaw(enum.IntEnum):
     Circular = 0
     Triangular = 1
 
-VALID_PPQS = (
+VALID_PPQS: Tuple[int] = (
     24,
     48,
     72,
@@ -37,9 +37,8 @@ VALID_PPQS = (
 )
 
 class Misc(FLObject):
-    """Used for storing one time events, which don't fall into any other category"""
+    """Used for storing one time events, which don't fall into any other category."""
 
-    _count = 0
     max_count = 1
 
     #region Properties
@@ -53,8 +52,8 @@ class Misc(FLObject):
         assert value in VALID_PPQS, \
             f"Invalid PPQ; expected one from {VALID_PPQS}; got {value}"
         self._ppq = value
-        # TODO: How to change?
-    
+        # TODO: The task of checking whether this changed lies on `Project.save()`
+
     @property
     def format(self) -> Optional[int]:
         return getattr(self, '_format', None)
@@ -62,8 +61,8 @@ class Misc(FLObject):
     @format.setter
     def format(self, value: int):
         self._format = value
-        # TODO: How to change?
-    
+        # TODO: The task of checking whether this changed lies on `Project.save()`
+
     @property
     def channel_count(self) -> Optional[int]:
         """Total number of channels in the rack."""
@@ -72,8 +71,8 @@ class Misc(FLObject):
     @channel_count.setter
     def channel_count(self, value: int):
         self._channel_count = value
-        # TODO: How to change?
-    
+        # TODO: The task of checking whether this changed lies on `Project.save()`
+
     @property
     def loop_active(self) -> Optional[bool]:
         """Whether a portion of the song is selected."""
@@ -140,6 +139,12 @@ class Misc(FLObject):
 
     @property
     def regname(self) -> Optional[str]:
+        """Jumbled up (encrypted maybe) name of the artist's FL Studio username.
+        Can find it out decoded in Debug log section of FL.
+
+        *Most pirated versions of FL cause this to be empty.
+        IL can then detect projects made from cracked FL easily.*
+        """
         return getattr(self, '_regname', None)
 
     @regname.setter
@@ -167,9 +172,7 @@ class Misc(FLObject):
 
     @property
     def artists(self) -> Optional[str]:
-        """Project info -> Author.
-        I like to call it 'artists' because it is not a book :)
-        """
+        """Project info -> Author."""
         return getattr(self, '_artists', None)
 
     @artists.setter
@@ -178,7 +181,7 @@ class Misc(FLObject):
 
     @property
     def tempo(self) -> Optional[float]:
-        """BPM"""
+        """Initial tempo of the project in BPM."""
         return getattr(self, '_tempo', None)
 
     @tempo.setter
@@ -189,6 +192,7 @@ class Misc(FLObject):
     # TODO: Fix parsing
     @property
     def start_date(self) -> Optional[int]:
+        """The date when the project was started. Stored in microseconds since Delphi epoch (31-December-1899)."""
         return getattr(self, '_start_date', None)
 
     @start_date.setter
@@ -200,6 +204,7 @@ class Misc(FLObject):
 
     @property
     def work_time(self) -> Optional[datetime.timedelta]:
+        """The total amount of time the artist(s) worked on the project. Stored in microseconds."""
         return getattr(self, '_work_time', None)
 
     @work_time.setter
@@ -211,6 +216,8 @@ class Misc(FLObject):
 
     @property
     def version_build(self) -> Optional[int]:
+        """`pyflp.utils.FLVersion.build` stored as an integer, idk for what reason,
+        the `MiscEventID.Version` event already stores it."""
         return getattr(self, '_version_build', None)
 
     @version_build.setter
@@ -243,67 +250,109 @@ class Misc(FLObject):
     @panning_law.setter
     def panning_law(self, value: PanningLaw):
         self.setprop('panning_law', value)
+
+    @property
+    def time_sig_num(self) -> Optional[int]:
+        return getattr(self, '_time_sig_num', None)
+
+    @time_sig_num.setter
+    def time_sig_num(self, value: int):
+        self.setprop('time_sig_num', value)
+
+    @property
+    def time_sig_beat(self) -> Optional[int]:
+        return getattr(self, '_time_sig_beat', None)
+
+    @time_sig_beat.setter
+    def time_sig_beat(self, value: int):
+        self.setprop('time_sig_beat', value)
+
+    @property
+    def song_loop_pos(self) -> Optional[int]:
+        """If a portion of a song is selected, it is stored as 4 byte integer,
+        2b for loop start position and 2b for loop end position, TODO a tuple for this."""
+        return getattr(self, '_song_loop_pos', None)
+
+    @song_loop_pos.setter
+    def song_loop_pos(self, value: int):
+        self.setprop('song_loop_pos', value)
+
+    @property
+    def play_truncated_notes(self) -> Optional[bool]:
+        return getattr(self, '_play_truncated_notes', None)
+
+    @play_truncated_notes.setter
+    def play_truncated_notes(self, value: bool):
+        self.setprop('play_truncated_notes', value)
+
+    @property
+    def shuffle(self) -> Optional[int]:
+        """Global channel swing mix (ig)."""
+        return getattr(self, '_shuffle', None)
+
+    @shuffle.setter
+    def shuffle(self, value: int):
+        self.setprop('shuffle', value)
     #endregion
 
     #region Parsing logic
     def _parse_byte_event(self, event: ByteEvent):
         if event.id == MiscEventID.LoopActive:
-            self._events['loop_active'] = event
-            self._loop_active = event.to_bool()
+            self.parse_bool_prop(event, 'loop_active')
         elif event.id == MiscEventID.ShowInfo:
-            self._events['show_info'] = event
-            self._show_info = event.to_bool()
+            self.parse_bool_prop(event, 'show_info')
+        elif event.id == MiscEventID.TimeSigNum:
+            self.parse_uint8_prop(event, 'time_sig_num')
+        elif event.id == MiscEventID.TimeSigBeat:
+            self.parse_uint8_prop(event, 'time_sig_beat')
         elif event.id == MiscEventID.PanningLaw:
             self._events['panning_law'] = event
+            data = event.to_uint8()
             try:
-                self._panning_law = PanningLaw(event.to_uint8())
+                self._panning_law = PanningLaw(data)
             except AttributeError as e:
-                self._log.error(f"Invalid panning law; expected {PanningLaw.__members__.values()}; got {event.to_uint8()}")
+                self._panning_law = data
+                self._log.error(f"Invalid panning law; expected {PanningLaw.__members__}; got {data}")
+        elif event.id == MiscEventID.PlayTruncatedNotes:
+            self.parse_bool_prop(event, 'play_truncated_notes')
+        elif event.id == MiscEventID.Shuffle:
+            self.parse_uint8_prop(event, 'shuffle')
 
     def _parse_word_event(self, event: WordEvent) -> None:
         if event.id == MiscEventID.CurrentPatternNum:
-            self._events['current_pattern_num'] = event
-            self._current_pattern_num = event.to_uint16()
+            self.parse_uint16_prop(event, 'current_pattern_num')
 
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == MiscEventID.Tempo:
-            self._events['tempo'] = event
-            self._tempo = event.to_uint32() / 1000
+            self.parseprop(event, 'tempo', event.to_uint32() / 1000)
         elif event.id == MiscEventID.CurrentFilterChannelNum:
-            self._events['current_filterchannel_num'] = event
-            self._current_filterchannel_num = event.to_int32()
+            self.parse_int32_prop(event, 'current_filterchannel_num')
         elif event.id == MiscEventID.VersionBuild:
-            self._events['version_build'] = event
-            self._version_build = event.to_uint32()
+            self.parse_uint32_prop(event, 'version_build')
+        elif event.id == MiscEventID.SongLoopPos:
+            self.parse_uint32_prop(event, 'song_loop_pos')
 
     def _parse_text_event(self, event: TextEvent):
         if event.id == MiscEventID.Title:
-            self._events['title'] = event
-            self._title = event.to_str()
+            self.parse_str_prop(event, 'title')
         elif event.id == MiscEventID.Comment:
-            self._events['comment'] = event
-            self._comment = event.to_str()
+            self.is_rtf_comment = False
+            self.parse_str_prop(event, 'comment')
         elif event.id == MiscEventID.Url:
-            self._events['url'] = event
-            self._url = event.to_str()
+            self.parse_str_prop(event, 'url')
         elif event.id == MiscEventID._CommentRtf:
-            self._events['comment'] = event
-            self._comment = event.to_str()
+            self.is_rtf_comment = True
+            self.parse_str_prop(event, 'comment')
         elif event.id == MiscEventID.Version:
-            self._events['version'] = event
-            self._version = event.to_str()
+            self.parse_str_prop(event, 'version')
         elif event.id == MiscEventID.RegName:
-            self._events['regname'] = event
-            self._regname = event.to_str()
+            self.parse_str_prop(event, 'regname')
         elif event.id == MiscEventID.DataPath:
-            self._events['data_path'] = event
-            self._data_path = event.to_str()
+            self.parse_str_prop(event, 'data_path')
         elif event.id == MiscEventID.Genre:
-            self._events['genre'] = event
-            self._genre = event.to_str()
+            self.parse_str_prop(event, 'genre')
         elif event.id == MiscEventID.Artists:
-            self._events['artists'] = event
-            self._artists = event.to_str()
+            self.parse_str_prop(event, 'artists')
 
     def _parse_data_event(self, event: DataEvent):
         if event.id == MiscEventID.SaveTimestamp:
@@ -317,14 +366,13 @@ class Misc(FLObject):
 
     def save(self) -> Optional[ValuesView[Event]]:
         self._log.info("save() called")
-        _savetimestamp_ev = self._events.get('savetimestamp')
-        if _savetimestamp_ev:
+
+        savetimestamp = self._events.get('savetimestamp')
+        if savetimestamp:
             self._savetimestamp_data.seek(0)
-            _savetimestamp_ev.dump(self._savetimestamp_data.read())
-        else:
-            self._log.info("Save timestamp event absent")
+            savetimestamp.dump(self._savetimestamp_data.read())
+
         return super().save()
 
     def __init__(self):
         super().__init__()
-        self._log.info("__init__()")

@@ -12,7 +12,6 @@ from pyflp.event import (
 __all__ = ['TimeMarker']
 
 class TimeMarker(FLObject):
-    _count = 0
 
     #region Properties
     @property
@@ -55,21 +54,17 @@ class TimeMarker(FLObject):
     #region Parsing logic
     def _parse_byte_event(self, event: ByteEvent):
         if event.id == TimeMarkerEventID.Numerator:
-            self._events['numerator'] = event
-            self._numerator = event.to_uint8()
+            self.parse_uint8_prop(event, 'numerator')
         elif event.id == TimeMarkerEventID.Denominator:
-            self._events['denominator'] = event
-            self._denominator = event.to_uint8()
+            self.parse_uint8_prop(event, 'denominator')
 
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == TimeMarkerEventID.Position:
-            self._events['position'] = event
-            self._position = event.to_uint32()
+            self.parse_uint32_prop(event, 'position')
 
     def _parse_text_event(self, event: TextEvent):
         if event.id == TimeMarkerEventID.Name:
-            self._events['name'] = event
-            self._name = event.to_str()
+            self.parse_str_prop(event, 'name')
     #endregion
 
     def save(self) -> Optional[ValuesView[Event]]:
@@ -77,6 +72,4 @@ class TimeMarker(FLObject):
         return super().save()
 
     def __init__(self):
-        self.idx = TimeMarker._count
-        TimeMarker._count += 1
         super().__init__()

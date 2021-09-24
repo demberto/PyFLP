@@ -66,15 +66,15 @@ class Insert(FLObject):
         self.setprop('name', value)
 
     @property
-    def routing(self) -> Optional[bytes]:
+    def routing(self) -> List[bool]:
         """An order collection of booleans, representing how this `Insert` is routed.
         So if the sequence is [0, 1, 1, 0, ...], then this `Insert` is routed to Insert 2, 3.
         """
-        return getattr(self, '_routing', None)
+        return getattr(self, '_routing', [])
 
     @routing.setter
-    def routing(self, value: bytes):
-        self.setprop('routing', value)
+    def routing(self, value: List[bool]):
+        self.setprop('routing', bytes(value))
 
     @property
     def icon(self) -> Optional[int]:
@@ -221,43 +221,44 @@ class Insert(FLObject):
 
     def _parse_word_event(self, event: WordEvent):
         if event.id == InsertEventID.Icon:
-            self._events['icon'] = event
-            self._icon = event.to_uint16()
+            self.parse_uint16_prop(event, 'icon')
 
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == InsertEventID.Input:
-            self._events['input'] = event
-            self._input = event.to_int32()
+            self.parse_int32_prop(event, 'input')
         elif event.id == InsertEventID.Color:
-            self._events['color'] = event
-            self._color = event.to_uint32()
+            self.parse_uint32_prop(event, 'color')
         elif event.id == InsertEventID.Output:
-            self._events['output'] = event
-            self._output = event.to_int32()
+            self.parse_int32_prop(event, 'output')
 
     def _parse_text_event(self, event: TextEvent):
         if event.id == InsertEventID.Name:
-            self._events['name'] = event
-            self._name = event.to_str()
+            self.parse_str_prop(event, 'name')
 
     def _parse_data_event(self, event: DataEvent):
         if event.id == InsertEventID.Parameters:
             self._events['parameters'] = event
             self._parameters_data = BytesIOEx(event.data)
-            self._flags = InsertFlags(self._parameters_data.read_uint32())
+            flags = self._parameters_data.read_uint32()
+            try:
+                self._flags = InsertFlags(flags)
+            except AttributeError:
+                self._flags = flags
+                self._log.error(f"Flags (value: {flags}) could not be converted to InsertFlags")
             self._locked = self._parameters_data.read_int32()
             # 4 more bytes
         elif event.id == InsertEventID.Routing:
-            self._events['routing'] = event
-            self._routing = event.data
+            bool_list = []
+            for byte in event.data:
+                boolean = False if byte == '\x00' else True
+                bool_list.append(boolean)
+            self.parseprop(event, 'routing', bool_list)
     #endregion
 
     def save(self) -> Optional[List[Event]]:
         # Insert data events
         self._log.info("save() called")
-        routing_ev = self._events.get('routing')
-        if routing_ev:
-            routing_ev.dump(self._routing)
+        
         self._parameters_data.seek(0)
         self._events['parameters'].dump(self._parameters_data.read())
 
@@ -276,6 +277,5 @@ class Insert(FLObject):
         self._cur_slot = InsertSlot()
         self._eq = InsertEQ()
         self._route_volumes = [int()] * Insert.max_count
-        Insert._count += 1
         assert Insert._count <= Insert.max_count, f"Insert count: {self._count}"
         self.idx = Insert._count - 2

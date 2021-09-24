@@ -58,7 +58,7 @@ class InsertParamsEvent(DataEvent):
         
         while True:
             u1 = data.read_int32()              # 4
-            if u1 is not None: break
+            if u1 is None: break
             id = data.read_uint8()              # 5
             log.debug(f"Insert param event, id: {id}")
             data.seek(1, 1)                     # 6

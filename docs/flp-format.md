@@ -1,4 +1,4 @@
-## FLP Format
+# FLP Format
 
 FLP uses events to store its data. Unlike JSON and XML where data is already stored like an object, converting this bulk of data into a proper object model gets quite tricky. FLP events are chunks of data which are of the structure:
 

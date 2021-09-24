@@ -34,10 +34,10 @@ class Project:
     arrangements: List[Arrangement] = dataclasses.field(default_factory=list, init=False)
     inserts: List[Insert] = dataclasses.field(default_factory=list, init=False)
     _unparsed_events: List[Event] = dataclasses.field(default_factory=list, init=False)
-    
+
     def __post_init__(self):
         log.setLevel(logging.DEBUG if self._verbose else logging.WARNING)
-    
+
     #region Utilities
     def used_insert_nums(self) -> Set[int]:
         """Returns a `Set` of used `Insert` indexes."""
@@ -54,7 +54,7 @@ class Project:
         Raises:
             AttributeError: When path is default and Project was created from a stream
         """
-        
+
         # Init
         if isinstance(path, str):
             if not path:
@@ -65,25 +65,25 @@ class Project:
             path = pathlib.Path(path)
         path.suffix = '.zip'
         path = os.fspath(path)
-        
+
         with zipfile.ZipFile(path, 'x') as archive:
             # Add FLP to ZIP
             archive.write(os.fspath(self.save_path))
-            
+
             # Find sampler and audio channels
             for channel in self.channels:
                 if channel.kind in (ChannelKind.Sampler, ChannelKind.Audio):
                     sample_path = getattr(channel, 'sample_path')
-                    
+
                     # Check whether sample file exists
                     if not os.path.exists(sample_path):
                         log.error(f"File doesn't exist {sample_path} or path string invalid")
                         continue
-        
+
                     # Add samples to ZIP
                     archive.write(os.fspath(sample_path))
     #endregion
-    
+
     #region Save logic
     def _save_state(self) -> List[Event]:
         """Calls `save()` for all `FLObject`s and returns a sorted list of the received events
@@ -91,7 +91,7 @@ class Project:
         Returns:
             List[Event]: [description]
         """
-        
+
         event_store: List[Event] = []
 
         # Misc
@@ -115,9 +115,9 @@ class Project:
 
         # Sort the events in ascending order w.r.t index
         event_store.sort(key=lambda event: event.index)
-        
+
         return event_store
-    
+
     def get_stream(self) -> bytes:
         """Converts the list of events received from `self._save_state()` and headers into a single stream.
         Typically used directly when Project was parsed from a stream, i.e. save_path is not set.
@@ -128,10 +128,10 @@ class Project:
 
         # Save event state
         event_store = self._save_state()
-        
+
         # Begin the save process: Stream init
         stream = io.BytesIO()
-        
+
         # Header
         header = b'FLhd' \
             + int.to_bytes(6, 4, 'little') \
@@ -160,7 +160,7 @@ class Project:
         stream.write(data.read())
         stream.seek(0)
         return stream.read()
-    
+
     def save(self, save_path: Union[pathlib.Path, str] = ''):
         """Save `Project` to the disk.
 
@@ -171,7 +171,7 @@ class Project:
             AttributeError: When Project.save_path doesn't exist and save_path is not set
             e: Exception which caused the write failed, most proably a permission/file-in-use error.
         """
-        
+
         # Type checking and init
         if isinstance(save_path, str):
             save_path = pathlib.Path(save_path)
@@ -186,7 +186,7 @@ class Project:
                 if save_path_bak.exists():
                     save_path_bak.unlink()
                 save_path.rename(save_path_bak)
-        
+
         stream = self.get_stream()
         with open(save_path, 'wb') as fp:
             try:
