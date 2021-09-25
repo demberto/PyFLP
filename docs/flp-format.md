@@ -10,7 +10,7 @@ data        # [size, type depends on id] Either a fixed size event or a variable
 
 *where type of `data` is decided by*
 
-```Python
+```{code-block} python
 if event_id in range(0, 64):
     data.size = 1       # Hence event size = 2 ("ByteEvent" from here on)
 elif event_id in range(64, 128):

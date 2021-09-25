@@ -9,7 +9,7 @@ It also has useful utilities like:
 * Creating a ZIP looped package from an FLP
 
 ## Usage
-```Python
+```{code-block} python
 from pyflp.parser import ProjectParser
 project = ProjectParser().parse("/path/to/efelpee.flp")
 
@@ -18,12 +18,12 @@ project = ProjectParser().parse("/path/to/efelpee.flp")
 
 ## Installation
 
-```
+```{code-block}
 pip install pyflp
 ```
 
 ## Testing
-I have created a [null test](test_parser.py). More tests need to be added.
+I have created a [null test](tests/test_parser.py). More tests need to be added.
 
 ## Thanks
 
@@ -33,4 +33,4 @@ I have created a [null test](test_parser.py). More tests need to be added.
 
 ## Contributions
 
-If you can spare some time for testing and/or contributing, I would be very grateful. Please check the [TODO](../TODO) as well for current goals/issues. You can reach me at **demberto**[at]**protonmail**[dot]**com** as well :)
+If you can spare some time for testing and/or contributing, I would be very grateful. Please check the [TODO](TODO.md) as well for current goals/issues. You can reach me at **demberto**[at]**protonmail**[dot]**com** as well :)

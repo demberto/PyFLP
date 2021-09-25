@@ -8,7 +8,7 @@ Since, FLP is an event-based binary format, we need to work with data types of C
 
 Then I read all the events into a `list` of `Event` objects which I call the **Event Store**. The parsing logic for this is in [`_build_event_store()`](../pyflp/parser.py#L78) method of `ProjectParser`. It is important that every new event has an `index` so it can be sorted later on, while saving. The `Event` class and its subclasses `ByteEvent`, `WordEvent`, `DWordEvent`, `TextEvent`, and `DataEvent` look like this *minified*:
 
-```Python
+```{code-block} python
 class Event:
     def __init__(self, id, data):
         self.id = id
@@ -33,7 +33,8 @@ Subclasses have additional `to_*` helper methods, which convert basic types to P
 Once the events are created, the `ProjectParser.parse()` starts building the `Project` object, by examining `Event` IDs. All its fields for e.g. `Channel`, `Insert` etc. inherit from `FLObject`.
 
 FLObject class looks like this *minified*:
-```Python
+
+```{code-block} python
 class FLObject:
     def __init__(self):
         self._events: Dict[str, Event] = {}

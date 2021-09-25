@@ -50,7 +50,7 @@ class Channel(FLObject):
 
     @property
     def index(self) -> Optional[int]:
-        """Index of the channel, should be no more than :attr:`Misc.channel_count`"""
+        """Index of the channel, should be no more than `pyflp.flobject.misc.misc.Misc.channel_count`."""
         return getattr(self, '_index', None)
 
     @index.setter
@@ -86,8 +86,8 @@ class Channel(FLObject):
 
     @property
     def target_insert(self) -> Optional[int]:
-        """The index of the :type:`Insert` the channel is routed to.
-        Allowed values: -1 to :attr:`Insert.max_count`."""
+        """The index of the `pyflp.flobject.insert.insert.Insert` the channel is routed to.
+        Allowed values: -1 to `pyflp.flobject.insert.insert.Insert.max_count`."""
         return getattr(self, '_target_insert', None)
 
     @target_insert.setter
@@ -97,7 +97,7 @@ class Channel(FLObject):
 
     @property
     def kind(self) -> Union[ChannelKind, int, None]:
-        """Type of channel. See :type:`ChannelKind` for the various types."""
+        """Type of channel. See `ChannelKind` for the various types."""
         return getattr(self, '_kind', None)
 
     @kind.setter
@@ -116,7 +116,7 @@ class Channel(FLObject):
     @property
     def locked(self) -> Optional[bool]:
         """Whether the channel is locked in the channel rack.
-        Paired with the :attr:`~Channel.enabled`, it represents the actual state of the channel."""
+        Paired with the `Channel.enabled`, it represents the actual state of the channel."""
         return getattr(self, '_locked', None)
 
     @locked.setter
@@ -152,7 +152,7 @@ class Channel(FLObject):
     @property
     def sample_path(self) -> Optional[str]:
         """The path to the sample file on the disk. Valid only if
-        :attr:`~Channel.kind` is :attr:`~ChannelKind.Sampler` or :attr:`~ChannelKind.Audio`."""
+        `Channel.kind` is `ChannelKind.Sampler` or `ChannelKind.Audio`."""
         assert self._kind in (ChannelKind.Sampler, ChannelKind.Audio)
         return getattr(self, '_sample_path', None)
 
@@ -162,7 +162,7 @@ class Channel(FLObject):
 
     @property
     def filter_channel(self) -> Optional[int]:
-        """The channel display filter (a.k.a :type:`FilterChannel`) under which channel is grouped."""
+        """The channel display filter (a.k.a : `FilterChannel`) under which channel is grouped."""
         return getattr(self, '_filter_channel', None)
 
     @filter_channel.setter
@@ -171,8 +171,8 @@ class Channel(FLObject):
 
     @property
     def plugin(self) -> Optional[Plugin]:
-        """The :type:`Plugin` associated with the channel.
-        Valid only if :attr:`~Channel.kind` is :attr:`~ChannelKind.Instrument`."""
+        """The `pyflp.flobject.plugin.plugin.Plugin` associated with the channel.
+        Valid only if `Channel.kind` is `ChannelKind.Instrument`."""
         return getattr(self, '_plugin', None)
 
     @plugin.setter
@@ -206,8 +206,8 @@ class Channel(FLObject):
         """The value of this depends on the type of `plugin`:
         
         * Native (stock) plugin: User-given name. Default event is not stored.
-        * VST plugin (VSTi): The name obtained from the VST, or the user-given name.
-        Default event (i.e VST plugin name) is stored.
+        * VST plugin (VSTi): The name obtained from the VST, or the user-given name. \
+          Default event (i.e VST plugin name) is stored.
         
         See `default_name` also.
         """

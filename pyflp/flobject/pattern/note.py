@@ -5,7 +5,7 @@ from pyflp.bytesioex import BytesIOEx
 __all__ = ['Note']
 
 class Note:
-    """Represents a MIDI event (note) in a :type:`Pattern`."""
+    """Represents a MIDI event (note) in a `pyflp.flobject.pattern.pattern.Pattern`."""
 
     #region Properties
     @property

@@ -125,7 +125,7 @@ class Insert(FLObject):
 
     @property
     def slots(self) -> List[InsertSlot]:
-        """Holds :class:`InsertSlot`s (empty and used)."""
+        """Holds `pyflp.flobject.insert.insert_slot.InsertSlot`s (empty and used)."""
         return getattr(self, '_slots', [])
 
     @slots.setter
@@ -134,7 +134,8 @@ class Insert(FLObject):
 
     @property
     def enabled(self) -> Optional[bool]:
-        """Whether :class:`Insert` is enabled in the mixer. Obatined from :class:`InsertParamsEvent`."""
+        """Whether `pyflp.flobject.insert.insert.Insert` is enabled in the mixer.
+        Obatined from `pyflp.flobject.insert.insert_params_event.InsertParamsEvent`."""
         return getattr(self, '_enabled', None)
 
     @enabled.setter
@@ -143,7 +144,7 @@ class Insert(FLObject):
 
     @property
     def volume(self) -> Optional[int]:
-        """Fader value. Obatined from :class:`InsertParamsEvent`."""
+        """Fader value. Obatined from `pyflp.flobject.insert.insert_params_event.InsertParamsEvent`."""
         return getattr(self, '_volume', None)
 
     @volume.setter
@@ -152,7 +153,7 @@ class Insert(FLObject):
 
     @property
     def pan(self) -> Optional[int]:
-        """Obatined from :class:`InsertParamsEvent`."""
+        """Obatined from `pyflp.flobject.insert.insert_params_event.InsertParamsEvent`."""
         return getattr(self, '_pan', None)
 
     @pan.setter
@@ -161,7 +162,7 @@ class Insert(FLObject):
 
     @property
     def stereo_separation(self) -> Optional[int]:
-        """Obatined from :class:`InsertParamsEvent`."""
+        """Obatined from `pyflp.flobject.insert.insert_params_event.InsertParamsEvent`."""
         return getattr(self, '_stereo_separation', None)
 
     @stereo_separation.setter
@@ -170,7 +171,7 @@ class Insert(FLObject):
 
     @property
     def eq(self) -> Optional[InsertEQ]:
-        """3-band post EQ. Obatined from :class:`InsertParamsEvent`."""
+        """3-band post EQ. Obatined from `pyflp.flobject.insert.insert_params_event.InsertParamsEvent`."""
         return getattr(self, '_eq', None)
 
     @eq.setter
@@ -179,8 +180,8 @@ class Insert(FLObject):
 
     @property
     def route_volumes(self) -> List[int]:
-        """Like :param:`routing`, stores an ordered collection of route volumes.
-        Obatined from :class:`InsertParamsEvent`."""
+        """Like `routing`, stores an ordered collection of route volumes.
+        Obatined from `pyflp.flobject.insert.insert_params_event.InsertParamsEvent`."""
         return getattr(self, '_route_volumes', [])
 
     @route_volumes.setter
@@ -190,7 +191,7 @@ class Insert(FLObject):
 
     @property
     def locked(self) -> Optional[bool]:
-        """Obatined from :class:`InsertParamsEvent`."""
+        """Obatined from `pyflp.flobject.insert.insert_params_event.InsertParamsEvent`."""
         return getattr(self, '_locked', None)
 
     @locked.setter
