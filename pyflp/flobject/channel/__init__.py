@@ -1,3 +1,3 @@
-from pyflp.flobject.channel.channel import *
-from pyflp.flobject.channel.filterchannel import *
-from pyflp.flobject.channel.event_id import ChannelEventID, FilterChannelEventID
+from .channel import *
+from .filterchannel import *
+from .enums import ChannelEvent, FilterChannelEvent

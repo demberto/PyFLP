@@ -4,10 +4,10 @@ pyflp.flobject.pattern package
 Submodules
 ----------
 
-pyflp.flobject.pattern.event\_id module
----------------------------------------
+pyflp.flobject.pattern.enums module
+-----------------------------------
 
-.. automodule:: pyflp.flobject.pattern.event_id
+.. automodule:: pyflp.flobject.pattern.enums
    :members:
    :undoc-members:
    :show-inheritance:

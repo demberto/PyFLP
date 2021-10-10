@@ -4,10 +4,10 @@ pyflp.flobject.misc package
 Submodules
 ----------
 
-pyflp.flobject.misc.event\_id module
-------------------------------------
+pyflp.flobject.misc.enums module
+--------------------------------
 
-.. automodule:: pyflp.flobject.misc.event_id
+.. automodule:: pyflp.flobject.misc.enums
    :members:
    :undoc-members:
    :show-inheritance:

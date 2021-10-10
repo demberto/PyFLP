@@ -2,17 +2,18 @@ import io
 import struct
 from typing import Optional
 
-Bool = struct.Struct('?')
-SByte = struct.Struct('b')
-Byte = struct.Struct('B')
-Short = struct.Struct('h')
-UShort = struct.Struct('H')
-Int = struct.Struct('i')
-UInt = struct.Struct('I')
-Long = struct.Struct('q')
-ULong = struct.Struct('Q')
-Float = struct.Struct('f')
-Double = struct.Struct('d')
+Bool = struct.Struct("?")
+SByte = struct.Struct("b")
+Byte = struct.Struct("B")
+Short = struct.Struct("h")
+UShort = struct.Struct("H")
+Int = struct.Struct("i")
+UInt = struct.Struct("I")
+Long = struct.Struct("q")
+ULong = struct.Struct("Q")
+Float = struct.Struct("f")
+Double = struct.Struct("d")
+
 
 class BytesIOEx(io.BytesIO):
     """C# BinaryReader + BinaryWriter equivalent."""
@@ -75,13 +76,17 @@ class BytesIOEx(io.BytesIO):
     def read_varint(self) -> Optional[int]:
         """Reads a 7bit variable sized encoded integer."""
         b = self.read_uint8()
-        data_len = b & 0x7F
-        shift = 7
-        while (b & 0x80) != 0:
-            b = self.read_uint8()
-            data_len |= (b & 0x7F) << shift
-            shift += 7
-        return data_len
+        if b is not None:
+            data_len = b & 0x7F
+            shift = 7
+            while (b & 0x80) != 0:
+                b = self.read_uint8()
+                if b is None:
+                    break
+                data_len |= (b & 0x7F) << shift
+                shift += 7
+            return data_len
+        return None
 
     def write_bool(self, value: bool) -> int:
         return self.write(Bool.pack(value))

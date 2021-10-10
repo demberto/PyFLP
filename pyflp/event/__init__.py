@@ -1,6 +1,10 @@
-from pyflp.event.event import Event
-from pyflp.event.byte_event import *
-from pyflp.event.word_event import *
-from pyflp.event.dword_event import *
-from pyflp.event.text_event import *
-from pyflp.event.data_event import *
+import logging
+
+logging.basicConfig()
+
+from .event import Event
+from .byte import *
+from .word import *
+from .dword import *
+from .text import *
+from .data import *

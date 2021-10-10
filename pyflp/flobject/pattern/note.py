@@ -2,15 +2,16 @@ from typing import Optional
 
 from pyflp.bytesioex import BytesIOEx
 
-__all__ = ['Note']
+__all__ = ["Note"]
+
 
 class Note:
     """Represents a MIDI event (note) in a `pyflp.flobject.pattern.pattern.Pattern`."""
 
-    #region Properties
+    # * Properties
     @property
     def position(self) -> Optional[int]:
-        return getattr(self, '_position', None)
+        return getattr(self, "_position", None)
 
     @position.setter
     def position(self, value: int):
@@ -20,7 +21,7 @@ class Note:
 
     @property
     def flags(self) -> Optional[int]:
-        return getattr(self, '_flags', None)
+        return getattr(self, "_flags", None)
 
     @flags.setter
     def flags(self, value: int):
@@ -30,7 +31,7 @@ class Note:
 
     @property
     def rack_channel(self) -> Optional[int]:
-        return getattr(self, '_rack_channel', None)
+        return getattr(self, "_rack_channel", None)
 
     @rack_channel.setter
     def rack_channel(self, value: int):
@@ -40,7 +41,7 @@ class Note:
 
     @property
     def duration(self) -> Optional[int]:
-        return getattr(self, '_duration', None)
+        return getattr(self, "_duration", None)
 
     @duration.setter
     def duration(self, value: int):
@@ -51,7 +52,7 @@ class Note:
     @property
     def key(self) -> Optional[int]:
         """0-131 for C0-B10. Yet 4-bytes, to save stamped chords/scales"""
-        return getattr(self, '_key', None)
+        return getattr(self, "_key", None)
 
     @key.setter
     def key(self, value: int):
@@ -61,7 +62,7 @@ class Note:
 
     @property
     def fine_pitch(self) -> Optional[int]:
-        return getattr(self, '_fine_pitch', None)
+        return getattr(self, "_fine_pitch", None)
 
     @fine_pitch.setter
     def fine_pitch(self, value: int):
@@ -71,7 +72,7 @@ class Note:
 
     @property
     def release(self) -> Optional[int]:
-        return getattr(self, '_release', None)
+        return getattr(self, "_release", None)
 
     @release.setter
     def release(self, value: int):
@@ -81,7 +82,7 @@ class Note:
 
     @property
     def midi_channel(self) -> Optional[int]:
-        return getattr(self, '_midi_channel', None)
+        return getattr(self, "_midi_channel", None)
 
     @midi_channel.setter
     def midi_channel(self, value: int):
@@ -91,7 +92,7 @@ class Note:
 
     @property
     def pan(self) -> Optional[int]:
-        return getattr(self, '_pan', None)
+        return getattr(self, "_pan", None)
 
     @pan.setter
     def pan(self, value: int):
@@ -101,7 +102,7 @@ class Note:
 
     @property
     def velocity(self) -> Optional[int]:
-        return getattr(self, '_velocity', None)
+        return getattr(self, "_velocity", None)
 
     @velocity.setter
     def velocity(self, value: int):
@@ -111,7 +112,7 @@ class Note:
 
     @property
     def mod_x(self) -> Optional[int]:
-        return getattr(self, '_mod_x', None)
+        return getattr(self, "_mod_x", None)
 
     @mod_x.setter
     def mod_x(self, value: int):
@@ -121,31 +122,30 @@ class Note:
 
     @property
     def mod_y(self) -> Optional[int]:
-        return getattr(self, '_mod_y', None)
+        return getattr(self, "_mod_y", None)
 
     @mod_y.setter
     def mod_y(self, value: int):
         self._data.seek(23)
         self._data.write_uint8(value)
         self._mod_y = value
-    #endregion
 
     def parse(self, data: bytes) -> None:
-        assert len(data) == 24
+        # ? assert len(data) == 24, remove or keep
         self._data = BytesIOEx(data)
-        self._position = self._data.read_uint32()       # 4
-        self._flags = self._data.read_uint16()          # 6
-        self._rack_channel = self._data.read_uint16()   # 8
-        self._duration = self._data.read_uint32()       # 12
-        self._key = self._data.read_uint32()            # 16
-        self._fine_pitch = self._data.read_int8()       # 17
-        self._u1 = self._data.read_int8()               # 18
-        self._release = self._data.read_uint8()         # 19
-        self._midi_channel = self._data.read_uint8()    # 20
-        self._pan = self._data.read_int8()              # 21
-        self._velocity = self._data.read_uint8()        # 22
-        self._mod_x = self._data.read_uint8()           # 23
-        self._mod_y = self._data.read_uint8()           # 24
+        self._position = self._data.read_uint32()  # 4
+        self._flags = self._data.read_uint16()  # 6
+        self._rack_channel = self._data.read_uint16()  # 8
+        self._duration = self._data.read_uint32()  # 12
+        self._key = self._data.read_uint32()  # 16
+        self._fine_pitch = self._data.read_int8()  # 17
+        self._u1 = self._data.read_int8()  # 18
+        self._release = self._data.read_uint8()  # 19
+        self._midi_channel = self._data.read_uint8()  # 20
+        self._pan = self._data.read_int8()  # 21
+        self._velocity = self._data.read_uint8()  # 22
+        self._mod_x = self._data.read_uint8()  # 23
+        self._mod_y = self._data.read_uint8()  # 24
 
     def save(self) -> bytes:
         self._data.seek(0)

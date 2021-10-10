@@ -4,10 +4,18 @@ pyflp.flobject.insert package
 Submodules
 ----------
 
-pyflp.flobject.insert.event\_id module
---------------------------------------
+pyflp.flobject.insert.enums module
+----------------------------------
 
-.. automodule:: pyflp.flobject.insert.event_id
+.. automodule:: pyflp.flobject.insert.enums
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyflp.flobject.insert.event module
+----------------------------------
+
+.. automodule:: pyflp.flobject.insert.event
    :members:
    :undoc-members:
    :show-inheritance:
@@ -20,18 +28,10 @@ pyflp.flobject.insert.insert module
    :undoc-members:
    :show-inheritance:
 
-pyflp.flobject.insert.insert\_params\_event module
---------------------------------------------------
+pyflp.flobject.insert.slot module
+---------------------------------
 
-.. automodule:: pyflp.flobject.insert.insert_params_event
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pyflp.flobject.insert.insertslot module
----------------------------------------
-
-.. automodule:: pyflp.flobject.insert.insertslot
+.. automodule:: pyflp.flobject.insert.slot
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
-from pyflp.flobject.plugin.plugin import Plugin
+from .plugin import Plugin
 
 # VSTPlugin
-from pyflp.flobject.plugin.vst_plugin import *
+from .vst_plugin import *
 
 # FBalance, FNotebook2, FSoftClipper, Soundgoodizer
-from pyflp.flobject.plugin.effects import *
+from .effects import *

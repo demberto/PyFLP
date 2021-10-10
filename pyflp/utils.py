@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass, field
 
 BYTE = 0
 WORD = 64
@@ -9,8 +9,17 @@ DATA = 208
 DATA_TEXT_EVENTS = (
     TEXT + 49,  # Arrangement.name
     TEXT + 39,  # FilterChannel.name
-    TEXT + 47   # Track.name
+    TEXT + 47,  # Track.name
 )
+
+
+def isascii(s: str) -> bool:
+    """str.isascii() for Python 3.6
+
+    https://stackoverflow.com/a/18403812
+    """
+    return len(s) == len(s.encode())
+
 
 def buflen_to_varint(buffer: bytes) -> bytes:
     ret = bytearray()
@@ -25,20 +34,24 @@ def buflen_to_varint(buffer: bytes) -> bytes:
             break
     return bytes(ret)
 
-@dataclasses.dataclass
+
+@dataclass
 class FLVersion:
     string: str
-    major: int = dataclasses.field(init=False)
-    minor: int = dataclasses.field(init=False)
-    revision: int = dataclasses.field(init=False)
-    build: int = dataclasses.field(init=False)
+    major: int = field(init=False, repr=False)
+    minor: int = field(init=False, repr=False)
+    revision: int = field(init=False, repr=False)
+    build: int = field(init=False, repr=False)
 
     def __post_init__(self):
-        split = self.string.split('.')
+        split = self.string.split(".")
         self.major = int(split[0])
         self.minor = int(split[1])
         self.revision = int(split[2])
-        self.build = int(split[3])
+        try:
+            self.build = int(split[3])
+        except IndexError:
+            pass
 
     def as_float(self) -> float:
-        return float(f'{self.major}.{self.minor}')
+        return float(f"{self.major}.{self.minor}")

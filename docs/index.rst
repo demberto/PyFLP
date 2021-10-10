@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PyFLP's documentation!
-=================================
+PyFLP
+=====
 
 .. toctree::
    :maxdepth: 2
@@ -12,7 +12,8 @@ Welcome to PyFLP's documentation!
 
    README <readme_link.md>
    FLP Format <flp-format.md>
-   Modules <modules.rst>
+   How does it work? <how-does-it-work.md>
+   Reference <modules.rst>
 
 Indices and tables
 ==================

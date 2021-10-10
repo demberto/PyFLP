@@ -12,10 +12,10 @@ pyflp.flobject.plugin.effects.balance module
    :undoc-members:
    :show-inheritance:
 
-pyflp.flobject.plugin.effects.notebook\_2 module
-------------------------------------------------
+pyflp.flobject.plugin.effects.notebook2 module
+----------------------------------------------
 
-.. automodule:: pyflp.flobject.plugin.effects.notebook_2
+.. automodule:: pyflp.flobject.plugin.effects.notebook2
    :members:
    :undoc-members:
    :show-inheritance:

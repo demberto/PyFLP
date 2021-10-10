@@ -1,17 +1,20 @@
 from typing import Optional
-from pyflp.flobject.plugin.plugin import EffectPlugin
+
 from pyflp.event import DataEvent
 
-__all__ = ['FBalance']
+from pyflp.flobject.plugin.plugin import EffectPlugin
+
+__all__ = ["FBalance"]
+
 
 class FBalance(EffectPlugin):
     """Implements Fruity Balance."""
 
-    #region Properties
+    # region Properties
     @property
     def pan(self) -> Optional[int]:
         """Linear. Min: -128, Max: 127, Default: 0 (0.50, Centred)"""
-        return getattr(self, '_pan', None)
+        return getattr(self, "_pan", None)
 
     @pan.setter
     def pan(self, value: int):
@@ -23,7 +26,7 @@ class FBalance(EffectPlugin):
     @property
     def volume(self) -> Optional[int]:
         """Logarithmic. Min: 0, Max: 320, Default: 256 (0.80, 0dB)"""
-        return getattr(self, '_volume', None)
+        return getattr(self, "_volume", None)
 
     @volume.setter
     def volume(self, value: int):
@@ -31,12 +34,15 @@ class FBalance(EffectPlugin):
         self._data.seek(4)
         self._data.write_uint32(value)
         self._volume = value
-    #endregion
+
+    # endregion
 
     def _parse_data_event(self, event: DataEvent) -> None:
         super()._parse_data_event(event)
         if len(event.data) != 8:
-            self._log.error("Cannot parse plugin data, expected a size of 8 bytes; got {} bytes instead")
+            self._log.error(
+                "Cannot parse plugin data, expected a size of 8 bytes; got {} bytes instead"
+            )
         self._pan = self._data.read_uint32()
         self._volume = self._data.read_uint32()
 

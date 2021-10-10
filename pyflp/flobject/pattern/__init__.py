@@ -1,2 +1,2 @@
-from pyflp.flobject.pattern.pattern import *
-from pyflp.flobject.pattern.event_id import *
+from .pattern import *
+from .enums import *

@@ -12,18 +12,10 @@ pyflp.flobject.channel.channel module
    :undoc-members:
    :show-inheritance:
 
-pyflp.flobject.channel.channel\_fx module
------------------------------------------
+pyflp.flobject.channel.enums module
+-----------------------------------
 
-.. automodule:: pyflp.flobject.channel.channel_fx
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pyflp.flobject.channel.event\_id module
----------------------------------------
-
-.. automodule:: pyflp.flobject.channel.event_id
+.. automodule:: pyflp.flobject.channel.enums
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,6 +24,14 @@ pyflp.flobject.channel.filterchannel module
 -------------------------------------------
 
 .. automodule:: pyflp.flobject.channel.filterchannel
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyflp.flobject.channel.fx module
+--------------------------------
+
+.. automodule:: pyflp.flobject.channel.fx
    :members:
    :undoc-members:
    :show-inheritance:

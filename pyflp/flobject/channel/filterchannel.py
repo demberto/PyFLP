@@ -1,33 +1,31 @@
-from typing import Optional, ValuesView
+from typing import Optional
 
-from pyflp.flobject.flobject import FLObject
-from pyflp.event import Event, TextEvent
-from pyflp.flobject.channel.event_id import FilterChannelEventID
+from pyflp.flobject import FLObject
+from pyflp.event import TextEvent
 
-__all__ = ['FilterChannel']
+from .enums import FilterChannelEvent
+
+__all__ = ["FilterChannel"]
+
 
 class FilterChannel(FLObject):
     """Channel display filter. Default: 'Unsorted', 'Audio' and 'Automation'.
-    
+
     Used by `pyflp.flobject.channel.channel.Channel.filter_channel`.
     """
 
     @property
     def name(self) -> Optional[str]:
         """Name of the filter channel."""
-        return getattr(self, '_name', None)
-    
+        return getattr(self, "_name", None)
+
     @name.setter
     def name(self, value: str):
-        self.setprop('name', value)
-    
+        self.setprop("name", value)
+
     def _parse_text_event(self, event: TextEvent):
-        if event.id == FilterChannelEventID.Name:
-            self.parse_str_prop(event, 'name')
-    
-    def save(self) -> Optional[ValuesView[Event]]:
-        self._log.info("save() called")
-        return super().save()
-    
+        if event.id == FilterChannelEvent.Name:
+            self.parse_str_prop(event, "name")
+
     def __init__(self):
         super().__init__()

@@ -5,4 +5,11 @@
 """
 __docformat__ = "restructuredtext"
 
-from pyflp.parser import *
+import logging
+
+logging.basicConfig(
+    format="[%(levelname)s] %(name)s <%(module)s.%(funcName)s>  %(message)s"
+)
+
+from .parser import *
+from .project import *

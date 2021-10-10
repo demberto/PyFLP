@@ -1,4 +1,4 @@
-pyflp
+PyFLP
 =====
 
 .. toctree::

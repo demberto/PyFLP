@@ -1,33 +1,30 @@
 from typing import List, Optional, ValuesView
 
-from pyflp.flobject.flobject import FLObject
+from pyflp.flobject import FLObject
 from pyflp.event import DataEvent, TextEvent, Event
-from pyflp.flobject.arrangement.playlist import _PlaylistItem
-from pyflp.flobject.arrangement.event_id import TrackEventID
-from pyflp.bytesioex import (
-    BytesIOEx,
-    UInt,
-    Bool,
-    Float
-)
+from pyflp.bytesioex import BytesIOEx, UInt, Bool, Float
 
-__all__ = ['Track']
+from .playlist import _PlaylistItem
+from .enums import TrackEvent
+
+__all__ = ["Track"]
+
 
 class Track(FLObject):
-    max_count = 500 # TODO
+    max_count = 500  # TODO
 
-    #region Properties
+    # * Properties
     @property
     def name(self) -> Optional[str]:
-        return getattr(self, '_name', None)
+        return getattr(self, "_name", None)
 
     @name.setter
     def name(self, value: str):
-        self.setprop('name', value)
+        self.setprop("name", value)
 
     @property
     def index(self) -> Optional[int]:
-        return self._index
+        return getattr(self, "_index", None)
 
     @index.setter
     def index(self, value: int):
@@ -37,7 +34,7 @@ class Track(FLObject):
 
     @property
     def color(self) -> Optional[int]:
-        return self._color
+        return getattr(self, "_color", None)
 
     @color.setter
     def color(self, value: int):
@@ -47,7 +44,7 @@ class Track(FLObject):
 
     @property
     def icon(self) -> Optional[int]:
-        return self._icon
+        return getattr(self, "_icon", None)
 
     @icon.setter
     def icon(self, value: int):
@@ -56,8 +53,8 @@ class Track(FLObject):
         self._icon = value
 
     @property
-    def enabled(self) -> bool:
-        return self._enabled
+    def enabled(self) -> Optional[bool]:
+        return getattr(self, "_enabled", None)
 
     @enabled.setter
     def enabled(self, value: bool):
@@ -66,8 +63,8 @@ class Track(FLObject):
         self._enabled = value
 
     @property
-    def height(self) -> float:
-        return self._height
+    def height(self) -> Optional[float]:
+        return getattr(self, "_height", None)
 
     @height.setter
     def height(self, value: float):
@@ -77,7 +74,7 @@ class Track(FLObject):
 
     @property
     def locked_height(self) -> float:
-        return self._locked_height
+        return getattr(self, "_locked_height", None)
 
     @locked_height.setter
     def locked_height(self, value: float):
@@ -87,7 +84,7 @@ class Track(FLObject):
 
     @property
     def locked_to_content(self) -> bool:
-        return self._locked_to_content
+        return getattr(self, "_locked_to_content", None)
 
     @locked_to_content.setter
     def locked_to_content(self, value: bool):
@@ -97,7 +94,7 @@ class Track(FLObject):
 
     @property
     def motion(self) -> Optional[int]:
-        return self._motion
+        return getattr(self, "_motion", None)
 
     @motion.setter
     def motion(self, value: int):
@@ -107,7 +104,7 @@ class Track(FLObject):
 
     @property
     def press(self) -> Optional[int]:
-        return self._press
+        return getattr(self, "_press", None)
 
     @press.setter
     def press(self, value: int):
@@ -117,7 +114,7 @@ class Track(FLObject):
 
     @property
     def trigger_sync(self) -> Optional[int]:
-        return self._trigger_sync
+        return getattr(self, "_trigger_sync", None)
 
     @trigger_sync.setter
     def trigger_sync(self, value: int):
@@ -127,7 +124,7 @@ class Track(FLObject):
 
     @property
     def queued(self) -> Optional[int]:
-        return self._queued
+        return getattr(self, "_queued", None)
 
     @queued.setter
     def queued(self, value: int):
@@ -137,7 +134,7 @@ class Track(FLObject):
 
     @property
     def tolerant(self) -> Optional[int]:
-        return self._tolerant
+        return getattr(self, "_tolerant", None)
 
     @tolerant.setter
     def tolerant(self, value: int):
@@ -147,7 +144,7 @@ class Track(FLObject):
 
     @property
     def position_sync(self) -> Optional[int]:
-        return self._position_sync
+        return getattr(self, "_position_sync", None)
 
     @position_sync.setter
     def position_sync(self, value: int):
@@ -157,7 +154,7 @@ class Track(FLObject):
 
     @property
     def grouped_with_above(self) -> Optional[bool]:
-        return self._grouped_with_above
+        return getattr(self, "_grouped_with_above", None)
 
     @grouped_with_above.setter
     def grouped_with_above(self, value: bool):
@@ -167,7 +164,7 @@ class Track(FLObject):
 
     @property
     def locked(self) -> Optional[bool]:
-        return self._locked
+        return getattr(self, "_locked", None)
 
     @locked.setter
     def locked(self, value: bool):
@@ -177,44 +174,41 @@ class Track(FLObject):
 
     @property
     def items(self) -> List[_PlaylistItem]:
-        return getattr(self, '_items', [])
+        return getattr(self, "_items", [])
 
     @items.setter
     def items(self, value: List[_PlaylistItem]):
         self._items = value
-    #endregion
 
-    #region Parsing logic
+    # * Parsing logic
     def _parse_text_event(self, event: TextEvent):
-        if event.id == TrackEventID.Name:
-            self.parse_str_prop(event, 'name')
+        if event.id == TrackEvent.Name:
+            self.parse_str_prop(event, "name")
 
     def _parse_data_event(self, event: DataEvent):
-        if event.id == TrackEventID.Data:
-            self._events['data'] = event
+        if event.id == TrackEvent.Data:
+            self._events["data"] = event
             self._events_data = BytesIOEx(event.data)
-            self._index = self._events_data.read_uint32()              # 4
-            self._color = self._events_data.read_int32()               # 8
-            self._icon = self._events_data.read_int32()                # 12
-            self._enabled = self._events_data.read_bool()              # 13
-            self._height = self._events_data.read_float()              # 17
-            self._locked_height = self._events_data.read_float()       # 21
-            self._locked_to_content = self._events_data.read_bool()    # 22
-            self._motion = self._events_data.read_uint32()             # 26
-            self._press = self._events_data.read_uint32()              # 30
-            self._trigger_sync = self._events_data.read_uint32()       # 34
-            self._queued = self._events_data.read_uint32()             # 38
-            self._tolerant = self._events_data.read_uint32()           # 42
-            self._position_sync = self._events_data.read_uint32()      # 46
-            self._grouped_with_above = self._events_data.read_bool()   # 47
-            self._locked = self._events_data.read_bool()               # 48
-            self._u2 = self._events_data.read(1)                       # 49
-    #endregion
+            self._index = self._events_data.read_uint32()  # 4
+            self._color = self._events_data.read_int32()  # 8
+            self._icon = self._events_data.read_int32()  # 12
+            self._enabled = self._events_data.read_bool()  # 13
+            self._height = self._events_data.read_float()  # 17
+            self._locked_height = self._events_data.read_float()  # 21
+            self._locked_to_content = self._events_data.read_bool()  # 22
+            self._motion = self._events_data.read_uint32()  # 26
+            self._press = self._events_data.read_uint32()  # 30
+            self._trigger_sync = self._events_data.read_uint32()  # 34
+            self._queued = self._events_data.read_uint32()  # 38
+            self._tolerant = self._events_data.read_uint32()  # 42
+            self._position_sync = self._events_data.read_uint32()  # 46
+            self._grouped_with_above = self._events_data.read_bool()  # 47
+            self._locked = self._events_data.read_bool()  # 48
+            self._u2 = self._events_data.read(1)  # 49
 
-    def save(self) -> Optional[ValuesView[Event]]:
-        self._log.info("save() called")
+    def save(self) -> ValuesView[Event]:
         self._events_data.seek(0)
-        self._events['data'].dump(self._events_data.read())
+        self._events["data"].dump(self._events_data.read())
         return super().save()
 
     def __init__(self):

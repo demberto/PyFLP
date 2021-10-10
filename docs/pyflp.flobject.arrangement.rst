@@ -12,10 +12,10 @@ pyflp.flobject.arrangement.arrangement module
    :undoc-members:
    :show-inheritance:
 
-pyflp.flobject.arrangement.event\_id module
--------------------------------------------
+pyflp.flobject.arrangement.enums module
+---------------------------------------
 
-.. automodule:: pyflp.flobject.arrangement.event_id
+.. automodule:: pyflp.flobject.arrangement.enums
    :members:
    :undoc-members:
    :show-inheritance:
