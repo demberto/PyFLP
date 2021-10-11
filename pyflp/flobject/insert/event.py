@@ -3,11 +3,12 @@
 import enum
 from typing import List
 
-from pyflp.bytesioex import BytesIOEx
 from pyflp.event import DataEvent
 from pyflp.utils import DATA
 
 from .insert import Insert
+
+from bytesioex import BytesIOEx
 
 __all__ = ["InsertParamsEvent"]
 

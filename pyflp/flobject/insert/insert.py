@@ -2,12 +2,13 @@ import enum
 from typing import List, Optional, Union
 import dataclasses
 
-from pyflp.bytesioex import BytesIOEx
 from pyflp.event import Event, WordEvent, DWordEvent, TextEvent, DataEvent
 from pyflp.flobject import FLObject
 
 from .enums import InsertEvent, InsertSlotEvent
 from .slot import InsertSlot
+
+from bytesioex import BytesIOEx
 
 __all__ = ["Insert"]
 

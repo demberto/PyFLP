@@ -12,6 +12,9 @@ You should also check these:
 - A CLI utility **FLPInfo** to see basic information about an FLP.
 - A GUI tool **FLPInspect** for a further, detailed view into the internal structure of an FLP.
 
+# Documentation
+Docs are available on [ReadTheDocs](https://pyflp.rtfd.io)
+
 ## Usage
 
 PyFLP can be used for automation purposes e.g. finding/setting project titles, artists names, genre etc. and also by people who are interested more about the FLP format. You can even repair a broken FLP, *ofcourse by yourself*.

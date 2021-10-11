@@ -1,5 +1,3 @@
-### PyFLP
-
 - `Misc.start_date` parse logic raises **OverflowError**
 - **repr()** for `FLObject` subclasses
 - Use the same event system used in other FLObjects for `Plugin` but make the `save()` method recombine it into a single event (Events inside event)
@@ -19,9 +17,4 @@
 - Support event editing
 - Warnings and errors are ignored by `GUIHandler` if verbose mode is not enabled
 - Tooltips are a mess
-- Tests
-
-### FLPInfo
-
-- Long comments cause incorrect formatting
 - Tests

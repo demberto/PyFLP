@@ -4,7 +4,7 @@ import os
 import logging
 from pathlib import Path
 import zipfile
-from typing import List, Set, Union, ValuesView
+from typing import List, Set, Union
 
 from pyflp.event import Event
 from pyflp.flobject import (
@@ -16,8 +16,9 @@ from pyflp.flobject import (
     Insert,
     FLObject,
 )
-from pyflp.bytesioex import BytesIOEx
 from pyflp.flobject.insert.event import InsertParamsEvent
+
+from bytesioex import BytesIOEx
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ class Project:
         """Exports a ZIP looped package of an FLP.
 
         Args:
-            path: The path to save the ZIP to. Defaults to ''.
+            path: The path to save the ZIP to.
 
         Raises:
             AttributeError: When path is default and Project was created from a stream

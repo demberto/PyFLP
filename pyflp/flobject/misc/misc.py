@@ -3,11 +3,12 @@ import datetime
 from typing import Optional, Union, Tuple, ValuesView
 
 from pyflp.flobject.flobject import FLObject
-from pyflp.bytesioex import BytesIOEx
 from pyflp.utils import FLVersion
 from pyflp.event import WordEvent, TextEvent, DataEvent, DWordEvent, ByteEvent, Event
 
 from .enums import MiscEvent
+
+from bytesioex import BytesIOEx
 
 __all__ = ["Misc"]
 

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pyflp.bytesioex import BytesIOEx
+from bytesioex import BytesIOEx
 
 __all__ = ["Note"]
 

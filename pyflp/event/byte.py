@@ -65,4 +65,8 @@ class ByteEvent(Event):
     def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         if not id < WORD:
             raise ValueError(f"Exepcted 0-63; got {id}")
+        if len(data) != 1:
+            raise TypeError(
+                f"Expected a data of 1 byte; got a data of size {len(data)} instead"
+            )
         super().__init__(id, data)

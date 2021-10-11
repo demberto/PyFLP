@@ -4,8 +4,9 @@ from typing import List, Optional
 
 from pyflp.flobject.plugin.plugin import Plugin
 from pyflp.event import DataEvent
-from pyflp.bytesioex import BytesIOEx
 from pyflp.utils import isascii
+
+from bytesioex import BytesIOEx
 
 PLUGIN_VST = 10
 

@@ -1,7 +1,6 @@
 import abc
-from pyflp.bytesioex import BytesIOEx
+from bytesioex import BytesIOEx
 from pyflp.event import Event, DataEvent
-from typing import ValuesView
 
 from pyflp.flobject.flobject import FLObject
 

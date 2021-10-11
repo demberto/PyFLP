@@ -1,6 +1,5 @@
 import io
 import logging
-import pathlib
 import zipfile
 from pathlib import Path
 from typing import List, Set, Union
@@ -9,7 +8,7 @@ from pyflp.flobject import *
 from pyflp.event import *
 from pyflp.utils import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD, FLVersion
 from pyflp.project import Project
-from pyflp.bytesioex import BytesIOEx
+from bytesioex import BytesIOEx
 
 log = logging.getLogger(__name__)
 
@@ -57,21 +56,21 @@ class Parser:
         assert self.r.read(4) == b"FLhd"
 
         # Header size (always 6)
-        assert self.r.read_uint32() == 6
+        assert self.r.read_I() == 6
 
         # Format, TODO enum
-        format = self.r.read_int16()
+        format = self.r.read_h()
         assert format == 0
         self.__project.misc.format = format
 
         # Channel count
-        channel_count = self.r.read_uint16()
+        channel_count = self.r.read_H()
         assert channel_count in range(1, 1000)
         self.__project.misc.channel_count = channel_count
         Channel.max_count = channel_count
 
         # PPQ
-        ppq = self.r.read_uint16()
+        ppq = self.r.read_H()
         self.__project.misc.ppq = ppq
         Playlist.ppq = ppq
 
@@ -82,13 +81,13 @@ class Parser:
         assert self.r.read(4) == b"FLdt"
 
         # Combined size of all events
-        self._chunklen = self.r.read_uint32()
+        self._chunklen = self.r.read_I()
 
     def __build_event_store(self):
         """Gathers all events into a single list."""
 
         while True:
-            id = self.r.read_uint8()
+            id = self.r.read_B()
             if id is None:
                 break
 
@@ -99,7 +98,7 @@ class Parser:
             elif id in range(DWORD, TEXT):
                 self.__event_store.append(DWordEvent(id, self.r.read(4)))
             else:
-                varint = self.r.read_varint()
+                varint = self.r.read_v()
                 buf = self.r.read(varint)
                 if id in range(TEXT, DATA) or id in DATA_TEXT_EVENTS:
                     if id == MiscEvent.Version:

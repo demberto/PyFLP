@@ -2,11 +2,12 @@ import abc
 import dataclasses
 from typing import Dict, List
 
-from pyflp.bytesioex import BytesIOEx
 from pyflp.event import DataEvent
 from pyflp.flobject.flobject import FLObject
 
 from .enums import PlaylistEvent
+
+from bytesioex import BytesIOEx
 
 __all__ = ["Playlist"]
 

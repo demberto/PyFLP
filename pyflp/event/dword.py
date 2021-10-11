@@ -63,4 +63,8 @@ class DWordEvent(Event):
     def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         if id not in range(DWORD, TEXT):
             raise ValueError(f"Exepcted 128-191; got {id}")
+        if len(data) != 4:
+            raise TypeError(
+                f"Expected a data of 4 bytes; got a data of size {len(data)} instead"
+            )
         super().__init__(id, data)

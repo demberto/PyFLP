@@ -22,6 +22,5 @@ data     | 1, 2, 4 or `length` | Size decided by `event_id` (see below)
 
 Variable-sized events (`TextEvent` and `DataEvent`) are used for storing strings or a blob of a collection of various simple types like `int`, `bool`, `float` etc. Since `event_id` can hold only 256 different values, it is easier to use just a single `event_id` > 192 and store all sorts of data in it without worrying a lot about size and event ID space.
 
-```{admonition} More about DataEvents
-As newer features get introduced, many times IL just adds more data at the end of an existing `DataEvent`, making for e.g. a 62 byte event in FL 20 to a 66 byte event in a later version.
-```
+!!! note "DataEvents"
+    As newer features get introduced, many times IL just adds more data at the end of an existing `DataEvent`, making for e.g. a 62 byte event in FL 20 to a 66 byte event in a later version.

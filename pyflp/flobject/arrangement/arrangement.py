@@ -47,6 +47,7 @@ class Arrangement(FLObject):
 
     @property
     def playlist(self) -> Optional[Playlist]:
+        """The `Playlist` of an Arrangement."""
         return getattr(self, "_playlist", None)
 
     @playlist.setter
@@ -55,6 +56,7 @@ class Arrangement(FLObject):
 
     @property
     def timemarkers(self) -> List[TimeMarker]:
+        """A list of `TimeMarker` objects present in an Arrangement."""
         return getattr(self, "_timemarkers", [])
 
     @timemarkers.setter
