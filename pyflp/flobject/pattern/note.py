@@ -1,6 +1,6 @@
 from typing import Optional
 
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 __all__ = ["Note"]
 

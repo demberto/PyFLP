@@ -1,6 +1,24 @@
+# 0.1.2
+
+## Additions
+
+- More docs
+- Add some new properties/events to `Channel`
+- A sample [empty FLP]("tests/assets/FL 20.8.3/Empty.flp") has been provided to allow running tests
+- All `FLObject` subclasses now have a basic `__repr__` method
+
+## Bug fixes
+
+- Improve the GitHub workflow action, uploads to PyPI will not happen unless the test is passed
+- Fix all naming inconsistencies caused due to migration to [`BytesIOEx`](https://github.com/demberto/BytesIOEx)
+
+## Known issues
+
+Same as in 0.1.1
+
 # 0.1.1
 
-The first version of PyFLP that works correctly 🥳
+~~The first version of PyFLP that works correctly 🥳~~ No, unfortunately
 
 ## **Highlights**
 
@@ -18,11 +36,11 @@ The first version of PyFLP that works correctly 🥳
 
 ## Known issues
 
-Same as in 0.1.0
+- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known
 
-******************************************************************************************************************************
+---
+
 **❗ These versions below don't work because I didn't know how to configure `setup.cfg` properly 😅, you will not find them 👇**
-
 
 # 0.1.0
 
@@ -40,7 +58,7 @@ Same as in 0.1.0
 - Adopted [`black`](https://github.com/psf/black) coding style
 - Added a `log_level` argument to `Parser`
 - `Project.create_zip` copies stock samples as well now
-- `Project.get_events` for getting just the events; they are not parsed.
+- `Project.get_events` for getting just the events; they are not parsed
   Read [docs](https://pyflp.rtfd.io) for more info about this
 - `Event` classes now have an `__eq__` and `__repr__` method
 
@@ -57,4 +75,5 @@ Same as in 0.1.0
 
 - `flpinfo` doesn't output correctly sometimes due to long strings
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known
-******************************************************************************************************************************
+
+---

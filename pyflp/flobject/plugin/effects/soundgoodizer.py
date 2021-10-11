@@ -17,7 +17,7 @@ class Soundgoodizer(EffectPlugin):
     def mode(self, value: int):
         assert value in range(0, 4)
         self._data.seek(4)
-        self._data.write_uint32(value)
+        self._data.write_I(value)
         self._mode = value
 
     @property
@@ -29,7 +29,7 @@ class Soundgoodizer(EffectPlugin):
     def amount(self, value: int):
         assert value in range(0, 1001)
         self._data.seek(8)
-        self._data.write_uint32(value)
+        self._data.write_I(value)
         self._amount = value
 
     def _parse_data_event(self, event: DataEvent) -> None:
@@ -39,8 +39,8 @@ class Soundgoodizer(EffectPlugin):
                 "Cannot parse plugin data, expected a size of 12 bytes; got {} bytes instead"
             )
         self._data.seek(4)  # TODO: Always == 3?
-        self._mode = self._data.read_uint32()
-        self._amount = self._data.read_uint32()
+        self._mode = self._data.read_I()
+        self._amount = self._data.read_I()
 
     def __init__(self):
         super().__init__()

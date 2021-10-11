@@ -11,6 +11,7 @@ __all__ = ["TimeMarker"]
 class TimeMarker(FLObject):
     @property
     def name(self) -> Optional[str]:
+        """Name of the timemarker, e.g `4/4`, `3/4`"""
         return getattr(self, "_name", None)
 
     @name.setter
@@ -19,6 +20,8 @@ class TimeMarker(FLObject):
 
     @property
     def position(self) -> Optional[int]:
+        """Position of the timemarker in the playlist,
+        from the start and proportional to PPQ"""
         return getattr(self, "_position", None)
 
     @position.setter

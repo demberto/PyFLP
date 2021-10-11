@@ -23,9 +23,8 @@ theme:
         icon: material/toggle-switch
         name: Switch to light mode
 markdown_extensions:
-  - codehilite
   - admonition
-  - mkautodoc
 plugins:
   - search
+  - mkdocstrings
   - autorefs

@@ -8,7 +8,7 @@ __all__ = ["FSoftClipper"]
 class FSoftClipper(EffectPlugin):
     Default = bytearray((100, 0, 0, 0, 128, 0, 0, 0))
 
-    # region Properties
+    # * Properties
     @property
     def threshold(self) -> Optional[int]:
         """Logarithmic. Min: 1, Max: 127, Default: 100 (0.60, -4.4dB)"""
@@ -18,7 +18,7 @@ class FSoftClipper(EffectPlugin):
     def threshold(self, value: int):
         assert value in range(1, 128)
         self._data.seek(0)
-        self._data.write_uint32(value)
+        self._data.write_I(value)
         self._threshold = value
 
     @property
@@ -30,10 +30,8 @@ class FSoftClipper(EffectPlugin):
     def post_gain(self, value: int):
         assert value in range(161)
         self._data.seek(4)
-        self._data.write_uint32(value)
+        self._data.write_I(value)
         self._post_gain = value
-
-    # endregion
 
     def _parse_data_event(self, event: DataEvent) -> None:
         super()._parse_data_event(event)
@@ -42,8 +40,8 @@ class FSoftClipper(EffectPlugin):
                 "Cannot parse plugin data, expected a size of "
                 f"8 bytes; got {len(event.data)} bytes instead"
             )
-        self._threshold = self._data.read_uint32()
-        self._post_gain = self._data.read_uint32()
+        self._threshold = self._data.read_I()
+        self._post_gain = self._data.read_I()
 
     def __init__(self):
         super().__init__()

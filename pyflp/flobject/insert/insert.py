@@ -8,7 +8,7 @@ from pyflp.flobject import FLObject
 from .enums import InsertEvent, InsertSlotEvent
 from .slot import InsertSlot
 
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 __all__ = ["Insert"]
 

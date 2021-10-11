@@ -7,7 +7,7 @@ from pyflp.flobject.flobject import FLObject
 
 from .enums import PlaylistEvent
 
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 __all__ = ["Playlist"]
 

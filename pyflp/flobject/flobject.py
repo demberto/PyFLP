@@ -21,7 +21,12 @@ class FLObject(abc.ABC):
     """
 
     _count = 0
-    fl_version: FLVersion = None  # Set by Parser and can be modified by Misc.version
+
+    # Set by Parser and can be modified by Misc.version
+    fl_version: FLVersion = None  # type: ignore
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} object>"
 
     def setprop(self, name: str, value: Any):
         """Reduces property setter boilerplate.

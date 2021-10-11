@@ -2,7 +2,7 @@ from typing import List, Optional, ValuesView
 
 from pyflp.flobject import FLObject
 from pyflp.event import DataEvent, TextEvent, Event
-from bytesioex import BytesIOEx, UInt, Bool, Float
+from bytesioex import BytesIOEx, UInt, Bool, Float  # type: ignore
 
 from .playlist import _PlaylistItem
 from .enums import TrackEvent

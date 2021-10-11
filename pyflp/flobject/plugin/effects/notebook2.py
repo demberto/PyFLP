@@ -12,7 +12,7 @@ class FNoteBook2(EffectPlugin):
     # 255, 255, 255, 255 4b
     # Editing enabled or disabled 1b
 
-    # region Properties
+    # * Properties
     @property
     def pages(self) -> List[str]:
         return getattr(self, "_pages", [])
@@ -21,9 +21,9 @@ class FNoteBook2(EffectPlugin):
     def pages(self, value: List[str]):
         self._data.seek(8)
         for page_num, page in enumerate(value):
-            self._data.write_uint32(page_num)  # TODO: or page_num + 1?
+            self._data.write_I(page_num)  # TODO: or page_num + 1?
             wstr = page.encode("utf-16", errors="ignore")
-            self._data.write_varint(len(wstr))
+            self._data.write_v(len(wstr))
             self._data.write(wstr)  # NULL bytes are not appended at the end
         self._pages = value
 
@@ -35,7 +35,7 @@ class FNoteBook2(EffectPlugin):
     def active_page_number(self, value: int):
         assert value in range(1, len(self._pages) + 1)  # TODO
         self._data.seek(4)
-        self._data.write_uint32(value)
+        self._data.write_I(value)
         self._active_page_number = value
 
     @property
@@ -48,17 +48,15 @@ class FNoteBook2(EffectPlugin):
         self._data.write_bool(value)
         self._editable = value
 
-    # endregion
-
     def _parse_data_event(self, event: DataEvent) -> None:
         super()._parse_data_event(event)
         self._data.seek(4)
-        self._active_page_number = self._data.read_uint32()
+        self._active_page_number = self._data.read_I()
         while True:
-            page_num = self._data.read_int32()
+            page_num = self._data.read_i()
             if page_num == -1:
                 break
-            size = self._data.read_varint()
+            size = self._data.read_v()
             buffer = self._data.read(size)
             self._pages.append(buffer.decode("utf-16", errors="ignore"))
         self._editable = self._data.read_bool()

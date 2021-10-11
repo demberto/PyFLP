@@ -6,7 +6,7 @@ from pyflp.flobject.plugin.plugin import Plugin
 from pyflp.event import DataEvent
 from pyflp.utils import isascii
 
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 PLUGIN_VST = 10
 

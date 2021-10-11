@@ -10,7 +10,7 @@ __all__ = ["FBalance"]
 class FBalance(EffectPlugin):
     """Implements Fruity Balance."""
 
-    # region Properties
+    # * Properties
     @property
     def pan(self) -> Optional[int]:
         """Linear. Min: -128, Max: 127, Default: 0 (0.50, Centred)"""
@@ -20,7 +20,7 @@ class FBalance(EffectPlugin):
     def pan(self, value: int):
         assert value in range(-128, 127)
         self._data.seek(0)
-        self._data.write_uint32(value)
+        self._data.write_I(value)
         self._pan = value
 
     @property
@@ -32,10 +32,8 @@ class FBalance(EffectPlugin):
     def volume(self, value: int):
         assert value in range(0, 321)
         self._data.seek(4)
-        self._data.write_uint32(value)
+        self._data.write_I(value)
         self._volume = value
-
-    # endregion
 
     def _parse_data_event(self, event: DataEvent) -> None:
         super()._parse_data_event(event)
@@ -43,8 +41,8 @@ class FBalance(EffectPlugin):
             self._log.error(
                 "Cannot parse plugin data, expected a size of 8 bytes; got {} bytes instead"
             )
-        self._pan = self._data.read_uint32()
-        self._volume = self._data.read_uint32()
+        self._pan = self._data.read_I()
+        self._volume = self._data.read_I()
 
     def __init__(self):
         super().__init__()
