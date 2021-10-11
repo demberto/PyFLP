@@ -1,3 +1,4 @@
 mkdocs-material>=7.1.0
 mkautodoc>=0.1.0
 mkdocs-autorefs>=0.3.0
+bytesioex==0.1.0
