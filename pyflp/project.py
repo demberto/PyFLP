@@ -205,7 +205,7 @@ class Project:
         chunklen = 0
         for ev in event_store:
             chunklen += ev.size
-        data.write_uint32(chunklen)
+        data.write_I(chunklen)
         log.debug(f"Save stream chunk length {chunklen}")
 
         # Dump events

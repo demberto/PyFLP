@@ -362,9 +362,9 @@ class Misc(FLObject):
             self._savetimestamp_data = BytesIOEx(e.data)
             # TODO: Raises OverflowError
             # self._start_date = datetime.datetime(1899, 12, 30) + datetime.timedelta(microseconds=self._savetimestamp.read_uint64())
-            self._start_date = self._savetimestamp_data.read_uint64()  # type: ignore
+            self._start_date = self._savetimestamp_data.read_Q()  # type: ignore
             self._work_time = datetime.timedelta(
-                microseconds=self._savetimestamp_data.read_uint64()
+                microseconds=self._savetimestamp_data.read_Q()
             )
 
     # endregion

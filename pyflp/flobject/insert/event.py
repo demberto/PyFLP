@@ -52,14 +52,14 @@ class InsertParamsEvent(DataEvent):
         data = BytesIOEx(self.data)
 
         while True:
-            u1 = data.read_int32()  # 4
+            u1 = data.read_i()  # 4
             if not u1:
                 break
-            id = data.read_uint8()  # 5
+            id = data.read_B()  # 5
             self._log.debug(f"Insert param event, id: {id}")
             data.seek(1, 1)  # 6
-            channel_data = data.read_uint16()  # 8
-            message_data = data.read_int32()  # 12
+            channel_data = data.read_H()  # 8
+            message_data = data.read_i()  # 12
             self._log.debug(f"Insert param event data: {message_data}")
 
             slot_id = channel_data & 0x3F

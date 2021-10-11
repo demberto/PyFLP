@@ -235,7 +235,7 @@ class Insert(FLObject):
         if event.id == InsertEvent.Parameters:
             self._events["parameters"] = event
             self._parameters_data = BytesIOEx(event.data)
-            flags = self._parameters_data.read_uint32()
+            flags = self._parameters_data.read_I()
             try:
                 self._flags = InsertFlags(flags)
             except AttributeError:
@@ -243,7 +243,7 @@ class Insert(FLObject):
                 self._log.error(
                     f"Flags (value: {flags}) could not be converted to InsertFlags"
                 )
-            self._locked = True if self._parameters_data.read_int32() else False
+            self._locked = True if self._parameters_data.read_i() else False
             # 4 more bytes
         elif event.id == InsertEvent.Routing:
             bool_list = []
