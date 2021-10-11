@@ -1,8 +1,9 @@
 import abc
-from bytesioex import BytesIOEx
 from pyflp.event import Event, DataEvent
 
 from pyflp.flobject.flobject import FLObject
+
+from bytesioex import BytesIOEx
 
 __all__ = ["Plugin", "EffectPlugin", "GeneratorPlugin"]
 
