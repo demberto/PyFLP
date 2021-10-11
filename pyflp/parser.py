@@ -8,7 +8,7 @@ from pyflp.flobject import *
 from pyflp.event import *
 from pyflp.utils import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD, FLVersion
 from pyflp.project import Project
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 log = logging.getLogger(__name__)
 

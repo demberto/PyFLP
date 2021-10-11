@@ -18,7 +18,7 @@ from pyflp.flobject import (
 )
 from pyflp.flobject.insert.event import InsertParamsEvent
 
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 logging.basicConfig()
 log = logging.getLogger(__name__)

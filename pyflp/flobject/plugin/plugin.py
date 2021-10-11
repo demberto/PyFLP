@@ -3,7 +3,7 @@ from pyflp.event import Event, DataEvent
 
 from pyflp.flobject.flobject import FLObject
 
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 __all__ = ["Plugin", "EffectPlugin", "GeneratorPlugin"]
 

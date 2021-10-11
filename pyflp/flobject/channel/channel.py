@@ -21,9 +21,14 @@ class ChannelKind(enum.IntEnum):
 
 
 class Channel(FLObject):
+    """Represents an Audio, Instrument, Layer or a Sampler channel in the channel rack."""
+
     max_count = 0
 
-    # region Properties
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} object, kind={self.kind}>"
+
+    # * Properties
     @property
     def default_name(self) -> Optional[str]:
         """Default name of the channel. Default event is stored.
@@ -211,27 +216,59 @@ class Channel(FLObject):
     def name(self, value: str):
         self.setprop("name", value)
 
-    # endregion
+    @property
+    def sampler_flags(self) -> Optional[int]:
+        return getattr(self, "_sampler_flags", None)
 
-    # region Parsing logic
-    def parse_event(self, event: Event) -> None:
-        if event.id in ChannelFXEvent.__members__.values():
+    @sampler_flags.setter
+    def sampler_flags(self, value: int):
+        """Flags associated with a channel of kind `ChannelKind.Sampler`."""
+        self.setprop("sampler_flags", value)
+
+    @property
+    def layer_flags(self) -> Optional[int]:
+        """Flags associated with a channel of kind `ChannelKind.Layer`."""
+        return getattr(self, "_layer_flags", None)
+
+    @layer_flags.setter
+    def layer_flags(self, value: int):
+        self.setprop("layer_flags", value)
+
+    @property
+    def use_loop_points(self) -> Optional[bool]:
+        return getattr(self, "_use_loop_points", None)
+
+    @use_loop_points.setter
+    def use_loop_points(self, value: bool):
+        self.setprop("use_loop_points", value)
+
+    @property
+    def swing(self) -> Optional[int]:
+        return getattr(self, "_swing", None)
+
+    @swing.setter
+    def swing(self, value: int):
+        self.setprop("swing", value)
+
+    # * Parsing logic
+    def parse_event(self, e: Event) -> None:
+        if e.id in ChannelFXEvent.__members__.values():
             if not hasattr(self, "_fx"):
                 self._fx = ChannelFX()
-            self._fx.parse_event(event)
+            self._fx.parse_event(e)
             return
-        return super().parse_event(event)
+        return super().parse_event(e)
 
-    def _parse_byte_event(self, event: ByteEvent):
-        if event.id == ChannelEvent.Enabled:
-            self.parse_bool_prop(event, "enabled")
-        elif event.id == ChannelEvent._Vol:
-            self.parse_uint8_prop(event, "volume")
-        elif event.id == ChannelEvent._Pan:
-            self.parse_int8_prop(event, "pan")
-        elif event.id == ChannelEvent.Kind:
-            self._events["kind"] = event
-            kind = event.to_uint8()
+    def _parse_byte_event(self, e: ByteEvent):
+        if e.id == ChannelEvent.Enabled:
+            self.parse_bool_prop(e, "enabled")
+        elif e.id == ChannelEvent._Vol:
+            self.parse_uint8_prop(e, "volume")
+        elif e.id == ChannelEvent._Pan:
+            self.parse_int8_prop(e, "pan")
+        elif e.id == ChannelEvent.Kind:
+            self._events["kind"] = e
+            kind = e.to_uint8()
             try:
                 self._kind = ChannelKind(kind)
             except AttributeError:
@@ -239,58 +276,67 @@ class Channel(FLObject):
                 self._log.error(
                     f"Unknown channel kind {kind}; expected one of {ChannelKind.__members__}"
                 )
-        elif event.id == ChannelEvent.Zipped:
-            self.parse_bool_prop(event, "zipped")
-        elif event.id == ChannelEvent.TargetInsert:
-            self.parse_int8_prop(event, "target_insert")
-        elif event.id == ChannelEvent.Locked:
-            self.parse_bool_prop(event, "locked")
+        elif e.id == ChannelEvent.Zipped:
+            self.parse_bool_prop(e, "zipped")
+        elif e.id == ChannelEvent.UseLoopPoints:
+            self.parse_bool_prop(e, "use_loop_points")
+        elif e.id == ChannelEvent.TargetInsert:
+            self.parse_int8_prop(e, "target_insert")
+        elif e.id == ChannelEvent.Locked:
+            self.parse_bool_prop(e, "locked")
 
-    def _parse_word_event(self, event: WordEvent):
-        if event.id == ChannelEvent.New:
-            self.parse_uint16_prop(event, "index")
-        elif event.id == ChannelEvent.Volume:
-            self.parse_uint16_prop(event, "volume")
-        elif event.id == ChannelEvent.Pan:
-            self.parse_int16_prop(event, "pan")
-        elif event.id == ChannelEvent.LayerChildren:
+    def _parse_word_event(self, e: WordEvent):
+        if e.id == ChannelEvent.New:
+            self.parse_uint16_prop(e, "index")
+        elif e.id == ChannelEvent.Volume:
+            self.parse_uint16_prop(e, "volume")
+        elif e.id == ChannelEvent.Pan:
+            self.parse_int16_prop(e, "pan")
+        elif e.id == ChannelEvent.LayerChildren:
             if not self.kind == ChannelKind.Layer:
                 self._log.error(
                     f"Channel {self._idx} has children but it is not a layer"
                 )
-            self.__children_events.append(event)
+            self.__children_events.append(e)
             children: List[int] = getattr(self, "_children", [])
-            children.append(event.to_uint16())
+            children.append(e.to_uint16())
+        elif e.id == ChannelEvent.Swing:
+            self.parse_uint16_prop(e, "swing")
 
-    def _parse_dword_event(self, event: DWordEvent):
-        if event.id == ChannelEvent.Color:
-            self.parse_uint32_prop(event, "color")
-        elif event.id == ChannelEvent.RootNote:
-            self.parse_uint32_prop(event, "root_note")
-        elif event.id == ChannelEvent.Icon:
-            self.parse_uint32_prop(event, "icon")
-        elif event.id == ChannelEvent.FilterChannelNum:
-            self.parse_int32_prop(event, "filter_channel")
+    def _parse_dword_event(self, e: DWordEvent):
+        if e.id == ChannelEvent.Color:
+            self.parse_uint32_prop(e, "color")
+        elif e.id == ChannelEvent.RootNote:
+            self.parse_uint32_prop(e, "root_note")
+        elif e.id == ChannelEvent.Icon:
+            self.parse_uint32_prop(e, "icon")
+        elif e.id == ChannelEvent.SamplerFlags:
+            self.parse_uint32_prop(e, "sampler_flags")
+        elif e.id == ChannelEvent.LayerFlags:
+            self.parse_uint32_prop(e, "layer_flags")
+        elif e.id == ChannelEvent.FilterChannelNum:
+            self.parse_int32_prop(e, "filter_channel")
 
-    def _parse_text_event(self, event: TextEvent):
-        if event.id == ChannelEvent.DefaultName:
-            self.parse_str_prop(event, "default_name")
-        elif event.id == ChannelEvent.SamplePath:
-            self.parse_str_prop(event, "sample_path")
-        elif event.id == ChannelEvent.Name:
-            self.parse_str_prop(event, "name")
+    def _parse_text_event(self, e: TextEvent):
+        if e.id == ChannelEvent.DefaultName:
+            self.parse_str_prop(e, "default_name")
+        elif e.id == ChannelEvent.SamplePath:
+            self.parse_str_prop(e, "sample_path")
+        elif e.id == ChannelEvent.Name:
+            self.parse_str_prop(e, "name")
 
-    def _parse_data_event(self, event: DataEvent) -> None:
-        if event.id == ChannelEvent.Plugin:
-            self._events["plugin"] = event
+    def _parse_data_event(self, e: DataEvent) -> None:
+        if e.id == ChannelEvent.Plugin:
+            self._events["plugin"] = e
             self._plugin = Plugin()
-            self._plugin.parse_event(event)
+            self._plugin.parse_event(e)
 
     def save(self) -> List[Event]:  # type: ignore
         events = list(super().save())
 
         if self.plugin:
-            # Present only for ChannelKind.Instrument
+            if self.kind != ChannelKind.Instrument:
+                self._log.error("Found a plugin event but channel is not an instrument")
             events.append(self.plugin.save())
         if self.fx:
             events.extend(list(self.fx.save()))

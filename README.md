@@ -1,18 +1,20 @@
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/demberto/pyflp/Build%20&%20Publish?style=flat-square)
 [![Documentation Status](https://readthedocs.org/projects/pyflp/badge/?version=latest)](https://pyflp.readthedocs.io/en/latest/?badge=latest)
-![PyPI - License](https://img.shields.io/pypi/l/pyflp)
-![PyPI](https://img.shields.io/pypi/v/pyflp?color=blue)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyflp)
-![Code Style: Black](https://img.shields.io/badge/code%20style-black-black)
+![PyPI - License](https://img.shields.io/pypi/l/pyflp?style=flat-square)
+![PyPI](https://img.shields.io/pypi/v/pyflp?color=blue&style=flat-square)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyflp?style=flat-square)
+![Code Style: Black](https://img.shields.io/badge/code%20style-black-black?style=flat-square)
 
 # PyFLP
 
 PyFLP allows an object oriented access to an FLP. This provides an abstraction from its TLV implementation. _Please don't use this for serious stuffs yet._
 
 You should also check these:
-- A CLI utility **FLPInfo** to see basic information about an FLP.
-- A GUI tool **FLPInspect** for a further, detailed view into the internal structure of an FLP.
+- A CLI utility [**FLPInfo**](https://github.com/demberto/FLPInfo) to see basic information about an FLP.
+- A GUI tool [**FLPInspect**](https://github.com/demberto/FLPInspect) for a further, detailed view into the internal structure of an FLP.
 
 # Documentation
+
 Docs are available on [ReadTheDocs](https://pyflp.rtfd.io)
 
 ## Usage

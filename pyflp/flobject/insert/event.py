@@ -8,7 +8,7 @@ from pyflp.utils import DATA
 
 from .insert import Insert
 
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 __all__ = ["InsertParamsEvent"]
 

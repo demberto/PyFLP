@@ -8,7 +8,7 @@ from pyflp.event import WordEvent, TextEvent, DataEvent, DWordEvent, ByteEvent, 
 
 from .enums import MiscEvent
 
-from bytesioex import BytesIOEx
+from bytesioex import BytesIOEx  # type: ignore
 
 __all__ = ["Misc"]
 
@@ -366,8 +366,6 @@ class Misc(FLObject):
             self._work_time = datetime.timedelta(
                 microseconds=self._savetimestamp_data.read_Q()
             )
-
-    # endregion
 
     def save(self) -> ValuesView[Event]:
         events = super().save()

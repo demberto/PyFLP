@@ -12,7 +12,7 @@ class ChannelEvent(enum.IntEnum):
     _Vol = 2
     _Pan = 3
     Zipped = 15
-    # UseLoopPoints = 19
+    UseLoopPoints = 19
     Kind = 21
     TargetInsert = 22
     # FXProperties = 27
@@ -37,7 +37,7 @@ class ChannelEvent(enum.IntEnum):
     # DotRel = WORD + 32
     # DotShift = WORD + 28
     LayerChildren = WORD + 30
-    # Swing = WORD + 33
+    Swing = WORD + 33
     Color = DWORD
     # Echo = DWORD + 2
     # FxSine = DWORD + 3
@@ -47,8 +47,8 @@ class ChannelEvent(enum.IntEnum):
     # DelayModXY = DWORD + 10
     # StretchTime = DWORD + 12
     # FineTune = DWORD + 14
-    # SamplerFlags = DWORD + 15
-    # LayerFlags = DWORD + 16
+    SamplerFlags = DWORD + 15
+    LayerFlags = DWORD + 16
     FilterChannelNum = DWORD + 17
     # AUSampleRate = DWORD + 25
     Icon = DWORD + 27
