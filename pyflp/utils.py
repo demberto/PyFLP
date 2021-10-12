@@ -16,7 +16,7 @@ DATA_TEXT_EVENTS = (
 def isascii(s: str) -> bool:
     """str.isascii() for Python 3.6
 
-    https://stackoverflow.com/a/18403812
+    [StackOverflow](https://stackoverflow.com/a/18403812)
     """
     return len(s) == len(s.encode())
 

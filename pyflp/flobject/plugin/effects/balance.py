@@ -4,6 +4,8 @@ from pyflp.event import DataEvent
 
 from pyflp.flobject.plugin.plugin import EffectPlugin
 
+from bytesioex import BytesIOEx  # type: ignore
+
 __all__ = ["FBalance"]
 
 
@@ -13,7 +15,7 @@ class FBalance(EffectPlugin):
     # * Properties
     @property
     def pan(self) -> Optional[int]:
-        """Linear. Min: -128, Max: 127, Default: 0 (0.50, Centred)"""
+        """Linear. Min: -128, Max: 127, Default: 0 (0.50, Centred)."""
         return getattr(self, "_pan", None)
 
     @pan.setter
@@ -25,7 +27,7 @@ class FBalance(EffectPlugin):
 
     @property
     def volume(self) -> Optional[int]:
-        """Logarithmic. Min: 0, Max: 320, Default: 256 (0.80, 0dB)"""
+        """Logarithmic. Min: 0, Max: 320, Default: 256 (0.80, 0dB)."""
         return getattr(self, "_volume", None)
 
     @volume.setter
@@ -36,7 +38,7 @@ class FBalance(EffectPlugin):
         self._volume = value
 
     def _parse_data_event(self, event: DataEvent) -> None:
-        super()._parse_data_event(event)
+        self._data = BytesIOEx(event.data)
         if len(event.data) != 8:
             self._log.error(
                 "Cannot parse plugin data, expected a size of 8 bytes; got {} bytes instead"

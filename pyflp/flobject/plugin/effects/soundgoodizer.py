@@ -2,6 +2,8 @@ from typing import Optional
 from pyflp.flobject.plugin.plugin import EffectPlugin
 from pyflp.event import DataEvent
 
+from bytesioex import BytesIOEx  # type: ignore
+
 __all__ = ["Soundgoodizer"]
 
 
@@ -10,7 +12,7 @@ class Soundgoodizer(EffectPlugin):
 
     @property
     def mode(self) -> Optional[int]:
-        """A = 0, B = 1, C = 2, D = 3"""
+        """A = 0, B = 1, C = 2, D = 3."""
         return getattr(self, "_mode", None)
 
     @mode.setter
@@ -22,7 +24,7 @@ class Soundgoodizer(EffectPlugin):
 
     @property
     def amount(self) -> Optional[int]:
-        """Logarithmic. Min: 0, Max: 1000, Default: 600"""
+        """Logarithmic. Possible values: 0-1000, Default: 600."""
         return getattr(self, "_amount", None)
 
     @amount.setter
@@ -33,7 +35,7 @@ class Soundgoodizer(EffectPlugin):
         self._amount = value
 
     def _parse_data_event(self, event: DataEvent) -> None:
-        super()._parse_data_event(event)
+        self._data = BytesIOEx(event.data)
         if len(event.data) != 12:
             self._log.error(
                 "Cannot parse plugin data, expected a size of 12 bytes; got {} bytes instead"

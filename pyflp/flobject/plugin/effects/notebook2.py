@@ -2,6 +2,8 @@ from typing import List, Optional
 from pyflp.flobject.plugin.plugin import EffectPlugin
 from pyflp.event import DataEvent
 
+from bytesioex import BytesIOEx  # type: ignore
+
 __all__ = ["FNoteBook2"]
 
 
@@ -15,6 +17,7 @@ class FNoteBook2(EffectPlugin):
     # * Properties
     @property
     def pages(self) -> List[str]:
+        """List of strings. One string per page."""
         return getattr(self, "_pages", [])
 
     @pages.setter
@@ -29,6 +32,7 @@ class FNoteBook2(EffectPlugin):
 
     @property
     def active_page_number(self) -> Optional[int]:
+        """Currently selected page number."""
         return getattr(self, "_active_page_number", None)
 
     @active_page_number.setter
@@ -40,6 +44,7 @@ class FNoteBook2(EffectPlugin):
 
     @property
     def editable(self) -> Optional[bool]:
+        """Whether notebook is marked as editable or read-only."""
         return getattr(self, "_editable", None)
 
     @editable.setter
@@ -48,17 +53,19 @@ class FNoteBook2(EffectPlugin):
         self._data.write_bool(value)
         self._editable = value
 
+    # ! This doesn't work
     def _parse_data_event(self, event: DataEvent) -> None:
-        super()._parse_data_event(event)
+        self._data = BytesIOEx(event.data)
         self._data.seek(4)
         self._active_page_number = self._data.read_I()
         while True:
             page_num = self._data.read_i()
-            if page_num == -1:
+            if page_num in (-1, None):
                 break
             size = self._data.read_v()
             buffer = self._data.read(size)
             self._pages.append(buffer.decode("utf-16", errors="ignore"))
+            print(self._pages)
         self._editable = self._data.read_bool()
 
     def __init__(self):

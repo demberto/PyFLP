@@ -57,10 +57,10 @@ class Playlist(FLObject):
             self._events_data = BytesIOEx(event.data)
             while True:
                 position = self._events_data.read_I()  # 4
-                if not position:
+                if position is None:
                     break
-                pattern_base = self._events_data.read_I()  # 6
-                pattern_id = self._events_data.read_I()  # 8
+                pattern_base = self._events_data.read_H()  # 6
+                pattern_id = self._events_data.read_H()  # 8
                 length = self._events_data.read_I()  # 12
                 track = self._events_data.read_i()  # 16
                 if self.fl_version.major >= 20:

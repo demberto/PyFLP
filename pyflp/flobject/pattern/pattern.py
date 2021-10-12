@@ -17,31 +17,42 @@ class Pattern(FLObject):
     # * Properties
     @property
     def name(self) -> Optional[str]:
+        """Pattern name. Default event is not stored."""
         return getattr(self, "_name", None)
 
     @name.setter
     def name(self, value: str):
-        self.setprop("name", value)
+        self._setprop("name", value)
 
     @property
     def color(self) -> Optional[int]:
+        """Pattern color."""
         return getattr(self, "_color", None)
 
     @color.setter
     def color(self, value: int):
-        self.setprop("color", value)
+        self._setprop("color", value)
 
     @property
     def index(self) -> Optional[int]:
+        """Pattern index. Begins from 1.
+
+        Occurs twice, once near the top with note data and once with rest of
+        the metadata. The first time a `PatternEvent.New` occurs, it is
+        parsed by `parse_index1()`. Empty patterns are not stored at the top
+        since they don't have any note data. They come later on.
+
+        See `Parser.__parse_pattern()` for implemntation."""
         return getattr(self, "_index", None)
 
     @index.setter
     def index(self, value: int):
-        self.setprop("index", value)
+        self._setprop("index", value)
         self._events["index (metadata)"].dump(value)
 
     @property
     def notes(self) -> List[Note]:
+        """Contains the list of MIDI events (notes) of all channels."""
         return getattr(self, "_notes", [])
 
     @notes.setter
@@ -49,32 +60,31 @@ class Pattern(FLObject):
         self._notes = value
 
     # * Parsing logic
-    def parse_index1(self, event: WordEvent):
+    def parse_index1(self, e: WordEvent):
         """Thanks to FL for storing data of a single
         pattern at 2 different places."""
-        self._events["index (metadata)"] = event
+        self._events["index (metadata)"] = e
 
-    def _parse_word_event(self, event: WordEvent):
-        if event.id == PatternEvent.New:
-            self._events["index"] = event
-            self._index = event.to_uint16()
+    def _parse_word_event(self, e: WordEvent):
+        if e.id == PatternEvent.New:
+            self._parse_uint16_prop(e, "index")
 
-    def _parse_dword_event(self, event: DWordEvent):
-        if event.id == PatternEvent.Color:
-            self.parse_uint32_prop(event, "color")
+    def _parse_dword_event(self, e: DWordEvent):
+        if e.id == PatternEvent.Color:
+            self._parse_uint32_prop(e, "color")
 
-    def _parse_text_event(self, event: TextEvent):
-        if event.id == PatternEvent.Name:
-            self.parse_str_prop(event, "name")
+    def _parse_text_event(self, e: TextEvent):
+        if e.id == PatternEvent.Name:
+            self._parse_str_prop(e, "name")
 
-    def _parse_data_event(self, event: DataEvent):
-        if event.id == PatternEvent.Notes:
-            self._events["notes"] = event
-            if not len(event.data) % Pattern.NOTE_SIZE == 0:
+    def _parse_data_event(self, e: DataEvent):
+        if e.id == PatternEvent.Notes:
+            self._events["notes"] = e
+            if not len(e.data) % Pattern.NOTE_SIZE == 0:
                 self._log.error(
                     f"Cannot parse pattern notes, size % {Pattern.NOTE_SIZE} != 0, contact me!"
                 )
-            self._notes_data = io.BytesIO(event.data)
+            self._notes_data = io.BytesIO(e.data)
             while True:
                 data = self._notes_data.read(Pattern.NOTE_SIZE)
                 if data == b"":  # None != b'', wow Python
@@ -103,10 +113,9 @@ class Pattern(FLObject):
 
     # * Utility methods
     def is_empty(self) -> bool:
-        """Whether pattern has notes"""
+        """Whether pattern has note data."""
         return "notes" in self._events
 
     def __init__(self):
         super().__init__()
-        self.parse_metadata = False
         self._notes: List[Note] = []

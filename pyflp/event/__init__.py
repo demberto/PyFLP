@@ -1,4 +1,5 @@
 import logging
+from typing import TypeVar
 
 logging.basicConfig()
 
@@ -8,3 +9,5 @@ from .word import *
 from .dword import *
 from .text import *
 from .data import *
+
+EventType = TypeVar("EventType", bound=Event)

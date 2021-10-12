@@ -21,11 +21,11 @@ class FilterChannel(FLObject):
 
     @name.setter
     def name(self, value: str):
-        self.setprop("name", value)
+        self._setprop("name", value)
 
     def _parse_text_event(self, event: TextEvent):
         if event.id == FilterChannelEvent.Name:
-            self.parse_str_prop(event, "name")
+            self._parse_str_prop(event, "name")
 
     def __init__(self):
         super().__init__()

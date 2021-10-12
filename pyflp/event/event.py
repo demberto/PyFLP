@@ -23,11 +23,14 @@ class Event(abc.ABC):
 
     @abc.abstractmethod
     def dump(self, new_data):
-        """Converts Python data types into equivalent C types and dumps them to `data`."""
+        """Converts Python data types into equivalent
+        C types and dumps them to `self.data`."""
+        self._log.debug(f"called with new_data={new_data}")
         pass
 
     def to_raw(self) -> bytes:
         """Used by Project.save(). Overriden by `_VariabledSizedEvent`."""
+        self._log.debug("called")
         return int.to_bytes(self.id, 1, "little") + self.data
 
     def __repr__(self) -> str:

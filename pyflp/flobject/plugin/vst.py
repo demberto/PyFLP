@@ -8,12 +8,12 @@ from pyflp.utils import isascii
 
 from bytesioex import BytesIOEx  # type: ignore
 
-PLUGIN_VST = 10
+PLUGIN_VST = 8, 10
 
 
 @enum.unique
-class PluginChunkEventID(enum.IntEnum):
-    """An event inside event, again. Roughly in this order"""
+class PluginChunkEvent(enum.IntEnum):
+    """An event inside event, again. Roughly in this order."""
 
     MIDI = 1
     Flags = 2
@@ -37,12 +37,16 @@ class PluginIOInfo:
 
 
 class VSTPlugin(Plugin):
-    """Parses a VST2/3 plugin (including Waveshells) data
-    (ChannelEventID.PluginData & InsertSlotEventID.PluginData event)"""
+    """VST2/3 (including Waveshells, *maybe AU as well*) plugin data
+    (`ChannelEventID.Plugin` & `InsertSlotEventID.Plugin` event).
 
-    # region Properties
+    [FL Studio Manual Page](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/wrapper.htm#wrapper_pluginsettings)
+    """
+
+    # * Properties
     @property
     def midi_in_port(self) -> Optional[int]:
+        """MIDI Input Port. Possible values: 0-255. Default: TODO."""
         return getattr(self, "_midi_in_port", None)
 
     @midi_in_port.setter
@@ -51,6 +55,7 @@ class VSTPlugin(Plugin):
 
     @property
     def midi_out_port(self) -> Optional[int]:
+        """MIDI Output Port. Possible values: 0-255. Default: TODO."""
         return getattr(self, "_midi_out_port", None)
 
     @midi_out_port.setter
@@ -59,6 +64,7 @@ class VSTPlugin(Plugin):
 
     @property
     def pitch_bend_range(self) -> Optional[int]:
+        """VST Wrapper settings -> MIDI -> Send pitch bend range (semitones)."""
         return getattr(self, "_pitch_bend_range", None)
 
     @pitch_bend_range.setter
@@ -67,6 +73,7 @@ class VSTPlugin(Plugin):
 
     @property
     def flags(self) -> Optional[int]:
+        """VST Wrapper settings, boolean values TODO"""
         return getattr(self, "_flags", None)
 
     @flags.setter
@@ -75,6 +82,8 @@ class VSTPlugin(Plugin):
 
     @property
     def num_inputs(self) -> Optional[int]:
+        """Number of inputs to a plugin. Depend on the plugin.
+        VST Wrapper settings -> Processing -> Connections."""
         return getattr(self, "_num_inputs", None)
 
     @num_inputs.setter
@@ -83,6 +92,8 @@ class VSTPlugin(Plugin):
 
     @property
     def num_outputs(self) -> Optional[int]:
+        """Number of outputs of a plugin. Depend on the plugin.
+        VST Wrapper settings -> Processing -> Connections."""
         return getattr(self, "_num_outputs", None)
 
     @num_outputs.setter
@@ -91,6 +102,7 @@ class VSTPlugin(Plugin):
 
     @property
     def input_info(self) -> List[PluginIOInfo]:
+        """Input information."""
         return getattr(self, "_input_info", [])
 
     @input_info.setter
@@ -99,6 +111,7 @@ class VSTPlugin(Plugin):
 
     @property
     def output_info(self) -> List[PluginIOInfo]:
+        """Ouput information."""
         return getattr(self, "_output_info", [])
 
     @output_info.setter
@@ -107,6 +120,7 @@ class VSTPlugin(Plugin):
 
     @property
     def vst_number(self) -> Optional[int]:
+        """TODO. Maybe related to Waveshells."""
         return getattr(self, "_vst_number", None)
 
     @vst_number.setter
@@ -114,17 +128,17 @@ class VSTPlugin(Plugin):
         pass
 
     @property
-    def vst_fourcc(self) -> Optional[str]:
-        """FourCC unique VST ID, as reserved by plugin dev"""
+    def fourcc(self) -> Optional[str]:
+        """FourCC unique VST ID, as reserved by plugin dev on Steinberg portal."""
         return getattr(self, "_vst_fourcc", None)
 
-    @vst_fourcc.setter
-    def vst_fourcc(self, value: str):
+    @fourcc.setter
+    def fourcc(self, value: str):
         assert len(value) == 4 and isascii(value)
 
     @property
     def guid(self) -> Optional[bytes]:
-        """Waveshell unique plugin ID"""
+        """Waveshell unique plugin ID."""
         return getattr(self, "_guid", None)
 
     @guid.setter
@@ -133,7 +147,9 @@ class VSTPlugin(Plugin):
 
     @property
     def state(self) -> Optional[bytes]:
-        """The actual plugin data"""
+        """The actual plugin data. Plugin specific. Can be a list of floats,
+        but devs generally use their own format. This is the only data
+        present in stock plugin events."""
         return getattr(self, "_state", None)
 
     @state.setter
@@ -142,7 +158,7 @@ class VSTPlugin(Plugin):
 
     @property
     def name(self) -> Optional[str]:
-        """User set name for native plugins, real/user-set name for VSTs"""
+        """User set name for native plugins, factory/user-set name for VSTs."""
         return getattr(self, "_name", None)
 
     @name.setter
@@ -151,7 +167,7 @@ class VSTPlugin(Plugin):
 
     @property
     def plugin_path(self) -> Optional[str]:
-        """The absolute path to the plugin .dll on the disk.
+        """The absolute path to the plugin .dll on the disk in ASCII.
         Idk why this is required, FL already creates .fst
         when it discovers a plugin. Maybe only useful for Waveshells."""
         return getattr(self, "_plugin_path", None)
@@ -162,7 +178,7 @@ class VSTPlugin(Plugin):
 
     @property
     def vendor(self) -> Optional[str]:
-        """Plugin developer name."""
+        """Plugin developer name stored in ASCII."""
         return getattr(self, "_vendor", None)
 
     @vendor.setter
@@ -172,26 +188,26 @@ class VSTPlugin(Plugin):
     def _parse_data_event(self, event: DataEvent) -> None:
         self._events["data"] = event
         self._data = BytesIOEx(event.data)
-        self._kind = self._data.read_int32()
-        if not self._kind == PLUGIN_VST:
+        self._kind = self._data.read_i()
+        if not self._kind in PLUGIN_VST:
             return
 
         while True:
-            event_id = self._data.read_int32()
+            event_id = self._data.read_i()
             if not event_id:
                 break
-            length = self._data.read_uint64()
+            length = self._data.read_I()
             data = self._data.read(length)
 
-            if event_id == PluginChunkEventID.Vendor:
+            if event_id == PluginChunkEvent.Vendor:
                 self._vendor = data.decode("ascii")
-            elif event_id == PluginChunkEventID.PluginPath:
+            elif event_id == PluginChunkEvent.PluginPath:
                 self._plugin_path = data.decode("ascii")
-            elif event_id == PluginChunkEventID.Name:
+            elif event_id == PluginChunkEvent.Name:
                 self._name = data.decode("ascii")
-            elif event_id == PluginChunkEventID.VSTFourCC:
-                self._vst_fourcc = data.decode("ascii")
-            elif event_id == PluginChunkEventID.State:
+            elif event_id == PluginChunkEvent.VSTFourCC:
+                self._fourcc = data.decode("ascii")
+            elif event_id == PluginChunkEvent.State:
                 self._state = data
             else:
                 self._log.info(f"Unparsed plugin chunk event ID {event_id} found")

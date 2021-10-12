@@ -15,6 +15,7 @@ class ChannelFXReverb(FLObject):
     """
 
     def setprop(self, name: str, value: Any):
+        # TODO
         if name == "kind":
             pass
         elif name == "mix":
@@ -81,7 +82,7 @@ class ChannelFX(FLObject):
 
     @pre_amp.setter
     def pre_amp(self, value: int):
-        self.setprop("pre_amp", value)
+        self._setprop("pre_amp", value)
 
     @property
     def stereo_delay(self) -> Optional[int]:
@@ -90,7 +91,7 @@ class ChannelFX(FLObject):
 
     @stereo_delay.setter
     def stereo_delay(self, value: int):
-        self.setprop("stereo_delay", value)
+        self._setprop("stereo_delay", value)
 
     @property
     def reverb(self) -> Optional[ChannelFXReverb]:

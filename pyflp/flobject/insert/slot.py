@@ -27,7 +27,7 @@ class InsertSlot(FLObject):
 
     @default_name.setter
     def default_name(self, value: str):
-        self.setprop("default_name", value)
+        self._setprop("default_name", value)
 
     @property
     def icon(self) -> Optional[int]:
@@ -36,7 +36,7 @@ class InsertSlot(FLObject):
 
     @icon.setter
     def icon(self, value: int):
-        self.setprop("icon", value)
+        self._setprop("icon", value)
 
     @property
     def color(self) -> Optional[int]:
@@ -45,7 +45,7 @@ class InsertSlot(FLObject):
 
     @color.setter
     def color(self, value: int):
-        self.setprop("color", value)
+        self._setprop("color", value)
 
     @property
     def index(self) -> Optional[int]:
@@ -55,7 +55,7 @@ class InsertSlot(FLObject):
     @index.setter
     def index(self, value: int):
         assert value in range(0, InsertSlot.max_count + 1)
-        self.setprop("index", value)
+        self._setprop("index", value)
 
     @property
     def enabled(self) -> Optional[bool]:
@@ -99,24 +99,24 @@ class InsertSlot(FLObject):
 
     @name.setter
     def name(self, value: str):
-        self.setprop("name", value)
+        self._setprop("name", value)
 
     # * Parsing logic
     def _parse_word_event(self, e: WordEvent) -> None:
         if e.id == InsertSlotEvent.Index:
-            self.parse_uint16_prop(e, "index")
+            self._parse_uint16_prop(e, "index")
 
     def _parse_dword_event(self, e: DWordEvent):
         if e.id == InsertSlotEvent.Color:
-            self.parse_uint32_prop(e, "color")
+            self._parse_uint32_prop(e, "color")
         elif e.id == InsertSlotEvent.Icon:
-            self.parse_uint32_prop(e, "icon")
+            self._parse_uint32_prop(e, "icon")
 
     def _parse_text_event(self, e: TextEvent):
         if e.id == InsertSlotEvent.DefaultName:
-            self.parse_str_prop(e, "default_name")
+            self._parse_str_prop(e, "default_name")
         elif e.id == InsertSlotEvent.Name:
-            self.parse_str_prop(e, "name")
+            self._parse_str_prop(e, "name")
 
     def _parse_data_event(self, e: DataEvent):
         if e.id == InsertSlotEvent.PluginNew:

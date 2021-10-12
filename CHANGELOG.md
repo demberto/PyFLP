@@ -1,3 +1,36 @@
+# 0.2.0 Inital release
+
+## **Highlights**
+
+- **PyFLP has passed the null test for a full project of mine (FL 20.7.2) 🥳**
+- This library uses code from [FLParser](https://github.com/monadgroup/FLParser), a GPL license project, PyFLP is now under GPL
+- API reference documentation is complete now
+- Few new events implemented for `Channel`
+- Refactored `FLObject` and `Plugin`
+
+## `FLObject` refactoring
+
+- `parseprop` is now `_parseprop`
+- All `_parseprop` delegates are now "protected" as well
+- `setprop` is now `_setprop`
+
+## Additions
+
+- `ChannelEvent.Delay` is implemented by `ChannelDelay` and `Channel.delay`
+- `Event.to_raw` and `Event.dump` now log when they are called
+- [Exceptions](https://github.com/demberto/PyFLP/tree/master/exceptions.py) `DataCorruptionDetected` and `OperationNotPermitted`
+
+## Bug Fixes
+
+- Can definitely say, all naming inconsistencies have been fixed
+- Fixed `TimeMarker` assign to `Arrangement` logic in `Parser`
+- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, caused due to double dumping of same events
+- Empty pattern events, `PatternEvent.Name` and `PatternEvent.Color` don't get saved
+
+---
+
+**❗ These versions below don't work due to naming inconsistencies 😅, you will not find them 👇**
+
 # 0.1.2
 
 ## Additions
@@ -10,7 +43,7 @@
 ## Bug fixes
 
 - Improve the GitHub workflow action, uploads to PyPI will not happen unless the test is passed
-- Fix all naming inconsistencies caused due to migration to [`BytesIOEx`](https://github.com/demberto/BytesIOEx)
+- ~~Fix all naming inconsistencies caused due to migration to [`BytesIOEx`](https://github.com/demberto/BytesIOEx)~~ Not all
 
 ## Known issues
 
@@ -40,7 +73,7 @@ Same as in 0.1.1
 
 ---
 
-**❗ These versions below don't work because I didn't know how to configure `setup.cfg` properly 😅, you will not find them 👇**
+**❗ These versions below don't work because I didn't know how to configure `setup.cfg` properly 😅**
 
 # 0.1.0
 

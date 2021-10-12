@@ -3,10 +3,11 @@ import io
 import os
 import logging
 from pathlib import Path
+import platform
 import zipfile
 from typing import List, Set, Union
 
-from pyflp.event import Event
+from pyflp.event import Event, EventType
 from pyflp.flobject import (
     Misc,
     Pattern,
@@ -29,7 +30,9 @@ __all__ = ["Project"]
 @dataclass
 class Project:
     _verbose: bool
-    events: List[Event] = field(default_factory=list, init=False)
+
+    # TODO: Mypy error - Type variable "pyflp.event.EventType" is unbound
+    events: List[EventType] = field(default_factory=list, init=False)  # type: ignore
     save_path: Path = field(init=False)
     misc: Misc = field(default_factory=Misc, init=False)
     patterns: List[Pattern] = field(default_factory=list, init=False)
@@ -54,6 +57,7 @@ class Project:
 
     def create_zip(self, path: Union[str, Path] = ""):
         """Exports a ZIP looped package of an FLP.
+        Importing stock sample Works only on Windows
 
         Args:
             path: The path to save the ZIP to.
@@ -89,6 +93,8 @@ class Project:
         cwd = os.getcwd()
         os.chdir(str(path.parent))
         with zipfile.ZipFile(p, "x") as archive:
+            system = platform.system()
+
             # Add FLP to ZIP
             archive.write(str(path.name))
 
@@ -99,10 +105,25 @@ class Project:
                 # Check whether sample file exists
                 if sample_path:
 
+                    # Check existence of stock samples and Windows
+                    if (
+                        sample_path.find(r"%FLStudioFactoryData") != -1
+                        and system != "Windows"
+                    ):
+                        log.error(
+                            f"Cannot import stock samples from {system}. "
+                            "Only Windows is supported currently."
+                        )
+
                     # Resolve locations of stock samples
                     if fl_dir.exists():
                         sample_path = sample_path.replace(
                             r"%FLStudioFactoryData%", str(fl_dir), 1
+                        )
+                    else:
+                        log.error(
+                            "Importing stock samples requires FL Studio "
+                            f"installed at {str(fl_dir)}. Skipping sample"
                         )
                     sp = Path(sample_path)
                     if not sp.exists():
@@ -150,13 +171,15 @@ class Project:
                 log.error(f"self.{param} is empty or None")
                 continue
             for obj in objs:
-                obj_events: List[Event] = list(obj.save())
+                events = obj.save()
+
+                obj_events: List[Event] = list(events)
                 if obj_events:  # ? Remove
                     event_store.extend(obj_events)
 
         # Insert params event
         for e in self.events:
-            if e.id == InsertParamsEvent.ID:
+            if e.id == InsertParamsEvent.ID:  # type: ignore
                 event_store.append(e)
 
         # ? Assign event store to self.events
@@ -170,7 +193,7 @@ class Project:
     def get_stream(self) -> bytes:
         """Converts the list of events received from `self._save_state()`
         and headers into a single stream. Typically used directly when
-        `Project` was parsed from a stream, i.e. save_path is not set.
+        `Project` was parsed from a stream, i.e. `save_path` is not set.
 
         Returns:
             bytes: The stream. Used by `save()`.
