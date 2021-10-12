@@ -2,6 +2,8 @@ from typing import Optional
 from pyflp.flobject.plugin.plugin import EffectPlugin
 from pyflp.event import DataEvent
 
+from bytesioex import BytesIOEx  # type: ignore
+
 __all__ = ["FSoftClipper"]
 
 
@@ -11,7 +13,7 @@ class FSoftClipper(EffectPlugin):
     # * Properties
     @property
     def threshold(self) -> Optional[int]:
-        """Logarithmic. Min: 1, Max: 127, Default: 100 (0.60, -4.4dB)"""
+        """Logarithmic. Min: 1, Max: 127, Default: 100 (0.60, -4.4dB)."""
         return getattr(self, "_threshold", None)
 
     @threshold.setter
@@ -23,7 +25,7 @@ class FSoftClipper(EffectPlugin):
 
     @property
     def post_gain(self) -> Optional[int]:
-        """Linear. Min: 0, Max: 160, Default: 128 (80%)"""
+        """Linear. Min: 0, Max: 160, Default: 128 (80%)."""
         return getattr(self, "_post_gain", None)
 
     @post_gain.setter
@@ -34,7 +36,7 @@ class FSoftClipper(EffectPlugin):
         self._post_gain = value
 
     def _parse_data_event(self, event: DataEvent) -> None:
-        super()._parse_data_event(event)
+        self._data = BytesIOEx(event.data)
         if len(event.data) != 8:
             self._log.error(
                 "Cannot parse plugin data, expected a size of "

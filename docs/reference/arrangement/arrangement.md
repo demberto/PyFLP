@@ -6,5 +6,3 @@
         - playlist
         - timemarkers
         - tracks
-    watch:
-      - pyflp/flobject/arrangement/arrangement.py

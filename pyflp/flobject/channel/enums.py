@@ -55,7 +55,7 @@ class ChannelEvent(enum.IntEnum):
     SamplePath = TEXT + 4
     DefaultName = TEXT + 9
     Name = TEXT + 11
-    # Delay = DATA + 1
+    Delay = DATA + 1
     Plugin = DATA + 5
 
 

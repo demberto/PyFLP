@@ -1,9 +1,17 @@
 import abc
 import logging
-from typing import Any, Dict, ValuesView
+from typing import Any, Dict, Optional, ValuesView
 
 from pyflp.utils import FLVersion, DATA_TEXT_EVENTS, BYTE, DWORD, TEXT, DATA, WORD
-from pyflp.event import Event, ByteEvent, WordEvent, DWordEvent, TextEvent, DataEvent
+from pyflp.event import (
+    Event,
+    ByteEvent,
+    EventType,
+    WordEvent,
+    DWordEvent,
+    TextEvent,
+    DataEvent,
+)
 
 __all__ = ["FLObject"]
 
@@ -17,18 +25,17 @@ class FLObject(abc.ABC):
     1. `__init__()` should call `super().__init__()` before anything
     2. Use `self._log` for logging, no pre-module logging!
     3. Set `_count` = 0
-    4. Set `max_count` wherever applicable
-    """
+    4. Set `max_count` wherever applicable."""
 
     _count = 0
 
     # Set by Parser and can be modified by Misc.version
-    fl_version: FLVersion = None  # type: ignore
+    fl_version: Optional[FLVersion] = None
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} object>"
 
-    def setprop(self, name: str, value: Any):
+    def _setprop(self, name: str, value: Any):
         """Reduces property setter boilerplate.
 
         1. Gets corresponding event from event store.
@@ -39,8 +46,7 @@ class FLObject(abc.ABC):
 
         Args:
             name (str): Name of the property
-            value (Any): Value to assign to property and dump in event store
-        """
+            value (Any): Value to assign to property and dump in event store."""
 
         # Dump value to event store if event exists
         event = self._events.get(name)
@@ -54,11 +60,11 @@ class FLObject(abc.ABC):
         setattr(self, "_" + name, value)
 
     # * Parsing logic
-    def parse_event(self, event: Event) -> None:
+    def parse_event(self, event: EventType) -> None:
         """Adds and parses an event from the event store.
 
-        Uses delegate methods `_parse_byte_event`, `_parse_word_event`,
-        `_parse_dword_event`, `_parse_text_event` and `_parse_data_event`.
+        Uses delegate methods `__parse_byte_event`, ``,
+        `_parse_dword_event`, `__parse_text_event` and `__parse_data_event`.
 
         Can be overriden when a derived class contains properties holding
         `FLObject` derived classes, for e.g. `pyflp.flobject.insert.insert.Insert.slots`
@@ -67,20 +73,24 @@ class FLObject(abc.ABC):
         it is passed to the slot's `parse()` method directly.
 
         Args:
-            event (Event): Event to send to `self.parseprop`.
-        """
+            event (Event): Event to send to `self._parseprop`."""
 
         id = event.id
         if id in range(BYTE, WORD):
-            self._parse_byte_event(event)  # type: ignore
+            assert isinstance(event, ByteEvent)
+            self._parse_byte_event(event)
         elif id in range(WORD, DWORD):
-            self._parse_word_event(event)  # type: ignore
+            assert isinstance(event, WordEvent)
+            self._parse_word_event(event)
         elif id in range(DWORD, TEXT):
-            self._parse_dword_event(event)  # type: ignore
+            assert isinstance(event, DWordEvent)
+            self._parse_dword_event(event)
         elif id in range(TEXT, DATA) or id in DATA_TEXT_EVENTS:
-            self._parse_text_event(event)  # type: ignore
+            assert isinstance(event, TextEvent)
+            self._parse_text_event(event)
         else:
-            self._parse_data_event(event)  # type: ignore
+            assert isinstance(event, DataEvent)
+            self._parse_data_event(event)
 
     def _parse_byte_event(self, ev: ByteEvent) -> None:
         pass
@@ -98,7 +108,7 @@ class FLObject(abc.ABC):
         pass
 
     # * Property parsing logic
-    def parseprop(self, event: Event, key: str, value: Any):
+    def _parseprop(self, event: EventType, key: str, value: Any):
         """Reduces boilerplate for `parse_event()` delegate methods.
 
         Conditions to use this function:
@@ -109,51 +119,55 @@ class FLObject(abc.ABC):
             key (str): Dictionary key, provided that '_' + key == *name_of_local_variable*.
             value (Any): Value to assign to the local variable.
 
-        Not to be used directly unless helper `parse_*_prop` methods aren't useful.
-        """
+        Not to be used unless helper `__parse_*_prop` methods aren't useful."""
 
         self._events[key] = event
         setattr(self, "_" + key, value)
 
-    def parse_bool_prop(self, event: ByteEvent, key: str):
-        """`self.parseprop` for boolean properties."""
+    def _parse_bool_prop(self, event: ByteEvent, key: str):
+        """`self._parseprop` for boolean properties."""
+        self._parseprop(event, key, event.to_bool())
 
-        self.parseprop(event, key, event.to_bool())
+    def _parse_uint8_prop(self, event: ByteEvent, key: str):
+        """`self._parseprop` for uint8 properties."""
+        self._parseprop(event, key, event.to_uint8())
 
-    def parse_uint8_prop(self, event: ByteEvent, key: str):
-        """`self.parseprop` for uint8 properties."""
+    def _parse_int8_prop(self, event: ByteEvent, key: str):
+        """`self._parseprop` for int8 properties."""
+        self._parseprop(event, key, event.to_int8())
 
-        self.parseprop(event, key, event.to_uint8())
+    def _parse_uint16_prop(self, event: WordEvent, key: str):
+        """`self._parseprop` for uint16 properties."""
+        self._parseprop(event, key, event.to_uint16())
 
-    def parse_int8_prop(self, event: ByteEvent, key: str):
-        """`self.parseprop` for int8 properties."""
+    def _parse_int16_prop(self, event: WordEvent, key: str):
+        """`self._parseprop` for int16 properties."""
+        self._parseprop(event, key, event.to_int16())
 
-        self.parseprop(event, key, event.to_int8())
+    def _parse_uint32_prop(self, event: DWordEvent, key: str):
+        """`self._parseprop` for uint32 properties."""
+        self._parseprop(event, key, event.to_uint32())
 
-    def parse_uint16_prop(self, event: WordEvent, key: str):
-        """`self.parseprop` for uint16 properties."""
+    def _parse_int32_prop(self, event: DWordEvent, key: str):
+        """`self._parseprop` for int32 properties."""
+        self._parseprop(event, key, event.to_int32())
 
-        self.parseprop(event, key, event.to_uint16())
+    def _parse_str_prop(self, event: TextEvent, key: str):
+        """`self._parseprop` for string properties."""
+        self._parseprop(event, key, event.to_str())
 
-    def parse_int16_prop(self, event: WordEvent, key: str):
-        """`self.parseprop` for int16 properties."""
+    def _parse_flobject_prop(self, event: DataEvent, key: str, value: Any):
+        """`self._parseprop` for `FLObject` properties. e.g `Channel.delay`
+        is of type `ChannelDelay` which is itself an `FLObject` subclass.
 
-        self.parseprop(event, key, event.to_int16())
+        This method works only for classes which work on a single event
+        and occur once inside the container class!"""
 
-    def parse_uint32_prop(self, event: DWordEvent, key: str):
-        """`self.parseprop` for uint32 properties."""
-
-        self.parseprop(event, key, event.to_uint32())
-
-    def parse_int32_prop(self, event: DWordEvent, key: str):
-        """`self.parseprop` for int32 properties."""
-
-        self.parseprop(event, key, event.to_int32())
-
-    def parse_str_prop(self, event: TextEvent, key: str):
-        """`self.parseprop` for string properties."""
-
-        self.parseprop(event, key, event.to_str())
+        if not hasattr(self, "_" + key):
+            assert issubclass(type(value), FLObject)
+            self._parseprop(event, key, value)
+        obj = getattr(self, "_" + key)  # type: ignore
+        obj.parse_event(event)  # type: ignore
 
     def save(self) -> ValuesView[Event]:
         """Returns the events stored in `self._events` as a read only view.
@@ -163,8 +177,7 @@ class FLObject(abc.ABC):
         2. Save that to a variable called *events*, as this is a ValuesView, changes to
         the `self._events` dictionary while get reflected in *events*, if a list would
         have been returned, this would not have been possible.
-        3. Simply return *events*, instead of calling `self._events.values()`.
-        """
+        3. Simply return *events*, instead of calling `self._events.values()`."""
 
         self._log.info(f"index: {self._idx}")
         return self._events.values()

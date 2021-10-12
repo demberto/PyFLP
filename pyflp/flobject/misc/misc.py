@@ -15,6 +15,8 @@ __all__ = ["Misc"]
 
 @enum.unique
 class PanningLaw(enum.IntEnum):
+    """Used by `Misc.panning_law`"""
+
     Circular = 0
     Triangular = 1
 
@@ -42,6 +44,7 @@ class Misc(FLObject):
 
     @property
     def format(self) -> Optional[int]:
+        """The format of the the file."""
         return getattr(self, "_format", None)
 
     @format.setter
@@ -64,7 +67,7 @@ class Misc(FLObject):
 
     @loop_active.setter
     def loop_active(self, value: bool):
-        self.setprop("loop_active", value)
+        self._setprop("loop_active", value)
 
     @property
     def show_info(self) -> Optional[bool]:
@@ -73,7 +76,7 @@ class Misc(FLObject):
 
     @show_info.setter
     def show_info(self, value: bool):
-        self.setprop("show_info", value)
+        self._setprop("show_info", value)
 
     @property
     def title(self) -> Optional[str]:
@@ -82,24 +85,25 @@ class Misc(FLObject):
 
     @title.setter
     def title(self, value: str):
-        self.setprop("title", value)
+        self._setprop("title", value)
 
     @property
     def comment(self) -> Optional[str]:
-        """Project info -> Comments"""
+        """Project info -> Comments."""
         return getattr(self, "_comment", None)
 
     @comment.setter
     def comment(self, value: str):
-        self.setprop("comment", value)
+        self._setprop("comment", value)
 
     @property
     def url(self) -> Optional[str]:
+        """Project info -> Web link."""
         return getattr(self, "_url", None)
 
     @url.setter
     def url(self, value: str):
-        self.setprop("url", value)
+        self._setprop("url", value)
 
     @property
     def version(self) -> Optional[str]:
@@ -119,7 +123,7 @@ class Misc(FLObject):
         assert (
             len(split) >= 3
         ), "Version should be of the format 'Major.Minor.Revision(.Build)?'."
-        self.setprop("version", value)
+        self._setprop("version", value)
         FLObject.fl_version = FLVersion(value)
         try:
             temp = int(split[3])
@@ -141,7 +145,7 @@ class Misc(FLObject):
 
     @regname.setter
     def regname(self, value: str):
-        self.setprop("regname", value)
+        self._setprop("regname", value)
 
     # TODO: Use pathlib.Path instead of str
     @property
@@ -151,7 +155,7 @@ class Misc(FLObject):
 
     @data_path.setter
     def data_path(self, value: str):
-        self.setprop("data_path", value)
+        self._setprop("data_path", value)
 
     @property
     def genre(self) -> Optional[str]:
@@ -160,7 +164,7 @@ class Misc(FLObject):
 
     @genre.setter
     def genre(self, value: str):
-        self.setprop("genre", value)
+        self._setprop("genre", value)
 
     @property
     def artists(self) -> Optional[str]:
@@ -169,7 +173,7 @@ class Misc(FLObject):
 
     @artists.setter
     def artists(self, value: str):
-        self.setprop("artists", value)
+        self._setprop("artists", value)
 
     @property
     def tempo(self) -> Optional[float]:
@@ -179,7 +183,7 @@ class Misc(FLObject):
     @tempo.setter
     def tempo(self, value: float):
         assert 10.0 <= value <= 522.0
-        self.setprop("tempo", int(value * 1000))
+        self._setprop("tempo", int(value * 1000))
 
     # TODO: Fix parsing
     @property
@@ -214,7 +218,7 @@ class Misc(FLObject):
 
     @version_build.setter
     def version_build(self, value: int):
-        self.setprop("version_build", value)
+        self._setprop("version_build", value)
 
     @property
     def current_pattern_num(self) -> Optional[int]:
@@ -223,7 +227,7 @@ class Misc(FLObject):
 
     @current_pattern_num.setter
     def current_pattern_num(self, value: int):
-        self.setprop("current_pattern_num", value)
+        self._setprop("current_pattern_num", value)
 
     @property
     def current_filterchannel_num(self) -> Optional[int]:
@@ -232,7 +236,7 @@ class Misc(FLObject):
 
     @current_filterchannel_num.setter
     def current_filterchannel_num(self, value: int):
-        self.setprop("current_filterchannel_num", value)
+        self._setprop("current_filterchannel_num", value)
 
     @property
     def panning_law(self) -> Union[PanningLaw, int, None]:
@@ -241,23 +245,27 @@ class Misc(FLObject):
 
     @panning_law.setter
     def panning_law(self, value: Union[PanningLaw, int]):
-        self.setprop("panning_law", value)
+        self._setprop("panning_law", value)
 
     @property
     def time_sig_num(self) -> Optional[int]:
+        """Time signature numerator.
+        Project settings -> Time settings."""
         return getattr(self, "_time_sig_num", None)
 
     @time_sig_num.setter
     def time_sig_num(self, value: int):
-        self.setprop("time_sig_num", value)
+        self._setprop("time_sig_num", value)
 
     @property
     def time_sig_beat(self) -> Optional[int]:
+        """Time signature denominator.
+        Project settings -> Time settings."""
         return getattr(self, "_time_sig_beat", None)
 
     @time_sig_beat.setter
     def time_sig_beat(self, value: int):
-        self.setprop("time_sig_beat", value)
+        self._setprop("time_sig_beat", value)
 
     # TODO: A tuple for this
     @property
@@ -268,15 +276,16 @@ class Misc(FLObject):
 
     @song_loop_pos.setter
     def song_loop_pos(self, value: int):
-        self.setprop("song_loop_pos", value)
+        self._setprop("song_loop_pos", value)
 
     @property
     def play_truncated_notes(self) -> Optional[bool]:
+        """Whether to play truncated notes in pattern clips."""
         return getattr(self, "_play_truncated_notes", None)
 
     @play_truncated_notes.setter
     def play_truncated_notes(self, value: bool):
-        self.setprop("play_truncated_notes", value)
+        self._setprop("play_truncated_notes", value)
 
     @property
     def shuffle(self) -> Optional[int]:
@@ -285,26 +294,27 @@ class Misc(FLObject):
 
     @shuffle.setter
     def shuffle(self, value: int):
-        self.setprop("shuffle", value)
+        self._setprop("shuffle", value)
 
     @property
     def main_pitch(self) -> int:
+        """Master pitch - https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/toolbar_panels.htm#mainpitch_slider"""
         return getattr(self, "_main_pitch", None)
 
     @main_pitch.setter
     def main_pitch(self, value: int):
-        self.setprop("main_pitch", value)
+        self._setprop("main_pitch", value)
 
     # * Parsing logic
     def _parse_byte_event(self, e: ByteEvent):
         if e.id == MiscEvent.LoopActive:
-            self.parse_bool_prop(e, "loop_active")
+            self._parse_bool_prop(e, "loop_active")
         elif e.id == MiscEvent.ShowInfo:
-            self.parse_bool_prop(e, "show_info")
+            self._parse_bool_prop(e, "show_info")
         elif e.id == MiscEvent.TimeSigNum:
-            self.parse_uint8_prop(e, "time_sig_num")
+            self._parse_uint8_prop(e, "time_sig_num")
         elif e.id == MiscEvent.TimeSigBeat:
-            self.parse_uint8_prop(e, "time_sig_beat")
+            self._parse_uint8_prop(e, "time_sig_beat")
         elif e.id == MiscEvent.PanningLaw:
             self._events["panning_law"] = e
             data = e.to_uint8()
@@ -314,47 +324,47 @@ class Misc(FLObject):
                 self._panning_law = data  # type: ignore
                 self._log.exception(f"Invalid panning law {data}")
         elif e.id == MiscEvent.PlayTruncatedNotes:
-            self.parse_bool_prop(e, "play_truncated_notes")
+            self._parse_bool_prop(e, "play_truncated_notes")
         elif e.id == MiscEvent.Shuffle:
-            self.parse_uint8_prop(e, "shuffle")
+            self._parse_uint8_prop(e, "shuffle")
 
     def _parse_word_event(self, e: WordEvent) -> None:
         if e.id == MiscEvent.CurrentPatternNum:
-            self.parse_uint16_prop(e, "current_pattern_num")
+            self._parse_uint16_prop(e, "current_pattern_num")
         elif e.id == MiscEvent.MainPitch:
-            self.parse_int16_prop(e, "main_pitch")
+            self._parse_int16_prop(e, "main_pitch")
 
     def _parse_dword_event(self, e: DWordEvent):
         if e.id == MiscEvent.Tempo:
-            self.parseprop(e, "tempo", e.to_uint32() / 1000)
+            self._parseprop(e, "tempo", e.to_uint32() / 1000)
         elif e.id == MiscEvent.CurrentFilterChannelNum:
-            self.parse_int32_prop(e, "current_filterchannel_num")
+            self._parse_int32_prop(e, "current_filterchannel_num")
         elif e.id == MiscEvent.VersionBuild:
-            self.parse_uint32_prop(e, "version_build")
+            self._parse_uint32_prop(e, "version_build")
         elif e.id == MiscEvent.SongLoopPos:
-            self.parse_uint32_prop(e, "song_loop_pos")
+            self._parse_uint32_prop(e, "song_loop_pos")
 
     def _parse_text_event(self, e: TextEvent):
         if e.id == MiscEvent.Title:
-            self.parse_str_prop(e, "title")
+            self._parse_str_prop(e, "title")
         elif e.id == MiscEvent.Comment:
             self.is_rtf_comment = False
-            self.parse_str_prop(e, "comment")
+            self._parse_str_prop(e, "comment")
         elif e.id == MiscEvent.Url:
-            self.parse_str_prop(e, "url")
+            self._parse_str_prop(e, "url")
         elif e.id == MiscEvent._CommentRtf:
             self.is_rtf_comment = True
-            self.parse_str_prop(e, "comment")
+            self._parse_str_prop(e, "comment")
         elif e.id == MiscEvent.Version:
-            self.parse_str_prop(e, "version")
+            self._parse_str_prop(e, "version")
         elif e.id == MiscEvent.RegName:
-            self.parse_str_prop(e, "regname")
+            self._parse_str_prop(e, "regname")
         elif e.id == MiscEvent.DataPath:
-            self.parse_str_prop(e, "data_path")
+            self._parse_str_prop(e, "data_path")
         elif e.id == MiscEvent.Genre:
-            self.parse_str_prop(e, "genre")
+            self._parse_str_prop(e, "genre")
         elif e.id == MiscEvent.Artists:
-            self.parse_str_prop(e, "artists")
+            self._parse_str_prop(e, "artists")
 
     def _parse_data_event(self, e: DataEvent):
         if e.id == MiscEvent.SaveTimestamp:

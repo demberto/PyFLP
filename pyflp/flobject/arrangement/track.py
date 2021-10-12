@@ -9,7 +9,7 @@ from .enums import TrackEvent
 
 __all__ = ["Track"]
 
-
+# TODO Override the setprop method insead of individual setters
 class Track(FLObject):
     max_count = 500  # TODO
 
@@ -20,7 +20,7 @@ class Track(FLObject):
 
     @name.setter
     def name(self, value: str):
-        self.setprop("name", value)
+        self._setprop("name", value)
 
     @property
     def index(self) -> Optional[int]:
@@ -183,7 +183,7 @@ class Track(FLObject):
     # * Parsing logic
     def _parse_text_event(self, event: TextEvent):
         if event.id == TrackEvent.Name:
-            self.parse_str_prop(event, "name")
+            self._parse_str_prop(event, "name")
 
     def _parse_data_event(self, event: DataEvent):
         if event.id == TrackEvent.Data:

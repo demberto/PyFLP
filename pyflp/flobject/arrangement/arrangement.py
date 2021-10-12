@@ -14,8 +14,7 @@ __all__ = ["Arrangement"]
 class Arrangement(FLObject):
     """Represents an arrangement.
     FL 12.89 introduced support for multiple arrangements. Every arrangement
-    has its own `Track` and `TimeMarker` objects as well as a `Playlist`.
-    """
+    has its own `Track` and `TimeMarker` objects as well as a `Playlist`."""
 
     # * Properties
     @property
@@ -24,7 +23,7 @@ class Arrangement(FLObject):
 
     @name.setter
     def name(self, value: str):
-        self.setprop("name", value)
+        self._setprop("name", value)
 
     @property
     def index(self) -> Optional[int]:
@@ -32,10 +31,11 @@ class Arrangement(FLObject):
 
     @index.setter
     def index(self, value: int):
-        self.setprop("index", value)
+        self._setprop("index", value)
 
     @property
     def tracks(self) -> List[Track]:
+        """A list of `Track` objects of an arrangement contains."""
         return getattr(self, "_tracks", [])
 
     @tracks.setter
@@ -47,7 +47,7 @@ class Arrangement(FLObject):
 
     @property
     def playlist(self) -> Optional[Playlist]:
-        """The `Playlist` of an Arrangement."""
+        """The `Playlist` of an arrangement."""
         return getattr(self, "_playlist", None)
 
     @playlist.setter
@@ -56,59 +56,48 @@ class Arrangement(FLObject):
 
     @property
     def timemarkers(self) -> List[TimeMarker]:
-        """A list of `TimeMarker` objects present in an Arrangement."""
+        """A list of `TimeMarker` objects an arrangement contains."""
         return getattr(self, "_timemarkers", [])
 
     @timemarkers.setter
     def timemarkers(self, value: List[TimeMarker]):
-        for timemarker in value:
-            if timemarker.denominator:
-                assert timemarker.denominator % 4 == 0
-            if timemarker.numerator:
-                assert timemarker.numerator in range(1, 17)
         self._timemarkers = value
 
     # * Parsing logic
-    def parse_event(self, event: Event) -> None:
-        if event.id in PlaylistEvent.__members__.values():
+    def parse_event(self, e: Event) -> None:
+        if e.id in PlaylistEvent.__members__.values():
             if not hasattr(self, "_playlist"):
                 self._playlist = Playlist()
-            self._playlist.parse_event(event)
-        elif event.id in (
+            self._playlist.parse_event(e)
+        elif e.id in (
             TimeMarkerEvent.Numerator,
             TimeMarkerEvent.Denominator,
             TimeMarkerEvent.Name,
         ):
-            if not hasattr(self, "_cur_timemarker"):
-                raise Exception(
-                    f"Got {event.id.name} event when timemarker "  # type: ignore
-                    "did not get initialised."
-                )
-            else:
-                self._cur_timemarker.parse_event(event)
-        elif event.id == TrackEvent.Name:
-            self._cur_track.parse_event(event)
+            self._cur_timemarker.parse_event(e)
+        elif e.id == TrackEvent.Name:
+            self._cur_track.parse_event(e)
         else:
-            return super().parse_event(event)
+            return super().parse_event(e)
 
-    def _parse_word_event(self, event: WordEvent):
-        if event.id == ArrangementEvent.Index:
-            self.parse_uint16_prop(event, "index")
+    def _parse_word_event(self, e: WordEvent):
+        if e.id == ArrangementEvent.New:
+            self._parse_uint16_prop(e, "index")
 
-    def _parse_dword_event(self, event: DWordEvent):
-        if event.id == TimeMarkerEvent.Position:
+    def _parse_dword_event(self, e: DWordEvent):
+        if e.id == TimeMarkerEvent.Position:
             self._cur_timemarker = TimeMarker()
             self._timemarkers.append(self._cur_timemarker)
-            self._cur_timemarker.parse_event(event)
+            self._cur_timemarker.parse_event(e)
 
-    def _parse_text_event(self, event: TextEvent):
-        if event.id == ArrangementEvent.Name:
-            self.parse_str_prop(event, "name")
+    def _parse_text_event(self, e: TextEvent):
+        if e.id == ArrangementEvent.Name:
+            self._parse_str_prop(e, "name")
 
-    def _parse_data_event(self, event: DataEvent):
-        if event.id == TrackEvent.Data:
+    def _parse_data_event(self, e: DataEvent):
+        if e.id == TrackEvent.Data:
             self._cur_track = Track()
-            self._cur_track.parse_event(event)
+            self._cur_track.parse_event(e)
             self._tracks.append(self._cur_track)
 
     def save(self) -> List[Event]:  # type: ignore

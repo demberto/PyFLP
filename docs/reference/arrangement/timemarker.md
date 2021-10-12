@@ -7,5 +7,3 @@
         - name
         - numerator
         - position
-    watch:
-      - pyflp/flobject/arrangement/timemarker.py

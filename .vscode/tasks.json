@@ -35,6 +35,12 @@
             "label": "mypy",
             "type": "shell",
             "command": "mypy . --no-strict-optional"
+        },
+        {
+            "label": "run main.py",
+            "type": "shell",
+            "command": "py -3.9 ./main.py",
+            "problemMatcher": []
         }
     ]
 }

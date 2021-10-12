@@ -58,7 +58,7 @@ class Insert(FLObject):
 
     @name.setter
     def name(self, value: str):
-        self.setprop("name", value)
+        self._setprop("name", value)
 
     @property
     def routing(self) -> List[bool]:
@@ -69,7 +69,7 @@ class Insert(FLObject):
 
     @routing.setter
     def routing(self, value: List[bool]):
-        self.setprop("routing", bytes(value))
+        self._setprop("routing", bytes(value))
 
     @property
     def icon(self) -> Optional[int]:
@@ -78,7 +78,7 @@ class Insert(FLObject):
 
     @icon.setter
     def icon(self, value: int):
-        self.setprop("icon", value)
+        self._setprop("icon", value)
 
     @property
     def input(self) -> Optional[int]:
@@ -87,7 +87,7 @@ class Insert(FLObject):
 
     @input.setter
     def input(self, value: int):
-        self.setprop("input", value)
+        self._setprop("input", value)
 
     @property
     def output(self) -> Optional[int]:
@@ -96,7 +96,7 @@ class Insert(FLObject):
 
     @output.setter
     def output(self, value: int):
-        self.setprop("output", value)
+        self._setprop("output", value)
 
     @property
     def color(self) -> Optional[int]:
@@ -105,7 +105,7 @@ class Insert(FLObject):
 
     @color.setter
     def color(self, value: int):
-        self.setprop("color", value)
+        self._setprop("color", value)
 
     @property
     def flags(self) -> Union[InsertFlags, int, None]:
@@ -217,19 +217,19 @@ class Insert(FLObject):
 
     def _parse_word_event(self, event: WordEvent):
         if event.id == InsertEvent.Icon:
-            self.parse_uint16_prop(event, "icon")
+            self._parse_uint16_prop(event, "icon")
 
     def _parse_dword_event(self, event: DWordEvent):
         if event.id == InsertEvent.Input:
-            self.parse_int32_prop(event, "input")
+            self._parse_int32_prop(event, "input")
         elif event.id == InsertEvent.Color:
-            self.parse_uint32_prop(event, "color")
+            self._parse_uint32_prop(event, "color")
         elif event.id == InsertEvent.Output:
-            self.parse_int32_prop(event, "output")
+            self._parse_int32_prop(event, "output")
 
     def _parse_text_event(self, event: TextEvent):
         if event.id == InsertEvent.Name:
-            self.parse_str_prop(event, "name")
+            self._parse_str_prop(event, "name")
 
     def _parse_data_event(self, event: DataEvent):
         if event.id == InsertEvent.Parameters:
@@ -250,7 +250,7 @@ class Insert(FLObject):
             for byte in event.data:
                 boolean = False if byte == "\x00" else True
                 bool_list.append(boolean)
-            self.parseprop(event, "routing", bool_list)
+            self._parseprop(event, "routing", bool_list)
 
     def save(self) -> List[Event]:  # type: ignore
         events = list(super().save())

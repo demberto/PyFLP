@@ -24,7 +24,10 @@ theme:
         name: Switch to light mode
 markdown_extensions:
   - admonition
+  - codehilite
 plugins:
   - search
-  - mkdocstrings
   - autorefs
+  - mkdocstrings:
+      watch:
+        - pyflp

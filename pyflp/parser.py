@@ -2,7 +2,7 @@ import io
 import logging
 import zipfile
 from pathlib import Path
-from typing import List, Set, Union
+from typing import List, Set, Type, Union
 
 from pyflp.flobject import *
 from pyflp.event import *
@@ -32,7 +32,8 @@ class Parser:
         handlers: List[logging.Handler] = [],
         verbosity: int = logging.DEBUG,
     ):
-        self.__event_store: List[Event] = []
+        # TODO: Unbound type mypy error
+        self.__event_store: List[EventType] = []  # type: ignore
         self.__verbose = verbose
 
         if verbose:
@@ -41,13 +42,18 @@ class Parser:
                 logging.root.addHandler(handler)
         self._channel_count = 0
 
-        # Reinitialise static variables
+        self.__reset_static_vars()
+        self._timemarkers: List[TimeMarker] = []
+        self._pattern_indexes: Set[int] = set()
+
+    @staticmethod
+    def __reset_static_vars():
+        """Reset static variables"""
+
         FLObject._count = 0
         Event._count = 0
         for subclass in FLObject.__subclasses__():
             subclass._count = 0
-        self._timemarkers: List[TimeMarker] = []
-        self._pattern_indexes: Set[int] = set()
 
     def __parse_flhd(self):
         """Parses header chunk."""
@@ -111,7 +117,7 @@ class Parser:
 
         log.info(f"Event store built; contains {len(self.__event_store)} events")
 
-    def __parse_channel(self, ev: Event):
+    def __parse_channel(self, ev: EventType):
         """Creates and appends `Channel` objects to `Project`.
         Dispatches `ChannelEventID` events for parsing.
         """
@@ -124,7 +130,7 @@ class Parser:
             self.__project.channels.append(self._cur_channel)
         self._cur_channel.parse_event(ev)
 
-    def __parse_pattern(self, ev: Event):
+    def __parse_pattern(self, ev: EventType):
         """Creates and appends `Pattern` objects to `Project`.
         Dispatches `PatternEventID` events to `Pattern` for parsing.
         """
@@ -135,7 +141,9 @@ class Parser:
             # New patterns can occur for metadata as well; they are empty.
             index = ev.to_uint16()
             if index in self._pattern_indexes:
-                self._cur_pattern = self.__project.patterns[index - 1]
+                for pattern in self.__project.patterns:
+                    if pattern.index == index:
+                        self._cur_pattern = pattern
                 self._cur_pattern.parse_index1(ev)
                 return  # Don't let the event be parsed again!
             else:
@@ -144,7 +152,7 @@ class Parser:
                 self.__project.patterns.append(self._cur_pattern)
         self._cur_pattern.parse_event(ev)
 
-    def __parse_insert(self, ev: Event):
+    def __parse_insert(self, ev: EventType):
         """Creates and appends `Insert` objects to `Project`.
         Dispatches `InsertEvent` and `InsertSlotEventID` events for parsing.
         """
@@ -154,32 +162,34 @@ class Parser:
             self.__project.inserts.append(self._cur_insert)
         self._cur_insert.parse_event(ev)
 
-    def __parse_arrangement(self, ev: Event):
+    def __parse_arrangement(self, ev: EventType):
         """Creates and appends `Arrangement` objects to `Project`.
         Dispatches `ArrangementEventID`, `PlaylistEventID` and
         `TrackEventID` events for parsing.
         """
 
-        if ev.id == ArrangementEvent.Index:
-            self._cur_arrangement = Arrangement()
+        if ev.id == ArrangementEvent.New:
+            self._cur_arrangement: Arrangement = Arrangement()
             self.__project.arrangements.append(self._cur_arrangement)
 
-            # Assumes that all timemarker events occur before this event occurs
+        # I have found timemarkers occuring before ArrangementEvent.Index
+        # in certains version of FL 20.0-20.1 (best guess)
+        if ev.id == TrackEvent.Data and not self._cur_arrangement.timemarkers:
             self._cur_arrangement.timemarkers = self._timemarkers
             self._timemarkers = []
         self._cur_arrangement.parse_event(ev)
 
-    def __parse_filterchannel(self, ev: Event):
+    def __parse_filterchannel(self, ev: EventType):
         """Creates and appends `FilterChannel` objects to `Project`.
         Dispatches `FilterChannelEventID` events for parsing.
         """
 
         if ev.id == FilterChannelEvent.Name:
-            self._cur_filterchannel = FilterChannel()
+            self._cur_filterchannel: FilterChannel = FilterChannel()
             self.__project.filterchannels.append(self._cur_filterchannel)
         self._cur_filterchannel.parse_event(ev)
 
-    def __parse_timemarker(self, ev: Event):
+    def __parse_timemarker(self, ev: EventType):
         if ev.id == TimeMarkerEvent.Position:
             self._cur_timemarker = TimeMarker()
             self._timemarkers.append(self._cur_timemarker)
@@ -199,6 +209,10 @@ class Parser:
         [FLPInfo](https://github.com/demberto/flpinfo) can still
         display some minimal information based on the events.
         """
+
+        # * Reset static vars because the same Parser
+        # * instance can be used to parse again
+        self.__reset_static_vars()
 
         # * Argument validation
         self.__project = Project(self.__verbose)

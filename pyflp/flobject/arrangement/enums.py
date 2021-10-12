@@ -8,7 +8,7 @@ __all__ = ["ArrangementEvent", "PlaylistEvent", "TimeMarkerEvent", "TrackEvent"]
 @enum.unique
 class ArrangementEvent(enum.IntEnum):
     Name = TEXT + 49
-    Index = WORD + 35
+    New = WORD + 35
 
 
 @enum.unique

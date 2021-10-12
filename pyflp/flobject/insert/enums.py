@@ -8,7 +8,6 @@ __all__ = ["InsertEvent", "InsertSlotEvent"]
 @enum.unique
 class InsertEvent(enum.IntEnum):
     Parameters = DATA + 28
-    # Slot events come here
     Routing = DATA + 27
     Input = DWORD + 26
     Output = DWORD + 19
