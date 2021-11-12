@@ -19,20 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Almost everything has a docstring now, even enum members.
 - PyFLP has adopted Contributor Covenant Code of Conduct v2.1.
 
-### Changed
-
-- All `_FLObject` subclasses have been moved to parent `pyflp/` from `pyflp/flobject/` to ease import names.
-- All `Event` subclasses have been moved in a single `event.py` and `event/` folder is removed.
-- All event ID enum names are now inner classes of `_FLObject` subclasses.
-- Constructor of `Project` has been simplified.
-- `VSTPlugin`'s underlying event now supports saving, it has been refactored out of `_parse_data_event` also.
-- `InsertParametersEvent` to replace the equivalent parsing in `Insert._parse_data_event`.
-- The [TODO](https://github.com/demberto/PyFLP/blob/master/TODO.md) has been changed to reflect the type of goals.
-- `_FLObject.save` is now `_FLObject._save`.
-- Some constants present in `utils.py` have been moved to `constants.py`.
-- Docs include a brief summary of the underlying data event wherever applicable.
-- Minor property name changes; made them more concise.
-
 ### Added
 
 - `__repr__()` for all `_FLObject` subclasses.
@@ -52,6 +38,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Parser.parse_zip` now accepts a `bytes` object for `zip_file` parameter.
 - `Misc.registered` for `Misc.EventID.Registered`.
 
+### Changed
+
+- All `_FLObject` subclasses have been moved to parent `pyflp/` from `pyflp/flobject/` to ease import names.
+- All `Event` subclasses have been moved in a single `event.py` and `event/` folder is removed.
+- All event ID enum names are now inner classes of `_FLObject` subclasses.
+- Constructor of `Project` has been simplified.
+- `VSTPlugin`'s underlying event now supports saving, it has been refactored out of `_parse_data_event` also.
+- `InsertParametersEvent` to replace the equivalent parsing in `Insert._parse_data_event`.
+- The [TODO](https://github.com/demberto/PyFLP/blob/master/TODO.md) has been changed to reflect the type of goals.
+- `_FLObject.save` is now `_FLObject._save`.
+- Some constants present in `utils.py` have been moved to `constants.py`.
+- Docs include a brief summary of the underlying data event wherever applicable.
+- Minor property name changes; made them more concise.
+- Absolute imports are used everywhere now.
+
 ### Fixed
 
 - `ChannelFXReverb` was not getting initialised.
@@ -63,7 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Submodule `__init__.py` files, absolute imports are used everywhere.
 - Any and all sort of logging, not useful anymore. Haven't seen any 3rd party python library ever using it. Used `warnings` wherever necessary.
 - `mypy`. Its useless tbh, I will use types as I see fit.
 - Setters for all properties containing `_FLObject` (or any sort of a collection of them), _e.g. Arrangement.tracks_.

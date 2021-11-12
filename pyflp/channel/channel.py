@@ -1,9 +1,9 @@
 import enum
-import colour
 import struct
-from typing import List, Optional, Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 
-from pyflp.constants import WORD, DWORD, TEXT, DATA
+import colour
+
 from pyflp.channel.arp import ChannelArp
 from pyflp.channel.delay import ChannelDelay
 from pyflp.channel.envlfo import (
@@ -16,13 +16,14 @@ from pyflp.channel.level_offsets import ChannelLevelOffsets
 from pyflp.channel.levels import ChannelLevels
 from pyflp.channel.polyphony import ChannelPolyphony
 from pyflp.channel.tracking import ChannelTracking, ChannelTrackingEvent
+from pyflp.constants import DATA, DWORD, TEXT, WORD
 from pyflp.event import (
-    _EventType,
     ByteEvent,
-    WordEvent,
-    _DWordEventType,
-    _DataEventType,
     TextEvent,
+    WordEvent,
+    _DataEventType,
+    _DWordEventType,
+    _EventType,
 )
 from pyflp.flobject import _FLObject
 from pyflp.insert.insert import Insert
@@ -30,14 +31,14 @@ from pyflp.plugin.plugin import _Plugin
 from pyflp.plugin.synths.boobass import BooBass
 from pyflp.plugin.vst import VSTPlugin
 from pyflp.properties import (
-    _UIntProperty,
-    _EnumProperty,
     _BoolProperty,
+    _ColorProperty,
+    _EnumProperty,
     _IntProperty,
     _StrProperty,
-    _ColorProperty,
+    _UIntProperty,
 )
-from pyflp.validators import _UIntValidator, _IntValidator
+from pyflp.validators import _IntValidator, _UIntValidator
 
 
 class Channel(_FLObject):

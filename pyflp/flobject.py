@@ -2,16 +2,16 @@ import abc
 import enum
 from typing import Any, Dict, Optional, ValuesView
 
-from pyflp.constants import DATA_TEXT_EVENTS, BYTE, DWORD, TEXT, DATA, WORD
+from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
 from pyflp.event import (
-    _EventType,
     ByteEvent,
-    WordEvent,
-    DWordEvent,
-    _DWordEventType,
     ColorEvent,
+    DWordEvent,
     TextEvent,
+    WordEvent,
     _DataEventType,
+    _DWordEventType,
+    _EventType,
 )
 from pyflp.properties import _Property
 from pyflp.utils import FLVersion

@@ -1,6 +1,6 @@
 from pyflp.event import _DataEventType
-from pyflp.properties import _UIntProperty, _IntValidator, _UIntValidator
 from pyflp.plugin.plugin import _EffectPlugin
+from pyflp.properties import _IntValidator, _UIntProperty, _UIntValidator
 
 
 class FSoftClipper(_EffectPlugin):

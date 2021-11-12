@@ -4,7 +4,7 @@ from bytesioex import BytesIOEx
 
 from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
-from pyflp.properties import _IntProperty, _EnumProperty
+from pyflp.properties import _EnumProperty, _IntProperty
 
 
 class ChannelPolyphonyEvent(DataEvent):

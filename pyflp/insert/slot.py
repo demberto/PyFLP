@@ -3,25 +3,25 @@ from typing import Optional, ValuesView
 
 import colour
 
-from pyflp.constants import WORD, DWORD, TEXT, DATA
+from pyflp.constants import DATA, DWORD, TEXT, WORD
+from pyflp.event import DataEvent, TextEvent, WordEvent, _DWordEventType, _EventType
 from pyflp.flobject import _FLObject
-from pyflp.properties import (
-    _UIntProperty,
-    _IntProperty,
-    _BoolProperty,
-    _StrProperty,
-    _ColorProperty,
-)
-from pyflp.validators import _IntValidator, _UIntValidator
-from pyflp.event import _EventType, WordEvent, _DWordEventType, TextEvent, DataEvent
-from pyflp.plugin.plugin import _Plugin
 from pyflp.plugin.effects.balance import FBalance
 from pyflp.plugin.effects.fast_dist import FFastDist
 from pyflp.plugin.effects.notebook2 import FNoteBook2
 from pyflp.plugin.effects.send import FSend
 from pyflp.plugin.effects.soft_clipper import FSoftClipper
 from pyflp.plugin.effects.soundgoodizer import Soundgoodizer
+from pyflp.plugin.plugin import _Plugin
 from pyflp.plugin.vst import VSTPlugin
+from pyflp.properties import (
+    _BoolProperty,
+    _ColorProperty,
+    _IntProperty,
+    _StrProperty,
+    _UIntProperty,
+)
+from pyflp.validators import _IntValidator, _UIntValidator
 
 
 class InsertSlot(_FLObject):

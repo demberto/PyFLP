@@ -3,13 +3,13 @@ from typing import List, Optional
 
 import colour
 
-from pyflp.constants import WORD, DWORD, TEXT, DATA
-from pyflp.event import _EventType, WordEvent, DWordEvent, TextEvent, _DataEventType
+from pyflp.constants import DATA, DWORD, TEXT, WORD
+from pyflp.event import DWordEvent, TextEvent, WordEvent, _DataEventType, _EventType
 from pyflp.flobject import _FLObject
-from pyflp.insert.parameters import InsertParameters, InsertFlags
+from pyflp.insert.parameters import InsertFlags, InsertParameters
 from pyflp.insert.slot import InsertSlot
-from pyflp.properties import _IntProperty, _UIntProperty, _StrProperty, _ColorProperty
-from pyflp.validators import _UIntValidator, _IntValidator
+from pyflp.properties import _ColorProperty, _IntProperty, _StrProperty, _UIntProperty
+from pyflp.validators import _IntValidator, _UIntValidator
 
 
 class Insert(_FLObject):

@@ -1,11 +1,11 @@
 import enum
 from typing import List, Optional
 
-from pyflp.arrangement.timemarker import TimeMarker
 from pyflp.arrangement.playlist import Playlist
+from pyflp.arrangement.timemarker import TimeMarker
 from pyflp.arrangement.track import Track
 from pyflp.constants import TEXT, WORD
-from pyflp.event import _EventType, WordEvent, TextEvent, DataEvent
+from pyflp.event import DataEvent, TextEvent, WordEvent, _EventType
 from pyflp.flobject import _FLObject
 from pyflp.properties import _StrProperty, _UIntProperty
 

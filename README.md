@@ -2,6 +2,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pyflp/badge/?version=latest)](https://pyflp.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/demberto/PyFLP/branch/master/graph/badge.svg?token=RGSRMMF8PF)](https://codecov.io/gh/demberto/PyFLP)
 [![CodeFactor](https://www.codefactor.io/repository/github/demberto/pyflp/badge)](https://www.codefactor.io/repository/github/demberto/pyflp)
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/PyFLP/community)
 ![PyPI - License](https://img.shields.io/pypi/l/pyflp?style=flat-square)
 ![PyPI](https://img.shields.io/pypi/v/pyflp?color=blue&style=flat-square)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyflp?style=flat-square)

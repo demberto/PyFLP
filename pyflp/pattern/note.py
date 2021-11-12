@@ -6,7 +6,7 @@ from bytesioex import BytesIOEx
 
 from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
-from pyflp.properties import _UIntProperty, _IntProperty
+from pyflp.properties import _IntProperty, _UIntProperty
 from pyflp.validators import _IntValidator, _UIntValidator
 
 

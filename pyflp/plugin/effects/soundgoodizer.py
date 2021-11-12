@@ -1,8 +1,8 @@
 import enum
 
 from pyflp.event import _DataEventType
-from pyflp.properties import _EnumProperty, _UIntProperty, _UIntValidator
 from pyflp.plugin.plugin import _EffectPlugin
+from pyflp.properties import _EnumProperty, _UIntProperty, _UIntValidator
 
 
 class Soundgoodizer(_EffectPlugin):

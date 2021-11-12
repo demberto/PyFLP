@@ -1,8 +1,8 @@
 import enum
 
 from pyflp.constants import DWORD, TEXT
+from pyflp.event import ByteEvent, TextEvent, _DWordEventType
 from pyflp.flobject import _FLObject
-from pyflp.event import ByteEvent, _DWordEventType, TextEvent
 from pyflp.properties import _EnumProperty, _StrProperty, _UIntProperty
 from pyflp.validators import _IntValidator, _OneOfValidator
 

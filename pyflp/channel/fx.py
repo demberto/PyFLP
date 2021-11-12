@@ -1,10 +1,10 @@
 import enum
 from typing import Optional
 
-from pyflp.constants import WORD, DWORD
-from pyflp.event import _EventType, WordEvent, _DWordEventType
+from pyflp.constants import DWORD, WORD
+from pyflp.event import WordEvent, _DWordEventType, _EventType
 from pyflp.flobject import _FLObject
-from pyflp.properties import _IntProperty, _UIntProperty, _EnumProperty
+from pyflp.properties import _EnumProperty, _IntProperty, _UIntProperty
 from pyflp.validators import _UIntValidator
 
 
