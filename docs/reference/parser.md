@@ -1,5 +1,3 @@
 # Parser
 
-::: pyflp.Parser
-    :docstring:
-    :members:
+::: pyflp.parser.Parser

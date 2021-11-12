@@ -1,0 +1,124 @@
+import abc
+import dataclasses
+import enum
+import warnings
+from typing import Dict, List, NoReturn
+
+from bytesioex import BytesIOEx
+
+from pyflp.constants import DATA
+from pyflp.event import _DataEventType
+from pyflp.flobject import _FLObject
+
+
+@dataclasses.dataclass
+class _PlaylistItem(abc.ABC):
+    """ABC for ChannelPlaylistItem and PatternPlaylistItem"""
+
+    position: int
+    length: int
+    start_offset: int
+    end_offset: int
+    muted: bool
+
+
+@dataclasses.dataclass
+class ChannelPlaylistItem(_PlaylistItem):
+    channel: int  # TODO
+
+
+@dataclasses.dataclass
+class PatternPlaylistItem(_PlaylistItem):
+    pattern: int  # TODO
+
+
+class Playlist(_FLObject):
+    ppq = 0
+    max_count = 1
+
+    def __json__(self) -> NoReturn:
+        raise NotImplementedError
+
+    @enum.unique
+    class EventID(enum.IntEnum):
+        """Events used by `Playlist`."""
+
+        # _LoopBar = WORD + 20
+        # _LoopEndBar = WORD + 26
+        # _Item = DWORD + 1
+
+        Events = DATA + 25
+        """See `Playlist.items`."""
+
+    # * Properties
+    @property
+    def items(self) -> Dict[int, List[_PlaylistItem]]:
+        return self._items
+
+    # * Parsing logic
+    def _parse_data_event(self, event: _DataEventType):
+        if event.id == Playlist.EventID.Events:
+            self._events["event"] = event
+
+            # Validation
+            if not len(event.data) % 32 == 0:
+                warnings.warn(
+                    "Playlist event is not divisible into 32 byte chunks", UserWarning
+                )
+                return
+            self._r = r = BytesIOEx(event.data)
+            while True:
+                position = r.read_I()  # 4
+                if position is None:
+                    break
+                pattern_base = r.read_H()  # 6
+                item_idx = r.read_H()  # 8
+                length = r.read_I()  # 12
+                track = r.read_i()  # 16
+                if self.fl_version.major >= 20:
+                    track = 499 - track
+                else:
+                    track = 198 - track
+                r.seek(2, 1)  # 18
+                item_flags = r.read_H()  # 20
+                r.seek(4, 1)  # 24
+                muted = True if (item_flags & 0x2000) > 0 else False
+
+                # Init the list if not
+                track_events = self.items.get(track)
+                if not track_events:
+                    track_events = []
+
+                if item_idx <= pattern_base:
+                    start_offset = int(r.read_f() * Playlist.ppq)  # 28
+                    end_offset = int(r.read_f() * Playlist.ppq)  # 32
+
+                    # Cannot access tracks from here; handled by Parser
+                    track_events.append(
+                        ChannelPlaylistItem(
+                            position,
+                            length,
+                            start_offset,
+                            end_offset,
+                            muted,
+                            channel=item_idx,
+                        )
+                    )
+                else:
+                    start_offset = r.read_i()  # 28
+                    end_offset = r.read_i()  # 32
+
+                    track_events.append(
+                        PatternPlaylistItem(
+                            position,
+                            length,
+                            start_offset,
+                            end_offset,
+                            muted,
+                            pattern=item_idx - pattern_base - 1,
+                        )
+                    )
+
+    def __init__(self):
+        super().__init__()
+        self._items: Dict[int, List[_PlaylistItem]] = {}

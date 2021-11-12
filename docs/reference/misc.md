@@ -1,21 +1,25 @@
-# Misc
+## Misc
 
-::: pyflp.flobject.misc.Misc
+### ::: pyflp.misc.Misc
     selection:
       members:
         - VALID_PPQS
+        - EventID
+        - Format
         - artists
         - channel_count
-        - current_pattern_num
-        - current_filterchannel_num
+        - cur_pattern
+        - cur_filter
         - data_path
         - comment
         - format
         - genre
         - loop_active
         - main_pitch
+        - main_volume
         - panning_law
         - play_truncated_notes
+        - ppq
         - regname
         - show_info
         - shuffle

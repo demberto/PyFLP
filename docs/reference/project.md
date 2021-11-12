@@ -1,5 +1,3 @@
 ## Project
 
-::: pyflp.Project
-    :docstring:
-    :members:
+::: pyflp.project.Project

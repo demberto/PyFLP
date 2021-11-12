@@ -1,0 +1,19 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Windows-style newlines with a newline ending every file
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+
+# 4 space indentation
+[*.py]
+indent_style = space
+indent_size = 4
+
+[docs/*.md]
+indent_style = space
+indent_size = 2

@@ -6,10 +6,10 @@ repo_url: https://github.com/demberto/PyFLP/
 copyright: (c) demberto 2021
 nav:
   - Overview: index.md
-  - Getting Started: getting-started.md
+  - Handbook: handbook.md
   - FLP Format: flp-format.md
-  - How does it work?: how-does-it-work.md
   - Reference: reference.md
+  - Contributing: contributing.md
   - Issues: https://github.com/demberto/PyFLP/issues
 theme:
   name: material
@@ -24,10 +24,13 @@ theme:
         name: Switch to light mode
 markdown_extensions:
   - admonition
-  - codehilite
 plugins:
   - search
   - autorefs
   - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_if_no_docstring: yes
       watch:
         - pyflp

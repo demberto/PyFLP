@@ -1,109 +1,168 @@
-# Entry-point classes
-
 ## [**Parser**](reference/parser.md)
-
-Most of the times this is only what you will actually need.
 
 ## [**Project**](reference/project.md)
 
-`Parser` will create this _whenever it can_.
-
 ---
 
-# [Event](reference/event/event.md)
+## Events
 
-### [ByteEvent](reference/event/byte.md)
+### [Event](reference/event.md#Event)
 
-### [WordEvent](reference/event/word.md)
+::: pyflp.event.Event
+    selection:
+      members:
+        - __init__
+    rendering:
+      show_source: false
+      show_root_toc_entry: false
 
-### [DWordEvent](reference/event/dword.md)
+### [ByteEvent](reference/event.md#ByteEvent)
 
-### [TextEvent](reference/event/text.md)
+::: pyflp.event.ByteEvent
+    selection:
+      members:
+        - __doc__
+    rendering:
+      show_source: false
+      show_root_toc_entry: false
 
-### [DataEvent](reference/event/data.md)
+### [WordEvent](reference/event.md#WordEvent)
+
+::: pyflp.event.WordEvent
+    selection:
+      members:
+        - __doc__
+    rendering:
+      show_source: false
+      show_root_toc_entry: false
+
+### [DWordEvent](reference/event.md#DWordEvent)
+
+::: pyflp.event.DWordEvent
+    selection:
+      members:
+        - __doc__
+    rendering:
+      show_source: false
+      show_root_toc_entry: false
+
+### [TextEvent](reference/event.md#TextEvent)
+
+::: pyflp.event.TextEvent
+    selection:
+      members:
+        - __doc__
+    rendering:
+      show_source: false
+      show_root_toc_entry: false
+
+### [DataEvent](reference/event.md#DataEvent)
+
+::: pyflp.event.DataEvent
+    selection:
+      members:
+        - __doc__
+    rendering:
+      show_source: false
+      show_root_toc_entry: false
+
+### [ColorEvent](reference/event.md#ColorEvent)
+
+::: pyflp.event.ColorEvent
+    selection:
+      members:
+        - __doc__
+    rendering:
+      show_source: false
+      show_root_toc_entry: false
 
 ---
 
 # FLP Object Model
 
-## [FLObject](reference/flobject.md)
+## [_FLObject](reference/flobject.md)
 
-Abstract base class for the FLP object model.
+---
 
-## [Arrangement](reference/arrangement/arrangement.md)
+## [Arrangement](reference/arrangement.md#Arrangement)
 
-Contains `Playlist`, `TimeMarker` and `Track`.
+### [Playlist](reference/arrangement.md#Playlist)
 
-### Playlist
+### [TimeMarker](reference/arrangement.md#TimeMarker)
 
-This class has nothing special yet, just a parse method, so no docs.
+### [Track](reference/arrangement.md#Track)
 
-### [TimeMarker](reference/arrangement/timemarker.md)
+---
 
-### [Track](reference/arrangement/track.md)
+## [Channel](reference/channel.md#Channel)
 
-## [Channel](reference/channel/channel.md)
+### [ChannelArp](reference/channel.md#ChannelArp)
 
-Contains `ChannelFX`, `ChannelDelay` and `FilterChannel`.
+### [ChannelFX](reference/channel.md#ChannelFX)
 
-### [ChannelFX](reference/channel/fx.md)
+### [ChannelDelay](reference/channel.md#ChannelDelay)
 
-### [ChannelDelay](reference/channel/delay.md)
+### [ChannelEnvelopeLFO](reference/channel.md#ChannelEnvelopeLFO)
 
-::: pyflp.flobject.channel.delay.ChannelDelay
-    selection:
-      members:
-        - __doc__
+### [ChannelLevels](reference/channel.md#ChannelLevels)
 
-### [FilterChannel](reference/channel/filterchannel.md)
+### [ChannelLevelOffsets](reference/channel.md#ChannelLevelOffsets)
 
-::: pyflp.flobject.FilterChannel
-    selection:
-      members:
-        - __doc__
+### [ChannelPolyphony](reference/channel.md#ChannelPolyphony)
 
-## [Insert](reference/insert/insert.md)
+### [ChannelTracking](reference/channel.md#ChannelTracking)
 
-::: pyflp.flobject.Insert
-    selection:
-      members:
-        - __doc__
+## [Filter](reference/channel.md#Filter)
 
-### [InsertSlot](reference/insert/slot.md)
+---
 
-::: pyflp.flobject.InsertSlot
-    selection:
-      members:
-        - __doc__
+## [Insert](reference/insert.md#Insert)
+
+### [InsertSlot](reference/insert.md#InsertSlot)
+
+---
 
 ## [Misc](reference/misc.md)
 
-::: pyflp.flobject.Misc
-    selection:
-      members:
-        - __doc__
+---
 
-## [Pattern](reference/pattern/pattern.md)
+## [Pattern](reference/pattern.md#Pattern)
 
-Contains `Note`
+### [PatternController](reference/pattern.md#PatternController)
 
-### [(MIDI) Note](reference/pattern/note.md)
-
-## Plugin
-
-### [VSTPlugin](reference/plugin/vst.md)
-
-Implementation of `InsertSlotEvent.Plugin` event for these stock FX plugins
-
-### [Fruity Balance](reference/plugin/balance.md)
-
-### [Fruity Notebook 2](reference/plugin/notebook2.md)
-
-### [Fruity Soft Clipper](reference/plugin/soft_clipper.md)
-
-### [Soundgoodizer](reference/plugin/soundgoodizer.md)
+### [PatternNote](reference/pattern.md#PatternNote)
 
 ---
+
+## [Plugin](reference/plugin.md#Plugin)
+
+### [VSTPlugin](reference/plugin.md#VSTPlugin)
+
+---
+
+Implementation of `Plugin` for these native FX plugins:
+
+### [Fruity Balance](reference/plugin.md#Fruity-Balance)
+
+### [Fruity Fast Dist](reference/plugin.md#Fruity-Fast-Dist)
+
+### [Fruity Notebook 2](reference/plugin.md#Fruity-Notebook-2)
+
+### [Fruity Send](reference/plugin.md#Fruity-Send)
+
+### [Fruity Soft Clipper](reference/plugin.md#Fruity-Soft-Clipper)
+
+### [Soundgoodizer](reference/plugin.md#Soundgoodizer)
+
+---
+
+Implementation of `Plugin` for these native generator plugins:
+
+### [BooBass](reference/plugin/boobass.md)
+
+---
+
+## [Constants](reference/constants.md)
 
 ## [Exceptions](reference/exceptions.md)
 

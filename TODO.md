@@ -1,15 +1,23 @@
-Here I keep my TODOs and issues. I remove them once they are solved/no longer a problem.
+Here I keep my TODOs, goals and issues. I remove them once they are solved/no longer a problem.
+This is not a complete list, you can find many `# TODO` comments all over the codebase.
 
-- Improve `FLObject.save()` method
-- `Misc.start_date` parse logic raises **OverflowError**
-- A more detailed **repr()** for `FLObject` subclasses
-- Use the same event system used in other FLObjects for `Plugin` but make the `save()` method recombine it into a single event (Events inside event)
+## General goals
+
+- There are many unknown properties in discovered events, discover their purpose.
+- Figure out remaining event IDs.
 - Instead of creating objects in a single go, create them in multiple layers of parsing. I think this is what FL also does
-- Test for verifying that the data chunk length == size of events
-- Pattern controller events
-- Saving an FLP back into a ZIP
-- Using a color object for storing color properties
-- Figure out remaining event IDs
-- Use `_setprop()` override for `Track`
-- Reduce the use of `# type: ignore`
-- Fruity Notebook2 parsing code doesn't work, it caused infinite loops, however the latter has been fixed.
+- How about a separate parser class for `FLObject` subclasses? For e.g, `Misc` will just hold the properties and saving logic, parsing will be handled by `MiscParser` which can also hold some of the parsing logic from `Parser`.
+- Automation! Although controllers have been implemented, a huge number of properties are yet to be discovered.
+
+## Current TODOs
+
+- Saving an FLP back into a ZIP.
+- Use the same event system used in other FLObjects for `Plugin` but make the `save()` method recombine it into a single event (Events inside event).
+- Discover enums for `Channel.layer_flags` and `Channel.sampler_flags`.
+- Merge `Channel.layer_flags` and `Channel.sampler_flags` into `Channel.flags`. Needs a custom getter and parsing logic
+- Group pattern notes by `Note.rack_channel` i.e. `Pattern.notes` should be of type `Dict[int, Note]`.
+- `VSTPluginEvent` is a mess, clean it up
+
+## Issues
+
+- Using multiple instances of `Parser` cause issues due to the static nature of `FLObject._count`.

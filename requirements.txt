@@ -1,2 +1,3 @@
 bytesioex==0.1.0
+colour==0.1.5
 # dataclasses==0.8.0;python_requires=='3.6'

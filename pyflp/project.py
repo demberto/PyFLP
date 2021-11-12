@@ -1,49 +1,61 @@
-from dataclasses import dataclass, field
 import io
 import os
-import logging
 from pathlib import Path
 import platform
+import warnings
 import zipfile
-from typing import List, Set, Union
+from typing import List, Set, Union, Optional
 
-from pyflp.event import Event, EventType
-from pyflp.flobject import (
-    Misc,
-    Pattern,
-    Channel,
-    FilterChannel,
-    Arrangement,
-    Insert,
-    FLObject,
-)
-from pyflp.flobject.insert.event import InsertParamsEvent
+from bytesioex import BytesIOEx
 
-from bytesioex import BytesIOEx  # type: ignore
-
-logging.basicConfig()
-log = logging.getLogger(__name__)
-
-__all__ = ["Project"]
+from pyflp.arrangement.arrangement import Arrangement
+from pyflp.channel.channel import Channel
+from pyflp.channel.filter import Filter
+from pyflp.controllers import Controller
+from pyflp.event import _EventType
+from pyflp.flobject import _FLObject
+from pyflp.insert.insert import Insert
+from pyflp.insert.event import InsertParamsEvent
+from pyflp.misc import Misc
+from pyflp.pattern.pattern import Pattern
 
 
-@dataclass
 class Project:
-    _verbose: bool
+    __slots__ = (
+        "events",
+        "save_path",
+        "misc",
+        "patterns",
+        "filters",
+        "channels",
+        "arrangements",
+        "inserts",
+        "controllers",
+        "_unparsed_events",
+    )
 
-    # TODO: Mypy error - Type variable "pyflp.event.EventType" is unbound
-    events: List[EventType] = field(default_factory=list, init=False)  # type: ignore
-    save_path: Path = field(init=False)
-    misc: Misc = field(default_factory=Misc, init=False)
-    patterns: List[Pattern] = field(default_factory=list, init=False)
-    filterchannels: List[FilterChannel] = field(default_factory=list, init=False)
-    channels: List[Channel] = field(default_factory=list, init=False)
-    arrangements: List[Arrangement] = field(default_factory=list, init=False)
-    inserts: List[Insert] = field(default_factory=list, init=False)
-    _unparsed_events: List[Event] = field(default_factory=list, init=False)
+    def __init__(self) -> None:
+        self.events: List[_EventType] = []
+        self.save_path: Optional[Path] = None
+        self.misc = Misc()
+        self.patterns: List[Pattern] = []
+        self.filters: List[Filter] = []
+        self.channels: List[Channel] = []
+        self.arrangements: List[Arrangement] = []
+        self.inserts: List[Insert] = []
+        self.controllers: List[Controller] = []
+        self._unparsed_events: List[_EventType] = []
 
-    def __post_init__(self):
-        log.setLevel(logging.DEBUG if self._verbose else logging.WARNING)
+    def __repr__(self) -> str:
+        return "<Project {}, {}, {}, {}, {}, {}, {}>".format(
+            f'version="{self.misc.version}"',
+            f"{len(self.channels)} channels",
+            f"{len(self.patterns)} patterns",
+            f"{len(self.used_insert_nums())} inserts used",
+            f"{self.slots_used()} insert slots occupied",
+            f"{len(self.controllers)} controllers",
+            f"{len(self.events)} events ({len(self._unparsed_events)} unparsed)",
+        )
 
     # * Utilities
     def used_insert_nums(self) -> Set[int]:
@@ -53,6 +65,15 @@ class Project:
             i = channel.target_insert
             if i is not None:
                 ret.add(i)
+        return ret
+
+    def slots_used(self) -> int:
+        """Returns the total number of slots used across all inserts."""
+        ret = int()
+        for insert in self.inserts:
+            for slot in insert.slots:
+                if slot.is_used():
+                    ret += 1
         return ret
 
     def create_zip(self, path: Union[str, Path] = ""):
@@ -71,8 +92,8 @@ class Project:
             if not path:
                 if not hasattr(self, "save_path"):
                     raise AttributeError(
-                        "Optional argument 'path' cannot be default \
-                        to create a ZIP for a Project object created through a stram."
+                        "Optional argument 'path' cannot be default to create "
+                        "a ZIP for a Project object created through a stream."
                     )
                 path = Path(self.save_path)
             path = Path(path)
@@ -110,9 +131,10 @@ class Project:
                         sample_path.find(r"%FLStudioFactoryData") != -1
                         and system != "Windows"
                     ):
-                        log.error(
+                        warnings.warn(
                             f"Cannot import stock samples from {system}. "
-                            "Only Windows is supported currently."
+                            "Only Windows is supported currently.",
+                            RuntimeWarning,
                         )
 
                     # Resolve locations of stock samples
@@ -121,15 +143,13 @@ class Project:
                             r"%FLStudioFactoryData%", str(fl_dir), 1
                         )
                     else:
-                        log.error(
+                        warnings.warn(
                             "Importing stock samples requires FL Studio "
                             f"installed at {str(fl_dir)}. Skipping sample"
                         )
                     sp = Path(sample_path)
                     if not sp.exists():
-                        log.error(
-                            f"File doesn't exist {sample_path} or path string invalid"
-                        )
+                        warnings.warn(f"File {sample_path} doesn't exist")
                         continue
 
                     # Add samples to ZIP
@@ -139,19 +159,17 @@ class Project:
         os.chdir(cwd)
 
     # * Save logic
-    def __save_state(self) -> List[Event]:
-        """Calls `save()` for all `FLObject`s and returns a sorted list of the received events
+    def __save_state(self) -> List[_EventType]:
+        """Calls `_save` for all `_FLObject`s and returns a sorted list of the received events
 
         Returns:
             List[Event]: A list of events sorted by `Event.index`
         """
 
-        log.debug("__save_state() called")
-
-        event_store: List[Event] = []
+        event_store: List[_EventType] = []
 
         # Misc
-        misc_events = list(self.misc.save())
+        misc_events = list(self.misc._save())
         if misc_events:
             event_store.extend(misc_events)
 
@@ -160,26 +178,27 @@ class Project:
             event_store.extend(self._unparsed_events)
 
         for param in (
-            "filterchannels",
+            "filters",
             "channels",
             "patterns",
             "arrangements",
             "inserts",
+            "controllers",
         ):
-            objs: List[FLObject] = getattr(self, param, None)
-            if objs is None:
-                log.error(f"self.{param} is empty or None")
-                continue
+            objs: List[_FLObject] = getattr(self, param)
             for obj in objs:
-                events = obj.save()
-
-                obj_events: List[Event] = list(events)
-                if obj_events:  # ? Remove
+                events = obj._save()
+                try:
+                    obj_events = list(events)
+                except TypeError:
+                    # events is None
+                    continue
+                else:
                     event_store.extend(obj_events)
 
         # Insert params event
         for e in self.events:
-            if e.id == InsertParamsEvent.ID:  # type: ignore
+            if e.id == InsertParamsEvent.ID:
                 event_store.append(e)
 
         # ? Assign event store to self.events
@@ -187,7 +206,6 @@ class Project:
 
         # Sort the events in ascending order w.r.t index
         event_store.sort(key=lambda event: event.index)
-        log.debug("Event store sorted")
         return event_store
 
     def get_stream(self) -> bytes:
@@ -199,15 +217,11 @@ class Project:
             bytes: The stream. Used by `save()`.
         """
 
-        log.debug("get_stream() called")
-
         # Save event state
         event_store = self.__save_state()
-        log.debug("Event stored saved")
 
         # Begin the save process: Stream init
         stream = io.BytesIO()
-        log.debug("Save stream initialised")
 
         # Header
         header = (
@@ -218,7 +232,6 @@ class Project:
             + self.misc.ppq.to_bytes(2, "little")
         )
         stream.write(header)
-        log.debug("Wrote header to stream")
 
         # Data chunk header
         data = BytesIOEx(b"FLdt")
@@ -229,13 +242,11 @@ class Project:
         for ev in event_store:
             chunklen += ev.size
         data.write_I(chunklen)
-        log.debug(f"Save stream chunk length {chunklen}")
 
         # Dump events
         for ev in event_store:
             data.write(ev.to_raw())
         assert (data.tell() - 8) == chunklen
-        log.debug("Dumped events to stream")
 
         # BytesIOEx -> bytes
         data.seek(0)
@@ -251,21 +262,19 @@ class Project:
             save_path (Union[Path, str], optional): File path to save to.
 
         Raises:
-            AttributeError: When `Project.save_path` doesn't exist and `save_path` is not set.
-            e: Exception which caused the write failed, most proably a permission/file-in-use error.
+            AttributeError: When `Project.save_path` \
+            doesn't exist and `save_path` is not set.
+            OSError: Exception which caused the write failed, \
+            most proably a permission/file-in-use error.
         """
-
-        # ! raise NotImplementedError for FLPs from ZIPs
-
-        log.debug("save() called")
 
         # Type checking and init
         if isinstance(save_path, str):
             save_path = Path(save_path)
         if not (hasattr(self, "save_path") or save_path == "."):
             raise AttributeError(
-                "Optional argument 'path' cannot be default when \
-                Project was parsed from a stream. Use get_stream() instead."
+                "Optional argument 'path' cannot be default when Parser "
+                "was initialised from a stream. Use get_stream() instead."
             )
         if hasattr(self, "save_path"):
             if save_path == Path("."):
@@ -277,10 +286,9 @@ class Project:
                 save_path.rename(save_path_bak)
         try:
             stream = self.get_stream()
-        except Exception as e:
+        except Exception:
             # Rollback
             save_path_bak.rename(save_path)
-            log.exception(e)
 
         with open(save_path, "wb") as fp:
             try:
