@@ -4,10 +4,10 @@
 
 ::: pyflp.exceptions.Error
 
-## DataCorruptionDetected
+## DataCorruptionDetectedError
 
-::: pyflp.exceptions.DataCorruptionDetected
+::: pyflp.exceptions.DataCorruptionDetectedError
 
-## OperationNotPermitted
+## OperationNotPermittedError
 
-::: pyflp.exceptions.OperationNotPermitted
+::: pyflp.exceptions.OperationNotPermittedError

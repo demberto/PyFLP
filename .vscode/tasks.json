@@ -28,13 +28,8 @@
         {
             "label": "docs",
             "type": "shell",
-            "command": "cd docs && ./make html",
+            "command": "mkdocs build",
             "problemMatcher": []
-        },
-        {
-            "label": "mypy",
-            "type": "shell",
-            "command": "mypy . --no-strict-optional"
         },
         {
             "label": "run main.py",

@@ -1,22 +1,10 @@
 from dataclasses import dataclass, field
 
-BYTE = 0
-WORD = 64
-DWORD = 128
-TEXT = 192
-DATA = 208
-
-DATA_TEXT_EVENTS = (
-    TEXT + 49,  # Arrangement.name
-    TEXT + 39,  # FilterChannel.name
-    TEXT + 47,  # Track.name
-)
-
 
 def isascii(s: str) -> bool:
     """str.isascii() for Python 3.6
 
-    [StackOverflow](https://stackoverflow.com/a/18403812)
+    Attribution: https://stackoverflow.com/a/18403812
     """
     return len(s) == len(s.encode())
 
@@ -37,11 +25,11 @@ def buflen_to_varint(buffer: bytes) -> bytes:
 
 @dataclass
 class FLVersion:
-    string: str
-    major: int = field(init=False, repr=False)
-    minor: int = field(init=False, repr=False)
-    revision: int = field(init=False, repr=False)
-    build: int = field(init=False, repr=False)
+    string: str = field(repr=False)
+    major: int = field(init=False)
+    minor: int = field(init=False)
+    revision: int = field(init=False)
+    build: int = field(init=False)
 
     def __post_init__(self):
         split = self.string.split(".")
@@ -50,7 +38,7 @@ class FLVersion:
         self.revision = int(split[2])
         try:
             self.build = int(split[3])
-        except IndexError:
+        except IndexError:  # pragma: no cover
             pass
 
     def as_float(self) -> float:

@@ -1,20 +1,17 @@
-__all__ = ["DataCorruptionDetected"]
-
-
 class Error(Exception):
-    """Base class for all PyFLP exceptions"""
+    """Base class for PyFLP exceptions"""
 
-    def __init__(self, msg: str, *args: object) -> None:
-        self.__msg = msg
+    def __init__(self, what: str, *args: object) -> None:
+        self.what = what
         super().__init__(*args)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__doc__} {self.__msg}"
+        return f"{type(self).__doc__}: {self.what}"
 
 
-class DataCorruptionDetected(Error):
+class DataCorruptionDetectedError(Error):
     """Possible corruption in event data detected"""
 
 
-class OperationNotPermitted(Error):
+class OperationNotPermittedError(Error):
     """Operation not permitted"""

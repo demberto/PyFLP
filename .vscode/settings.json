@@ -1,6 +1,5 @@
 {
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "python.formatting.provider": "black",
-    "restructuredtext.confPath": "${workspaceFolder}\\docs"
+    "python.formatting.provider": "black"
 }
