@@ -1,6 +1,6 @@
 from pyflp.event import _DataEventType
-from pyflp.properties import _IntProperty, _IntValidator
 from pyflp.plugin.plugin import _EffectPlugin
+from pyflp.properties import _IntProperty, _IntValidator
 
 
 class FBalance(_EffectPlugin):

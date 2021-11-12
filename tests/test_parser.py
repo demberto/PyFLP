@@ -1,5 +1,5 @@
-import os
 import math
+import os
 import zipfile
 
 import pytest
@@ -9,13 +9,13 @@ from pyflp import Project
 from pyflp.channel.channel import Channel
 from pyflp.controllers import RemoteController
 from pyflp.insert.parameters import InsertFlags
-from pyflp.plugin.synths.boobass import BooBass
 from pyflp.plugin.effects.balance import FBalance
 from pyflp.plugin.effects.fast_dist import FFastDist
 from pyflp.plugin.effects.notebook2 import FNoteBook2
 from pyflp.plugin.effects.send import FSend
 from pyflp.plugin.effects.soft_clipper import FSoftClipper
 from pyflp.plugin.effects.soundgoodizer import Soundgoodizer
+from pyflp.plugin.synths.boobass import BooBass
 
 
 def test_nulltest(proj: Project):

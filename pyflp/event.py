@@ -3,9 +3,9 @@ import enum
 from typing import TypeVar, Union
 
 import colour
-from bytesioex import Byte, SByte, Int, UInt
+from bytesioex import Byte, Int, SByte, UInt
 
-from pyflp.constants import BYTE, WORD, DWORD, TEXT, DATA, DATA_TEXT_EVENTS
+from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
 from pyflp.utils import buflen_to_varint
 
 

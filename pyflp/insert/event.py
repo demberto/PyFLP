@@ -6,8 +6,8 @@ from typing import List
 
 from bytesioex import BytesIOEx
 
-from pyflp.event import DataEvent
 from pyflp.constants import DATA
+from pyflp.event import DataEvent
 from pyflp.insert.insert import Insert
 
 

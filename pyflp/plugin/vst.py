@@ -1,13 +1,14 @@
 import dataclasses
 import enum
 from typing import Any, List, Optional, Union, ValuesView
+
 from bytesioex import BytesIOEx, UInt, ULong
 
 from pyflp.event import DataEvent, _VariableSizedEvent
 from pyflp.flobject import _FLObject
 from pyflp.plugin.plugin import _Plugin
-from pyflp.properties import _BytesProperty, _UIntProperty, _IntProperty, _StrProperty
-from pyflp.validators import _UIntValidator, _StrValidator
+from pyflp.properties import _BytesProperty, _IntProperty, _StrProperty, _UIntProperty
+from pyflp.validators import _StrValidator, _UIntValidator
 
 
 class _QWordVariableEvent(_VariableSizedEvent):

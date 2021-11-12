@@ -1,7 +1,7 @@
 from pyflp.event import _DataEventType
-from pyflp.properties import _UIntProperty, _IntProperty
-from pyflp.validators import _IntValidator, _UIntValidator
 from pyflp.plugin.plugin import _EffectPlugin
+from pyflp.properties import _IntProperty, _UIntProperty
+from pyflp.validators import _IntValidator, _UIntValidator
 
 
 class FSend(_EffectPlugin):

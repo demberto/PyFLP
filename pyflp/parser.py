@@ -4,42 +4,42 @@ from pathlib import Path
 from typing import List, Set, Union
 
 from bytesioex import BytesIOEx
-from pyflp.controllers import RemoteController, RemoteControllerEvent
 
-from pyflp.flobject import _FLObject
 from pyflp.arrangement.arrangement import Arrangement
 from pyflp.arrangement.playlist import Playlist
 from pyflp.arrangement.timemarker import TimeMarker
 from pyflp.arrangement.track import Track, TrackDataEvent
-from pyflp.misc import Misc
 from pyflp.channel.channel import Channel
 from pyflp.channel.delay import ChannelDelayEvent
 from pyflp.channel.envlfo import ChannelEnvelopeLFOEvent
 from pyflp.channel.filter import Filter
 from pyflp.channel.fx import ChannelFX
-from pyflp.channel.levels import ChannelLevelsEvent
 from pyflp.channel.level_offsets import ChannelLevelOffsetsEvent
+from pyflp.channel.levels import ChannelLevelsEvent
 from pyflp.channel.parameters import ChannelParametersEvent
 from pyflp.channel.polyphony import ChannelPolyphonyEvent
 from pyflp.channel.tracking import ChannelTrackingEvent
 from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
+from pyflp.controllers import RemoteController, RemoteControllerEvent
 from pyflp.event import (
-    Event,
-    _EventType,
     ByteEvent,
-    WordEvent,
+    ColorEvent,
     DataEvent,
     DWordEvent,
-    ColorEvent,
+    Event,
     TextEvent,
+    WordEvent,
+    _EventType,
 )
+from pyflp.flobject import _FLObject
 from pyflp.insert.event import InsertParamsEvent
 from pyflp.insert.insert import Insert
-from pyflp.insert.slot import InsertSlot
 from pyflp.insert.parameters import InsertParametersEvent
-from pyflp.pattern.pattern import Pattern
+from pyflp.insert.slot import InsertSlot
+from pyflp.misc import Misc
 from pyflp.pattern.controller import PatternControllersEvent
 from pyflp.pattern.note import PatternNotesEvent
+from pyflp.pattern.pattern import Pattern
 from pyflp.plugin.vst import VSTPluginEvent
 from pyflp.project import Project
 from pyflp.utils import FLVersion

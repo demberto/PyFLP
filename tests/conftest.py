@@ -3,7 +3,7 @@ import zipfile
 
 import pytest
 
-from pyflp import Project, Parser
+from pyflp import Parser, Project
 
 curdir = os.path.dirname(__file__)
 zp = zipfile.ZipFile(f"{curdir}/assets/FL 20.8.3.zip")

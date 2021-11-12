@@ -1,21 +1,21 @@
 import enum
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
-from bytesioex import BytesIOEx
 import colour
+from bytesioex import BytesIOEx
 
 from pyflp.arrangement.playlist import _PlaylistItem
-from pyflp.constants import TEXT, DATA
-from pyflp.event import TextEvent, DataEvent
+from pyflp.constants import DATA, TEXT
+from pyflp.event import DataEvent, TextEvent
 from pyflp.flobject import _FLObject
 from pyflp.properties import (
-    _EnumProperty,
-    _IntProperty,
-    _UIntProperty,
-    _StrProperty,
-    _FloatProperty,
     _BoolProperty,
     _ColorProperty,
+    _EnumProperty,
+    _FloatProperty,
+    _IntProperty,
+    _StrProperty,
+    _UIntProperty,
 )
 from pyflp.validators import _FloatValidator, _IntValidator
 

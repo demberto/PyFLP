@@ -2,7 +2,7 @@ import enum
 from typing import NoReturn, Optional
 
 from pyflp.flobject import _FLObject
-from pyflp.properties import _UIntProperty, _EnumProperty, _FloatProperty, _BoolProperty
+from pyflp.properties import _BoolProperty, _EnumProperty, _FloatProperty, _UIntProperty
 
 
 class ChannelArp(_FLObject):

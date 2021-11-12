@@ -1,15 +1,15 @@
 import pytest
 from colour import Color
 
+from pyflp.constants import BYTE, DATA, DWORD, TEXT, WORD
 from pyflp.event import (
     ByteEvent,
-    WordEvent,
     ColorEvent,
     DataEvent,
-    TextEvent,
     DWordEvent,
+    TextEvent,
+    WordEvent,
 )
-from pyflp.constants import DATA, DWORD, TEXT, WORD, BYTE
 
 
 def test_equality():

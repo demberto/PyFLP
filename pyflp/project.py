@@ -1,10 +1,10 @@
 import io
 import os
-from pathlib import Path
 import platform
 import warnings
 import zipfile
-from typing import List, Set, Union, Optional
+from pathlib import Path
+from typing import List, Optional, Set, Union
 
 from bytesioex import BytesIOEx
 
@@ -14,8 +14,8 @@ from pyflp.channel.filter import Filter
 from pyflp.controllers import Controller
 from pyflp.event import _EventType
 from pyflp.flobject import _FLObject
-from pyflp.insert.insert import Insert
 from pyflp.insert.event import InsertParamsEvent
+from pyflp.insert.insert import Insert
 from pyflp.misc import Misc
 from pyflp.pattern.pattern import Pattern
 

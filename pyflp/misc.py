@@ -1,28 +1,28 @@
-import enum
 import datetime
+import enum
 from typing import Optional, ValuesView
 
 from bytesioex import BytesIOEx, Double
 
-from pyflp.constants import WORD, DWORD, TEXT, DATA
+from pyflp.constants import DATA, DWORD, TEXT, WORD
 from pyflp.event import (
-    _EventType,
     ByteEvent,
-    WordEvent,
-    _DWordEventType,
     TextEvent,
+    WordEvent,
     _DataEventType,
+    _DWordEventType,
+    _EventType,
 )
 from pyflp.flobject import _FLObject
 from pyflp.properties import (
-    _UIntProperty,
-    _IntProperty,
     _BoolProperty,
     _EnumProperty,
+    _IntProperty,
     _StrProperty,
+    _UIntProperty,
 )
-from pyflp.validators import _OneOfValidator, _UIntValidator
 from pyflp.utils import FLVersion
+from pyflp.validators import _OneOfValidator, _UIntValidator
 
 
 class Misc(_FLObject):
