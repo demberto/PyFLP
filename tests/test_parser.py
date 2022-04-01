@@ -1,12 +1,17 @@
+"""Tests `pyflp.parser.Parser` class and property getters."""
+
 import math
-import os
-import zipfile
 
 import pytest
 from colour import Color
 
 from pyflp import Project
+from pyflp.channel.arp import ChannelArp
 from pyflp.channel.channel import Channel
+from pyflp.channel.delay import ChannelDelay
+from pyflp.channel.level_offsets import ChannelLevelOffsets
+from pyflp.channel.polyphony import ChannelPolyphony
+from pyflp.channel.tracking import ChannelTracking
 from pyflp.controllers import RemoteController
 from pyflp.insert.parameters import InsertFlags
 from pyflp.plugin.effects.balance import FBalance
@@ -16,15 +21,7 @@ from pyflp.plugin.effects.send import FSend
 from pyflp.plugin.effects.soft_clipper import FSoftClipper
 from pyflp.plugin.effects.soundgoodizer import Soundgoodizer
 from pyflp.plugin.synths.boobass import BooBass
-
-
-def test_nulltest(proj: Project):
-    new = proj.get_stream()
-    curdir = os.path.dirname(__file__)
-    zp = zipfile.ZipFile(f"{curdir}/assets/FL 20.8.3.zip")
-    original = zp.open("FL 20.8.3.flp").read()
-    result = original == new
-    assert result
+from pyflp.plugin.vst import VSTPlugin
 
 
 def test_misc(proj: Project):
@@ -55,10 +52,20 @@ def test_filters(proj: Project):
 
 
 @pytest.mark.parametrize(
-    "index, kind, enabled, locked, volume, pan, color, cut_group",
+    "index, kind, enabled, locked, volume, pan, color, cut_group, name",
     [
-        (0, Channel.Kind.Layer, True, True, 10000, 6400, Color("#141414"), ()),
-        (1, Channel.Kind.Native, False, True, 0, 6400, Color("#FFFFFF"), (1, 1)),
+        (0, Channel.Kind.Layer, True, True, 10000, 6400, Color("#141414"), (), "Layer"),
+        (
+            1,
+            Channel.Kind.Native,
+            False,
+            True,
+            0,
+            6400,
+            Color("#FFFFFF"),
+            (1, 1),
+            "BoobAss",
+        ),
         (
             2,
             Channel.Kind.Instrument,
@@ -68,13 +75,34 @@ def test_filters(proj: Project):
             12800,
             Color("#14FF14"),
             (2, 3),
+            "",  # ! Idk why, this should have been "Audio Clip"
         ),
-        (3, Channel.Kind.Sampler, False, False, 12800, 0, Color("#FF1414"), (3, 2)),
-        (4, Channel.Kind.Automation, True, False, 0, 12800, Color("#1414FF"), (0, 0)),
+        (
+            3,
+            Channel.Kind.Sampler,
+            False,
+            False,
+            12800,
+            0,
+            Color("#FF1414"),
+            (3, 2),
+            "Min Size",
+        ),
+        (
+            4,
+            Channel.Kind.Automation,
+            True,
+            False,
+            0,
+            12800,
+            Color("#1414FF"),
+            (0, 0),
+            "Automation Clip",
+        ),
     ],
 )
 def test_channel(
-    proj: Project, index, kind, enabled, locked, volume, pan, color, cut_group
+    proj: Project, index, kind, enabled, locked, volume, pan, color, cut_group, name
 ):
     """Tests `pyflp.channel.channel.Channel` class."""
     ch = proj.channels[index]
@@ -86,6 +114,14 @@ def test_channel(
     assert ch.pan == pan
     assert ch.color == color
     assert ch.cut_group == cut_group
+    assert not ch.zipped
+    assert isinstance(ch.delay, ChannelDelay)
+    assert isinstance(ch.polyphony, ChannelPolyphony)
+    assert isinstance(ch.tracking_key, ChannelTracking)
+    assert isinstance(ch.level_offsets, ChannelLevelOffsets)
+    assert isinstance(ch.arp, ChannelArp)
+    assert len(ch.env_lfos) == 5
+    assert ch.get_name() == name
 
     # Channel specific
     if index == 0:
@@ -156,7 +192,7 @@ def test_insert(
     # Insert specific
     if index == -1:
         # Test stock plugin implementations
-        for i, slot in enumerate(ins.slots[:6]):
+        for i, slot in enumerate(ins.slots[:7]):
             assert slot.index == i
             assert slot.is_used()
             p = slot.plugin
@@ -183,13 +219,19 @@ def test_insert(
                 assert isinstance(p, FBalance)
                 assert p.volume == 256
                 assert p.pan == 0
-            else:
+            elif i == 5:
                 assert isinstance(p, FFastDist)
                 assert p.post == 128
                 assert p.threshold == 10
                 assert p.pre == 128
                 assert p.mix == 128
                 assert p.kind == FFastDist.Kind.A
+            else:
+                assert isinstance(p, VSTPlugin)
+                assert p.name == "OTT"
+                assert p.fourcc == "TTfX"
+                assert p.vendor == "Xfer Records"
+                assert p.vst_number is None
     elif index == 4:
         assert InsertFlags.ReversePolarity in ins.flags
         eq = ins.eq

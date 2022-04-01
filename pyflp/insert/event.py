@@ -6,8 +6,8 @@ from typing import List
 
 from bytesioex import BytesIOEx
 
-from pyflp.constants import DATA
 from pyflp._event import _DataEvent
+from pyflp.constants import DATA
 from pyflp.insert.insert import Insert
 
 __all__ = ["InsertParamsEvent"]
@@ -41,7 +41,7 @@ class InsertParamsEvent(_DataEvent):
         super().__init__(InsertParamsEvent.ID, data)
 
     def parse(self, inserts: List[Insert]) -> bool:
-        if not len(self.data) % 12 == 0:
+        if not len(self.data) % 12 == 0:  # pragma: no cover
             warnings.warn("Unexpected data size; expected a divisible of 12.")
             return False
         data = BytesIOEx(self.data)
