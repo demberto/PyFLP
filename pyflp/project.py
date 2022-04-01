@@ -13,6 +13,7 @@ from pyflp.channel.channel import Channel
 from pyflp.channel.filter import Filter
 from pyflp.controllers import Controller
 from pyflp.event import _EventType
+from pyflp.exceptions import DataCorruptionDetectedError
 from pyflp.flobject import _FLObject
 from pyflp.insert.event import InsertParamsEvent
 from pyflp.insert.insert import Insert
@@ -246,7 +247,8 @@ class Project:
         # Dump events
         for ev in event_store:
             data.write(ev.to_raw())
-        assert (data.tell() - 8) == chunklen
+        if (data.tell() - 8) != chunklen:
+            raise DataCorruptionDetectedError
 
         # BytesIOEx -> bytes
         data.seek(0)
