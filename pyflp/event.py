@@ -306,12 +306,12 @@ class DWordEvent(Event):
         return Int.unpack(self.data)[0]
 
     def __repr__(self) -> str:
-        i = self.to_int32()
-        I = self.to_uint32()
-        if i == I:
-            msg = f"I={I}"
+        i32 = self.to_int32()
+        u32 = self.to_uint32()
+        if i32 == u32:
+            msg = f"I={u32}"
         else:
-            msg = f"i={i}, I={I}"
+            msg = f"i={i32}, I={u32}"
         return f"<{super().__repr__()}, {msg}>"
 
     def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
@@ -396,7 +396,7 @@ class TextEvent(_VariableSizedEvent):
         return self.as_ascii(self.data)
 
     def __repr__(self) -> str:
-        return f'<{super().__repr__()}, s="{self.to_str()}">'
+        return f'<{super().__repr__().strip("<>")}, s="{self.to_str()}">'
 
     def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
         """
@@ -458,7 +458,7 @@ class DataEvent(_VariableSizedEvent):
         if not isinstance(data, bytes):
             raise TypeError(f"Expected a bytes object; got {type(data)}")
         super().__init__(id, data)
-        if self._chunk_size:  # pragma: no cover
+        if self._chunk_size is not None:  # pragma: no cover
             if len(data) != self._chunk_size:
                 return
 

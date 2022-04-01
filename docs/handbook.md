@@ -1,6 +1,8 @@
 # Handbook
 
-PyFLP can be used for automation purposes e.g. finding/setting project titles, artists names, genre etc. and also by people who are interested more about the FLP format. You can even repair a broken FLP, *ofcourse by yourself*.
+PyFLP can be used for automation purposes e.g. finding/setting project titles,
+artists names, genre etc. and also by people who are interested more about the
+FLP format. You can even repair a broken FLP, *ofcourse by yourself*.
 
 ## Initialisation
 
@@ -21,10 +23,12 @@ project.save(save_path="/path/to/save.flp")
 for channel in project.channels:
     print(channel.name)     # Channel name
     print(channel.kind)     # Sampler, Audio, Instrument, Layer, ...
-    print(channel.sample_path)  # The location of a sample used in a sampler or plain audio
+    # The location of a sample used in a sampler or plain audio
+    print(channel.sample_path)
 ```
 
-There's a lot more information you can get (almost every type of information stored about a channel).
+There's a lot more information you can get (almost every type of information
+stored about a channel).
 
 !!! tip "For more information"
     See [Channel](reference/channel/channel.md).
@@ -49,7 +53,8 @@ for note in pattern.notes:
     See [Pattern](reference/pattern/pattern.md) and [Note](reference/pattern/note.md)
 
 !!! hint "Docstrings"
-    Almost all properties have a meaningful docstring, and many classes have a direct link to the FL Studio manual to refer what they implement.
+    Almost all properties have a meaningful docstring, and many classes have a
+    direct link to the FL Studio manual page to point out what they implement.
 
 !!! note
     There is much more, check the [Reference](reference.md)

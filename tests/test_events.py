@@ -1,3 +1,5 @@
+"""Tests classes from `pyflp.event` module."""
+
 import pytest
 from colour import Color
 

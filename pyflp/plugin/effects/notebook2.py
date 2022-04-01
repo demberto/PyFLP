@@ -46,7 +46,9 @@ class FNoteBook2(_EffectPlugin):
 
     @active_page.setter
     def active_page(self, value: int):
-        assert value in range(1, len(self._pages) + 1)  # TODO
+        num_pages = len(self._pages) + 1
+        if value not in range(1, num_pages):
+            raise ValueError(f"Expected a value in (1, {num_pages})")
         self._r.seek(4)
         self._r.write_I(value)
         super()._setprop("active_page", value)
