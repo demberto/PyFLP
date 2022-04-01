@@ -6,9 +6,9 @@ from typing import Dict, List, NoReturn
 
 from bytesioex import BytesIOEx
 
-from pyflp.constants import DATA
 from pyflp._event import _DataEventType
-from pyflp._flobject import _MaxInstancedFLObject, _FLObject
+from pyflp._flobject import _FLObject, _MaxInstancedFLObject
+from pyflp.constants import DATA
 
 
 @dataclasses.dataclass
@@ -72,7 +72,7 @@ class Playlist(_MaxInstancedFLObject):
                 item_idx = r.read_H()  # 8
                 length = r.read_I()  # 12
                 track = r.read_i()  # 16
-                if self.fl_version.major >= 20:
+                if self._fl_version.major >= 20:
                     track = 499 - track
                 else:
                     track = 198 - track
@@ -87,8 +87,8 @@ class Playlist(_MaxInstancedFLObject):
                     track_events = []
 
                 if item_idx <= pattern_base:
-                    start_offset = int(r.read_f() * _FLObject.ppq)  # 28
-                    end_offset = int(r.read_f() * _FLObject.ppq)  # 32
+                    start_offset = int(r.read_f() * _FLObject._ppq)  # 28
+                    end_offset = int(r.read_f() * _FLObject._ppq)  # 32
 
                     # Cannot access tracks from here; handled by Parser
                     track_events.append(

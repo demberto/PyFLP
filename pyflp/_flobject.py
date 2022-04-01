@@ -1,6 +1,6 @@
 import abc
 import enum
-from typing import Any, Dict, Optional, ValuesView
+from typing import Any, Dict, Iterable, Optional
 
 from pyflp._event import (
     _ByteEvent,
@@ -37,11 +37,11 @@ class _FLOBjectAbstractMeta(_FLObjectMeta, abc.ABCMeta):
 class _FLObject(metaclass=_FLOBjectAbstractMeta):
     """ABC for the FLP object model."""
 
-    ppq = 0
+    _ppq = 0
     _count = 0
 
     # Set by Parser and can be modified by Misc.version
-    fl_version: Optional[FLVersion] = None
+    _fl_version: Optional[FLVersion] = None
 
     @enum.unique
     class EventID(enum.IntEnum):
@@ -102,26 +102,27 @@ class _FLObject(metaclass=_FLOBjectAbstractMeta):
         else:
             self._parse_data_event(event)
 
-    def _parse_byte_event(self, _: _ByteEvent) -> None:
+    def _parse_byte_event(self, _: _ByteEvent) -> None:  # pragma: no cover
         pass
 
-    def _parse_word_event(self, _: _WordEvent) -> None:
+    def _parse_word_event(self, _: _WordEvent) -> None:  # pragma: no cover
         pass
 
-    def _parse_dword_event(self, _: _DWordEventType) -> None:
+    def _parse_dword_event(self, _: _DWordEventType) -> None:  # pragma: no cover
         pass
 
-    def _parse_text_event(self, _: _TextEvent) -> None:
+    def _parse_text_event(self, _: _TextEvent) -> None:  # pragma: no cover
         pass
 
-    def _parse_data_event(self, _: _DataEventType) -> None:
+    def _parse_data_event(self, _: _DataEventType) -> None:  # pragma: no cover
         pass
 
     # * Property parsing logic
     def _parseprop(self, event: _EventType, key: str, value: Any):
         """Reduces boilerplate for `parse_event()` delegate methods.
-        Not to be used unless helper `_parse_*` methods aren't useful."""
 
+        Not to be used unless helper `_parse_*` methods aren't useful.
+        """
         self._events[key] = event
         setattr(self, "_" + key, value)
 
@@ -162,12 +163,12 @@ class _FLObject(metaclass=_FLOBjectAbstractMeta):
         self._parseprop(event, key, event.to_color())
 
     def _parse_flobject(self, event: _EventType, key: str, value: Any):
-        """`self._parseprop` for `FLObject` properties. e.g `Channel.delay`
-        is of type `ChannelDelay` which is itself an `FLObject` subclass.
+        """`self._parseprop` for `FLObject` properties.
 
-        This method works only for classes which work on a single event
-        and occur once inside the container class!"""
-
+        e.g `Channel.delay` is of type `ChannelDelay` which is itself an
+        `FLObject` subclass. This method works only for classes which work on
+        a single event and occur once inside the container class!
+        """
         if not hasattr(self, "_" + key):
             if not isinstance(value, _FLObject):
                 raise TypeError
@@ -175,8 +176,8 @@ class _FLObject(metaclass=_FLOBjectAbstractMeta):
         obj: _FLObject = getattr(self, "_" + key)
         obj.parse_event(event)
 
-    def _save(self) -> ValuesView[_EventType]:
-        """Returns the events stored in `self._events` as a read only view."""
+    def _save(self) -> Iterable[_EventType]:
+        """Returns the events stored in `self._events` as an iterable."""
         return self._events.values()
 
     def __init__(self):
@@ -193,6 +194,6 @@ class _MaxInstancedFLObject(_FLObject):
 
     def __init__(self):
         cls = type(self)
-        if not (cls._count <= cls.max_count):
+        if cls._count > cls.max_count:
             raise MaxInstancesError(cls)
         super().__init__()

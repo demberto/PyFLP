@@ -22,14 +22,14 @@ class _OneOfValidator(_Validator):
     """Validates whether a value exists in a given set of options."""
 
     def __init__(self, options: Iterable):
-        self.options = options
+        self.__options = options
 
     def __repr__(self) -> str:
-        return f"<{type(self).__name__} options={self.options}>"
+        return f"<{type(self).__name__} options={self.__options!r}>"
 
     def validate(self, value: Any):
-        if value not in self.options:
-            raise ValueError(f"Expected {value!r} to be one of {self.options!r}")
+        if value not in self.__options:
+            raise ValueError(f"Expected {value!r} to be one of {self.__options!r}")
 
 
 class _BoolValidator(_OneOfValidator):
@@ -52,83 +52,89 @@ class _EnumValidator(_OneOfValidator):
     _Enum = Union[Type[enum.Enum], Type[enum.IntEnum], Type[enum.IntFlag]]
 
     def __init__(self, enum: _Enum):
-        self.enum = enum
+        self.__enum = enum
         super().__init__(tuple(enum))
 
     def __repr__(self) -> str:
-        return f'<EnumValidator enum="{self.enum.__name__}>"'
+        return f'<EnumValidator enum="{self.__enum.__name__}>"'
+
+    def validate(self, value: Any):
+        if issubclass(self.__enum, (enum.IntEnum, enum.IntFlag)):
+            if not isinstance(value, int):
+                raise TypeError(f"Expected {value!r} to be an int")
+        return super().validate(value)
 
 
-class _IntFloatValidatorBase(_Validator):
+class _IntFloatValidatorBase(_Validator, abc.ABC):
     """Base class for `_IntValidator` and `_FloatValidator`."""
 
-    def __init__(self, _min, _max) -> None:
-        self.min = _min
-        self.max = _max
+    def __init__(self, min_, max_) -> None:  # pragma: no cover
+        self.__min = min_
+        self.__max = max_
 
     def __repr__(self) -> str:
-        return f"<{type(self).__name__} min={self.min}, max={self.max}>"
+        return f"<{type(self).__name__} min={self.__min}, max={self.__max}>"
 
 
 class _IntValidator(_IntFloatValidatorBase):
     """Validates whether value is an `int` and lies in a range, optionally."""
 
-    def __init__(self, min: Optional[int] = None, max: Optional[int] = None):
-        self.min = min
-        self.max = max
+    def __init__(self, min_: Optional[int] = None, max_: Optional[int] = None):
+        self.__min = min_
+        self.__max = max_
 
     def validate(self, value: Any):
-        if not isinstance(value, int):
+        if type(value) is not int:  # https://stackoverflow.com/a/37888668
             raise TypeError(f"Expected {value!r} to be an int")
-        if self.min is not None and value < self.min:
-            raise ValueError(f"Expected {value!r} to be at least {self.min!r}")
-        if self.max is not None and value > self.max:
-            raise ValueError(f"Expected {value!r} to be no more than {self.max!r}")
+        if self.__min is not None and value < self.__min:
+            raise ValueError(f"Expected {value!r} to be at least {self.__min!r}")
+        if self.__max is not None and value > self.__max:
+            raise ValueError(f"Expected {value!r} to be no more than {self.__max!r}")
 
 
 class _UIntValidator(_IntValidator):
     """A specialization of `_IntValidator` for validating positive integers."""
 
-    def __init__(self, max: Optional[int] = None):
-        super().__init__(min=0, max=max)
+    def __init__(self, max_: Optional[int] = None):
+        super().__init__(min_=0, max_=max_)
 
 
 class _FloatValidator(_IntFloatValidatorBase):
     """Validates whether value is an `float` and lies in a range, optionally."""
 
     def __init__(
-        self, min: Optional[float] = None, max: Optional[float] = None
+        self, min_: Optional[float] = None, max_: Optional[float] = None
     ) -> None:
-        self.min = min
-        self.max = max
+        self.__min = min_
+        self.__max = max_
 
     def validate(self, value: Any):
-        if not isinstance(value, float):
+        if type(value) is not float:
             raise TypeError(f"Expected {value!r} to be a float")
-        if self.min is not None and value < self.min:
-            raise ValueError(f"Expected {value!r} to be at least {self.min!r}")
-        if self.max is not None and value > self.max:
-            raise ValueError(f"Expected {value!r} to be no more than {self.max!r}")
+        if self.__min is not None and value < self.__min:
+            raise ValueError(f"Expected {value!r} to be at least {self.__min!r}")
+        if self.__max is not None and value > self.__max:
+            raise ValueError(f"Expected {value!r} to be no more than {self.__max!r}")
 
 
-class _BytesStrValidatorBase(_Validator):
+class _BytesStrValidatorBase(_Validator, abc.ABC):
     """Base class for `_BytesValidator` and `_StrValidator`."""
 
     def __init__(self, minsize: Optional[int] = None, maxsize: Optional[int] = None):
-        self.minsize = minsize
-        self.maxsize = maxsize
+        self.__minsize = minsize
+        self.__maxsize = maxsize
 
     def __repr__(self) -> str:
-        return f"<{type(self).__name__} min={self.minsize}, max={self.maxsize}>"
+        return f"<{type(self).__name__} min={self.__minsize}, max={self.__maxsize}>"
 
     def validate(self, value: Any):
-        if self.minsize is not None and len(value) < self.minsize:
+        if self.__minsize is not None and len(value) < self.__minsize:
             raise ValueError(
-                f"Expected {value!r} to be no smaller than {self.minsize!r}"
+                f"Expected {value!r} to be no smaller than {self.__minsize!r}"
             )
-        if self.maxsize is not None and len(value) > self.maxsize:
+        if self.__maxsize is not None and len(value) > self.__maxsize:
             raise ValueError(
-                f"Expected {value!r} to be no bigger than {self.maxsize!r}"
+                f"Expected {value!r} to be no bigger than {self.__maxsize!r}"
             )
 
 
@@ -151,12 +157,12 @@ class _StrValidator(_BytesStrValidatorBase):
         mustascii: bool = False,
     ):
         super().__init__(minsize, maxsize)
-        self.mustascii = mustascii
+        self.__mustascii = mustascii
 
     def validate(self, value: Any):
         if not isinstance(value, str):
             raise TypeError(f"Expected {value!r} to be an str")
-        if self.mustascii and not isascii(value):
+        if self.__mustascii and not isascii(value):
             raise TypeError(f"Expected {value!r} to be an ASCII string")
         super().validate(value)
 
@@ -166,4 +172,4 @@ class _ColorValidator(_Validator):
 
     def validate(self, value: Any):
         if not isinstance(value, colour.Color):
-            raise TypeError(f"Expected {value!r} to be a {type(colour.Color)} object")
+            raise TypeError(f"Expected {value!r} to be a 'colour.Color' object")

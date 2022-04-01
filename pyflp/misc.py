@@ -4,16 +4,15 @@ from typing import Optional, ValuesView
 
 from bytesioex import BytesIOEx, Double
 
-from pyflp.constants import DATA, DWORD, TEXT, VALID_PPQS, WORD
 from pyflp._event import (
     _ByteEvent,
-    _TextEvent,
-    _WordEvent,
     _DataEventType,
     _DWordEventType,
     _EventType,
+    _TextEvent,
+    _WordEvent,
 )
-from pyflp._flobject import _MaxInstancedFLObject, _FLObject
+from pyflp._flobject import _FLObject, _MaxInstancedFLObject
 from pyflp._properties import (
     _BoolProperty,
     _EnumProperty,
@@ -21,8 +20,9 @@ from pyflp._properties import (
     _StrProperty,
     _UIntProperty,
 )
-from pyflp.utils import FLVersion
 from pyflp._validators import _OneOfValidator
+from pyflp.constants import DATA, DWORD, TEXT, VALID_PPQS, WORD
+from pyflp.utils import FLVersion
 
 __all__ = ["Misc"]
 
@@ -32,7 +32,7 @@ class Misc(_MaxInstancedFLObject):
 
     [Project Info](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/songsettings_songinfo.htm)
     [Project Settings](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/songsettings_settings.htm)
-    """
+    """  # noqa
 
     __DELPHI_EPOCH = datetime.datetime(1899, 12, 30)
 
@@ -219,13 +219,13 @@ class Misc(_MaxInstancedFLObject):
     @version.setter
     def version(self, value: str):
         split = value.split(".")
-        if len(split) not in range(3, 5):
+        if len(split) not in (3, 4):
             raise ValueError(
                 "Version should be of the format 'Major.Minor.Revision(.Build)?'."
             )
         self._events["version"].dump(value)
         self._version = value
-        _FLObject.fl_version = FLVersion(value)
+        _FLObject._fl_version = FLVersion(value)
         try:
             temp = int(split[3])
         except IndexError:
@@ -322,7 +322,7 @@ class Misc(_MaxInstancedFLObject):
     main_pitch: Optional[int] = _IntProperty()
     """Master pitch.
 
-    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/toolbar_panels.htm#mainpitch_slider)"""
+    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/toolbar_panels.htm#mainpitch_slider)"""  # noqa
 
     main_volume: Optional[int] = _IntProperty()
     """Master volume."""

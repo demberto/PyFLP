@@ -103,7 +103,7 @@ class Track(_MaxInstancedFLObject):
     max_count = 500
 
     def _setprop(self, n: str, v: Any):
-        if not n == "name":
+        if n != "name":
             self.__tde.dump(n, v)
         setattr(self, "_" + n, v)
 
