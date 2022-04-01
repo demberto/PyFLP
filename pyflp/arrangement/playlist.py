@@ -33,7 +33,6 @@ class PatternPlaylistItem(_PlaylistItem):
 
 
 class Playlist(_FLObject):
-    ppq = 0
     max_count = 1
 
     def __json__(self) -> NoReturn:
@@ -90,8 +89,8 @@ class Playlist(_FLObject):
                     track_events = []
 
                 if item_idx <= pattern_base:
-                    start_offset = int(r.read_f() * Playlist.ppq)  # 28
-                    end_offset = int(r.read_f() * Playlist.ppq)  # 32
+                    start_offset = int(r.read_f() * _FLObject.ppq)  # 28
+                    end_offset = int(r.read_f() * _FLObject.ppq)  # 32
 
                     # Cannot access tracks from here; handled by Parser
                     track_events.append(

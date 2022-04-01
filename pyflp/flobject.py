@@ -2,7 +2,7 @@ import abc
 import enum
 from typing import Any, Dict, Optional, ValuesView
 
-from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
+from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, VALID_PPQS, WORD
 from pyflp.event import (
     ByteEvent,
     ColorEvent,
@@ -13,6 +13,7 @@ from pyflp.event import (
     _DWordEventType,
     _EventType,
 )
+from pyflp.exceptions import MaxInstancesError
 from pyflp.properties import _Property
 from pyflp.utils import FLVersion
 
@@ -20,6 +21,7 @@ from pyflp.utils import FLVersion
 class _FLObject(abc.ABC):
     """Abstract base class for the FLP object model."""
 
+    ppq = 0
     _count = 0
 
     # Set by Parser and can be modified by Misc.version
@@ -37,6 +39,12 @@ class _FLObject(abc.ABC):
             if isinstance(prop, _Property):
                 reprs.append(f"{k}={attr!r}")
         return f"<{type(self).__name__} {', '.join(reprs)}>"
+
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        if __name == "ppq":
+            if __value not in VALID_PPQS:
+                raise ValueError(f"Expected one of {VALID_PPQS}; got {__value}")
+        return super().__setattr__(__name, __value)
 
     def _setprop(self, n, v):
         """Dumps a property value to the underlying event
@@ -151,7 +159,8 @@ class _FLObject(abc.ABC):
         and occur once inside the container class!"""
 
         if not hasattr(self, "_" + key):
-            assert isinstance(value, _FLObject)
+            if not isinstance(value, _FLObject):
+                raise TypeError
             self._parseprop(event, key, value)
         obj: _FLObject = getattr(self, "_" + key)
         obj.parse_event(event)
@@ -165,4 +174,15 @@ class _FLObject(abc.ABC):
         self._idx = cls._count
         cls._count += 1
         self._events: Dict[str, _EventType] = {}
+
+
+class _MaxInstancedFLObject(_FLObject):
+    """Used when a limit has too be imposed on the number of instances."""
+
+    max_count = 1
+
+    def __init__(self):
+        cls = type(self)
+        if not (cls._count <= cls.max_count):
+            raise MaxInstancesError(cls)
         super().__init__()
