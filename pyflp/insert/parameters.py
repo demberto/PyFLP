@@ -62,22 +62,25 @@ class InsertParametersEvent(_DataEvent):
 
         super().__init__(Insert.EventID.Parameters, data)
         self.__r = r = BytesIOEx(data)
-        self.u1 = r.read_I()
+        self._u1 = r.read_I()
         self.flags = InsertFlags(r.read_I())
-        self.u2 = r.read_I()
+        self._u2 = r.read_I()
 
     def __repr__(self) -> str:
-        return f"<InsertParametersEvent flags={self.flags}, u1={self.u1}, u2={self.u2}>"
+        return (
+            f"<InsertParametersEvent flags={self.flags!r}, _u1={self._u1!r}, "
+            f"_u2={self._u2!r}>"
+        )
 
     def set(self, n: str, v: int):
         r = self.__r
-        if n == "u1":
+        if n == "_u1":  # pragma: no cover
             r.seek(0)
             r.write_I(v)
         elif n == "flags":
             r.seek(4)
             r.write_I(v)
-        elif n == "u2":
+        elif n == "_u2":  # pragma: no cover
             r.seek(8)
             r.write_I(v)
         r.seek(0)

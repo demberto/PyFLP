@@ -6,6 +6,17 @@ from typing import List, Set, Union
 
 from bytesioex import BytesIOEx
 
+from pyflp._event import (
+    _ByteEvent,
+    _ColorEvent,
+    _DataEvent,
+    _DWordEvent,
+    _Event,
+    _EventType,
+    _TextEvent,
+    _WordEvent,
+)
+from pyflp._flobject import _FLObject
 from pyflp.arrangement.arrangement import Arrangement
 from pyflp.arrangement.playlist import Playlist
 from pyflp.arrangement.timemarker import TimeMarker
@@ -32,18 +43,7 @@ from pyflp.constants import (
     WORD,
 )
 from pyflp.controllers import RemoteController, RemoteControllerEvent
-from pyflp._event import (
-    _ByteEvent,
-    _ColorEvent,
-    _DataEvent,
-    _DWordEvent,
-    _Event,
-    _TextEvent,
-    _WordEvent,
-    _EventType,
-)
 from pyflp.exceptions import InvalidHeaderSizeError, InvalidMagicError
-from pyflp._flobject import _FLObject
 from pyflp.insert.event import InsertParamsEvent
 from pyflp.insert.insert import Insert
 from pyflp.insert.parameters import InsertParametersEvent
@@ -121,7 +121,7 @@ class Parser:
 
         def add_textevent(id, buf):
             if id == Misc.EventID.Version:
-                _FLObject.fl_version = flv = FLVersion(_TextEvent.as_ascii(buf))
+                _FLObject._fl_version = flv = FLVersion(_TextEvent.as_ascii(buf))
                 if flv.as_float() < 11.5:
                     _TextEvent.uses_unicode = False
             self.__events.append(_TextEvent(id, buf))
@@ -303,7 +303,7 @@ class Parser:
             raise InvalidHeaderSizeError(hdr_size)
         proj.misc.format = Misc.Format(r.read_h())
         proj.misc.channel_count = r.read_H()
-        proj.misc.ppq = _FLObject.ppq = r.read_H()
+        proj.misc.ppq = _FLObject._ppq = r.read_H()
         data_magic = r.read(4)
         if data_magic != DATA_MAGIC:
             raise InvalidMagicError(data_magic)
@@ -320,7 +320,7 @@ class Parser:
 
         # * Modify parsing logic as per FL version
         # TODO: This can be as less as 16. Also insert slots were once 8.
-        Insert.max_count = 127 if _FLObject.fl_version.as_float() >= 12.89 else 104
+        Insert.max_count = 127 if _FLObject._fl_version.as_float() >= 12.89 else 104
         self.__cur_ins = Insert()
 
         # * Build an object model

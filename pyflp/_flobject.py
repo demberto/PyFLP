@@ -37,11 +37,11 @@ class _FLOBjectAbstractMeta(_FLObjectMeta, abc.ABCMeta):
 class _FLObject(metaclass=_FLOBjectAbstractMeta):
     """ABC for the FLP object model."""
 
-    ppq = 0
+    _ppq = 0
     _count = 0
 
     # Set by Parser and can be modified by Misc.version
-    fl_version: Optional[FLVersion] = None
+    _fl_version: Optional[FLVersion] = None
 
     @enum.unique
     class EventID(enum.IntEnum):
