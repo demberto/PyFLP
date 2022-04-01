@@ -18,15 +18,13 @@ class _QWordVariableEvent(_VariableSizedEvent):
             return 9 + len(self.data)
         return 9
 
-    def dump(self, new: Union[str, bytes]):
-        if not isinstance(new, (bytes, str)):
-            raise TypeError(
-                f"Expected a bytes or an str object; got a '{type(new)}'", new
-            )
-        if isinstance(new, str):
-            self.data = new.encode("ascii")
+    def dump(self, new_data: Union[str, bytes]):
+        if not isinstance(new_data, (bytes, str)):
+            raise TypeError("Expected a bytes or an str object")
+        if isinstance(new_data, str):
+            self.data = new_data.encode("ascii")
         else:
-            self.data = new
+            self.data = new_data
 
     def to_raw(self) -> bytes:
         id = UInt.pack(self.id)

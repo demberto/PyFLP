@@ -1,5 +1,5 @@
 import enum
-from typing import NoReturn, Optional
+from typing import Optional
 
 from pyflp.flobject import _FLObject
 from pyflp.properties import _BoolProperty, _EnumProperty, _FloatProperty, _UIntProperty
@@ -42,7 +42,3 @@ class ChannelArp(_FLObject):
 
     slide: Optional[bool] = _BoolProperty()
     """Whether arpeggio will slide between notes."""
-
-    def _save(self) -> NoReturn:
-        """Implemented in `ChannelParametersEvent`."""
-        raise NotImplementedError

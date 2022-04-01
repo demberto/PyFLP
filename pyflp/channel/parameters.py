@@ -38,10 +38,9 @@ class ChannelParameters(_FLObject):
 
     def _save(self) -> ChannelParametersEvent:
         e = tuple(self._events.values())[0]
-        d = e.data
-        ol = len(d)
-        r = BytesIOEx(d)
-        if ol > 40:
+        oldlen = len(e.data)
+        r = BytesIOEx(e.data)
+        if oldlen > 40:
             r.seek(40)
             arp = self.arp
             r.write_I(arp.direction)
@@ -54,6 +53,6 @@ class ChannelParameters(_FLObject):
         # Prevent writing more data than previously was since write_* methods
         # can add more data than actually was, possibly making the FLP unopenable.
         r.seek(0)
-        nd = r.read(ol)
+        newbuf = r.read(oldlen)
         r.seek(0)
-        r.write(nd)
+        r.write(newbuf)

@@ -19,7 +19,17 @@ from pyflp.channel.levels import ChannelLevelsEvent
 from pyflp.channel.parameters import ChannelParametersEvent
 from pyflp.channel.polyphony import ChannelPolyphonyEvent
 from pyflp.channel.tracking import ChannelTrackingEvent
-from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
+from pyflp.constants import (
+    BYTE,
+    DATA,
+    DATA_MAGIC,
+    DATA_TEXT_EVENTS,
+    DWORD,
+    HEADER_MAGIC,
+    HEADER_SIZE,
+    TEXT,
+    WORD,
+)
 from pyflp.controllers import RemoteController, RemoteControllerEvent
 from pyflp.event import (
     ByteEvent,
@@ -31,6 +41,7 @@ from pyflp.event import (
     WordEvent,
     _EventType,
 )
+from pyflp.exceptions import InvalidHeaderSizeError, InvalidMagicError
 from pyflp.flobject import _FLObject
 from pyflp.insert.event import InsertParamsEvent
 from pyflp.insert.insert import Insert
@@ -281,32 +292,19 @@ class Parser:
             )
 
         r = self.__r
-
-        # * Init: Verify header integrity and build event store
-        # Magic number
-        assert r.read(4) == b"FLhd"
-
-        # Header size (always 6)
-        assert r.read_I() == 6
-
-        # Format, TODO enum
-        proj.misc.format = format = r.read_h()
-        assert format == Misc.Format.Song
-
-        # Channel count.
-        # For Patcher presets, the total number of plugins used inside it.
-        proj.misc.channel_count = channel_count = r.read_H()
-        assert channel_count in range(1, 1000)
-
-        # PPQ
-        proj.misc.ppq = Playlist.ppq = r.read_H()
-
-        # Magic number
-        assert r.read(4) == b"FLdt"
-
-        # Combined size of all events
-        _ = r.read_I()
-
+        hdr_magic = r.read(4)
+        if hdr_magic != HEADER_MAGIC:
+            raise InvalidMagicError(hdr_magic)
+        hdr_size = r.read_I()
+        if hdr_size != HEADER_SIZE:
+            raise InvalidHeaderSizeError(hdr_size)
+        proj.misc.format = Misc.Format(r.read_h())
+        proj.misc.channel_count = r.read_H()
+        proj.misc.ppq = _FLObject.ppq = r.read_H()
+        data_magic = r.read(4)
+        if data_magic != DATA_MAGIC:
+            raise InvalidMagicError(data_magic)
+        _ = r.read_I()  # Combined size of all events
         self.__build_event_store()
 
         return self.__events

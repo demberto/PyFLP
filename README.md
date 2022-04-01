@@ -1,3 +1,5 @@
+<!-- PROJECT SHIELDS -->
+
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/demberto/pyflp/Build%20&%20Publish?style=flat-square)
 [![Documentation Status](https://readthedocs.org/projects/pyflp/badge/?version=latest)](https://pyflp.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/demberto/PyFLP/branch/master/graph/badge.svg?token=RGSRMMF8PF)](https://codecov.io/gh/demberto/PyFLP)
@@ -37,7 +39,7 @@ from pyflp import Parser
 project = Parser().parse("/path/to/efelpee.flp")
 ```
 
-More examples [here](https://pyflp.rtfd.io/handbook.md)
+More examples [here](https://pyflp.rtfd.io/en/latest/handbook/)
 
 # Documentation
 
