@@ -2,24 +2,40 @@ import abc
 import enum
 from typing import Any, Dict, Optional, ValuesView
 
-from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, VALID_PPQS, WORD
 from pyflp._event import (
     _ByteEvent,
     _ColorEvent,
-    _DWordEvent,
-    _TextEvent,
-    _WordEvent,
     _DataEventType,
+    _DWordEvent,
     _DWordEventType,
     _EventType,
+    _TextEvent,
+    _WordEvent,
 )
-from pyflp.exceptions import MaxInstancesError
 from pyflp._properties import _Property
+from pyflp._validators import _OneOfValidator
+from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, VALID_PPQS, WORD
+from pyflp.exceptions import MaxInstancesError
 from pyflp.utils import FLVersion
 
 
-class _FLObject(abc.ABC):
-    """Abstract base class for the FLP object model."""
+class _FLObjectMeta(type):
+    """Metaclass for `_FLObject`."""
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == "_ppq":
+            _OneOfValidator(VALID_PPQS).validate(value)
+        return super().__setattr__(name, value)
+
+
+class _FLOBjectAbstractMeta(_FLObjectMeta, abc.ABCMeta):
+    """Abstract metaclass for `_FLObject` (to avoid MRO errors)."""
+
+    pass
+
+
+class _FLObject(metaclass=_FLOBjectAbstractMeta):
+    """ABC for the FLP object model."""
 
     ppq = 0
     _count = 0
@@ -39,12 +55,6 @@ class _FLObject(abc.ABC):
             if isinstance(prop, _Property):
                 reprs.append(f"{k}={attr!r}")
         return f"<{type(self).__name__} {', '.join(reprs)}>"
-
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        if __name == "ppq":
-            if __value not in VALID_PPQS:
-                raise ValueError(f"Expected one of {VALID_PPQS}; got {__value}")
-        return super().__setattr__(__name, __value)
 
     def _setprop(self, n, v):
         """Dumps a property value to the underlying event

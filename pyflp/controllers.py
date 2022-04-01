@@ -1,19 +1,20 @@
+import abc
 import enum
 from typing import Optional  # , Union
 
 from bytesioex import BytesIOEx
 
-from pyflp.constants import DATA
 from pyflp._event import _DataEvent
 
 # from pyflp.exceptions import OperationNotPermittedError
-from pyflp._flobject import _FLObject
+from pyflp._flobject import _FLObject, _FLOBjectAbstractMeta
 from pyflp._properties import _BoolProperty, _EnumProperty, _IntProperty, _UIntProperty
+from pyflp.constants import DATA
 
 __all__ = ["RemoteController", "RemoteControllerEvent"]
 
 
-class Controller(_FLObject):
+class Controller(_FLObject, metaclass=_FLOBjectAbstractMeta):
     pass
 
 
