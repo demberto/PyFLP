@@ -55,6 +55,8 @@ from pyflp.plugin.vst import VSTPluginEvent
 from pyflp.project import Project
 from pyflp.utils import FLVersion
 
+__all__ = ["Parser"]
+
 
 class Parser:
     """FL Studio project file parser."""

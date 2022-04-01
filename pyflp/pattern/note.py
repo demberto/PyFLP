@@ -9,23 +9,11 @@ from pyflp.flobject import _FLObject
 from pyflp.properties import _IntProperty, _UIntProperty
 from pyflp.validators import _IntValidator, _UIntValidator
 
+__all__ = ["PatternNote", "PatternNotesEvent"]
+
 
 class PatternNote(_FLObject):
     """Represents a note (MIDI event) in a `Pattern`."""
-
-    def __repr__(self) -> str:
-        return "<PatternNote {}, {}, {}, {}, {}, {}, {}, {}, {}, {}>".format(
-            f"key={self.key}",
-            f"position={self.position}",
-            f"rack_channel={self.rack_channel}",
-            f"duration={self.duration}",
-            f"velocity={self.velocity}",
-            f"pan={self.pan}",
-            f"midi_channel={self.midi_channel}",
-            f"release={self.release}",
-            f"mod_x={self.mod_x}",
-            f"mod_y={self.mod_y}",
-        )
 
     # * Properties
     position: int = _UIntProperty()

@@ -4,6 +4,8 @@ from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
 from pyflp.properties import _IntProperty
 
+__all__ = ["ChannelLevelOffsets", "ChannelLevelOffsetsEvent"]
+
 
 class ChannelLevelOffsetsEvent(DataEvent):
     """Implements `Channel.EventID.LevelOffsets`."""

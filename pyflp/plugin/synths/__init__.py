@@ -2,3 +2,5 @@
 
 Currently only BooBass has one.
 """
+
+from .boobass import BooBass

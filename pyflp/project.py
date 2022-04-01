@@ -20,6 +20,8 @@ from pyflp.insert.insert import Insert
 from pyflp.misc import Misc
 from pyflp.pattern.pattern import Pattern
 
+__all__ = ["Project"]
+
 
 class Project:
     __slots__ = (

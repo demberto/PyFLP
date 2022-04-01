@@ -3,6 +3,8 @@ from pyflp.plugin.plugin import _EffectPlugin
 from pyflp.properties import _IntProperty, _UIntProperty
 from pyflp.validators import _IntValidator, _UIntValidator
 
+__all__ = ["FSend"]
+
 
 class FSend(_EffectPlugin):
     """Implements Fruity Send. 4 knobs. 16 bytes.

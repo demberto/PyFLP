@@ -6,6 +6,8 @@ from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
 from pyflp.properties import _IntProperty
 
+__all__ = ["ChannelDelay", "ChannelDelayEvent"]
+
 
 class ChannelDelayEvent(DataEvent):
     """Implements `Channel.EventID.Delay`."""

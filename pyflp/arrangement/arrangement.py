@@ -9,6 +9,8 @@ from pyflp.event import DataEvent, TextEvent, WordEvent, _EventType
 from pyflp.flobject import _FLObject
 from pyflp.properties import _StrProperty, _UIntProperty
 
+__all__ = ["Arrangement"]
+
 
 class Arrangement(_FLObject):
     """Represents an arrangement. FL 12.89 introduced support for multiple

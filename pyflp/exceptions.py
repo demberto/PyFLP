@@ -1,3 +1,13 @@
+__all__ = [
+    "Error",
+    "DataCorruptionDetectedError",
+    "InvalidHeaderSizeError",
+    "InvalidMagicError",
+    "OperationNotPermittedError",
+    "MaxInstancesError",
+]
+
+
 class Error(Exception):
     """Base class for PyFLP exceptions"""
 
@@ -26,10 +36,6 @@ class InvalidMagicError(Error):
     """Invalid header magic number"""
 
 
-class OperationNotPermittedError(Error):
-    """Operation not permitted"""
-
-
 class MaxInstancesError(Error):
     """Maximum number of instances already initialised"""
 
@@ -39,3 +45,7 @@ class MaxInstancesError(Error):
 
     def __repr__(self) -> str:
         return f"{self.__type}: {self.__max_count} instances already initialised."
+
+
+class OperationNotPermittedError(Error):
+    """Operation not permitted"""

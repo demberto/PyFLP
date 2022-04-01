@@ -2,6 +2,8 @@ from pyflp.event import _DataEventType
 from pyflp.plugin.plugin import _EffectPlugin
 from pyflp.properties import _IntProperty, _IntValidator
 
+__all__ = ["FBalance"]
+
 
 class FBalance(_EffectPlugin):
     """Implements Fruity Balance. 2 knobs. 8 bytes.

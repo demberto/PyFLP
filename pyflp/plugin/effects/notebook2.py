@@ -3,6 +3,8 @@ from typing import List, Optional
 from pyflp.event import _DataEventType
 from pyflp.plugin.plugin import _EffectPlugin
 
+__all__ = ["FNoteBook2"]
+
 
 class FNoteBook2(_EffectPlugin):
     """Implements Fruity Notebook 2.

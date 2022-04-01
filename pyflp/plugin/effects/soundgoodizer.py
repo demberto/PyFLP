@@ -4,6 +4,8 @@ from pyflp.event import _DataEventType
 from pyflp.plugin.plugin import _EffectPlugin
 from pyflp.properties import _EnumProperty, _UIntProperty, _UIntValidator
 
+__all__ = ["Soundgoodizer"]
+
 
 class Soundgoodizer(_EffectPlugin):
     """Implements Soundgoodizer. 2 knobs. 12 bytes

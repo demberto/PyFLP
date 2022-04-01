@@ -6,6 +6,8 @@ from pyflp.flobject import _FLObject
 from pyflp.properties import _EnumProperty, _StrProperty, _UIntProperty
 from pyflp.validators import _IntValidator, _OneOfValidator
 
+__all__ = ["TimeMarker"]
+
 
 class TimeMarker(_FLObject):
     """Represents a time marker or a time signature stamp."""

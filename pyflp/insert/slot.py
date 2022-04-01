@@ -5,7 +5,7 @@ import colour
 
 from pyflp.constants import DATA, DWORD, TEXT, WORD
 from pyflp.event import DataEvent, TextEvent, WordEvent, _DWordEventType, _EventType
-from pyflp.flobject import _FLObject
+from pyflp.flobject import _MaxInstancedFLObject
 from pyflp.plugin.effects.balance import FBalance
 from pyflp.plugin.effects.fast_dist import FFastDist
 from pyflp.plugin.effects.notebook2 import FNoteBook2
@@ -24,14 +24,8 @@ from pyflp.properties import (
 from pyflp.validators import _IntValidator, _UIntValidator
 
 
-class InsertSlot(_FLObject):
+class InsertSlot(_MaxInstancedFLObject):
     max_count = 10  # TODO: Older versions had 8, maybe lesser as well
-
-    def __init__(self):
-        super().__init__()
-        assert (
-            self._count <= self.max_count
-        ), f"InsertSlot count={self._count} exceeds max_count={self.max_count}"
 
     @enum.unique
     class EventID(enum.IntEnum):

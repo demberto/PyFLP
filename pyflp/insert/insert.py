@@ -5,17 +5,17 @@ import colour
 
 from pyflp.constants import DATA, DWORD, TEXT, WORD
 from pyflp.event import DWordEvent, TextEvent, WordEvent, _DataEventType, _EventType
-from pyflp.flobject import _FLObject
+from pyflp.flobject import _MaxInstancedFLObject
 from pyflp.insert.parameters import InsertFlags, InsertParameters
 from pyflp.insert.slot import InsertSlot
 from pyflp.properties import _ColorProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp.validators import _IntValidator, _UIntValidator
 
 
-class Insert(_FLObject):
-    max_count = 0  # Will be a given a value by Parser
+class Insert(_MaxInstancedFLObject):
+    # Parser will decide a value for max_count
 
-    class EQ(_FLObject):
+    class EQ(_MaxInstancedFLObject):
         """Insert post EQ.
 
         [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/mixer_trackprops.htm)
@@ -145,7 +145,8 @@ class Insert(_FLObject):
 
     @route_volumes.setter
     def route_volumes(self, value: List[int]):
-        assert len(value) == Insert.max_count
+        if len(value) != Insert.max_count:
+            raise ValueError(f"Expected a list of size {Insert.max_count}")
         self._route_volumes = value
 
     @property
@@ -217,10 +218,9 @@ class Insert(_FLObject):
 
     def __init__(self):
         super().__init__()
-        InsertSlot._count = 0
+        InsertSlot._count = Insert.EQ._count = 0
         self._slots: List[InsertSlot] = []
         self._cur_slot = InsertSlot()
         self._eq = Insert.EQ()
         self._route_volumes = [int()] * Insert.max_count
-        assert Insert._count <= Insert.max_count
         self.index = Insert._count - 2

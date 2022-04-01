@@ -4,6 +4,8 @@ from pyflp.channel.arp import ChannelArp
 from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
 
+__all__ = ["ChannelParameters", "ChannelParametersEvent"]
+
 
 class ChannelParametersEvent(DataEvent):
     """Implements `Channel.EventID.Parameters`."""
