@@ -41,10 +41,9 @@ def test_byte_event():
         assert e.to_bool()
     with pytest.raises(ValueError):
         e.dump(b"")
-    with pytest.raises(OverflowError):
-        e.dump(-256)
-    with pytest.raises(OverflowError):
-        e.dump(256)
+    for overflow in (-256, 256):
+        with pytest.raises(OverflowError):
+            e.dump(overflow)
     with pytest.raises(TypeError):
         e.dump("s")
     assert e != _ByteEvent(BYTE, b"\xFF")
@@ -53,6 +52,8 @@ def test_byte_event():
         e == w
     with pytest.raises(TypeError):
         e != w
+    e.dump(True)
+    assert e.to_bool()
 
 
 def test_word_event():
@@ -99,7 +100,7 @@ def test_dword_event():
     assert e != _DWordEvent(DWORD, b"\x00\x00\x00\x01")
 
 
-def test_text_event():
+def test_text_event(monkeypatch):
     with pytest.raises(ValueError):
         e = _TextEvent(DATA, b"t\x00e\x00x\x00t\x00\0")
     with pytest.raises(TypeError):
@@ -108,14 +109,11 @@ def test_text_event():
     s = e.size
     assert s == 11
     assert e.to_str() == "text"
-    _TextEvent.uses_unicode = False
+    monkeypatch.setattr(_TextEvent, "uses_unicode", False)
     e.dump("more")
     assert e.size == 7
     with pytest.raises(TypeError):
         e.dump(0)
-
-    # ! All future tests fail without this
-    _TextEvent.uses_unicode = True
 
 
 def test_data_event():

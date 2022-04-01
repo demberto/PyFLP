@@ -37,7 +37,7 @@ class ChannelLevelOffsetsEvent(_DataEvent):
             r.seek(0)
         elif n == "volume":
             r.seek(4)
-        elif n == "_u1":
+        elif n == "_u1":  # pragma: no cover
             r.seek(8)
         elif n == "mod_x":
             r.seek(12)

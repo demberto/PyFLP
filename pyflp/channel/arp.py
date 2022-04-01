@@ -2,7 +2,12 @@ import enum
 from typing import Optional
 
 from pyflp._flobject import _FLObject
-from pyflp._properties import _BoolProperty, _EnumProperty, _FloatProperty, _UIntProperty
+from pyflp._properties import (
+    _BoolProperty,
+    _EnumProperty,
+    _FloatProperty,
+    _UIntProperty,
+)
 
 
 class ChannelArp(_FLObject):
@@ -23,7 +28,6 @@ class ChannelArp(_FLObject):
 
     # * Properties
     direction: Direction = _EnumProperty(Direction)
-    """See `Direction`."""
 
     range: Optional[int] = _UIntProperty()
     """Range (in octaves)."""

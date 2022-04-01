@@ -39,11 +39,11 @@ class ChannelLevelsEvent(_DataEvent):
             r.seek(4)
         elif n == "pitch_shift":
             r.seek(8)
-        elif n == "_u1":
+        elif n == "_u1":  # pragma: no cover
             r.seek(12)
-        elif n == "_u2":
+        elif n == "_u2":  # pragma: no cover
             r.seek(16)
-        elif n == "_u3":
+        elif n == "_u3":  # pragma: no cover
             r.seek(20)
         r.write_i(v)
         r.seek(0)
