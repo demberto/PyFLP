@@ -1,27 +1,27 @@
-# Event
+# _Event
 
-::: pyflp.event.Event
+::: pyflp._event._Event
 
 # ByteEvent
 
-::: pyflp.event.ByteEvent
+::: pyflp._event._ByteEvent
 
-# WordEvent
+# _WordEvent
 
-::: pyflp.event.WordEvent
+::: pyflp._event._WordEvent
 
-# DWordEvent
+# _DWordEvent
 
-::: pyflp.event.DWordEvent
+::: pyflp._event._DWordEvent
 
-## ColorEvent
+## _ColorEvent
 
-::: pyflp.event.ColorEvent
+::: pyflp._event._ColorEvent
 
-# TextEvent
+# _TextEvent
 
-::: pyflp.event.TextEvent
+::: pyflp._event._TextEvent
 
-# DataEvent
+# _DataEvent
 
-::: pyflp.event.DataEvent
+::: pyflp._event._DataEvent

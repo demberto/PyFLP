@@ -17,20 +17,20 @@ from pyflp.channel.levels import ChannelLevels
 from pyflp.channel.polyphony import ChannelPolyphony
 from pyflp.channel.tracking import ChannelTracking, ChannelTrackingEvent
 from pyflp.constants import DATA, DWORD, TEXT, WORD
-from pyflp.event import (
-    ByteEvent,
-    TextEvent,
-    WordEvent,
+from pyflp._event import (
+    _ByteEvent,
+    _TextEvent,
+    _WordEvent,
     _DataEventType,
     _DWordEventType,
     _EventType,
 )
-from pyflp.flobject import _FLObject
+from pyflp._flobject import _FLObject
 from pyflp.insert.insert import Insert
-from pyflp.plugin.plugin import _Plugin
+from pyflp.plugin._plugin import _Plugin
 from pyflp.plugin.synths.boobass import BooBass
 from pyflp.plugin.vst import VSTPlugin
-from pyflp.properties import (
+from pyflp._properties import (
     _BoolProperty,
     _ColorProperty,
     _EnumProperty,
@@ -38,7 +38,7 @@ from pyflp.properties import (
     _StrProperty,
     _UIntProperty,
 )
-from pyflp.validators import _IntValidator, _UIntValidator
+from pyflp._validators import _IntValidator, _UIntValidator
 
 
 class Channel(_FLObject):
@@ -337,7 +337,7 @@ class Channel(_FLObject):
     stretch_time: Optional[int] = _UIntProperty()
     """Sampler/Audio -> Time stretching -> Time.
 
-    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_sampler.htm#Sampler_Beatmatching)"""  # noqa
+    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_sampler.htm#Sampler_Beatmatching)"""
 
     au_sample_rate: Optional[int] = _UIntProperty()
     """AU-format sample specific."""
@@ -373,7 +373,7 @@ class Channel(_FLObject):
             return self._fx.parse_event(e)
         return super().parse_event(e)
 
-    def _parse_byte_event(self, e: ByteEvent):
+    def _parse_byte_event(self, e: _ByteEvent):
         if e.id == Channel.EventID.Enabled:
             self._parse_bool(e, "enabled")
         elif e.id == Channel.EventID._Vol:
@@ -396,7 +396,7 @@ class Channel(_FLObject):
         elif e.id == Channel.EventID.Locked:
             self._parse_bool(e, "locked")
 
-    def _parse_word_event(self, e: WordEvent):
+    def _parse_word_event(self, e: _WordEvent):
         if e.id == Channel.EventID.New:
             self._parse_H(e, "index")
         elif e.id == Channel.EventID._Volume:
@@ -430,7 +430,7 @@ class Channel(_FLObject):
         elif e.id == Channel.EventID.AUSampleRate:
             self._parse_I(e, "au_sample_rate")
 
-    def _parse_text_event(self, e: TextEvent):
+    def _parse_text_event(self, e: _TextEvent):
         if e.id == Channel.EventID.DefaultName:
             self._parse_s(e, "default_name")
         elif e.id == Channel.EventID.SamplePath:

@@ -3,17 +3,17 @@ from typing import Any
 
 from bytesioex import BytesIOEx
 
-from pyflp.event import DataEvent
-from pyflp.flobject import _FLObject
-from pyflp.properties import _BoolProperty, _EnumProperty, _IntProperty, _UIntProperty
-from pyflp.validators import _IntValidator, _UIntValidator
+from pyflp._event import _DataEvent
+from pyflp._flobject import _FLObject
+from pyflp._properties import _BoolProperty, _EnumProperty, _IntProperty, _UIntProperty
+from pyflp._validators import _IntValidator, _UIntValidator
 
 __all__ = ["ChannelEnvelopeLFO", "ChannelEnvelopeLFOEvent"]
 
 EnvelopeLFONames = ("Panning", "Volume", "Pitch", "Mod X", "Mod Y")
 
 
-class ChannelEnvelopeLFOEvent(DataEvent):
+class ChannelEnvelopeLFOEvent(_DataEvent):
     _chunk_size = 68
 
     def __init__(self, data: bytes):
@@ -101,7 +101,7 @@ class ChannelEnvelopeLFOEvent(DataEvent):
 class ChannelEnvelopeLFO(_FLObject):
     """Used by `Channel._env_lfos`.
 
-    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_ins.htm)"""  # noqa
+    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_ins.htm)"""
 
     _AHDSR_VALIDATOR = _IntValidator(100, 65536)
     _TNS_VALIDATOR = _IntValidator(-128, 128)

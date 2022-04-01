@@ -4,9 +4,9 @@ from typing import List
 
 from bytesioex import BytesIOEx
 
-from pyflp.event import DataEvent
-from pyflp.flobject import _FLObject
-from pyflp.properties import _FloatProperty, _UIntProperty
+from pyflp._event import _DataEvent
+from pyflp._flobject import _FLObject
+from pyflp._properties import _FloatProperty, _UIntProperty
 
 __all__ = ["PatternController", "PatternControllersEvent"]
 
@@ -51,7 +51,7 @@ class PatternController(_FLObject):
         )
 
 
-class PatternControllersEvent(DataEvent):
+class PatternControllersEvent(_DataEvent):
     def __init__(self, data: bytes):
         from pyflp.pattern.pattern import Pattern
 

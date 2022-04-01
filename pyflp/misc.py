@@ -5,16 +5,16 @@ from typing import Optional, ValuesView
 from bytesioex import BytesIOEx, Double
 
 from pyflp.constants import DATA, DWORD, TEXT, VALID_PPQS, WORD
-from pyflp.event import (
-    ByteEvent,
-    TextEvent,
-    WordEvent,
+from pyflp._event import (
+    _ByteEvent,
+    _TextEvent,
+    _WordEvent,
     _DataEventType,
     _DWordEventType,
     _EventType,
 )
-from pyflp.flobject import _MaxInstancedFLObject
-from pyflp.properties import (
+from pyflp._flobject import _MaxInstancedFLObject, _FLObject
+from pyflp._properties import (
     _BoolProperty,
     _EnumProperty,
     _IntProperty,
@@ -22,7 +22,7 @@ from pyflp.properties import (
     _UIntProperty,
 )
 from pyflp.utils import FLVersion
-from pyflp.validators import _OneOfValidator, _UIntValidator
+from pyflp._validators import _OneOfValidator, _UIntValidator
 
 __all__ = ["Misc"]
 
@@ -32,7 +32,7 @@ class Misc(_MaxInstancedFLObject):
 
     [Project Info](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/songsettings_songinfo.htm)
     [Project Settings](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/songsettings_settings.htm)
-    """  # noqa
+    """
 
     __DELPHI_EPOCH = datetime.datetime(1899, 12, 30)
 
@@ -225,7 +225,7 @@ class Misc(_MaxInstancedFLObject):
             )
         self._events["version"].dump(value)
         self._version = value
-        _MaxInstancedFLObject.fl_version = FLVersion(value)
+        _FLObject.fl_version = FLVersion(value)
         try:
             temp = int(split[3])
         except IndexError:
@@ -322,7 +322,7 @@ class Misc(_MaxInstancedFLObject):
     main_pitch: Optional[int] = _IntProperty()
     """Master pitch.
 
-    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/toolbar_panels.htm#mainpitch_slider)"""  # noqa
+    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/toolbar_panels.htm#mainpitch_slider)"""
 
     main_volume: Optional[int] = _IntProperty()
     """Master volume."""
@@ -331,7 +331,7 @@ class Misc(_MaxInstancedFLObject):
     """Whether project was saved in a purchased copy of FL or in trial mode."""
 
     # * Parsing logic
-    def _parse_byte_event(self, e: ByteEvent):
+    def _parse_byte_event(self, e: _ByteEvent):
         if e.id == Misc.EventID.LoopActive:
             self._parse_bool(e, "loop_active")
         elif e.id == Misc.EventID.ShowInfo:
@@ -354,7 +354,7 @@ class Misc(_MaxInstancedFLObject):
         elif e.id == Misc.EventID.Registered:
             self._parse_bool(e, "registered")
 
-    def _parse_word_event(self, e: WordEvent) -> None:
+    def _parse_word_event(self, e: _WordEvent) -> None:
         if e.id == Misc.EventID.CurrentPatternNum:
             self._parse_H(e, "cur_pattern")
         elif e.id == Misc.EventID.MainPitch:
@@ -370,7 +370,7 @@ class Misc(_MaxInstancedFLObject):
         elif e.id == Misc.EventID.SongLoopPos:
             self._parse_I(e, "song_loop_pos")
 
-    def _parse_text_event(self, e: TextEvent):
+    def _parse_text_event(self, e: _TextEvent):
         if e.id == Misc.EventID.Title:
             self._parse_s(e, "title")
         elif e.id == Misc.EventID.Comment:

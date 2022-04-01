@@ -5,17 +5,17 @@ from typing import TYPE_CHECKING, List, Optional, ValuesView
 import colour
 
 from pyflp.constants import DATA, DWORD, TEXT, WORD
-from pyflp.event import (
-    TextEvent,
-    WordEvent,
+from pyflp._event import (
+    _TextEvent,
+    _WordEvent,
     _DataEventType,
     _DWordEventType,
     _EventType,
 )
-from pyflp.flobject import _FLObject
+from pyflp._flobject import _FLObject
 from pyflp.pattern.controller import PatternController, PatternControllersEvent
 from pyflp.pattern.note import PatternNote, PatternNotesEvent
-from pyflp.properties import _ColorProperty, _StrProperty
+from pyflp._properties import _ColorProperty, _StrProperty
 
 __all__ = ["Pattern"]
 
@@ -82,12 +82,12 @@ class Pattern(_FLObject):
         return getattr(self, "_controllers", [])
 
     # * Parsing logic
-    def parse_index1(self, e: WordEvent):
+    def parse_index1(self, e: _WordEvent):
         """Thanks to FL for storing data of a single
         pattern at 2 different places."""
         self._events["index (metadata)"] = e
 
-    def _parse_word_event(self, e: WordEvent):
+    def _parse_word_event(self, e: _WordEvent):
         if e.id == Pattern.EventID.New:
             self._parse_H(e, "index")
 
@@ -95,7 +95,7 @@ class Pattern(_FLObject):
         if e.id == Pattern.EventID.Color:
             self._parse_color(e, "color")
 
-    def _parse_text_event(self, e: TextEvent):
+    def _parse_text_event(self, e: _TextEvent):
         if e.id == Pattern.EventID.Name:
             self._parse_s(e, "name")
 

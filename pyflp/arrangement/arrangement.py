@@ -5,9 +5,9 @@ from pyflp.arrangement.playlist import Playlist
 from pyflp.arrangement.timemarker import TimeMarker
 from pyflp.arrangement.track import Track
 from pyflp.constants import TEXT, WORD
-from pyflp.event import DataEvent, TextEvent, WordEvent, _EventType
-from pyflp.flobject import _FLObject
-from pyflp.properties import _StrProperty, _UIntProperty
+from pyflp._event import _DataEvent, _TextEvent, _WordEvent, _EventType
+from pyflp._flobject import _FLObject
+from pyflp._properties import _StrProperty, _UIntProperty
 
 __all__ = ["Arrangement"]
 
@@ -70,15 +70,15 @@ class Arrangement(_FLObject):
         else:
             super().parse_event(e)
 
-    def _parse_word_event(self, e: WordEvent):
+    def _parse_word_event(self, e: _WordEvent):
         if e.id == Arrangement.EventID.New:
             self._parse_H(e, "index")
 
-    def _parse_text_event(self, e: TextEvent):
+    def _parse_text_event(self, e: _TextEvent):
         if e.id == Arrangement.EventID.Name:
             self._parse_s(e, "name")
 
-    def _parse_data_event(self, e: DataEvent):
+    def _parse_data_event(self, e: _DataEvent):
         if e.id == Track.EventID.Data:
             self._cur_track = Track()
             self._cur_track.parse_event(e)

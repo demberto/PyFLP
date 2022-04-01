@@ -7,13 +7,13 @@ from typing import Dict, List, NoReturn
 from bytesioex import BytesIOEx
 
 from pyflp.constants import DATA
-from pyflp.event import _DataEventType
-from pyflp.flobject import _FLObject
+from pyflp._event import _DataEventType
+from pyflp._flobject import _MaxInstancedFLObject, _FLObject
 
 
 @dataclasses.dataclass
 class _PlaylistItem(abc.ABC):
-    """ABC for ChannelPlaylistItem and PatternPlaylistItem"""
+    """ABC for `ChannelPlaylistItem` and `PatternPlaylistItem`."""
 
     position: int
     length: int
@@ -32,9 +32,7 @@ class PatternPlaylistItem(_PlaylistItem):
     pattern: int  # TODO
 
 
-class Playlist(_FLObject):
-    max_count = 1
-
+class Playlist(_MaxInstancedFLObject):
     def __json__(self) -> NoReturn:
         raise NotImplementedError
 

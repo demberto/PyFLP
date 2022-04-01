@@ -25,8 +25,8 @@ testpaths = "tests"
 [tool.coverage.run]
 branch = true
 omit = [
-    "pyflp/properties.py",
-    "pyflp/validators.py"
+    "pyflp/_properties.py",
+    "pyflp/_validators.py"
 ]
 
 [tool.coverage.report]
@@ -45,3 +45,45 @@ exclude_lines = [
     "@(abc\\.)?abstractmethod",
 ]
 ignore_errors = true
+
+[tool.tbump]
+# Uncomment this if your project is hosted on GitHub:
+github_url = "https://github.com/demberto/PyFLP/"
+
+[tool.tbump.version]
+current = "1.0.0"
+
+# Example of a semver regexp.
+# Make sure this matches current_version before
+# using tbump
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+  '''
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "{new_version}"
+
+# For each file to patch, add a [[tool.tbump.file]] config
+# section containing the path of the file, relative to the
+# tbump.toml location.
+[[tool.tbump.file]]
+src = "VERSION"
+
+# You can specify a list of commands to
+# run after the files have been patched
+# and before the git commit is made
+
+[[tool.tbump.before_commit]]
+name = "check changelog"
+cmd = "git-grep -q {new_version} CHANGELOG.md"
+
+# Or run some commands after the git tag and the branch
+# have been pushed:
+#  [[tool.tbump.after_push]]
+#  name = "publish"
+#  cmd = "./publish.sh"

@@ -31,7 +31,7 @@ There's a lot more information you can get (almost every type of information
 stored about a channel).
 
 !!! tip "For more information"
-    See [Channel](reference/channel/channel.md).
+    See [Channel](reference/channel.md).
 
 ### What about patterns?
 
@@ -50,7 +50,7 @@ for note in pattern.notes:
 ```
 
 !!! tip "For more information"
-    See [Pattern](reference/pattern/pattern.md) and [Note](reference/pattern/note.md)
+    See [Pattern](reference/pattern.md) and [PatternNote](reference/pattern.md#PatternNote)
 
 !!! hint "Docstrings"
     Almost all properties have a meaningful docstring, and many classes have a

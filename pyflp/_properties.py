@@ -2,7 +2,7 @@ import abc
 from typing import TYPE_CHECKING, Any, NoReturn
 
 from pyflp.exceptions import OperationNotPermittedError
-from pyflp.validators import (
+from pyflp._validators import (
     _BoolValidator,
     _BytesValidator,
     _ColorValidator,
@@ -14,8 +14,8 @@ from pyflp.validators import (
 )
 
 if TYPE_CHECKING:
-    from pyflp.flobject import _FLObject
-    from pyflp.validators import _Validator
+    from pyflp._flobject import _FLObject
+    from pyflp._validators import _Validator
 
 
 class _Property(abc.ABC):
@@ -24,34 +24,34 @@ class _Property(abc.ABC):
     https://stackoverflow.com/a/69599069"""
 
     def __init__(self, validator: "_Validator"):
-        self.validator = validator
+        self.__validator = validator
 
     def __repr__(self) -> str:
         return (
             f"<{type(self).__name__} "
-            f'name="{self.public_name}", '
-            f'validator="{repr(self.validator)}">'
+            f'name="{self.__public_name}", '
+            f'validator="{repr(self.__validator)}">'
         )
 
     def __set_name__(self, owner, name: str):
-        self.public_name = name
-        self.private_name = "_" + name
+        self.__public_name = name
+        self.__private_name = "_" + name
 
     def __get__(self, obj: "_FLObject", objtype=None) -> Any:
         if obj is None:
             return self
-        return getattr(obj, self.private_name, None)
+        return getattr(obj, self.__private_name, None)
 
     def __delete__(self, obj) -> NoReturn:
         raise OperationNotPermittedError("Properties cannot be deleted", obj)
 
     def __set__(self, obj: "_FLObject", value) -> None:
-        self.validator.validate(value)
-        setattr(obj, self.private_name, value)
+        self.__validator.validate(value)
+        setattr(obj, self.__private_name, value)
 
-        # This allows for overriding setter logic in FLObject
+        # This allows for overriding setter logic in _FLObject
         # subclass while still allowing to use these descriptors
-        obj._setprop(self.public_name, value)
+        obj._setprop(self.__public_name, value)
 
 
 class _BoolProperty(_Property):
@@ -62,6 +62,11 @@ class _BoolProperty(_Property):
 class _BytesProperty(_Property):
     def __init__(self):
         super().__init__(_BytesValidator())
+
+
+class _ColorProperty(_Property):
+    def __init__(self):
+        super().__init__(_ColorValidator())
 
 
 class _EnumProperty(_Property):
@@ -95,8 +100,3 @@ class _UIntProperty(_Property):
         if validator is None:
             validator = _UIntValidator()
         super().__init__(validator)
-
-
-class _ColorProperty(_Property):
-    def __init__(self):
-        super().__init__(_ColorValidator())

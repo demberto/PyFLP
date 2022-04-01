@@ -8,6 +8,8 @@ from pyflp.utils import isascii
 
 
 class _Validator(abc.ABC):
+    """Base class of all validator classes."""
+
     def __repr__(self) -> str:
         return f"<{type(self).__name__}>"
 
@@ -17,6 +19,8 @@ class _Validator(abc.ABC):
 
 
 class _OneOfValidator(_Validator):
+    """Validates whether a value exists in a given set of options."""
+
     def __init__(self, options: Iterable):
         self.options = options
 
@@ -29,6 +33,8 @@ class _OneOfValidator(_Validator):
 
 
 class _BoolValidator(_OneOfValidator):
+    """Validates whether a value equals `True` or `False`."""
+
     def __init__(self):
         super().__init__((True, False))
 
@@ -41,6 +47,8 @@ class _BoolValidator(_OneOfValidator):
 
 
 class _EnumValidator(_OneOfValidator):
+    """Validates whether a value exists in a particular `enum` class."""
+
     _Enum = Union[Type[enum.Enum], Type[enum.IntEnum], Type[enum.IntFlag]]
 
     def __init__(self, enum: _Enum):
@@ -52,6 +60,8 @@ class _EnumValidator(_OneOfValidator):
 
 
 class _IntFloatValidatorBase(_Validator):
+    """Base class for `_IntValidator` and `_FloatValidator`."""
+
     def __init__(self, _min, _max) -> None:
         self.min = _min
         self.max = _max
@@ -61,6 +71,8 @@ class _IntFloatValidatorBase(_Validator):
 
 
 class _IntValidator(_IntFloatValidatorBase):
+    """Validates whether value is an `int` and lies in a range, optionally."""
+
     def __init__(self, min: Optional[int] = None, max: Optional[int] = None):
         self.min = min
         self.max = max
@@ -75,14 +87,15 @@ class _IntValidator(_IntFloatValidatorBase):
 
 
 class _UIntValidator(_IntValidator):
-    """IntValidator but with min=0. If you want
-    to set a min > 0, use IntValidator instead."""
+    """A specialization of `_IntValidator` for validating positive integers."""
 
     def __init__(self, max: Optional[int] = None):
         super().__init__(min=0, max=max)
 
 
 class _FloatValidator(_IntFloatValidatorBase):
+    """Validates whether value is an `float` and lies in a range, optionally."""
+
     def __init__(
         self, min: Optional[float] = None, max: Optional[float] = None
     ) -> None:
@@ -99,6 +112,8 @@ class _FloatValidator(_IntFloatValidatorBase):
 
 
 class _BytesStrValidatorBase(_Validator):
+    """Base class for `_BytesValidator` and `_StrValidator`."""
+
     def __init__(self, minsize: Optional[int] = None, maxsize: Optional[int] = None):
         self.minsize = minsize
         self.maxsize = maxsize
@@ -118,6 +133,8 @@ class _BytesStrValidatorBase(_Validator):
 
 
 class _BytesValidator(_BytesStrValidatorBase):
+    """Validates the type and size of a `bytes` object."""
+
     def validate(self, value: Any):
         if not isinstance(value, bytes):
             raise TypeError(f"Expected {value!r} to be a bytes object")
@@ -125,6 +142,8 @@ class _BytesValidator(_BytesStrValidatorBase):
 
 
 class _StrValidator(_BytesStrValidatorBase):
+    """Validates the type and size of an `str` object."""
+
     def __init__(
         self,
         minsize: Optional[int] = None,
@@ -143,6 +162,8 @@ class _StrValidator(_BytesStrValidatorBase):
 
 
 class _ColorValidator(_Validator):
+    """Validates whether the type of value is `colour.Color`."""
+
     def validate(self, value: Any):
         if not isinstance(value, colour.Color):
             raise TypeError(f"Expected {value!r} to be a {type(colour.Color)} object")

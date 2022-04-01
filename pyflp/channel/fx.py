@@ -2,10 +2,10 @@ import enum
 from typing import Optional
 
 from pyflp.constants import DWORD, WORD
-from pyflp.event import WordEvent, _DWordEventType
-from pyflp.flobject import _FLObject
-from pyflp.properties import _EnumProperty, _IntProperty, _UIntProperty
-from pyflp.validators import _UIntValidator
+from pyflp._event import _WordEvent, _DWordEventType
+from pyflp._flobject import _FLObject
+from pyflp._properties import _EnumProperty, _IntProperty, _UIntProperty
+from pyflp._validators import _UIntValidator
 
 __all__ = ["ChannelFX", "ChannelFXReverb"]
 
@@ -116,7 +116,7 @@ class ChannelFX(_FLObject):
 
     stereo_delay: Optional[int] = _IntProperty()
 
-    def _parse_word_event(self, e: WordEvent) -> None:
+    def _parse_word_event(self, e: _WordEvent) -> None:
         if e.id == ChannelFX.EventID.CutOff:
             self._parse_H(e, "cutoff")
         elif e.id == ChannelFX.EventID.PreAmp:

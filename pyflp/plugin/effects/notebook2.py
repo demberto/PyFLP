@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from pyflp.event import _DataEventType
-from pyflp.plugin.plugin import _EffectPlugin
+from pyflp._event import _DataEventType
+from pyflp.plugin._plugin import _EffectPlugin
 
 __all__ = ["FNoteBook2"]
 

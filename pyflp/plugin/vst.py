@@ -4,11 +4,11 @@ from typing import Any, List, Optional, Union, ValuesView
 
 from bytesioex import BytesIOEx, UInt, ULong
 
-from pyflp.event import DataEvent, _VariableSizedEvent
-from pyflp.flobject import _FLObject
-from pyflp.plugin.plugin import _Plugin
-from pyflp.properties import _BytesProperty, _IntProperty, _StrProperty, _UIntProperty
-from pyflp.validators import _StrValidator, _UIntValidator
+from pyflp._event import _DataEvent, _VariableSizedEvent
+from pyflp._flobject import _FLObject
+from pyflp.plugin._plugin import _Plugin
+from pyflp._properties import _BytesProperty, _IntProperty, _StrProperty, _UIntProperty
+from pyflp._validators import _StrValidator, _UIntValidator
 
 
 class _QWordVariableEvent(_VariableSizedEvent):
@@ -83,7 +83,7 @@ class _VSTPluginParser(_FLObject):
             self.state = data
 
 
-class VSTPluginEvent(DataEvent):
+class VSTPluginEvent(_DataEvent):
     def __init__(self, id, data: bytes):
         super().__init__(id, data)
         self.parser = _VSTPluginParser()

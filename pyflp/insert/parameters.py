@@ -3,9 +3,9 @@ from typing import Any, Optional
 
 from bytesioex import BytesIOEx
 
-from pyflp.event import DataEvent
-from pyflp.flobject import _FLObject
-from pyflp.properties import _EnumProperty
+from pyflp._event import _DataEvent
+from pyflp._flobject import _FLObject
+from pyflp._properties import _EnumProperty
 
 __all__ = ["InsertFlags", "InsertParameters", "InsertParametersEvent"]
 
@@ -52,7 +52,7 @@ class InsertFlags(enum.IntFlag):
     """Whether insert is linked to an audio track."""
 
 
-class InsertParametersEvent(DataEvent):
+class InsertParametersEvent(_DataEvent):
     """Implements `Insert.EventID.Parameters`."""
 
     _chunk_size = 12

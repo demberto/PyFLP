@@ -12,9 +12,9 @@ from pyflp.arrangement.arrangement import Arrangement
 from pyflp.channel.channel import Channel
 from pyflp.channel.filter import Filter
 from pyflp.controllers import Controller
-from pyflp.event import _EventType
+from pyflp._event import _EventType
 from pyflp.exceptions import DataCorruptionDetectedError
-from pyflp.flobject import _FLObject
+from pyflp._flobject import _FLObject
 from pyflp.insert.event import InsertParamsEvent
 from pyflp.insert.insert import Insert
 from pyflp.misc import Misc

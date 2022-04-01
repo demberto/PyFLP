@@ -4,24 +4,24 @@ from typing import Optional, ValuesView
 import colour
 
 from pyflp.constants import DATA, DWORD, TEXT, WORD
-from pyflp.event import DataEvent, TextEvent, WordEvent, _DWordEventType, _EventType
-from pyflp.flobject import _MaxInstancedFLObject
+from pyflp._event import _DataEvent, _TextEvent, _WordEvent, _DWordEventType, _EventType
+from pyflp._flobject import _MaxInstancedFLObject
 from pyflp.plugin.effects.balance import FBalance
 from pyflp.plugin.effects.fast_dist import FFastDist
 from pyflp.plugin.effects.notebook2 import FNoteBook2
 from pyflp.plugin.effects.send import FSend
 from pyflp.plugin.effects.soft_clipper import FSoftClipper
 from pyflp.plugin.effects.soundgoodizer import Soundgoodizer
-from pyflp.plugin.plugin import _Plugin
+from pyflp.plugin._plugin import _Plugin
 from pyflp.plugin.vst import VSTPlugin
-from pyflp.properties import (
+from pyflp._properties import (
     _BoolProperty,
     _ColorProperty,
     _IntProperty,
     _StrProperty,
     _UIntProperty,
 )
-from pyflp.validators import _IntValidator, _UIntValidator
+from pyflp._validators import _IntValidator, _UIntValidator
 
 
 class InsertSlot(_MaxInstancedFLObject):
@@ -97,7 +97,7 @@ class InsertSlot(_MaxInstancedFLObject):
     for VST/AU plugins, if a user-given name is not given."""
 
     # * Parsing logic
-    def _parse_word_event(self, e: WordEvent) -> None:
+    def _parse_word_event(self, e: _WordEvent) -> None:
         if e.id == InsertSlot.EventID.Index:
             self._parse_H(e, "index")
 
@@ -107,13 +107,13 @@ class InsertSlot(_MaxInstancedFLObject):
         elif e.id == InsertSlot.EventID.Icon:
             self._parse_I(e, "icon")
 
-    def _parse_text_event(self, e: TextEvent):
+    def _parse_text_event(self, e: _TextEvent):
         if e.id == InsertSlot.EventID.DefaultName:
             self._parse_s(e, "default_name")
         elif e.id == InsertSlot.EventID.Name:
             self._parse_s(e, "name")
 
-    def _parse_data_event(self, e: DataEvent):
+    def _parse_data_event(self, e: _DataEvent):
         if e.id == InsertSlot.EventID.PluginNew:
             self._events["new"] = e
             self._new = e.data
