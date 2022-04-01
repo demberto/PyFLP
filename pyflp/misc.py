@@ -24,6 +24,8 @@ from pyflp.properties import (
 from pyflp.utils import FLVersion
 from pyflp.validators import _OneOfValidator, _UIntValidator
 
+__all__ = ["Misc"]
+
 
 class Misc(_MaxInstancedFLObject):
     """Used for storing one time events, which don't fall into any other category.

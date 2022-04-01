@@ -6,6 +6,8 @@ from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
 from pyflp.properties import _EnumProperty, _IntProperty
 
+__all__ = ["ChannelPolyphony", "ChannelPolyphonyEvent"]
+
 
 class ChannelPolyphonyEvent(DataEvent):
     """Implements `Channel.EventID.Polyphony`."""

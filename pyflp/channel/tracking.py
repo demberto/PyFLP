@@ -4,6 +4,8 @@ from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
 from pyflp.properties import _IntProperty
 
+__all__ = ["ChannelTracking", "ChannelTrackingEvent"]
+
 
 class ChannelTrackingEvent(DataEvent):
     """Implements `Channel.EventID.Tracking`."""

@@ -8,6 +8,15 @@ from bytesioex import Byte, Int, SByte, UInt
 from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
 from pyflp.utils import buflen_to_varint
 
+__all__ = [
+    "ByteEvent",
+    "ColorEvent",
+    "DataEvent",
+    "DWordEvent",
+    "TextEvent",
+    "WordEvent",
+]
+
 
 class Event(abc.ABC):
     """Abstract base class representing an event."""

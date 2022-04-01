@@ -7,6 +7,8 @@ from pyflp.flobject import _FLObject
 from pyflp.properties import _EnumProperty, _IntProperty, _UIntProperty
 from pyflp.validators import _UIntValidator
 
+__all__ = ["ChannelFX", "ChannelFXReverb"]
+
 
 # TODO Cleanup
 class ChannelFXReverb(_FLObject):

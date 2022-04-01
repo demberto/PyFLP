@@ -10,6 +10,8 @@ from pyflp.constants import DATA
 from pyflp.event import DataEvent
 from pyflp.insert.insert import Insert
 
+__all__ = ["InsertParamsEvent"]
+
 
 class InsertParamsEvent(DataEvent):
     @enum.unique

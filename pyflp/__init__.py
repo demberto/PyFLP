@@ -1,2 +1,2 @@
-from pyflp.parser import Parser
-from pyflp.project import Project
+from .parser import Parser
+from .project import Project

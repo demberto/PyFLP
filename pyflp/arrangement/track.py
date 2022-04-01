@@ -19,6 +19,8 @@ from pyflp.properties import (
 )
 from pyflp.validators import _FloatValidator, _IntValidator
 
+__all__ = ["Track", "TrackDataEvent"]
+
 
 # TODO Track data events are as big as 66 bytes
 class TrackDataEvent(DataEvent):

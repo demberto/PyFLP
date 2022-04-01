@@ -10,6 +10,8 @@ from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
 from pyflp.properties import _BoolProperty, _EnumProperty, _IntProperty, _UIntProperty
 
+__all__ = ["RemoteController", "RemoteControllerEvent"]
+
 
 class Controller(_FLObject):
     pass

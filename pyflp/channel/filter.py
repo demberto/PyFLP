@@ -5,6 +5,8 @@ from pyflp.event import TextEvent
 from pyflp.flobject import _FLObject
 from pyflp.properties import _StrProperty
 
+__all__ = ["Filter"]
+
 
 class Filter(_FLObject):
     """Channel display filter. Default: 'Unsorted', 'Audio'

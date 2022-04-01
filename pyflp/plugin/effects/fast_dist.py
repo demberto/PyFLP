@@ -5,6 +5,8 @@ from pyflp.plugin.plugin import _EffectPlugin
 from pyflp.properties import _EnumProperty, _UIntProperty
 from pyflp.validators import _IntValidator, _UIntValidator
 
+__all__ = ["FFastDist"]
+
 
 class FFastDist(_EffectPlugin):
     """Implements Fruity Fast Dist. 5 knobs. 20 bytes.

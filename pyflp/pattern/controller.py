@@ -8,6 +8,8 @@ from pyflp.event import DataEvent
 from pyflp.flobject import _FLObject
 from pyflp.properties import _FloatProperty, _UIntProperty
 
+__all__ = ["PatternController", "PatternControllersEvent"]
+
 
 class PatternController(_FLObject):
     position = _UIntProperty()

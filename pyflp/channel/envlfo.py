@@ -8,6 +8,8 @@ from pyflp.flobject import _FLObject
 from pyflp.properties import _BoolProperty, _EnumProperty, _IntProperty, _UIntProperty
 from pyflp.validators import _IntValidator, _UIntValidator
 
+__all__ = ["ChannelEnvelopeLFO", "ChannelEnvelopeLFOEvent"]
+
 EnvelopeLFONames = ("Panning", "Volume", "Pitch", "Mod X", "Mod Y")
 
 

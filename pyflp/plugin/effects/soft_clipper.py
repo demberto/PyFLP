@@ -2,6 +2,8 @@ from pyflp.event import _DataEventType
 from pyflp.plugin.plugin import _EffectPlugin
 from pyflp.properties import _IntValidator, _UIntProperty, _UIntValidator
 
+__all__ = ["FSoftClipper"]
+
 
 class FSoftClipper(_EffectPlugin):
     """Implements Fruity Soft Clipper. 2 knobs. 8 bytes.
