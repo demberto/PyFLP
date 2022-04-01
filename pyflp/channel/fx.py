@@ -2,7 +2,7 @@ import enum
 from typing import Optional
 
 from pyflp.constants import DWORD, WORD
-from pyflp.event import WordEvent, _DWordEventType, _EventType
+from pyflp.event import WordEvent, _DWordEventType
 from pyflp.flobject import _FLObject
 from pyflp.properties import _EnumProperty, _IntProperty, _UIntProperty
 from pyflp.validators import _UIntValidator
@@ -15,7 +15,7 @@ class ChannelFXReverb(_FLObject):
     [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_sampler.htm#channelsampler_Precomputed)
     """
 
-    class _UIntProperty(_UIntProperty):
+    class _Mix(_UIntProperty):
         def __set__(self, obj, value):
 
             # Update obj._kind and obj._mix
@@ -24,7 +24,7 @@ class ChannelFXReverb(_FLObject):
             buf = (obj._kind + obj._mix).to_bytes(4, "little")
             obj._events["reverb"].dump(buf)
 
-    class _EnumProperty(_EnumProperty):
+    class _Kind(_EnumProperty):
         def __set__(self, obj, value):
 
             # Update obj._kind and obj._mix
@@ -33,7 +33,7 @@ class ChannelFXReverb(_FLObject):
             buf = (obj._kind + obj._mix).to_bytes(4, "little")
             obj._events["reverb"].dump(buf)
 
-    class ReverbKind(enum.IntEnum):
+    class Kind(enum.IntEnum):
         """Sampler/Audio Reverb type (A or B). Used by `kind`."""
 
         A = 0
@@ -43,21 +43,21 @@ class ChannelFXReverb(_FLObject):
         def default(cls):
             return cls.B
 
-    kind: Optional[ReverbKind] = _EnumProperty(ReverbKind)
-    """See `ReverbKind`."""
+    kind: Optional[Kind] = _Kind(Kind)
+    """See `Kind`."""
 
-    mix: Optional[int] = _UIntProperty(_UIntValidator(256))
+    mix: Optional[int] = _Mix(_UIntValidator(256))
     """Reverb mix (dry/wet). Min: 0, Max: 256, Default: 0."""
 
     def _parse_dword_event(self, e: _DWordEventType) -> None:
         self._events["reverb"] = e
         value = e.to_uint32()
-        default = self.ReverbKind.default()
+        default = self.Kind.default()
         if value >= default:
-            self._kind = self.ReverbKind.B
+            self._kind = self.Kind.B
             self._mix = value - default
         else:
-            self._kind = self.ReverbKind.A
+            self._kind = self.Kind.A
             self._mix = value
 
 

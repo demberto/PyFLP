@@ -1,6 +1,7 @@
 import abc
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, NoReturn
 
+from pyflp.exceptions import OperationNotPermittedError
 from pyflp.validators import (
     _BoolValidator,
     _BytesValidator,
@@ -32,24 +33,24 @@ class _Property(abc.ABC):
             f'validator="{repr(self.validator)}">'
         )
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner, name: str):
         self.public_name = name
         self.private_name = "_" + name
 
-    def __get__(self, obj: "_FLObject", objtype=None):
+    def __get__(self, obj: "_FLObject", objtype=None) -> Any:
         if obj is None:
             return self
         return getattr(obj, self.private_name, None)
 
-    def __delete__(self, obj):
-        raise NotImplementedError
+    def __delete__(self, obj) -> NoReturn:
+        raise OperationNotPermittedError("Properties cannot be deleted", obj)
 
-    def __set__(self, obj: "_FLObject", value):
+    def __set__(self, obj: "_FLObject", value) -> None:
         self.validator.validate(value)
+        setattr(obj, self.private_name, value)
 
         # This allows for overriding setter logic in FLObject
         # subclass while still allowing to use these descriptors
-        setattr(obj, self.private_name, value)
         obj._setprop(self.public_name, value)
 
 

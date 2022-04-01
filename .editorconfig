@@ -3,17 +3,14 @@
 # top-most EditorConfig file
 root = true
 
-# Windows-style newlines with a newline ending every file
 [*]
 charset = utf-8
-end_of_line = crlf
+end_of_line = lf
+indent_style = space
+indent_size = 2
 insert_final_newline = true
+trim_trailing_whitespace = true
 
 # 4 space indentation
 [*.py]
-indent_style = space
 indent_size = 4
-
-[docs/*.md]
-indent_style = space
-indent_size = 2
