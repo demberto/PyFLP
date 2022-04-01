@@ -28,6 +28,7 @@ def test_nulltest(proj: Project):
 
 
 def test_misc(proj: Project):
+    """Tests `pyflp.misc.Misc` class."""
     misc = proj.misc
     assert misc.version == "20.8.3.2304"
     assert misc.version_build == 2304
@@ -75,6 +76,7 @@ def test_filters(proj: Project):
 def test_channel(
     proj: Project, index, kind, enabled, locked, volume, pan, color, cut_group
 ):
+    """Tests `pyflp.channel.channel.Channel` class."""
     ch = proj.channels[index]
     assert ch.index == index
     assert ch.kind == kind
@@ -105,6 +107,7 @@ def test_channel(
     ],
 )
 def test_pattern(proj: Project, index, name, color):
+    """Tests `pyflp.pattern.pattern.Pattern` class."""
     pat = proj.patterns[index - 1]
     assert pat.index == index
     assert pat.name == name
@@ -139,6 +142,7 @@ def test_pattern(proj: Project, index, name, color):
 def test_insert(
     proj: Project, index, name, enabled, locked, volume, pan, color, stereo_separation
 ):
+    """Tests `pyflp.insert.Insert` and `pyflp.insert.` class."""
     ins = proj.inserts[index + 1]
     assert ins.index == index
     assert ins.name == name

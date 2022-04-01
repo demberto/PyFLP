@@ -4,7 +4,7 @@ from typing import Optional, ValuesView
 
 from bytesioex import BytesIOEx, Double
 
-from pyflp.constants import DATA, DWORD, TEXT, WORD
+from pyflp.constants import DATA, DWORD, TEXT, VALID_PPQS, WORD
 from pyflp.event import (
     ByteEvent,
     TextEvent,
@@ -13,7 +13,7 @@ from pyflp.event import (
     _DWordEventType,
     _EventType,
 )
-from pyflp.flobject import _FLObject
+from pyflp.flobject import _MaxInstancedFLObject
 from pyflp.properties import (
     _BoolProperty,
     _EnumProperty,
@@ -25,7 +25,7 @@ from pyflp.utils import FLVersion
 from pyflp.validators import _OneOfValidator, _UIntValidator
 
 
-class Misc(_FLObject):
+class Misc(_MaxInstancedFLObject):
     """Used for storing one time events, which don't fall into any other category.
 
     [Project Info](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/songsettings_songinfo.htm)
@@ -33,12 +33,11 @@ class Misc(_FLObject):
     """  # noqa
 
     __DELPHI_EPOCH = datetime.datetime(1899, 12, 30)
-    VALID_PPQS = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
 
     # * Enums
     @enum.unique
     class PanningLaw(enum.IntEnum):
-        """Used by `panning_law`"""
+        """Used by `panning_law`."""
 
         Circular = 0
         Triangular = 2
@@ -183,7 +182,10 @@ class Misc(_FLObject):
     """The format of the the file. See `Format`."""
 
     channel_count: int = _UIntProperty()
-    """Number of channels in the rack."""
+    """Number of channels in the rack.
+
+    For Patcher presets, the total number of plugins used inside it.
+    """
 
     loop_active: bool = _BoolProperty()
     """Whether a portion of the song is selected."""
@@ -215,12 +217,13 @@ class Misc(_FLObject):
     @version.setter
     def version(self, value: str):
         split = value.split(".")
-        assert len(split) in range(
-            3, 5
-        ), "Version should be of the format 'Major.Minor.Revision(.Build)?'."
+        if len(split) not in range(3, 5):
+            raise ValueError(
+                "Version should be of the format 'Major.Minor.Revision(.Build)?'."
+            )
         self._events["version"].dump(value)
         self._version = value
-        _FLObject.fl_version = FLVersion(value)
+        _MaxInstancedFLObject.fl_version = FLVersion(value)
         try:
             temp = int(split[3])
         except IndexError:
@@ -252,7 +255,8 @@ class Misc(_FLObject):
 
     @tempo.setter
     def tempo(self, value: float):
-        assert 10.0 <= value <= 522.0
+        if not (10.0 <= value <= 522.0):
+            raise ValueError
         v = int(value * 1000)
         self._events["tempo"].dump(v)
         self._tempo = v

@@ -246,7 +246,8 @@ class Channel(_FLObject):
 
     @zipped.setter
     def zipped(self, value: bool):
-        assert isinstance(value, bool)
+        if not isinstance(value, bool):
+            raise TypeError
         self._setprop("zipped", value)
 
     root_note: Optional[int] = _IntProperty()
@@ -359,7 +360,8 @@ class Channel(_FLObject):
 
     @cut_group.setter
     def cut_group(self, value: Tuple[int]):
-        assert len(value) == 2
+        if len(value) != 2:
+            raise TypeError("Expected a tuple of size 2")
         self._events["cut_group"].data = struct.pack("2H", *value)
         self._cut_group = value
 

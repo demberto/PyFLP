@@ -1,6 +1,6 @@
 import enum
 import io
-from typing import List, Optional, ValuesView
+from typing import TYPE_CHECKING, List, Optional, ValuesView
 
 import colour
 
@@ -16,6 +16,8 @@ from pyflp.flobject import _FLObject
 from pyflp.pattern.controller import PatternController, PatternControllersEvent
 from pyflp.pattern.note import PatternNote, PatternNotesEvent
 from pyflp.properties import _ColorProperty, _StrProperty
+
+__all__ = ["Pattern"]
 
 
 class Pattern(_FLObject):
@@ -99,12 +101,16 @@ class Pattern(_FLObject):
 
     def _parse_data_event(self, e: _DataEventType):
         if e.id == Pattern.EventID.Notes:
-            assert isinstance(e, PatternNotesEvent)
+            if TYPE_CHECKING:
+                if not isinstance(e, PatternNotesEvent):
+                    raise TypeError
             self._events["notes"] = e
             self._notes = e.notes
 
         elif e.id == Pattern.EventID.Controllers:
-            assert isinstance(e, PatternControllersEvent)
+            if TYPE_CHECKING:
+                if not isinstance(e, PatternControllersEvent):
+                    raise TypeError
             self._events["controllers"] = e
             self._controllers = e.controllers
 
