@@ -1,13 +1,13 @@
 from bytesioex import BytesIOEx
 
 from pyflp.channel.arp import ChannelArp
-from pyflp.event import DataEvent
-from pyflp.flobject import _FLObject
+from pyflp._event import _DataEvent
+from pyflp._flobject import _FLObject
 
 __all__ = ["ChannelParameters", "ChannelParametersEvent"]
 
 
-class ChannelParametersEvent(DataEvent):
+class ChannelParametersEvent(_DataEvent):
     """Implements `Channel.EventID.Parameters`."""
 
     def __init__(self, data: bytes):

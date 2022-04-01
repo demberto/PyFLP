@@ -1,12 +1,12 @@
-from pyflp.event import _DataEventType
-from pyflp.plugin.plugin import _SynthPlugin
-from pyflp.properties import _UIntProperty, _UIntValidator
+from pyflp._event import _DataEventType
+from pyflp.plugin._plugin import _SynthPlugin
+from pyflp._properties import _UIntProperty, _UIntValidator
 
 
 class BooBass(_SynthPlugin):
     """Implements BooBass. 3 knobs. 16 bytes.
 
-    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/BooBass.htm)"""  # noqa
+    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/BooBass.htm)"""
 
     chunk_size = 16
 

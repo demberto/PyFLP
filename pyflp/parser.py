@@ -1,3 +1,4 @@
+import enum
 import io
 import zipfile
 from pathlib import Path
@@ -31,18 +32,18 @@ from pyflp.constants import (
     WORD,
 )
 from pyflp.controllers import RemoteController, RemoteControllerEvent
-from pyflp.event import (
-    ByteEvent,
-    ColorEvent,
-    DataEvent,
-    DWordEvent,
-    Event,
-    TextEvent,
-    WordEvent,
+from pyflp._event import (
+    _ByteEvent,
+    _ColorEvent,
+    _DataEvent,
+    _DWordEvent,
+    _Event,
+    _TextEvent,
+    _WordEvent,
     _EventType,
 )
 from pyflp.exceptions import InvalidHeaderSizeError, InvalidMagicError
-from pyflp.flobject import _FLObject
+from pyflp._flobject import _FLObject
 from pyflp.insert.event import InsertParamsEvent
 from pyflp.insert.insert import Insert
 from pyflp.insert.parameters import InsertParametersEvent
@@ -61,15 +62,15 @@ __all__ = ["Parser"]
 class Parser:
     """FL Studio project file parser."""
 
-    __INSERT_EVENTS = []
+    __INSERT_EVENTS: List[enum.IntEnum] = []
     for en in (Insert.EventID, InsertSlot.EventID):
         __INSERT_EVENTS.extend(en.__members__.values())
 
-    __ARRANGEMENT_EVENTS = []
+    __ARRANGEMENT_EVENTS: List[enum.IntEnum] = []
     for en in (Arrangement.EventID, Track.EventID, Playlist.EventID):
         __ARRANGEMENT_EVENTS.extend(en.__members__.values())
 
-    __CHANNEL_EVENTS = []
+    __CHANNEL_EVENTS: List[enum.IntEnum] = []
     for en in (Channel.EventID, ChannelFX.EventID):
         __CHANNEL_EVENTS.extend(en.__members__.values())
 
@@ -104,7 +105,7 @@ class Parser:
         USING MULTIPLE INSTANCES AT THE SAME TIME."""
 
         _FLObject._count = 0
-        Event._count = 0
+        _Event._count = 0
         for subclass in _FLObject.__subclasses__():
             subclass._count = 0
 
@@ -113,17 +114,17 @@ class Parser:
 
         def add_dwordevent(id, buf):
             if id in self.__COLOR_EVENTS:
-                ev = ColorEvent(id, buf)
+                ev = _ColorEvent(id, buf)
             else:
-                ev = DWordEvent(id, buf)
+                ev = _DWordEvent(id, buf)
             self.__events.append(ev)
 
         def add_textevent(id, buf):
             if id == Misc.EventID.Version:
-                _FLObject.fl_version = flv = FLVersion(TextEvent.as_ascii(buf))
+                _FLObject.fl_version = flv = FLVersion(_TextEvent.as_ascii(buf))
                 if flv.as_float() < 11.5:
-                    TextEvent.uses_unicode = False
-            self.__events.append(TextEvent(id, buf))
+                    _TextEvent.uses_unicode = False
+            self.__events.append(_TextEvent(id, buf))
 
         def add_dataevent(id, buf):
             if id == Track.EventID.Data:
@@ -146,7 +147,7 @@ class Parser:
                 if self.__cur_plug_is_vst:
                     ev = VSTPluginEvent(id, buf)
                 else:
-                    ev = DataEvent(id, buf)
+                    ev = _DataEvent(id, buf)
             elif id == Insert.EventID.Parameters:
                 ev = InsertParametersEvent(buf)
             elif id == Pattern.EventID.Controllers:
@@ -156,7 +157,7 @@ class Parser:
             elif id == RemoteController.ID:
                 ev = RemoteControllerEvent(buf)
             else:
-                ev = DataEvent(id, buf)
+                ev = _DataEvent(id, buf)
             self.__events.append(ev)
 
         while True:
@@ -165,9 +166,9 @@ class Parser:
                 break
 
             if id in range(BYTE, WORD):
-                self.__events.append(ByteEvent(id, self.__r.read(1)))
+                self.__events.append(_ByteEvent(id, self.__r.read(1)))
             elif id in range(WORD, DWORD):
-                self.__events.append(WordEvent(id, self.__r.read(2)))
+                self.__events.append(_WordEvent(id, self.__r.read(2)))
             elif id in range(DWORD, TEXT):
                 add_dwordevent(id, self.__r.read(4))
             else:
@@ -192,7 +193,7 @@ class Parser:
         """Creates and appends `Pattern` objects to `Project`.
         Dispatches `PatternEventID` events to `Pattern` for parsing."""
 
-        if ev.id == Pattern.EventID.New and isinstance(ev, WordEvent):
+        if ev.id == Pattern.EventID.New and isinstance(ev, _WordEvent):
             # Occurs twice, once with the note events only and later again
             # for metadata (name, color and a few undiscovered properties)
             # New patterns can occur for metadata as well; they are empty.
@@ -375,19 +376,23 @@ class Parser:
         return self.__proj
 
     def parse_zip(self, zip_file, name: str = "") -> Project:
-        """Parses an FLP inside a ZIP and returns a `Project` object.
+        """Parses an FLP inside a ZIP.
 
         Args:
-            zip_file (Union[zipfile.ZipFile, str, bytes, Path, io.BufferedIOBase]): \
-            The path to the ZIP file, stream, Path, file-like or a ZipFile object.
-            name (str, optional): If the ZIP has multiple FLPs, \
-            you need to specify the name of the FLP to parse.
+            zip_file (Union[zipfile.ZipFile, str, bytes, Path, io.BufferedIOBase]):
+                The path to the ZIP file, stream, Path, file-like or a ZipFile
+                object.
+            name (str, optional): If the ZIP has multiple FLPs, you need
+                to specify the name of the FLP to parse.
 
         Raises:
-            TypeError: When `zip_file` points to a ZIP or stream \
-            containing no FLPs.
-            TypeError: When `name` is empty and `zip_file` points \
-            to a ZIP or stream containing more than one FLP.
+            TypeError: When `zip_file` points to a ZIP or stream containing no
+                files with an extension of .flp.
+            TypeError: When `name` is empty and `zip_file` points to a ZIP or
+                stream containing more than one FLP.
+
+        Returns:
+            Project: The parsed object.
         """
 
         flp = None

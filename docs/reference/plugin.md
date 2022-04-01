@@ -1,6 +1,6 @@
 # Plugin
 
-::: pyflp.plugin.plugin
+::: pyflp.plugin._plugin._Plugin
 
 ## VSTPlugin
 

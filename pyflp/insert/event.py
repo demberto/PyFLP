@@ -7,13 +7,13 @@ from typing import List
 from bytesioex import BytesIOEx
 
 from pyflp.constants import DATA
-from pyflp.event import DataEvent
+from pyflp._event import _DataEvent
 from pyflp.insert.insert import Insert
 
 __all__ = ["InsertParamsEvent"]
 
 
-class InsertParamsEvent(DataEvent):
+class InsertParamsEvent(_DataEvent):
     @enum.unique
     class EventID(enum.IntEnum):
         """Events inside event, nice design IL"""

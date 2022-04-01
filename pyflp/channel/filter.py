@@ -1,9 +1,9 @@
 import enum
 
 from pyflp.constants import TEXT
-from pyflp.event import TextEvent
-from pyflp.flobject import _FLObject
-from pyflp.properties import _StrProperty
+from pyflp._event import _TextEvent
+from pyflp._flobject import _FLObject
+from pyflp._properties import _StrProperty
 
 __all__ = ["Filter"]
 
@@ -22,6 +22,6 @@ class Filter(_FLObject):
     name: str = _StrProperty()
     """Name of the filter channel."""
 
-    def _parse_text_event(self, e: TextEvent):
+    def _parse_text_event(self, e: _TextEvent):
         if e.id == Filter.EventID.Name:
             self._parse_s(e, "name")

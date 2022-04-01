@@ -3,8 +3,8 @@ from typing import Optional, ValuesView
 
 from bytesioex import BytesIOEx
 
-from pyflp.event import _DataEventType, _EventType
-from pyflp.flobject import _FLObject
+from pyflp._event import _DataEventType, _EventType
+from pyflp._flobject import _FLObject
 
 
 class _Plugin(_FLObject, abc.ABC):

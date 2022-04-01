@@ -1,10 +1,10 @@
 import enum
 
 from pyflp.constants import DWORD, TEXT
-from pyflp.event import ByteEvent, TextEvent, _DWordEventType
-from pyflp.flobject import _FLObject
-from pyflp.properties import _EnumProperty, _StrProperty, _UIntProperty
-from pyflp.validators import _IntValidator, _OneOfValidator
+from pyflp._event import _ByteEvent, _TextEvent, _DWordEventType
+from pyflp._flobject import _FLObject
+from pyflp._properties import _EnumProperty, _StrProperty, _UIntProperty
+from pyflp._validators import _IntValidator, _OneOfValidator
 
 __all__ = ["TimeMarker"]
 
@@ -62,7 +62,7 @@ class TimeMarker(_FLObject):
     """Possible values: 2, 4, 8, 16."""
 
     # * Parsing logic
-    def _parse_byte_event(self, e: ByteEvent):
+    def _parse_byte_event(self, e: _ByteEvent):
         if e.id == TimeMarker.EventID.Numerator:
             self._parse_B(e, "numerator")
         elif e.id == TimeMarker.EventID.Denominator:
@@ -78,7 +78,7 @@ class TimeMarker(_FLObject):
                 self._kind = TimeMarker.Kind.Marker
             self._parseprop(e, "position", pos)
 
-    def _parse_text_event(self, e: TextEvent):
+    def _parse_text_event(self, e: _TextEvent):
         if e.id == TimeMarker.EventID.Name:
             self._parse_s(e, "name")
 

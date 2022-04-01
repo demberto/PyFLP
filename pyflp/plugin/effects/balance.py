@@ -1,6 +1,6 @@
-from pyflp.event import _DataEventType
-from pyflp.plugin.plugin import _EffectPlugin
-from pyflp.properties import _IntProperty, _IntValidator
+from pyflp._event import _DataEventType
+from pyflp.plugin._plugin import _EffectPlugin
+from pyflp._properties import _IntProperty, _IntValidator
 
 __all__ = ["FBalance"]
 

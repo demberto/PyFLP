@@ -8,17 +8,8 @@ from bytesioex import Byte, Int, SByte, UInt
 from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
 from pyflp.utils import buflen_to_varint
 
-__all__ = [
-    "ByteEvent",
-    "ColorEvent",
-    "DataEvent",
-    "DWordEvent",
-    "TextEvent",
-    "WordEvent",
-]
 
-
-class Event(abc.ABC):
+class _Event(abc.ABC):
     """Abstract base class representing an event."""
 
     _count = 0
@@ -69,15 +60,15 @@ class Event(abc.ABC):
 
         self.id = id
         self.data = data
-        self.__index = Event._count
-        Event._count += 1
+        self.__index = _Event._count
+        _Event._count += 1
         super().__init__()
 
 
-_EventType = TypeVar("_EventType", bound=Event)
+_EventType = TypeVar("_EventType", bound=_Event)
 
 
-class _VariableSizedEvent(Event):
+class _VariableSizedEvent(_Event):
     """Implements `Event.size` and `Event.to_raw` for `TextEvent` and `DataEvent`."""
 
     @property
@@ -100,7 +91,7 @@ class _VariableSizedEvent(Event):
         return id + length + data if self.data else id + length
 
 
-class ByteEvent(Event):
+class _ByteEvent(_Event):
     """Represents a byte-sized event."""
 
     @property
@@ -182,7 +173,7 @@ class ByteEvent(Event):
         super().__init__(id, data)
 
 
-class WordEvent(Event):
+class _WordEvent(_Event):
     """Represents a 2 byte event."""
 
     @property
@@ -257,7 +248,7 @@ class WordEvent(Event):
         super().__init__(id, data)
 
 
-class DWordEvent(Event):
+class _DWordEvent(_Event):
     """Represents a 4 byte event."""
 
     DWORD_MAX = 4_294_967_295
@@ -342,10 +333,10 @@ class DWordEvent(Event):
         super().__init__(id, data)
 
 
-_DWordEventType = TypeVar("_DWordEventType", bound=DWordEvent)
+_DWordEventType = TypeVar("_DWordEventType", bound=_DWordEvent)
 
 
-class ColorEvent(DWordEvent):
+class _ColorEvent(_DWordEvent):
     """Represents a 4 byte event which stores a color."""
 
     def dump(self, new_color: colour.Color):
@@ -366,7 +357,7 @@ class ColorEvent(DWordEvent):
         return colour.Color(rgb=(r, g, b))
 
 
-class TextEvent(_VariableSizedEvent):
+class _TextEvent(_VariableSizedEvent):
     """Represents a variable sized event used for storing strings."""
 
     uses_unicode = True  # Parser can change this
@@ -394,13 +385,13 @@ class TextEvent(_VariableSizedEvent):
         if not isinstance(new_text, str):
             raise TypeError(f"Expected an str object; got {type(new_text)}")
         # Version event (199) is always ASCII
-        if TextEvent.uses_unicode and self.id != 199:
+        if _TextEvent.uses_unicode and self.id != 199:
             self.data = new_text.encode("utf-16", errors="ignore") + b"\0\0"
         else:
             self.data = new_text.encode("ascii", errors="ignore") + b"\0"
 
     def to_str(self) -> str:
-        if TextEvent.uses_unicode and self.id != 199:
+        if _TextEvent.uses_unicode and self.id != 199:
             return self.as_uf16(self.data)
         return self.as_ascii(self.data)
 
@@ -425,7 +416,7 @@ class TextEvent(_VariableSizedEvent):
         super().__init__(id, data)
 
 
-class DataEvent(_VariableSizedEvent):
+class _DataEvent(_VariableSizedEvent):
     """Represents a variable sized event used for storing a blob of data, consists
     of a collection of POD types like int, bool, float, sometimes ASCII strings.
     Its size is determined by the event and also FL version sometimes.
@@ -472,4 +463,4 @@ class DataEvent(_VariableSizedEvent):
                 return
 
 
-_DataEventType = TypeVar("_DataEventType", bound=DataEvent)
+_DataEventType = TypeVar("_DataEventType", bound=_DataEvent)

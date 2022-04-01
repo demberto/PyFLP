@@ -1,9 +1,9 @@
 import enum
 
-from pyflp.event import _DataEventType
-from pyflp.plugin.plugin import _EffectPlugin
-from pyflp.properties import _EnumProperty, _UIntProperty
-from pyflp.validators import _IntValidator, _UIntValidator
+from pyflp._event import _DataEventType
+from pyflp.plugin._plugin import _EffectPlugin
+from pyflp._properties import _EnumProperty, _UIntProperty
+from pyflp._validators import _IntValidator, _UIntValidator
 
 __all__ = ["FFastDist"]
 

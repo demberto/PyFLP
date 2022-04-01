@@ -4,12 +4,12 @@ from typing import List, Optional
 import colour
 
 from pyflp.constants import DATA, DWORD, TEXT, WORD
-from pyflp.event import DWordEvent, TextEvent, WordEvent, _DataEventType, _EventType
-from pyflp.flobject import _MaxInstancedFLObject
+from pyflp._event import _DWordEvent, _TextEvent, _WordEvent, _DataEventType, _EventType
+from pyflp._flobject import _MaxInstancedFLObject
 from pyflp.insert.parameters import InsertFlags, InsertParameters
 from pyflp.insert.slot import InsertSlot
-from pyflp.properties import _ColorProperty, _IntProperty, _StrProperty, _UIntProperty
-from pyflp.validators import _IntValidator, _UIntValidator
+from pyflp._properties import _ColorProperty, _IntProperty, _StrProperty, _UIntProperty
+from pyflp._validators import _IntValidator, _UIntValidator
 
 
 class Insert(_MaxInstancedFLObject):
@@ -166,8 +166,8 @@ class Insert(_MaxInstancedFLObject):
     # * Parsing logic
     def parse_event(self, e: _EventType) -> None:
         if e.id == InsertSlot.EventID.Index:
-            self._cur_slot.parse_event(e)  # type: ignore
-            self._slots.append(self._cur_slot)  # type: ignore
+            self._cur_slot.parse_event(e)
+            self._slots.append(self._cur_slot)
             if len(self._slots) < InsertSlot.max_count:
                 self._cur_slot = InsertSlot()
         elif e.id in (
@@ -182,11 +182,11 @@ class Insert(_MaxInstancedFLObject):
         else:
             return super().parse_event(e)
 
-    def _parse_word_event(self, e: WordEvent):
+    def _parse_word_event(self, e: _WordEvent):
         if e.id == Insert.EventID.Icon:
             self._parse_H(e, "icon")
 
-    def _parse_dword_event(self, e: DWordEvent):
+    def _parse_dword_event(self, e: _DWordEvent):
         if e.id == Insert.EventID.Input:
             self._parse_i(e, "input")
         elif e.id == Insert.EventID.Color:
@@ -194,7 +194,7 @@ class Insert(_MaxInstancedFLObject):
         elif e.id == Insert.EventID.Output:
             self._parse_i(e, "output")
 
-    def _parse_text_event(self, e: TextEvent):
+    def _parse_text_event(self, e: _TextEvent):
         if e.id == Insert.EventID.Name:
             self._parse_s(e, "name")
 

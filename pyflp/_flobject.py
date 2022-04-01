@@ -3,18 +3,18 @@ import enum
 from typing import Any, Dict, Optional, ValuesView
 
 from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, VALID_PPQS, WORD
-from pyflp.event import (
-    ByteEvent,
-    ColorEvent,
-    DWordEvent,
-    TextEvent,
-    WordEvent,
+from pyflp._event import (
+    _ByteEvent,
+    _ColorEvent,
+    _DWordEvent,
+    _TextEvent,
+    _WordEvent,
     _DataEventType,
     _DWordEventType,
     _EventType,
 )
 from pyflp.exceptions import MaxInstancesError
-from pyflp.properties import _Property
+from pyflp._properties import _Property
 from pyflp.utils import FLVersion
 
 
@@ -92,16 +92,16 @@ class _FLObject(abc.ABC):
         else:
             self._parse_data_event(event)
 
-    def _parse_byte_event(self, _: ByteEvent) -> None:
+    def _parse_byte_event(self, _: _ByteEvent) -> None:
         pass
 
-    def _parse_word_event(self, _: WordEvent) -> None:
+    def _parse_word_event(self, _: _WordEvent) -> None:
         pass
 
     def _parse_dword_event(self, _: _DWordEventType) -> None:
         pass
 
-    def _parse_text_event(self, _: TextEvent) -> None:
+    def _parse_text_event(self, _: _TextEvent) -> None:
         pass
 
     def _parse_data_event(self, _: _DataEventType) -> None:
@@ -115,39 +115,39 @@ class _FLObject(abc.ABC):
         self._events[key] = event
         setattr(self, "_" + key, value)
 
-    def _parse_bool(self, event: ByteEvent, key: str):
+    def _parse_bool(self, event: _ByteEvent, key: str):
         """`self._parseprop` for boolean properties."""
         self._parseprop(event, key, event.to_bool())
 
-    def _parse_B(self, event: ByteEvent, key: str):
+    def _parse_B(self, event: _ByteEvent, key: str):
         """`self._parseprop` for uint8 properties."""
         self._parseprop(event, key, event.to_uint8())
 
-    def _parse_b(self, event: ByteEvent, key: str):
+    def _parse_b(self, event: _ByteEvent, key: str):
         """`self._parseprop` for int8 properties."""
         self._parseprop(event, key, event.to_int8())
 
-    def _parse_H(self, event: WordEvent, key: str):
+    def _parse_H(self, event: _WordEvent, key: str):
         """`self._parseprop` for uint16 properties."""
         self._parseprop(event, key, event.to_uint16())
 
-    def _parse_h(self, event: WordEvent, key: str):
+    def _parse_h(self, event: _WordEvent, key: str):
         """`self._parseprop` for int16 properties."""
         self._parseprop(event, key, event.to_int16())
 
-    def _parse_I(self, event: DWordEvent, key: str):
+    def _parse_I(self, event: _DWordEvent, key: str):
         """`self._parseprop` for uint32 properties."""
         self._parseprop(event, key, event.to_uint32())
 
-    def _parse_i(self, event: DWordEvent, key: str):
+    def _parse_i(self, event: _DWordEvent, key: str):
         """`self._parseprop` for int32 properties."""
         self._parseprop(event, key, event.to_int32())
 
-    def _parse_s(self, event: TextEvent, key: str):
+    def _parse_s(self, event: _TextEvent, key: str):
         """`self._parseprop` for string properties."""
         self._parseprop(event, key, event.to_str())
 
-    def _parse_color(self, event: ColorEvent, key: str = "color"):
+    def _parse_color(self, event: _ColorEvent, key: str = "color"):
         """`self._parseprop` for Color properties."""
         self._parseprop(event, key, event.to_color())
 

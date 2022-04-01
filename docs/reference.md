@@ -6,119 +6,63 @@
 
 ## Events
 
-### [Event](reference/event.md#Event)
+### [\_Event](reference/event.md#event)
 
-::: pyflp.event.Event
-    selection:
-      members:
-        - __init__
-    rendering:
-      show_source: false
-      show_root_toc_entry: false
+### [\_ByteEvent](reference/event.md#byteevent)
 
-### [ByteEvent](reference/event.md#ByteEvent)
+### [\_WordEvent](reference/event.md#wordevent)
 
-::: pyflp.event.ByteEvent
-    selection:
-      members:
-        - __doc__
-    rendering:
-      show_source: false
-      show_root_toc_entry: false
+### [\_DWordEvent](reference/event.md#dwordevent)
 
-### [WordEvent](reference/event.md#WordEvent)
+### [\_TextEvent](reference/event.md#textevent)
 
-::: pyflp.event.WordEvent
-    selection:
-      members:
-        - __doc__
-    rendering:
-      show_source: false
-      show_root_toc_entry: false
+### [\_DataEvent](reference/event.md#dataevent)
 
-### [DWordEvent](reference/event.md#DWordEvent)
-
-::: pyflp.event.DWordEvent
-    selection:
-      members:
-        - __doc__
-    rendering:
-      show_source: false
-      show_root_toc_entry: false
-
-### [TextEvent](reference/event.md#TextEvent)
-
-::: pyflp.event.TextEvent
-    selection:
-      members:
-        - __doc__
-    rendering:
-      show_source: false
-      show_root_toc_entry: false
-
-### [DataEvent](reference/event.md#DataEvent)
-
-::: pyflp.event.DataEvent
-    selection:
-      members:
-        - __doc__
-    rendering:
-      show_source: false
-      show_root_toc_entry: false
-
-### [ColorEvent](reference/event.md#ColorEvent)
-
-::: pyflp.event.ColorEvent
-    selection:
-      members:
-        - __doc__
-    rendering:
-      show_source: false
-      show_root_toc_entry: false
+### [\_ColorEvent](reference/event.md#colorevent)
 
 ---
 
 # FLP Object Model
 
-## [_FLObject](reference/flobject.md)
+## [\_FLObject](reference/flobject.md)
 
 ---
 
-## [Arrangement](reference/arrangement.md#Arrangement)
+## [Arrangement](reference/arrangement.md#arrangement)
 
-### [Playlist](reference/arrangement.md#Playlist)
+### [Playlist](reference/arrangement.md#playlist)
 
-### [TimeMarker](reference/arrangement.md#TimeMarker)
+### [TimeMarker](reference/arrangement.md#timemarker)
 
-### [Track](reference/arrangement.md#Track)
-
----
-
-## [Channel](reference/channel.md#Channel)
-
-### [ChannelArp](reference/channel.md#ChannelArp)
-
-### [ChannelFX](reference/channel.md#ChannelFX)
-
-### [ChannelDelay](reference/channel.md#ChannelDelay)
-
-### [ChannelEnvelopeLFO](reference/channel.md#ChannelEnvelopeLFO)
-
-### [ChannelLevels](reference/channel.md#ChannelLevels)
-
-### [ChannelLevelOffsets](reference/channel.md#ChannelLevelOffsets)
-
-### [ChannelPolyphony](reference/channel.md#ChannelPolyphony)
-
-### [ChannelTracking](reference/channel.md#ChannelTracking)
-
-## [Filter](reference/channel.md#Filter)
+### [Track](reference/arrangement.md#track)
 
 ---
 
-## [Insert](reference/insert.md#Insert)
+## [Channel](reference/channel.md#channel)
 
-### [InsertSlot](reference/insert.md#InsertSlot)
+### [ChannelArp](reference/channel.md#channelarp)
+
+### [ChannelFX](reference/channel.md#channelfx)
+
+### [ChannelDelay](reference/channel.md#channeldelay)
+
+### [ChannelEnvelopeLFO](reference/channel.md#channelenvelopelfo)
+
+### [ChannelLevels](reference/channel.md#channellevels)
+
+### [ChannelLevelOffsets](reference/channel.md#channelleveloffsets)
+
+### [ChannelPolyphony](reference/channel.md#channelpolyphony)
+
+### [ChannelTracking](reference/channel.md#channeltracking)
+
+## [Filter](reference/channel.md#filter)
+
+---
+
+## [Insert](reference/insert.md#insert)
+
+### [InsertSlot](reference/insert.md#insertslot)
 
 ---
 
@@ -126,39 +70,39 @@
 
 ---
 
-## [Pattern](reference/pattern.md#Pattern)
+## [Pattern](reference/pattern.md#pattern)
 
-### [PatternController](reference/pattern.md#PatternController)
+### [PatternController](reference/pattern.md#patterncontroller)
 
-### [PatternNote](reference/pattern.md#PatternNote)
+### [PatternNote](reference/pattern.md#patternnote)
 
 ---
 
-## [Plugin](reference/plugin.md#Plugin)
+## [Plugin](reference/plugin.md#plugin)
 
-### [VSTPlugin](reference/plugin.md#VSTPlugin)
+### [VSTPlugin](reference/plugin.md#vstplugin)
 
 ---
 
 Implementation of `Plugin` for these native FX plugins:
 
-### [Fruity Balance](reference/plugin.md#Fruity-Balance)
+### [Fruity Balance](reference/plugin.md#fruity-balance)
 
-### [Fruity Fast Dist](reference/plugin.md#Fruity-Fast-Dist)
+### [Fruity Fast Dist](reference/plugin.md#fruity-fast-dist)
 
-### [Fruity Notebook 2](reference/plugin.md#Fruity-Notebook-2)
+### [Fruity Notebook 2](reference/plugin.md#fruity-notebook-2)
 
-### [Fruity Send](reference/plugin.md#Fruity-Send)
+### [Fruity Send](reference/plugin.md#fruity-send)
 
-### [Fruity Soft Clipper](reference/plugin.md#Fruity-Soft-Clipper)
+### [Fruity Soft Clipper](reference/plugin.md#fruity-soft-clipper)
 
-### [Soundgoodizer](reference/plugin.md#Soundgoodizer)
+### [Soundgoodizer](reference/plugin.md#soundgoodizer)
 
 ---
 
 Implementation of `Plugin` for these native generator plugins:
 
-### [BooBass](reference/plugin/boobass.md)
+### [BooBass](reference/plugin.md#boobass)
 
 ---
 
@@ -166,4 +110,8 @@ Implementation of `Plugin` for these native generator plugins:
 
 ## [Exceptions](reference/exceptions.md)
 
+## [Properties](reference/properties.md)
+
 ## [Utils](reference/utils.md)
+
+## [Validators](reference/validators.md)

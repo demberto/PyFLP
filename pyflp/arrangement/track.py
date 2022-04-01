@@ -6,9 +6,9 @@ from bytesioex import BytesIOEx
 
 from pyflp.arrangement.playlist import _PlaylistItem
 from pyflp.constants import DATA, TEXT
-from pyflp.event import DataEvent, TextEvent
-from pyflp.flobject import _FLObject
-from pyflp.properties import (
+from pyflp._event import _DataEvent, _TextEvent
+from pyflp._flobject import _MaxInstancedFLObject
+from pyflp._properties import (
     _BoolProperty,
     _ColorProperty,
     _EnumProperty,
@@ -17,13 +17,13 @@ from pyflp.properties import (
     _StrProperty,
     _UIntProperty,
 )
-from pyflp.validators import _FloatValidator, _IntValidator
+from pyflp._validators import _FloatValidator, _IntValidator
 
 __all__ = ["Track", "TrackDataEvent"]
 
 
 # TODO Track data events are as big as 66 bytes
-class TrackDataEvent(DataEvent):
+class TrackDataEvent(_DataEvent):
     """Implements `TrackEventID.Data` for `Track`."""
 
     def __init__(self, data: bytes):
@@ -101,7 +101,7 @@ class TrackDataEvent(DataEvent):
         super().dump(r.read())
 
 
-class Track(_FLObject):
+class Track(_MaxInstancedFLObject):
     max_count = 500
 
     def _setprop(self, n: str, v: Any):
@@ -203,7 +203,7 @@ class Track(_FLObject):
         return getattr(self, "_items", [])
 
     # * Parsing logic
-    def _parse_text_event(self, event: TextEvent):
+    def _parse_text_event(self, event: _TextEvent):
         if event.id == Track.EventID.Name:
             self._parse_s(event, "name")
 
