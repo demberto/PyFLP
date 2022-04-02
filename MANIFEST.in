@@ -1,3 +1,5 @@
+include .editorconfig
+include .gitattributes
 include *.md
 include tox.ini
 recursive-include docs *.md
@@ -6,4 +8,6 @@ recursive-include pyflp *.py
 recursive-include tests *.md
 recursive-include tests *.py
 recursive-include tests *.flp
+recursive-include *.yaml
+recursive-include *.yml
 include VERSION

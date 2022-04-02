@@ -5,7 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0]
+## [1.0.1] - 2022-04-02
+
+This update is more about QOL improvements, testing and refactoring. Few bugs
+have been fixed as well, while Python 3.6 support has been deprecated.
+
+### Added
+
+- Adopted `bandit`.
+- `_MaxInstancedFLObject`: `FLObject` with a limit on number of instances.
+- GPL3 short license headers.
+- Missing docs about `PatternNote` and `PatternController` events.
+- Exceptions: `InvalidHeaderSizeError`, `InvalidMagicError` and `MaxInstancesError`.
+- Import statements in submodules to simplify import process externally.
+- Test validators and properties and project version setter.
+- OTT plugin to test project to test VST plugins.
+
+### Changed
+
+- All use of `assert` has been replaced by exceptions (bandit: assert-used).
+- Version links in changelog now show changes.
+- LF line endings used and enforced everywhere.
+- `ppq` field moved to `_FLObject` from `Playlist`.
+- Much improved `tox.ini` and pre-commit configuration.
+- Modules which aren't meant for external use are prefixed with a _.
+- Simplified property declaration.
+
+### Deprecated
+
+- Python 3.6 support will be dropped in a future major release.
+
+### Fixed
+
+- All this time, `VSTPluginEvent` was never getting created/saved.
+- Lint errors reported by flake8, pylint and bandit.
+- Just realised `__setattr__` works only on instances 😅, came up with
+  `_FLObjectMeta` which is the metaclass used by `_FLObject`.
+
+### Removed
+
+- Redundant `__repr__` from `PatternNote`.
+
+## [1.0.0] - 2021-11-12
 
 ### **Highlights**
 
@@ -181,7 +222,8 @@ Same as in 0.1.1
 
 ---
 
-[1.0.0]: https://github.com/demberto/PyFLP/releases/tag/0.2.0
-[0.2.0]: https://github.com/demberto/PyFLP/releases/tag/0.2.0
-[0.1.2]: https://github.com/demberto/PyFLP/releases/tag/0.1.2
+[1.0.1]: https://github.com/demberto/PyFLP/compare/1.0.0...1.0.1
+[1.0.0]: https://github.com/demberto/PyFLP/compare/0.2.0...1.0.0
+[0.2.0]: https://github.com/demberto/PyFLP/compare/0.1.2...0.2.0
+[0.1.2]: https://github.com/demberto/PyFLP/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/demberto/PyFLP/releases/tag/0.1.1
