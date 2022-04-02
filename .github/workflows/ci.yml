@@ -22,7 +22,7 @@ jobs:
         run: tox
       - name: Test with pytest and upload coverage
         run: |
-          python -m pip install pytest-cov pytest-order
+          python -m pip install -rrequirements.txt pytest pytest-cov pytest-order
           pytest --cov=./ --cov-report=xml --cov-append --cov-fail-under 83
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
