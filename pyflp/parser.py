@@ -94,7 +94,7 @@ class Parser:
         # See `__parse_pattern` below for details.
         self.__pat_indexes: Set[int] = set()
 
-        # If current plugin defautl name is "Fruity Wrapper", this is True.
+        # If current plugin default name is "Fruity Wrapper", this is True.
         # `__build_event_store` will instantiate `VSTPluginEvent`.
         self.__cur_plug_is_vst = False
 
