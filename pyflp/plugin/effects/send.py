@@ -1,7 +1,6 @@
 from pyflp._event import _DataEventType
-from pyflp.plugin._plugin import _EffectPlugin
 from pyflp._properties import _IntProperty, _UIntProperty
-from pyflp._validators import _IntValidator, _UIntValidator
+from pyflp.plugin._plugin import _EffectPlugin
 
 __all__ = ["FSend"]
 
@@ -27,14 +26,14 @@ class FSend(_EffectPlugin):
         r.write_i(v)
 
     # * Properties
-    dry: int = _UIntProperty(_UIntValidator(256))
+    dry: int = _UIntProperty(max_=256)
     """Dry/wet. Min: 0 (0%), Max: 256 (100%), Default: 256 (100%). Linear."""
 
-    pan: int = _IntProperty(_IntValidator(-128, 127))
+    pan: int = _IntProperty(min_=-128, max_=127)
     """Pan. Min: -128 (100% left), Max: 127 (100% right),
     Default: 0 (Centred). Linear."""
 
-    volume: int = _UIntProperty(_UIntValidator(320))
+    volume: int = _UIntProperty(max_=320)
     """Volume. Min: 0 (-INF db, 0.00), Max: 320 (5.6 dB, 1.90),
     Default: 256 (0.0 dB, 1.00). Logarithmic."""
 

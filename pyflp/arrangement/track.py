@@ -4,8 +4,6 @@ from typing import Any, List, Optional
 import colour
 from bytesioex import BytesIOEx
 
-from pyflp.arrangement.playlist import _PlaylistItem
-from pyflp.constants import DATA, TEXT
 from pyflp._event import _DataEvent, _TextEvent
 from pyflp._flobject import _MaxInstancedFLObject
 from pyflp._properties import (
@@ -15,9 +13,9 @@ from pyflp._properties import (
     _FloatProperty,
     _IntProperty,
     _StrProperty,
-    _UIntProperty,
 )
-from pyflp._validators import _FloatValidator, _IntValidator
+from pyflp.arrangement.playlist import _PlaylistItem
+from pyflp.constants import DATA, TEXT
 
 __all__ = ["Track", "TrackDataEvent"]
 
@@ -155,9 +153,12 @@ class Track(_MaxInstancedFLObject):
     # * Properties
     name: Optional[str] = _StrProperty()
 
-    number: Optional[int] = _UIntProperty(_IntValidator(1, 500))
-    """Index. Part of `TrackDataEvent`. Min: 1, Max: 500.
-    A prior version of FL 20 didn't dump unused tracks."""
+    number: Optional[int] = _IntProperty(min_=1, max_=500)
+    """Min: 1, Max: 500.
+
+    Earlier versions of FL 20 didn't dump unused tracks.
+    Now, all 500 are dumped regardless of their use.
+    """
 
     color: Optional[colour.Color] = _ColorProperty()
 
@@ -166,7 +167,7 @@ class Track(_MaxInstancedFLObject):
     enabled: Optional[bool] = _BoolProperty()
     """Whether in enabled state or not."""
 
-    height: Optional[float] = _FloatProperty(_FloatValidator(0.0, 18.4))
+    height: Optional[float] = _FloatProperty(min_=0.0, max_=18.4)
     """Min: 0.0 (0%), Max: 18.4 (1840%), Default: 1.0 (100%)."""
 
     # TODO: What value this stores exactly is unclear yet.

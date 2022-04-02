@@ -1,6 +1,6 @@
 from pyflp._event import _DataEventType
+from pyflp._properties import _IntProperty, _UIntProperty
 from pyflp.plugin._plugin import _EffectPlugin
-from pyflp._properties import _IntValidator, _UIntProperty, _UIntValidator
 
 __all__ = ["FSoftClipper"]
 
@@ -22,10 +22,10 @@ class FSoftClipper(_EffectPlugin):
         r.write_I(0)
 
     # * Properties
-    threshold: int = _UIntProperty(_IntValidator(1, 127))
+    threshold: int = _IntProperty(min_=1, max_=127)
     """Threshold. Min: 1, Max: 127, Default: 100 (0.60, -4.4dB). Logarithmic."""
 
-    post: int = _UIntProperty(_UIntValidator(160))
+    post: int = _UIntProperty(max_=160)
     """Post gain. Min: 0, Max: 160, Default: 128 (80%). Linear."""
 
     def _parse_data_event(self, e: _DataEventType) -> None:

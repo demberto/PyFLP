@@ -1,9 +1,8 @@
 import enum
 
 from pyflp._event import _DataEventType
+from pyflp._properties import _EnumProperty, _IntProperty, _UIntProperty
 from pyflp.plugin._plugin import _EffectPlugin
-from pyflp._properties import _EnumProperty, _UIntProperty
-from pyflp._validators import _IntValidator, _UIntValidator
 
 __all__ = ["FFastDist"]
 
@@ -37,19 +36,19 @@ class FFastDist(_EffectPlugin):
         r.write_I(v)
 
     # * Properties
-    pre: int = _UIntProperty(_IntValidator(64, 192))
+    pre: int = _IntProperty(min_=64, max_=192)
     """Pre amp. Min: 64 (33%), Max: 192 (100%), Default: 128 (67%). Linear."""
 
-    threshold: int = _UIntProperty(_IntValidator(1, 10))
+    threshold: int = _IntProperty(min_=1, max_=10)
     """Threshold. Min: 1 (10%), Max: 10 (100%), Default: 10 (100%). Linear. Stepped."""
 
     kind: Kind = _EnumProperty(Kind)
     """Distortion type. Default: `Kind.A`. See `Kind`."""
 
-    mix: int = _UIntProperty(_UIntValidator(128))
+    mix: int = _UIntProperty(max_=128)
     """Mix. Min: 0 (0%), Max: 128 (100%), Default: 128 (100%). Linear."""
 
-    post: int = _UIntProperty(_UIntValidator(128))
+    post: int = _UIntProperty(max_=128)
     """Post gain. Min: 0 (0%), Max: 128 (100%), Default: 128 (100%). Linear."""
 
     # * Parsing logic

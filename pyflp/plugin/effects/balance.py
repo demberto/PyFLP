@@ -1,6 +1,6 @@
 from pyflp._event import _DataEventType
+from pyflp._properties import _IntProperty, _UIntProperty
 from pyflp.plugin._plugin import _EffectPlugin
-from pyflp._properties import _IntProperty, _IntValidator
 
 __all__ = ["FBalance"]
 
@@ -22,10 +22,10 @@ class FBalance(_EffectPlugin):
         r.write_i(v)
 
     # * Properties
-    pan: int = _IntProperty(_IntValidator(-128, 127))
+    pan: int = _IntProperty(min_=-128, max_=127)
     """Panning. Min: -128, Max: 127, Default: 0 (0.50, Centred). Linear."""
 
-    volume: int = _IntProperty(_IntValidator(0, 320))
+    volume: int = _UIntProperty(max_=320)
     """Volume. Min: 0, Max: 320, Default: 256 (0.80, 0dB). Logarithmic."""
 
     def _parse_data_event(self, e: _DataEventType) -> None:

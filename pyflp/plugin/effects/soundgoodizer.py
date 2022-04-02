@@ -1,8 +1,8 @@
 import enum
 
 from pyflp._event import _DataEventType
+from pyflp._properties import _EnumProperty, _UIntProperty
 from pyflp.plugin._plugin import _EffectPlugin
-from pyflp._properties import _EnumProperty, _UIntProperty, _UIntValidator
 
 __all__ = ["Soundgoodizer"]
 
@@ -34,7 +34,7 @@ class Soundgoodizer(_EffectPlugin):
     mode: Mode = _EnumProperty(Mode)
     """See `Mode`. Default: `Mode.A`"""
 
-    amount: int = _UIntProperty(_UIntValidator(1000))
+    amount: int = _UIntProperty(max_=1000)
     """Amount. Min: 0, Max: 1000, Default: 600. Logarithmic."""
 
     def _parse_data_event(self, e: _DataEventType) -> None:

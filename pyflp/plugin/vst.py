@@ -6,9 +6,9 @@ from bytesioex import BytesIOEx, UInt, ULong
 
 from pyflp._event import _DataEvent, _VariableSizedEvent
 from pyflp._flobject import _FLObject
-from pyflp.plugin._plugin import _Plugin
 from pyflp._properties import _BytesProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp._validators import _StrValidator, _UIntValidator
+from pyflp.plugin._plugin import _Plugin
 
 
 class _QWordVariableEvent(_VariableSizedEvent):
