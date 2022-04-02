@@ -1,21 +1,15 @@
 [build-system]
-requires = [
-    "setuptools>=51",
-    "wheel"
-]
+requires = ["setuptools>=51", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.isort]
 profile = "black"
 
 [tool.pylint.MASTER]
-jobs = 0    # Parallel execution
+jobs = 0 # Parallel execution
 
 [tool.pylint.'MESSAGE CONTROL']
-disable = [
-    "duplicate-code",
-    "invalid-name"
-]
+disable = ["duplicate-code", "invalid-name"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -24,25 +18,22 @@ testpaths = "tests"
 
 [tool.coverage.run]
 branch = true
-omit = [
-    "pyflp/_properties.py",
-    "pyflp/_validators.py"
-]
+parallel = true
 
 [tool.coverage.report]
 exclude_lines = [
-    # Have to re-enable the standard pragma
-    "pragma: no cover",
+  # Have to re-enable the standard pragma
+  "pragma: no cover",
 
-    # Don't complain about missing __repr__:
-    "def __repr__",
+  # Don't complain about missing __repr__:
+  "def __repr__",
 
-    # Don't complain if tests don't hit defensive assertion code:
-    "raise AssertionError",
-    "raise NotImplementedError",
+  # Don't complain if tests don't hit defensive assertion code:
+  "raise AssertionError",
+  "raise NotImplementedError",
 
-    # Don't complain about abstract methods, they aren't run:
-    "@(abc\\.)?abstractmethod",
+  # Don't complain about abstract methods, they aren't run:
+  "@(abc\\.)?abstractmethod",
 ]
 ignore_errors = true
 
@@ -80,7 +71,7 @@ src = "VERSION"
 
 [[tool.tbump.before_commit]]
 name = "check changelog"
-cmd = "git-grep -q {new_version} CHANGELOG.md"
+cmd = "git grep -q {new_version} CHANGELOG.md"
 
 # Or run some commands after the git tag and the branch
 # have been pushed:
