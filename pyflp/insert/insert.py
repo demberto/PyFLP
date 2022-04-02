@@ -3,13 +3,13 @@ from typing import List, Optional
 
 import colour
 
-from pyflp.constants import DATA, DWORD, TEXT, WORD
-from pyflp._event import _DWordEvent, _TextEvent, _WordEvent, _DataEventType, _EventType
+from pyflp._event import _DataEventType, _DWordEvent, _EventType, _TextEvent, _WordEvent
 from pyflp._flobject import _MaxInstancedFLObject
-from pyflp.insert.parameters import InsertFlags, InsertParameters
-from pyflp.insert.slot import InsertSlot
 from pyflp._properties import _ColorProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp._validators import _IntValidator, _UIntValidator
+from pyflp.constants import DATA, DWORD, TEXT, WORD
+from pyflp.insert.parameters import InsertFlags, InsertParameters
+from pyflp.insert.slot import InsertSlot
 
 
 class Insert(_MaxInstancedFLObject):
@@ -123,14 +123,14 @@ class Insert(_MaxInstancedFLObject):
         else:
             self._parameters.flags &= ~InsertFlags.Enabled
 
-    volume: Optional[int] = _UIntProperty(_UIntValidator(16000))
+    volume: Optional[int] = _UIntProperty(max_=16000)
     """Post volume fader. Min: 0 (0% / -INFdB / 0.00), Max: 16000 \
     (125% / 5.6dB / 1.90), Default: 12800 (100% / 0.0dB / 1.00)."""
 
-    pan: Optional[int] = _IntProperty(_IntValidator(-6400, 6400))
+    pan: Optional[int] = _IntProperty(min_=-6400, max_=6400)
     """Min: -6400 (100% left), Max: 6400 (100% right), Default: 0."""
 
-    stereo_separation: Optional[int] = _IntProperty(_IntValidator(-64, 64))
+    stereo_separation: Optional[int] = _IntProperty(min_=-64, max_=64)
     """Min: -64 (100% merged), Max: 64 (100% separated), Default: 0."""
 
     @property

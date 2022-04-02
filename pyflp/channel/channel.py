@@ -4,6 +4,23 @@ from typing import Dict, List, Optional, Tuple
 
 import colour
 
+from pyflp._event import (
+    _ByteEvent,
+    _DataEventType,
+    _DWordEventType,
+    _EventType,
+    _TextEvent,
+    _WordEvent,
+)
+from pyflp._flobject import _FLObject
+from pyflp._properties import (
+    _BoolProperty,
+    _ColorProperty,
+    _EnumProperty,
+    _IntProperty,
+    _StrProperty,
+    _UIntProperty,
+)
 from pyflp.channel.arp import ChannelArp
 from pyflp.channel.delay import ChannelDelay
 from pyflp.channel.envlfo import (
@@ -17,28 +34,10 @@ from pyflp.channel.levels import ChannelLevels
 from pyflp.channel.polyphony import ChannelPolyphony
 from pyflp.channel.tracking import ChannelTracking, ChannelTrackingEvent
 from pyflp.constants import DATA, DWORD, TEXT, WORD
-from pyflp._event import (
-    _ByteEvent,
-    _TextEvent,
-    _WordEvent,
-    _DataEventType,
-    _DWordEventType,
-    _EventType,
-)
-from pyflp._flobject import _FLObject
 from pyflp.insert.insert import Insert
 from pyflp.plugin._plugin import _Plugin
 from pyflp.plugin.synths.boobass import BooBass
 from pyflp.plugin.vst import VSTPlugin
-from pyflp._properties import (
-    _BoolProperty,
-    _ColorProperty,
-    _EnumProperty,
-    _IntProperty,
-    _StrProperty,
-    _UIntProperty,
-)
-from pyflp._validators import _IntValidator, _UIntValidator
 
 
 class Channel(_FLObject):
@@ -218,15 +217,15 @@ class Channel(_FLObject):
 
     index: int = _UIntProperty()
 
-    volume: Optional[int] = _UIntProperty(_UIntValidator(12800))
+    volume: Optional[int] = _UIntProperty(max_=12800)
     """Min: 0, Max: 12800, Default: 10000."""
 
-    pan: Optional[int] = _UIntProperty(_UIntValidator(12800))
+    pan: Optional[int] = _UIntProperty(max_=12800)
     """Min: 0, Max: 12800, Default: 6400."""
 
     color: colour.Color = _ColorProperty()
 
-    target_insert: Optional[int] = _IntProperty(_IntValidator(-1, Insert.max_count))
+    target_insert: Optional[int] = _IntProperty(min_=-1, max_=Insert.max_count)
     """The index of the `Insert` the channel is routed to."""
 
     kind: Optional[Kind] = _EnumProperty(Kind)
@@ -337,7 +336,7 @@ class Channel(_FLObject):
     stretch_time: Optional[int] = _UIntProperty()
     """Sampler/Audio -> Time stretching -> Time.
 
-    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_sampler.htm#Sampler_Beatmatching)"""
+    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_sampler.htm#Sampler_Beatmatching)"""  # noqa
 
     au_sample_rate: Optional[int] = _UIntProperty()
     """AU-format sample specific."""

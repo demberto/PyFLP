@@ -34,22 +34,22 @@ class PatternNote(_FLObject):
     """The note itself. Single notes: 0-131 (for C0-B10).
     Yet needs 4 bytes, to save stamped chords/scales."""
 
-    fine_pitch: int = _IntProperty(_IntValidator(-128, 127))
+    fine_pitch: int = _IntProperty(min_=-128, max_=127)
     """Min: -128 (-100 cents), Max: 127 (+100 cents)."""
 
     u1: int = _IntProperty()
     """TODO: Unknown parameter."""
 
-    release: int = _UIntProperty(_UIntValidator(128))
+    release: int = _UIntProperty(max_=128)
     """Min: 0, Max: 128."""
 
-    midi_channel: int = _UIntProperty(_UIntValidator(15))
+    midi_channel: int = _UIntProperty(max_=15)
     """A.k.a note color. Min: 0, Max: 15."""
 
-    pan: int = _IntProperty(_IntValidator(-64, 64))
+    pan: int = _IntProperty(min_=-64, max_=64)
     """Min: -64, Max: 64."""
 
-    velocity: int = _UIntProperty(_UIntValidator(128))
+    velocity: int = _UIntProperty(max_=128)
     """Min: 0, Max: 128."""
 
     mod_x: int = _UIntProperty()

@@ -1,9 +1,9 @@
 import enum
 
-from pyflp.constants import TEXT
 from pyflp._event import _TextEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _StrProperty
+from pyflp.constants import TEXT
 
 __all__ = ["Filter"]
 

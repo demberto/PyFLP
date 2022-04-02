@@ -1,8 +1,8 @@
 from bytesioex import BytesIOEx
 
-from pyflp.channel.arp import ChannelArp
 from pyflp._event import _DataEvent
 from pyflp._flobject import _FLObject
+from pyflp.channel.arp import ChannelArp
 
 __all__ = ["ChannelParameters", "ChannelParametersEvent"]
 

@@ -4,18 +4,18 @@ from typing import TYPE_CHECKING, List, Optional, ValuesView
 
 import colour
 
-from pyflp.constants import DATA, DWORD, TEXT, WORD
 from pyflp._event import (
-    _TextEvent,
-    _WordEvent,
     _DataEventType,
     _DWordEventType,
     _EventType,
+    _TextEvent,
+    _WordEvent,
 )
 from pyflp._flobject import _FLObject
+from pyflp._properties import _ColorProperty, _StrProperty
+from pyflp.constants import DATA, DWORD, TEXT, WORD
 from pyflp.pattern.controller import PatternController, PatternControllersEvent
 from pyflp.pattern.note import PatternNote, PatternNotesEvent
-from pyflp._properties import _ColorProperty, _StrProperty
 
 __all__ = ["Pattern"]
 

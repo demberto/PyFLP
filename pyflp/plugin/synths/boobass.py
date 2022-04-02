@@ -1,12 +1,12 @@
 from pyflp._event import _DataEventType
+from pyflp._properties import _UIntProperty
 from pyflp.plugin._plugin import _SynthPlugin
-from pyflp._properties import _UIntProperty, _UIntValidator
 
 
 class BooBass(_SynthPlugin):
     """Implements BooBass. 3 knobs. 16 bytes.
 
-    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/BooBass.htm)"""
+    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/BooBass.htm)"""  # noqa
 
     chunk_size = 16
 
@@ -20,13 +20,13 @@ class BooBass(_SynthPlugin):
             r.seek(12)
         r.write_I(v)
 
-    bass: int = _UIntProperty(_UIntValidator(65535))
+    bass: int = _UIntProperty(max_=65535)
     """Min: 0, Max: 65535, Default: 32767."""
 
-    mid: int = _UIntProperty(_UIntValidator(65535))
+    mid: int = _UIntProperty(max_=65535)
     """Min: 0, Max: 65535, Default: 32767."""
 
-    high: int = _UIntProperty(_UIntValidator(65535))
+    high: int = _UIntProperty(max_=65535)
     """Min: 0, Max: 65535, Default: 32767."""
 
     def _parse_data_event(self, e: _DataEventType) -> None:

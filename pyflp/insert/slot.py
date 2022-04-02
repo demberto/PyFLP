@@ -3,17 +3,8 @@ from typing import Optional, ValuesView
 
 import colour
 
-from pyflp.constants import DATA, DWORD, TEXT, WORD
-from pyflp._event import _DataEvent, _TextEvent, _WordEvent, _DWordEventType, _EventType
+from pyflp._event import _DataEvent, _DWordEventType, _EventType, _TextEvent, _WordEvent
 from pyflp._flobject import _MaxInstancedFLObject
-from pyflp.plugin.effects.balance import FBalance
-from pyflp.plugin.effects.fast_dist import FFastDist
-from pyflp.plugin.effects.notebook2 import FNoteBook2
-from pyflp.plugin.effects.send import FSend
-from pyflp.plugin.effects.soft_clipper import FSoftClipper
-from pyflp.plugin.effects.soundgoodizer import Soundgoodizer
-from pyflp.plugin._plugin import _Plugin
-from pyflp.plugin.vst import VSTPlugin
 from pyflp._properties import (
     _BoolProperty,
     _ColorProperty,
@@ -21,7 +12,15 @@ from pyflp._properties import (
     _StrProperty,
     _UIntProperty,
 )
-from pyflp._validators import _IntValidator, _UIntValidator
+from pyflp.constants import DATA, DWORD, TEXT, WORD
+from pyflp.plugin._plugin import _Plugin
+from pyflp.plugin.effects.balance import FBalance
+from pyflp.plugin.effects.fast_dist import FFastDist
+from pyflp.plugin.effects.notebook2 import FNoteBook2
+from pyflp.plugin.effects.send import FSend
+from pyflp.plugin.effects.soft_clipper import FSoftClipper
+from pyflp.plugin.effects.soundgoodizer import Soundgoodizer
+from pyflp.plugin.vst import VSTPlugin
 
 
 class InsertSlot(_MaxInstancedFLObject):
@@ -64,13 +63,13 @@ class InsertSlot(_MaxInstancedFLObject):
     color: Optional[colour.Color] = _ColorProperty()
     """Color."""
 
-    index: Optional[int] = _UIntProperty(_IntValidator(0, max_count))
+    index: Optional[int] = _UIntProperty(max_=max_count)
     """Index (FL12.3+); occurs irrespective of whether slot is used or not."""
 
     enabled: Optional[bool] = _BoolProperty()
     """Enabled state of the insert slot. Obtained from `InsertParamsEvent`."""
 
-    mix: Optional[int] = _UIntProperty(_UIntValidator(12800))
+    mix: Optional[int] = _UIntProperty(max_=12800)
     """Dry/Wet mix of the insert slot. Obtained from `InsertParamsEvent`.
     Min: 0 (0%), Max: 12800 (100%), Default: 12800 (100%)."""
 

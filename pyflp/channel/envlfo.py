@@ -6,7 +6,7 @@ from bytesioex import BytesIOEx
 from pyflp._event import _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _BoolProperty, _EnumProperty, _IntProperty, _UIntProperty
-from pyflp._validators import _IntValidator, _UIntValidator
+from pyflp._validators import _IntValidator
 
 __all__ = ["ChannelEnvelopeLFO", "ChannelEnvelopeLFOEvent"]
 
@@ -101,7 +101,7 @@ class ChannelEnvelopeLFOEvent(_DataEvent):
 class ChannelEnvelopeLFO(_FLObject):
     """Used by `Channel._env_lfos`.
 
-    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_ins.htm)"""
+    [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/chansettings_ins.htm)"""  # noqa
 
     _AHDSR_VALIDATOR = _IntValidator(100, 65536)
     _TNS_VALIDATOR = _IntValidator(-128, 128)
@@ -138,38 +138,39 @@ class ChannelEnvelopeLFO(_FLObject):
     """Whether LFO is in retriggered mode."""
 
     enabled: bool = _BoolProperty()
+    """Whether envelope section is enabled."""
 
     env_predelay: int = _UIntProperty(_AHDSR_VALIDATOR)
-    """Envelope predelay time. Min: 100 (0%), Max: 65536 (100%), Default: 100 (0%)."""
+    """Min: 100 (0%), Max: 65536 (100%), Default: 100 (0%)."""
 
     env_attack: int = _UIntProperty(_AHDSR_VALIDATOR)
-    """Envelope attack time. Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
+    """Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
 
     env_hold: int = _UIntProperty(_AHDSR_VALIDATOR)
-    """Envelope hold time. Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
+    """Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
 
     env_decay: int = _UIntProperty(_AHDSR_VALIDATOR)
-    """Envelope decay time. Min: 100 (0%), Max: 65536 (100%), Default: 30000 (46%)."""
+    """Min: 100 (0%), Max: 65536 (100%), Default: 30000 (46%)."""
 
-    env_sustain: int = _UIntProperty(_UIntValidator(128))
-    """Envelope sustain time. Min: 0 (0%), Max: 128 (100%), Default: 50 (39%)."""
+    env_sustain: int = _UIntProperty(max_=128)
+    """Min: 0 (0%), Max: 128 (100%), Default: 50 (39%)."""
 
     env_release: int = _UIntProperty(_AHDSR_VALIDATOR)
-    """Envelope release time. Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
+    """Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
 
     lfo_shape: LFOShape = _EnumProperty(LFOShape)
-    """LFO Shape (sine, triangle or pulse).
-    See `LFOShape`. Default: `LFOShape.Sine`."""
+    """Sine, triangle or pulse. Default: `LFOShape.Sine`."""
 
     env_att_tns: int = _IntProperty(_TNS_VALIDATOR)
-    """Envelope attack tension. Min: -128 (-100%), Max: 128 (100%), Default: 0 (0%)."""
+    """Attack tension. Min: -128 (-100%), Max: 128 (100%), Default: 0 (0%)."""
 
     env_sus_tns: int = _IntProperty(_TNS_VALIDATOR)
-    """Envelope sustain tension. Min: -128 (-100%), Max: 128 (100%), Default: 0 (0%)."""
+    """Sustain tension. Min: -128 (-100%), Max: 128 (100%), Default: 0 (0%)."""
 
     env_rel_tns: int = _IntProperty(_TNS_VALIDATOR)
-    """Envelope release tension. Min: -128 (-100%),
-    Max: 128 (100%), Default: -101 / 0 (-79% / 0%)."""
+    """Release tension.
+
+    Min: -128 (-100%), Max: 128 (100%), Default: -101 / 0 (-79% / 0%)."""
 
     def _parse_data_event(self, e: ChannelEnvelopeLFOEvent) -> None:
         self.__cel = self._events["envlfo"] = e

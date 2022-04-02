@@ -1,7 +1,6 @@
 import abc
 from typing import TYPE_CHECKING, Any, NoReturn
 
-from pyflp.exceptions import OperationNotPermittedError
 from pyflp._validators import (
     _BoolValidator,
     _BytesValidator,
@@ -12,6 +11,7 @@ from pyflp._validators import (
     _StrValidator,
     _UIntValidator,
 )
+from pyflp.exceptions import OperationNotPermittedError
 
 if TYPE_CHECKING:
     from pyflp._flobject import _FLObject
@@ -60,8 +60,10 @@ class _BoolProperty(_Property):
 
 
 class _BytesProperty(_Property):
-    def __init__(self):
-        super().__init__(_BytesValidator())
+    def __init__(self, validator=None, **kwargs):
+        if validator is None:
+            validator = _BytesValidator(**kwargs)
+        super().__init__(validator)
 
 
 class _ColorProperty(_Property):
@@ -75,28 +77,28 @@ class _EnumProperty(_Property):
 
 
 class _FloatProperty(_Property):
-    def __init__(self, validator=None):
+    def __init__(self, validator=None, **kwargs):
         if validator is None:
-            validator = _FloatValidator()
+            validator = _FloatValidator(**kwargs)
         super().__init__(validator)
 
 
 class _IntProperty(_Property):
-    def __init__(self, validator=None):
+    def __init__(self, validator=None, **kwargs):
         if validator is None:
-            validator = _IntValidator()
+            validator = _IntValidator(**kwargs)
         super().__init__(validator)
 
 
 class _StrProperty(_Property):
-    def __init__(self, validator=None):
+    def __init__(self, validator=None, **kwargs):
         if validator is None:
-            validator = _StrValidator()
+            validator = _StrValidator(**kwargs)
         super().__init__(validator)
 
 
 class _UIntProperty(_Property):
-    def __init__(self, validator=None):
+    def __init__(self, validator=None, **kwargs):
         if validator is None:
-            validator = _UIntValidator()
+            validator = _UIntValidator(**kwargs)
         super().__init__(validator)

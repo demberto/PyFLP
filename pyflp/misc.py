@@ -20,7 +20,7 @@ from pyflp._properties import (
     _StrProperty,
     _UIntProperty,
 )
-from pyflp._validators import _OneOfValidator, _UIntValidator
+from pyflp._validators import _OneOfValidator
 from pyflp.constants import DATA, DWORD, TEXT, VALID_PPQS, WORD
 from pyflp.utils import FLVersion
 
@@ -316,7 +316,7 @@ class Misc(_MaxInstancedFLObject):
     play_truncated_notes: Optional[bool] = _BoolProperty()
     """Whether to play truncated notes in pattern clips."""
 
-    shuffle: Optional[int] = _UIntProperty(_UIntValidator(128))
+    shuffle: Optional[int] = _UIntProperty(max_=128)
     """Global channel swing mix (ig). Min: 0, Max: 128, Default: 64."""
 
     main_pitch: Optional[int] = _IntProperty()

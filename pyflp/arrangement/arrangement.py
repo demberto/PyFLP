@@ -1,13 +1,13 @@
 import enum
 from typing import List, Optional
 
+from pyflp._event import _DataEvent, _EventType, _TextEvent, _WordEvent
+from pyflp._flobject import _FLObject
+from pyflp._properties import _StrProperty, _UIntProperty
 from pyflp.arrangement.playlist import Playlist
 from pyflp.arrangement.timemarker import TimeMarker
 from pyflp.arrangement.track import Track
 from pyflp.constants import TEXT, WORD
-from pyflp._event import _DataEvent, _TextEvent, _WordEvent, _EventType
-from pyflp._flobject import _FLObject
-from pyflp._properties import _StrProperty, _UIntProperty
 
 __all__ = ["Arrangement"]
 

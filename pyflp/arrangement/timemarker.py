@@ -1,10 +1,15 @@
 import enum
 
-from pyflp.constants import DWORD, TEXT
-from pyflp._event import _ByteEvent, _TextEvent, _DWordEventType
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
+from pyflp._event import _ByteEvent, _DWordEventType, _TextEvent
 from pyflp._flobject import _FLObject
-from pyflp._properties import _EnumProperty, _StrProperty, _UIntProperty
-from pyflp._validators import _IntValidator, _OneOfValidator
+from pyflp._properties import _EnumProperty, _IntProperty, _StrProperty, _UIntProperty
+from pyflp._validators import _OneOfValidator
+from pyflp.constants import DWORD, TEXT
 
 __all__ = ["TimeMarker"]
 
@@ -50,16 +55,15 @@ class TimeMarker(_FLObject):
     """Type of timemarker. See `Kind`."""
 
     name: str = _StrProperty()
-    """Name; e.g. `4/4`, `Chorus`, etc."""
+    """Name; e.g. `4/4` could be time signature, `Chorus` could be marker."""
 
     position: int = _UIntProperty()
     """Position in the playlist, from the start and proportional to PPQ."""
 
-    numerator: int = _UIntProperty(_IntValidator(1, 16))
+    numerator: int = _IntProperty(min_=1, max_=16)
     """Min: 1, Max: 16."""
 
-    denominator: int = _UIntProperty(_OneOfValidator((2, 4, 8, 16)))
-    """Possible values: 2, 4, 8, 16."""
+    denominator: Literal[2, 4, 8, 16] = _UIntProperty(_OneOfValidator((2, 4, 8, 16)))
 
     # * Parsing logic
     def _parse_byte_event(self, e: _ByteEvent):

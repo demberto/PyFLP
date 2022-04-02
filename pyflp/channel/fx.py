@@ -1,11 +1,11 @@
 import enum
 from typing import Optional
 
-from pyflp.constants import DWORD, WORD
-from pyflp._event import _WordEvent, _DWordEventType
+from pyflp._event import _DWordEventType, _WordEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _EnumProperty, _IntProperty, _UIntProperty
 from pyflp._validators import _UIntValidator
+from pyflp.constants import DWORD, WORD
 
 __all__ = ["ChannelFX", "ChannelFXReverb"]
 
@@ -94,19 +94,19 @@ class ChannelFX(_FLObject):
         Reverb = DWORD + 11
         """See `ChannelFX.reverb` and `ChannelFXReverb`."""
 
-    cutoff: Optional[int] = _UIntProperty(_UIntValidator(1024))
+    cutoff: Optional[int] = _UIntProperty(max_=1024)
     """Filter Mod X. Min = 0, Max = 1024, Default = 1024."""
 
-    fade_in: Optional[int] = _UIntProperty(_UIntValidator(1024))
+    fade_in: Optional[int] = _UIntProperty(max_=1024)
     """Quick fade-in. Min = 0, Max = 1024, Default = 0."""
 
-    fade_out: Optional[int] = _UIntProperty(_UIntValidator(1024))
+    fade_out: Optional[int] = _UIntProperty(max_=1024)
     """Quick fade-out. Min = 0, Max = 1024, Default = 0."""
 
-    pre_amp: Optional[int] = _UIntProperty(_UIntValidator(256))
+    pre_amp: Optional[int] = _UIntProperty(max_=256)
     """Boost. Min: 0, Max: 256, Default: 0."""
 
-    resonance: Optional[int] = _UIntProperty(_UIntValidator(1024))
+    resonance: Optional[int] = _UIntProperty(max_=1024)
     """Filter Mod Y. Min = 0, Max = 1024, Default = 0."""
 
     @property
