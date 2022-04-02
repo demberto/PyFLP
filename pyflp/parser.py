@@ -124,7 +124,13 @@ class Parser:
                 _FLObject._fl_version = flv = FLVersion(_TextEvent.as_ascii(buf))
                 if flv.as_float() < 11.5:
                     _TextEvent.uses_unicode = False
-            self.__events.append(_TextEvent(id, buf))
+            ev = _TextEvent(id, buf)
+            if (
+                id in (InsertSlot.EventID.DefaultName, Channel.EventID.DefaultName)
+                and ev.to_str() == "Fruity Wrapper"
+            ):
+                self.__cur_plug_is_vst = True
+            self.__events.append(ev)
 
         def add_dataevent(id, buf):
             if id == Track.EventID.Data:
@@ -146,6 +152,7 @@ class Parser:
             elif id in (Channel.EventID.Plugin, InsertSlot.EventID.Plugin):
                 if self.__cur_plug_is_vst:
                     ev = VSTPluginEvent(id, buf)
+                    self.__cur_plug_is_vst = False
                 else:
                     ev = _DataEvent(id, buf)
             elif id == Insert.EventID.Parameters:
@@ -218,11 +225,6 @@ class Parser:
         if ev.id == Insert.EventID.Output and Insert._count < Insert.max_count:
             self.__proj.inserts.append(self.__cur_ins)
             self.__cur_ins = Insert()
-        elif ev.id == InsertSlot.EventID.DefaultName:
-            if ev.to_str() == "Fruity Wrapper":
-                self.__cur_plug_is_vst = True
-            else:
-                self.__cur_plug_is_vst = False
 
     def __parse_arrangement(self, ev: _EventType):
         """Creates and appends `Arrangement` objects to `Project`. Dispatches

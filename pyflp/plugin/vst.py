@@ -1,6 +1,7 @@
+# ! FIX this mess
 import dataclasses
 import enum
-from typing import Any, List, Optional, Union, ValuesView
+from typing import Any, List, Optional, Union
 
 from bytesioex import BytesIOEx, UInt, ULong
 
@@ -9,6 +10,8 @@ from pyflp._flobject import _FLObject
 from pyflp._properties import _BytesProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp._validators import _StrValidator, _UIntValidator
 from pyflp.plugin._plugin import _Plugin
+
+__all__ = ["VSTPlugin", "VSTPluginEvent"]
 
 
 class _QWordVariableEvent(_VariableSizedEvent):
@@ -86,7 +89,7 @@ class _VSTPluginParser(_FLObject):
 class VSTPluginEvent(_DataEvent):
     def __init__(self, id, data: bytes):
         super().__init__(id, data)
-        self.parser = _VSTPluginParser()
+        self._parser = _VSTPluginParser()
         r = BytesIOEx(data)
         self.kind = r.read_i()
         if self.kind not in VSTPlugin.PLUGIN_VST:
@@ -99,17 +102,17 @@ class VSTPluginEvent(_DataEvent):
             length = r.read_Q()
             data = r.read(length)
             event = _QWordVariableEvent(_VSTPluginParser.EventID(eid), data)
-            self.parser.parse_event(event)
+            self._parser.parse_event(event)
 
-        self.name = self.parser.name
-        self.vendor = self.parser.vendor
-        self.plugin_path = self.parser.plugin_path
-        self.state = self.parser.state
-        self.fourcc = self.parser.fourcc
-        self.guid = self.parser.guid
+        self.name = self._parser.name
+        self.vendor = self._parser.vendor
+        self.plugin_path = self._parser.plugin_path
+        self.state = self._parser.state
+        self.fourcc = self._parser.fourcc
+        self.guid = self._parser.guid
 
     def dump(self, n: str, v: Union[str, bytes]):
-        self.parser._events[n].dump(v)
+        self._parser._events[n].dump(v)
 
 
 class VSTPlugin(_Plugin):
@@ -117,7 +120,7 @@ class VSTPlugin(_Plugin):
     (`ChannelEventID.Plugin` & `InsertSlotEventID.Plugin` event).
 
     [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/wrapper.htm#wrapper_pluginsettings)
-    """
+    """  # noqa
 
     PLUGIN_VST = 8, 10
 
@@ -202,10 +205,13 @@ class VSTPlugin(_Plugin):
         self._guid = e.guid
 
     # TODO: Improve this part
-    def _save(self) -> ValuesView[VSTPluginEvent]:
+    def _save(self) -> VSTPluginEvent:
         new = bytearray(UInt.pack(self._kind))
-        events = self.__vpe.parser._events
-        for attr in events.keys():
+        events = self.__vpe._parser._events
+        for attr in events:
             new.extend(events[attr].to_raw())
         self.__vpe.data = new
-        return super()._save()
+
+        # ! `VSTPluginEvent.dump` works differently; `super()._save()` useless.
+        # Also what it does is already achieved above
+        return self.__vpe
