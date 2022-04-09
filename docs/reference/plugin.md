@@ -49,6 +49,18 @@
         - post_gain
         - threshold
 
+### Fruity Stereo Enhancer
+
+::: pyflp.plugin.effects.stereo_enhancer.FStereoEnhancer
+    selection:
+      members:
+        - pan
+        - volume
+        - stereo_separation
+        - phase_offset
+        - phase_inversion
+        - effect_position
+
 ### Soundgoodizer
 
 ::: pyflp.plugin.effects.soundgoodizer.Soundgoodizer
