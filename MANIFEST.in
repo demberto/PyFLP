@@ -1,5 +1,4 @@
 include .editorconfig
-include .gitattributes
 include *.md
 include tox.ini
 recursive-include docs *.md
