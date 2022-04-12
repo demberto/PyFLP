@@ -19,6 +19,7 @@ These effects have an implementation:
 - Fruity NoteBook 2
 - Fruity Send
 - Fruity Soft Clipper
+- Fruity Stereo Enhancer
 - Soundgoodizer
 """
 
@@ -27,4 +28,5 @@ from .fast_dist import FFastDist
 from .notebook2 import FNoteBook2
 from .send import FSend
 from .soft_clipper import FSoftClipper
+from .stereo_enhancer import FStereoEnhancer
 from .soundgoodizer import Soundgoodizer

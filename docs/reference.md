@@ -96,6 +96,8 @@ Implementation of `Plugin` for these native FX plugins:
 
 ### [Fruity Soft Clipper](reference/plugin.md#fruity-soft-clipper)
 
+### [Fruity Stereo Enhancer](reference/plugin.md#fruity-stereo-enhancer)
+
 ### [Soundgoodizer](reference/plugin.md#soundgoodizer)
 
 ---

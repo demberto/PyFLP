@@ -33,6 +33,7 @@ from pyflp.plugin.effects.notebook2 import FNoteBook2
 from pyflp.plugin.effects.send import FSend
 from pyflp.plugin.effects.soft_clipper import FSoftClipper
 from pyflp.plugin.effects.soundgoodizer import Soundgoodizer
+from pyflp.plugin.effects.stereo_enhancer import FStereoEnhancer
 from pyflp.plugin.vst import VSTPlugin
 
 
@@ -140,6 +141,8 @@ class InsertSlot(_MaxInstancedFLObject):
                 plugin = FBalance()
             elif n == "Soundgoodizer":
                 plugin = Soundgoodizer()
+            elif n == "Fruity Stereo Enhancer":
+                plugin = FStereoEnhancer()
             elif n == "Fruity Fast Dist":
                 plugin = FFastDist()
             elif n == "Fruity Send":
