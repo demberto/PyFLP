@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "nickberry17",
+      "name": "nickberry17",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18670565?v=4",
+      "profile": "https://github.com/nickberry17",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "PyFLP",
+  "projectOwner": "demberto",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
