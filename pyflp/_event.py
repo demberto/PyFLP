@@ -363,8 +363,6 @@ class _ColorEvent(_DWordEvent):
 class _TextEvent(_VariableSizedEvent):
     """Represents a variable sized event used for storing strings."""
 
-    uses_unicode = True  # Parser can change this
-
     @staticmethod
     def as_ascii(buf: bytes):
         return buf.decode("ascii", errors="ignore").strip("\0")
@@ -389,20 +387,22 @@ class _TextEvent(_VariableSizedEvent):
         if not isinstance(text, str):
             raise TypeError(f"Expected an str object; got {type(text)!r}")
         # Version event (199) is always ASCII
-        if _TextEvent.uses_unicode and self.id != 199:
-            self.data = text.encode("utf-16", errors="ignore") + b"\0\0"
+        if self._uses_unicode and self.id != 199:
+            self.data = text.encode("utf-16-le") + b"\0\0"
         else:
-            self.data = text.encode("ascii", errors="ignore") + b"\0"
+            self.data = text.encode("ascii") + b"\0"
 
     def to_str(self) -> str:
-        if _TextEvent.uses_unicode and self.id != 199:
+        if self._uses_unicode and self.id != 199:
             return self.as_uf16(self.data)
         return self.as_ascii(self.data)
 
     def __repr__(self) -> str:
         return f'<{super().__repr__().strip("<>")!r}, s="{self.to_str()!r}">'
 
-    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
+    def __init__(
+        self, id: Union[enum.IntEnum, int], data: bytes, uses_unicode: bool = True
+    ):
         """
         Args:
             id (Union[enum.IntEnum, int]): An event ID from \
@@ -418,6 +418,7 @@ class _TextEvent(_VariableSizedEvent):
         if not isinstance(data, bytes):
             raise TypeError(f"Expected a bytes object; got {type(data)!r}")
         super().__init__(id, data)
+        self._uses_unicode = uses_unicode
 
 
 class _DataEvent(_VariableSizedEvent):

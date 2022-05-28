@@ -113,7 +113,7 @@ def test_dword_event():
     assert e != _DWordEvent(DWORD, b"\x00\x00\x00\x01")
 
 
-def test_text_event(monkeypatch):
+def test_text_event():
     with pytest.raises(ValueError):
         e = _TextEvent(DATA, b"t\x00e\x00x\x00t\x00\0")
     with pytest.raises(TypeError):
@@ -122,11 +122,10 @@ def test_text_event(monkeypatch):
     s = e.size
     assert s == 11
     assert e.to_str() == "text"
-    monkeypatch.setattr(_TextEvent, "uses_unicode", False)
-    e.dump("more")
-    assert e.size == 7
+    ascii_event = _TextEvent(TEXT, b"more", False)
+    assert ascii_event.size == 6
     with pytest.raises(TypeError):
-        e.dump(0)
+        ascii_event.dump(0)
 
 
 def test_data_event():

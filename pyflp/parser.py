@@ -97,7 +97,7 @@ class Parser:
     def __init__(self):
         self.__events = []
         self.__channel_count = 0
-        self.__reset_static_vars()
+        self.__uses_unicode = True
 
         # Timemarkers can occur anywhere before an arrangement
         # In that case, store them here temporarily until an
@@ -136,8 +136,8 @@ class Parser:
             if id == Misc.EventID.Version:
                 _FLObject._fl_version = flv = FLVersion(_TextEvent.as_ascii(buf))
                 if flv.as_float() < 11.5:
-                    _TextEvent.uses_unicode = False
-            ev = _TextEvent(id, buf)
+                    self.__uses_unicode = False
+            ev = _TextEvent(id, buf, self.__uses_unicode)
             if (
                 id in (InsertSlot.EventID.DefaultName, Channel.EventID.DefaultName)
                 and ev.to_str() == "Fruity Wrapper"

@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improvements to CI
 
+### Fixed
+
+- Incorrect encoding used to dump UTF-16 strings in `_TextEvent`.
 ### Removed
 
 - Gitter links from README and room itself, due to inactivity.
