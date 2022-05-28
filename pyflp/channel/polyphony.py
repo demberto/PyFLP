@@ -15,7 +15,7 @@ import enum
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent
+from pyflp._event import _DataEvent, EventID
 from pyflp._flobject import _FLObject
 from pyflp._properties import _EnumProperty, _IntProperty
 
@@ -27,10 +27,8 @@ class ChannelPolyphonyEvent(_DataEvent):
 
     _chunk_size = 9
 
-    def __init__(self, data: bytes):
-        from pyflp.channel.channel import Channel
-
-        super().__init__(Channel.EventID.Polyphony, data)
+    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+        super().__init__(index, id_, data)
         self.__r = r = BytesIOEx(data)
         self.max = r.read_I()
         self.slide = r.read_I()

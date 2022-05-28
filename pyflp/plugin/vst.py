@@ -99,10 +99,12 @@ class _VSTPluginParser(_FLObject):
             self.state = data
 
 
+# ! Very wrong OOP going on here
 class VSTPluginEvent(_DataEvent):
-    def __init__(self, id, data: bytes):
-        super().__init__(id, data)
+    def __init__(self, index: int, id, data: bytes):
+        super().__init__(index, id, data)
         self._parser = _VSTPluginParser()
+        self._event_count = 0
         r = BytesIOEx(data)
         self.kind = r.read_i()
         if self.kind not in VSTPlugin.PLUGIN_VST:
@@ -114,7 +116,9 @@ class VSTPluginEvent(_DataEvent):
                 break
             length = r.read_Q()
             data = r.read(length)
-            event = _QWordVariableEvent(_VSTPluginParser.EventID(eid), data)
+            id_ = _VSTPluginParser.EventID(eid)
+            event = _QWordVariableEvent(self._event_count, id_, data)
+            self._event_count += 1
             self._parser.parse_event(event)
 
         self.name = self._parser.name
@@ -223,7 +227,7 @@ class VSTPlugin(_Plugin):
         events = self.__vpe._parser._events
         for attr in events:
             new.extend(events[attr].to_raw())
-        self.__vpe.data = new
+        self.__vpe._data = new
 
         # ! `VSTPluginEvent.dump` works differently; `super()._save()` useless.
         # Also what it does is already achieved above

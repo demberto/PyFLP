@@ -34,8 +34,6 @@ __all__ = ["Pattern"]
 
 
 class Pattern(_FLObject):
-    _count = 0
-
     NOTE_SIZE = 24
 
     @enum.unique

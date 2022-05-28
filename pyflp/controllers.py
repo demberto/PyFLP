@@ -16,17 +16,17 @@ from typing import Optional  # , Union
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent
+from pyflp._event import _DataEvent, EventID
 
 # from pyflp.exceptions import OperationNotPermittedError
-from pyflp._flobject import _FLObject, _FLOBjectAbstractMeta
+from pyflp._flobject import _FLObject
 from pyflp._properties import _BoolProperty, _EnumProperty, _IntProperty, _UIntProperty
 from pyflp.constants import DATA
 
 __all__ = ["RemoteController", "RemoteControllerEvent"]
 
 
-class Controller(_FLObject, metaclass=_FLOBjectAbstractMeta):
+class Controller(_FLObject):
     pass
 
 
@@ -67,9 +67,9 @@ class RemoteController(Controller):
 class RemoteControllerEvent(_DataEvent):
     _chunk_size = 20
 
-    def __init__(self, data: bytes):
-        super().__init__(RemoteController.ID, data)
-        self.__r = r = BytesIOEx(data)
+    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+        super().__init__(index, id_, data)
+        r = BytesIOEx(data)
         self.u1 = r.read_H()
         self.u2 = r.read_B()
         self.u3 = r.read_B()

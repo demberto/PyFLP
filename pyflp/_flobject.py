@@ -12,6 +12,7 @@
 # <https://www.gnu.org/licenses/>.
 
 import abc
+import dataclasses
 import enum
 from typing import Any, Dict, Iterable, Optional
 
@@ -26,35 +27,20 @@ from pyflp._event import (
     _WordEvent,
 )
 from pyflp._properties import _Property
-from pyflp._validators import _OneOfValidator
-from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, VALID_PPQS, WORD
-from pyflp.exceptions import MaxInstancesError
-from pyflp.utils import FLVersion
+from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
 
 
-class _FLObjectMeta(type):
-    """Metaclass for `_FLObject`."""
+@dataclasses.dataclass
+class MaxInstances:
+    inserts: int = 0
+    """Maximum number of inserts per project."""
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name == "_ppq":
-            _OneOfValidator(VALID_PPQS).validate(value)
-        return super().__setattr__(name, value)
-
-
-class _FLOBjectAbstractMeta(_FLObjectMeta, abc.ABCMeta):
-    """Abstract metaclass for `_FLObject` (to avoid MRO errors)."""
-
-    pass
+    slots: int = 10
+    """Maximum number of slots per insert."""
 
 
-class _FLObject(metaclass=_FLOBjectAbstractMeta):
+class _FLObject(abc.ABC):
     """ABC for the FLP object model."""
-
-    _ppq = 0
-    _count = 0
-
-    # Set by Parser and can be modified by Misc.version
-    _fl_version: Optional[FLVersion] = None
 
     @enum.unique
     class EventID(enum.IntEnum):
@@ -183,8 +169,6 @@ class _FLObject(metaclass=_FLOBjectAbstractMeta):
         a single event and occur once inside the container class!
         """
         if not hasattr(self, "_" + key):
-            if not isinstance(value, _FLObject):
-                raise TypeError
             self._parseprop(event, key, value)
         obj: _FLObject = getattr(self, "_" + key)
         obj.parse_event(event)
@@ -193,20 +177,7 @@ class _FLObject(metaclass=_FLOBjectAbstractMeta):
         """Returns the events stored in `self._events` as an iterable."""
         return self._events.values()
 
-    def __init__(self):
-        cls = type(self)
-        self._idx = cls._count
-        cls._count += 1
+    def __init__(self, project=None, max_instances: Optional[MaxInstances] = None):
+        self._project = project
+        self._max_instances = max_instances
         self._events: Dict[str, _EventType] = {}
-
-
-class _MaxInstancedFLObject(_FLObject):
-    """Used when a limit has too be imposed on the number of instances."""
-
-    max_count = 1
-
-    def __init__(self):
-        cls = type(self)
-        if cls._count > cls.max_count:
-            raise MaxInstancesError(cls)
-        super().__init__()

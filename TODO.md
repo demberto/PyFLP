@@ -17,7 +17,3 @@ This is not a complete list, you can find many `# TODO` comments all over the co
 - Merge `Channel.layer_flags` and `Channel.sampler_flags` into `Channel.flags`. Needs a custom getter and parsing logic
 - Group pattern notes by `Note.rack_channel` i.e. `Pattern.notes` should be of type `Dict[int, Note]`.
 - `VSTPluginEvent` is a mess, clean it up
-
-## Issues
-
-- Using multiple instances of `Parser` cause issues due to the static nature of `FLObject._count`.

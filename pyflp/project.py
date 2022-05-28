@@ -22,7 +22,6 @@ from typing import List, Optional, Set, Union
 from bytesioex import BytesIOEx
 
 from pyflp._event import _EventType
-from pyflp._flobject import _FLObject
 from pyflp.arrangement.arrangement import Arrangement
 from pyflp.channel.channel import Channel
 from pyflp.channel.filter import Filter
@@ -181,6 +180,7 @@ class Project:
         Returns:
             List[Event]: A list of events sorted by `Event.index`
         """
+        from pyflp._flobject import _FLObject
 
         event_store: List[_EventType] = []
 

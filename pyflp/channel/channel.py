@@ -47,7 +47,6 @@ from pyflp.channel.levels import ChannelLevels
 from pyflp.channel.polyphony import ChannelPolyphony
 from pyflp.channel.tracking import ChannelTracking, ChannelTrackingEvent
 from pyflp.constants import DATA, DWORD, TEXT, WORD
-from pyflp.insert.insert import Insert
 from pyflp.plugin._plugin import _Plugin
 from pyflp.plugin.synths.boobass import BooBass
 from pyflp.plugin.vst import VSTPlugin
@@ -235,7 +234,7 @@ class Channel(_FLObject):
 
     color: colour.Color = _ColorProperty()
 
-    target_insert: Optional[int] = _IntProperty(min_=-1, max_=Insert.max_count)
+    target_insert: Optional[int] = _IntProperty(min_=-1)
     """The index of the `Insert` the channel is routed to."""
 
     kind: Optional[Kind] = _EnumProperty(Kind)
@@ -371,7 +370,7 @@ class Channel(_FLObject):
     def cut_group(self, value: Tuple[int]):
         if len(value) != 2:
             raise TypeError("Expected a tuple of size 2")
-        self._events["cut_group"].data = struct.pack("2H", *value)
+        self._events["cut_group"]._data = struct.pack("2H", *value)
         self._cut_group = value
 
     # * Parsing logic

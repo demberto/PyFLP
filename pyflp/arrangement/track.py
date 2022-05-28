@@ -17,8 +17,8 @@ from typing import Any, List, Optional
 import colour
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent, _TextEvent
-from pyflp._flobject import _MaxInstancedFLObject
+from pyflp._event import _DataEvent, _TextEvent, EventID
+from pyflp._flobject import _FLObject
 from pyflp._properties import (
     _BoolProperty,
     _ColorProperty,
@@ -27,7 +27,7 @@ from pyflp._properties import (
     _IntProperty,
     _StrProperty,
 )
-from pyflp.arrangement.playlist import _PlaylistItem
+from pyflp.arrangement.playlist import PlaylistItemType
 from pyflp.constants import DATA, TEXT
 
 __all__ = ["Track", "TrackDataEvent"]
@@ -37,8 +37,8 @@ __all__ = ["Track", "TrackDataEvent"]
 class TrackDataEvent(_DataEvent):
     """Implements `TrackEventID.Data` for `Track`."""
 
-    def __init__(self, data: bytes):
-        super().__init__(Track.EventID.Data, data)
+    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+        super().__init__(index, id_, data)
         self.__r = r = BytesIOEx(data)
         self.number = r.read_I()  # 4
         self.color = r.read_i()  # 8
@@ -112,9 +112,7 @@ class TrackDataEvent(_DataEvent):
         super().dump(r.read())
 
 
-class Track(_MaxInstancedFLObject):
-    max_count = 500
-
+class Track(_FLObject):
     def _setprop(self, n: str, v: Any):
         if n != "name":
             self.__tde.dump(n, v)
@@ -213,8 +211,8 @@ class Track(_MaxInstancedFLObject):
     """Whether in locked state or not. Default: False."""
 
     @property
-    def items(self) -> List[_PlaylistItem]:
-        return getattr(self, "_items", [])
+    def items(self) -> List[PlaylistItemType]:
+        return self._items
 
     # * Parsing logic
     def _parse_text_event(self, event: _TextEvent):
@@ -238,3 +236,7 @@ class Track(_MaxInstancedFLObject):
         self._position_sync = e.position_sync
         self._grouped = e.grouped
         self._locked = e.locked
+
+    def __init__(self, project = None, max_instances = None):
+        super().__init__(project, max_instances)
+        self._items: List[PlaylistItemType] = []

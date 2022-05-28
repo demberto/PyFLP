@@ -12,8 +12,9 @@
 # <https://www.gnu.org/licenses/>.
 
 import abc
+import collections
 import enum
-from typing import TypeVar, Union
+from typing import Type, TypeVar, Union, overload
 
 import colour
 from bytesioex import Byte, Int, SByte, UInt
@@ -21,24 +22,29 @@ from bytesioex import Byte, Int, SByte, UInt
 from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
 from pyflp.utils import buflen_to_varint
 
+EventID = TypeVar("EventID", enum.IntEnum, int)
+
 
 class _Event(abc.ABC):
     """Abstract base class representing an event."""
 
-    _count = 0
-
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def size(self) -> int:
         """Raw event size in bytes."""
 
     @property
     def index(self) -> int:
-        return self.__index
+        """Zero based index of instance w.r.t factory."""
+        return self._index
+
+    @property
+    def data(self) -> bytes:
+        return self._data
 
     @abc.abstractmethod
     def dump(self, new_data):
-        """Converts Python data types into bytes
-        objects and dumps them to `self.data`."""
+        """Converts Python types into bytes objects and stores it."""
 
     def to_raw(self) -> bytes:
         """Used by Project.save(). Overriden by `_VariabledSizedEvent`."""
@@ -66,17 +72,15 @@ class _Event(abc.ABC):
             )
         return self.id != o.id or self.data != o.data
 
-    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
+    def __init__(self, index: int, id: EventID, data: bytes):
         """
         Args:
-            id (Union[enum.IntEnum, int]): An event ID from **0** to **255**.
+            id (EventID): An event ID from **0** to **255**.
             data (bytes): A `bytes` object.
         """
-
         self.id = id
-        self.data = data
-        self.__index = _Event._count
-        _Event._count += 1
+        self._data = data
+        self._index = index
         super().__init__()
 
 
@@ -127,13 +131,13 @@ class _ByteEvent(_Event):
 
         if isinstance(new_data, bool):
             data = 1 if new_data else 0
-            self.data = data.to_bytes(1, "little")
+            self._data = data.to_bytes(1, "little")
         elif isinstance(new_data, bytes):
             if len(new_data) != 1:
                 raise ValueError(
                     f"Expected a bytes object of 1 byte length; got {new_data!r}"
                 )
-            self.data = new_data
+            self._data = new_data
         elif isinstance(new_data, int):
             if new_data != abs(new_data) and new_data not in range(-128, 128):
                 raise OverflowError(
@@ -141,7 +145,7 @@ class _ByteEvent(_Event):
                 )
             elif new_data > 255:
                 raise OverflowError(f"Expected a value from 0 to 255; got {new_data!r}")
-            self.data = new_data.to_bytes(1, "little")
+            self._data = new_data.to_bytes(1, "little")
         else:
             raise TypeError(
                 f"Expected a bytes, bool or an int object; got {type(new_data)!r}"
@@ -165,23 +169,22 @@ class _ByteEvent(_Event):
             msg = f"b={b!r}, B={B!r}"
         return f"<{super().__repr__()!r}, {msg!r}>"
 
-    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
+    def __init__(self, index: int, id: EventID, data: bytes):
         """
         Args:
-            id (Union[enum.IntEnum, int]): An event ID from **0** to **63**.
+            id (EventID): An event ID from **0** to **63**.
             data (bytes): A 1 byte sized `bytes` object.
 
         Raises:
             ValueError: When `id` is not in range of 0-63.
             TypeError: When size of `data` is not 1.
         """
-
         if not (id < WORD and id >= BYTE):
             raise ValueError(f"Exepcted 0-63; got {id!r}")
         dl = len(data)
         if dl != 1:
             raise TypeError(f"Unexpected data size; expected 1, got {dl!r}")
-        super().__init__(id, data)
+        super().__init__(index, id, data)
 
 
 class _WordEvent(_Event):
@@ -202,20 +205,19 @@ class _WordEvent(_Event):
             OverflowError: When `new_data` cannot be accumulated in 2 bytes.
             TypeError: When `new_data` isn't an int or a bytes object.
         """
-
         word = new_data
         if isinstance(word, bytes):
             if len(word) != 2:
                 raise ValueError(
                     f"Expected a bytes object of 2 bytes length; got {word!r}"
                 )
-            self.data = word
+            self._data = word
         elif isinstance(word, int):
             if word != abs(word) and word not in range(-32768, 32768):
                 raise OverflowError(f"Expected a value -32768 to 32767; got {word!r}")
             elif word > 65535:
                 raise OverflowError(f"Expected a value of 0 to 65535; got {word!r}")
-            self.data = word.to_bytes(2, "little")
+            self._data = word.to_bytes(2, "little")
         else:
             raise TypeError(f"Expected a bytes or an int object; got {type(word)!r}")
 
@@ -234,24 +236,23 @@ class _WordEvent(_Event):
             msg = f"h={h!r}, H={H!r}"
         return f"<{super().__repr__()!r}, {msg!r}>"
 
-    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
+    def __init__(self, index: int, id: EventID, data: bytes):
         """
         Args:
-            id (Union[enum.IntEnum, int]): An event ID from **64** to **127**.
+            id (EventID): An event ID from **64** to **127**.
             data (bytes): A `bytes` object of size 2.
 
         Raises:
             ValueError: When `id` is not in range of 64-127.
             TypeError: When size of `data` is not 2.
         """
-
         if id not in range(WORD, DWORD):
             raise ValueError(f"Exepcted 64-127; got {id!r}")
         if len(data) != 2:
             raise TypeError(
                 f"Expected a data of 2 bytes; got a data of size {len(data)!r} instead"
             )
-        super().__init__(id, data)
+        super().__init__(index, id, data)
 
 
 class _DWordEvent(_Event):
@@ -283,7 +284,7 @@ class _DWordEvent(_Event):
                 raise ValueError(
                     f"Expected a bytes object of 4 bytes length; got {dword!r}"
                 )
-            self.data = dword
+            self._data = dword
         elif isinstance(dword, int):
             if dword != abs(dword) and dword not in range(
                 self.INT_MIN, self.INT_MAX + 1
@@ -296,7 +297,7 @@ class _DWordEvent(_Event):
                 raise OverflowError(
                     f"Expected a value of 0 to {self.DWORD_MAX!r}; got {dword!r}"
                 )
-            self.data = dword.to_bytes(4, "little")
+            self._data = dword.to_bytes(4, "little")
         else:
             raise TypeError(f"Expected a bytes or an int object; got {type(dword)!r}")
 
@@ -317,26 +318,22 @@ class _DWordEvent(_Event):
             msg = f"i={i32!r}, I={u32!r}"
         return f"<{super().__repr__()!r}, {msg!r}>"
 
-    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
+    def __init__(self, index: int, id: EventID, data: bytes):
         """
         Args:
-            id (Union[enum.IntEnum, int]): An event ID from **128** to **191**.
+            id (EventID): An event ID from **128** to **191**.
             data (bytes): A `bytes` object of size 4.
 
         Raises:
             ValueError: When `id` is not in range of 128-191.
             TypeError: When size of `data` is not 4.
         """
-
         if id not in range(DWORD, TEXT):
             raise ValueError(f"Exepcted 128-191; got {id!r}")
         dl = len(data)
         if dl != 4:
             raise TypeError(f"Unexpected data size; expected 4, got {dl!r}")
-        super().__init__(id, data)
-
-
-_DWordEventType = TypeVar("_DWordEventType", bound=_DWordEvent)
+        super().__init__(index, id, data)
 
 
 class _ColorEvent(_DWordEvent):
@@ -353,7 +350,7 @@ class _ColorEvent(_DWordEvent):
 
         if not isinstance(new_color, colour.Color):
             raise TypeError(f"Expected a colour.Color; got {type(new_color)!r}")
-        self.data = bytes((int(c * 255) for c in new_color.rgb)) + b"\x00"
+        self._data = bytes((int(c * 255) for c in new_color.rgb)) + b"\x00"
 
     def to_color(self) -> colour.Color:
         r, g, b = (c / 255 for c in self.data[:3])
@@ -388,9 +385,9 @@ class _TextEvent(_VariableSizedEvent):
             raise TypeError(f"Expected an str object; got {type(text)!r}")
         # Version event (199) is always ASCII
         if self._uses_unicode and self.id != 199:
-            self.data = text.encode("utf-16-le") + b"\0\0"
+            self._data = text.encode("utf-16-le") + b"\0\0"
         else:
-            self.data = text.encode("ascii") + b"\0"
+            self._data = text.encode("ascii") + b"\0"
 
     def to_str(self) -> str:
         if self._uses_unicode and self.id != 199:
@@ -401,11 +398,15 @@ class _TextEvent(_VariableSizedEvent):
         return f'<{super().__repr__().strip("<>")!r}, s="{self.to_str()!r}">'
 
     def __init__(
-        self, id: Union[enum.IntEnum, int], data: bytes, uses_unicode: bool = True
+        self,
+        index: int,
+        id: EventID,
+        data: bytes,
+        uses_unicode: bool = True,
     ):
         """
         Args:
-            id (Union[enum.IntEnum, int]): An event ID from \
+            id (EventID): An event ID from
                 **192** to **207** or in `DATA_TEXT_EVENTS`.
             data (bytes): A `bytes` object.
 
@@ -417,7 +418,7 @@ class _TextEvent(_VariableSizedEvent):
             raise ValueError(f"Unexpected ID: {id!r}")
         if not isinstance(data, bytes):
             raise TypeError(f"Expected a bytes object; got {type(data)!r}")
-        super().__init__(id, data)
+        super().__init__(index, id, data)
         self._uses_unicode = uses_unicode
 
 
@@ -448,18 +449,17 @@ class _DataEvent(_VariableSizedEvent):
             raise TypeError(
                 f"Expected a bytes object; got a {type(new_bytes)!r} object"
             )
-        self.data = new_bytes
+        self._data = new_bytes
 
-    def __init__(self, id: Union[enum.IntEnum, int], data: bytes):
+    def __init__(self, index: int, id: EventID, data: bytes):
         """
         Args:
-            id (Union[enum.IntEnum, int]): An event ID in from **208** to **255**.
+            id (EventID): An event ID in from **208** to **255**.
             data (bytes): A `bytes` object.
 
         Raises:
             ValueError: When the event ID is not in the range of 208 (`DATA`) to 255.
         """
-
         if id < DATA:
             raise ValueError(f"Expected an event ID from 209 to 255; got {id!r}")
         if not isinstance(data, bytes):
@@ -471,3 +471,56 @@ class _DataEvent(_VariableSizedEvent):
 
 
 _DataEventType = TypeVar("_DataEventType", bound=_DataEvent)
+
+
+class EventList(collections.UserList):
+    def append(self, event_t: Type[_Event], id_: EventID, data: bytes, *args) -> None:
+        """Create and append an event to the list."""
+        event = self.create(event_t, id_, data, *args)
+        super().append(event)
+
+    def append_event(self, event: _EventType) -> None:
+        """For use with `create`."""
+        super().append(event)
+
+    @overload
+    def create(
+        self, event_t: Type[_ByteEvent], id_: EventID, data: bytes, *args
+    ) -> _ByteEvent:
+        ...
+
+    @overload
+    def create(
+        self, event_t: Type[_WordEvent], id_: EventID, data: bytes, *args
+    ) -> _WordEvent:
+        ...
+
+    @overload
+    def create(
+        self, event_t: Type[_ColorEvent], id_: EventID, data: bytes, *args
+    ) -> _ColorEvent:
+        ...
+
+    @overload
+    def create(
+        self, event_t: Type[_DWordEvent], id_: EventID, data: bytes, *args
+    ) -> _DWordEvent:
+        ...
+
+    @overload
+    def create(
+        self, event_t: Type[_TextEvent], id_: EventID, data: bytes, *args
+    ) -> _TextEvent:
+        ...
+
+    @overload
+    def create(
+        self, event_t: Type[_DataEvent], id_: EventID, data: bytes, *args
+    ) -> _DataEvent:
+        ...
+
+    def create(
+        self, event_t: Type[_Event], id_: EventID, data: bytes, *args
+    ) -> _EventType:
+        """Create an event object and return it."""
+        return event_t(len(self.data), id_, data, *args)

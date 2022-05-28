@@ -17,11 +17,79 @@ import zipfile
 import pytest
 
 from pyflp import Parser, Project
+from pyflp._event import (
+    EventList,
+    _ByteEvent,
+    EventType,
+    _WordEvent,
+    _DWordEvent,
+    _ColorEvent,
+    _DataEvent,
+    _TextEvent,
+)
 
 curdir = os.path.dirname(__file__)
+eventlist = EventList()
 
 
 @pytest.fixture(scope="session")
 def proj() -> Project:
     with zipfile.ZipFile(f"{curdir}/assets/FL 20.8.3.zip") as zp:
         return Parser().parse_zip(zp)
+
+
+# Pass a parameter to a fixture function: https://stackoverflow.com/a/68286553
+
+
+@pytest.fixture
+def event() -> EventType:
+    def _event(typ, id_, data, *args):
+        return eventlist.create(typ, id_, data, *args)
+
+    yield _event
+
+
+@pytest.fixture
+def byteevent(event) -> _ByteEvent:
+    def _byteevent(id_, data):
+        return event(_ByteEvent, id_, data)
+
+    yield _byteevent
+
+
+@pytest.fixture
+def wordevent(event) -> _WordEvent:
+    def _wordevent(id_, data):
+        return event(_WordEvent, id_, data)
+
+    yield _wordevent
+
+
+@pytest.fixture
+def dwordevent(event) -> _DWordEvent:
+    def _dwordevent(id_, data):
+        return event(_DWordEvent, id_, data)
+
+    yield _dwordevent
+
+
+@pytest.fixture
+def colorevent(event) -> _ColorEvent:
+    def _colorevent(id_, data):
+        return event(_ColorEvent, id_, data)
+
+    yield _colorevent
+
+
+@pytest.fixture
+def textevent(event) -> _TextEvent:
+    def _textevent(id_, data, uses_unicode):
+        return event(_TextEvent, id_, data, uses_unicode)
+
+    yield _textevent
+
+@pytest.fixture
+def dataevent(event) -> _DataEvent:
+    def _dataevent(id_, data):
+        return event(_DataEvent, id_, data)
+    yield _dataevent

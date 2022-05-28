@@ -18,8 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Incorrect encoding used to dump UTF-16 strings in `_TextEvent`.
+- [#4](https://github.com/demberto/PyFLP/issues/4).
+
 ### Removed
 
+- `_FLObject.max_count`, `MaxInstancesError`, `test_flobject.py` and
+  `_MaxInstancedFLObject`.
 - Gitter links from README and room itself, due to inactivity.
 
 ## [1.0.1] - 2022-04-02
@@ -239,6 +243,7 @@ Same as in 0.1.1
 
 ---
 
+[1.1.0]: https://github.com/demberto/PyFLP/compare/1.0.1...1.1.0
 [1.0.1]: https://github.com/demberto/PyFLP/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/demberto/PyFLP/compare/0.2.0...1.0.0
 [0.2.0]: https://github.com/demberto/PyFLP/compare/0.1.2...0.2.0

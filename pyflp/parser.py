@@ -24,12 +24,12 @@ from pyflp._event import (
     _ColorEvent,
     _DataEvent,
     _DWordEvent,
-    _Event,
     _EventType,
     _TextEvent,
     _WordEvent,
+    EventList,
 )
-from pyflp._flobject import _FLObject
+from pyflp._flobject import MaxInstances
 from pyflp.arrangement.arrangement import Arrangement
 from pyflp.arrangement.playlist import Playlist
 from pyflp.arrangement.timemarker import TimeMarker
@@ -71,32 +71,34 @@ from pyflp.utils import FLVersion
 
 __all__ = ["Parser"]
 
+INSERT_EVENTS: List[enum.IntEnum] = []
+for en in (Insert.EventID, InsertSlot.EventID):
+    INSERT_EVENTS.extend(en.__members__.values())
+
+ARRANGEMENT_EVENTS: List[enum.IntEnum] = []
+for en in (Arrangement.EventID, Track.EventID, Playlist.EventID):
+    ARRANGEMENT_EVENTS.extend(en.__members__.values())
+
+CHANNEL_EVENTS: List[enum.IntEnum] = []
+for en in (Channel.EventID, ChannelFX.EventID):
+    CHANNEL_EVENTS.extend(en.__members__.values())
+
+COLOR_EVENTS = (
+    Channel.EventID.Color,
+    Pattern.EventID.Color,
+    Insert.EventID.Color,
+    InsertSlot.EventID.Color,
+)
+
 
 class Parser:
     """FL Studio project file parser."""
 
-    __INSERT_EVENTS: List[enum.IntEnum] = []
-    for en in (Insert.EventID, InsertSlot.EventID):
-        __INSERT_EVENTS.extend(en.__members__.values())
-
-    __ARRANGEMENT_EVENTS: List[enum.IntEnum] = []
-    for en in (Arrangement.EventID, Track.EventID, Playlist.EventID):
-        __ARRANGEMENT_EVENTS.extend(en.__members__.values())
-
-    __CHANNEL_EVENTS: List[enum.IntEnum] = []
-    for en in (Channel.EventID, ChannelFX.EventID):
-        __CHANNEL_EVENTS.extend(en.__members__.values())
-
-    __COLOR_EVENTS = (
-        Channel.EventID.Color,
-        Pattern.EventID.Color,
-        Insert.EventID.Color,
-        InsertSlot.EventID.Color,
-    )
-
     def __init__(self):
-        self.__events = []
+        self.__events = EventList()
         self.__channel_count = 0
+        self.__max_counts = MaxInstances()
+        self.__fl_version: FLVersion = None
         self.__uses_unicode = True
 
         # Timemarkers can occur anywhere before an arrangement
@@ -111,93 +113,82 @@ class Parser:
         # `__build_event_store` will instantiate `VSTPluginEvent`.
         self.__cur_plug_is_vst = False
 
-    @staticmethod
-    def __reset_static_vars() -> None:
-        """Reset static variables. This allows multiple instances of `Parser`
-        in a single instance of the interpreter. HOWEVER THIS DOESN'T WORK FOR
-        USING MULTIPLE INSTANCES AT THE SAME TIME."""
-
-        _FLObject._count = 0
-        _Event._count = 0
-        for subclass in _FLObject.__subclasses__():
-            subclass._count = 0
-
     def __build_event_store(self) -> None:
         """Gathers all events into a single list."""
 
-        def add_dwordevent(id, buf):
-            if id in self.__COLOR_EVENTS:
-                ev = _ColorEvent(id, buf)
+        def add_dwordevent(id_, buf):
+            if id_ in COLOR_EVENTS:
+                typ = _ColorEvent
             else:
-                ev = _DWordEvent(id, buf)
-            self.__events.append(ev)
+                typ = _DWordEvent
+            self.__events.append(typ, id_, buf)
 
-        def add_textevent(id, buf):
-            if id == Misc.EventID.Version:
-                _FLObject._fl_version = flv = FLVersion(_TextEvent.as_ascii(buf))
-                if flv.as_float() < 11.5:
+        def add_textevent(id_, buf):
+            if id_ == Misc.EventID.Version:
+                self.__fl_version = FLVersion(_TextEvent.as_ascii(buf))
+                if self.__fl_version.as_float() < 11.5:
                     self.__uses_unicode = False
-            ev = _TextEvent(id, buf, self.__uses_unicode)
+            ev = self.__events.create(_TextEvent, id_, buf, self.__uses_unicode)
             if (
-                id in (InsertSlot.EventID.DefaultName, Channel.EventID.DefaultName)
+                id_ in (InsertSlot.EventID.DefaultName, Channel.EventID.DefaultName)
                 and ev.to_str() == "Fruity Wrapper"
             ):
                 self.__cur_plug_is_vst = True
-            self.__events.append(ev)
+            self.__events.append_event(ev)
 
-        def add_dataevent(id, buf):
-            if id == Track.EventID.Data:
-                ev = TrackDataEvent(buf)
-            elif id == Channel.EventID.Delay:
-                ev = ChannelDelayEvent(buf)
-            elif id == Channel.EventID.Polyphony:
-                ev = ChannelPolyphonyEvent(buf)
-            elif id == Channel.EventID.Levels:
-                ev = ChannelLevelsEvent(buf)
-            elif id == Channel.EventID.Tracking:
-                ev = ChannelTrackingEvent(buf)
-            elif id == Channel.EventID.LevelOffsets:
-                ev = ChannelLevelOffsetsEvent(buf)
-            elif id == Channel.EventID.Parameters:
-                ev = ChannelParametersEvent(buf)
-            elif id == Channel.EventID.EnvelopeLFO:
-                ev = ChannelEnvelopeLFOEvent(buf)
-            elif id in (Channel.EventID.Plugin, InsertSlot.EventID.Plugin):
+        def add_dataevent(id_, buf):
+            if id_ == Track.EventID.Data:
+                typ = TrackDataEvent
+            elif id_ == Channel.EventID.Delay:
+                typ = ChannelDelayEvent
+            elif id_ == Channel.EventID.Polyphony:
+                typ = ChannelPolyphonyEvent
+            elif id_ == Channel.EventID.Levels:
+                typ = ChannelLevelsEvent
+            elif id_ == Channel.EventID.Tracking:
+                typ = ChannelTrackingEvent
+            elif id_ == Channel.EventID.LevelOffsets:
+                typ = ChannelLevelOffsetsEvent
+            elif id_ == Channel.EventID.Parameters:
+                typ = ChannelParametersEvent
+            elif id_ == Channel.EventID.EnvelopeLFO:
+                typ = ChannelEnvelopeLFOEvent
+            elif id_ in (Channel.EventID.Plugin, InsertSlot.EventID.Plugin):
                 if self.__cur_plug_is_vst:
-                    ev = VSTPluginEvent(id, buf)
+                    typ = VSTPluginEvent
                     self.__cur_plug_is_vst = False
                 else:
-                    ev = _DataEvent(id, buf)
-            elif id == Insert.EventID.Parameters:
-                ev = InsertParametersEvent(buf)
-            elif id == Pattern.EventID.Controllers:
-                ev = PatternControllersEvent(buf)
-            elif id == Pattern.EventID.Notes:
-                ev = PatternNotesEvent(buf)
-            elif id == RemoteController.ID:
-                ev = RemoteControllerEvent(buf)
+                    typ = _DataEvent
+            elif id_ == Insert.EventID.Parameters:
+                typ = InsertParametersEvent
+            elif id_ == Pattern.EventID.Controllers:
+                typ = PatternControllersEvent
+            elif id_ == Pattern.EventID.Notes:
+                typ = PatternNotesEvent
+            elif id_ == RemoteController.ID:
+                typ = RemoteControllerEvent
             else:
-                ev = _DataEvent(id, buf)
-            self.__events.append(ev)
+                typ = _DataEvent
+            self.__events.append(typ, id_, buf)
 
         while True:
-            id = self.__r.read_B()
-            if id is None:
+            evid = self.__r.read_B()
+            if evid is None:
                 break
 
-            if id in range(BYTE, WORD):
-                self.__events.append(_ByteEvent(id, self.__r.read(1)))
-            elif id in range(WORD, DWORD):
-                self.__events.append(_WordEvent(id, self.__r.read(2)))
-            elif id in range(DWORD, TEXT):
-                add_dwordevent(id, self.__r.read(4))
+            if evid in range(BYTE, WORD):
+                self.__events.append(_ByteEvent, evid, self.__r.read(1))
+            elif evid in range(WORD, DWORD):
+                self.__events.append(_WordEvent, evid, self.__r.read(2))
+            elif evid in range(DWORD, TEXT):
+                add_dwordevent(evid, self.__r.read(4))
             else:
                 varint = self.__r.read_v()
                 buf = self.__r.read(varint)
-                if id in range(TEXT, DATA) or id in DATA_TEXT_EVENTS:
-                    add_textevent(id, buf)
+                if evid in range(TEXT, DATA) or evid in DATA_TEXT_EVENTS:
+                    add_textevent(evid, buf)
                 else:
-                    add_dataevent(id, buf)
+                    add_dataevent(evid, buf)
 
     def __parse_channel(self, ev: _EventType):
         """Creates and appends `Channel` objects to `Project`.
@@ -235,9 +226,12 @@ class Parser:
         `InsertEvent` and `InsertSlotEventID` events for parsing."""
 
         self.__cur_ins.parse_event(ev)
-        if ev.id == Insert.EventID.Output and Insert._count < Insert.max_count:
+        if (
+            ev.id == Insert.EventID.Output
+            and len(self.__proj.inserts) < self.__max_counts.inserts
+        ):
             self.__proj.inserts.append(self.__cur_ins)
-            self.__cur_ins = Insert()
+            self.__cur_ins = Insert(self.__proj, self.__max_counts)
 
     def __parse_arrangement(self, ev: _EventType):
         """Creates and appends `Arrangement` objects to `Project`. Dispatches
@@ -245,7 +239,7 @@ class Parser:
         for parsing."""
 
         if ev.id == Arrangement.EventID.New:
-            self.__cur_arr: Arrangement = Arrangement()
+            self.__cur_arr = Arrangement(self.__proj)
             self.__proj.arrangements.append(self.__cur_arr)
 
         # I have found timemarkers occuring randomly (mixed with channel events)
@@ -284,12 +278,8 @@ class Parser:
         - In the event of failure, user can at least get the events.
         - [FLPInspect](https://github.com/demberto/flpinspect) and
         [FLPInfo](https://github.com/demberto/flpinfo) can still
-        display some minimal information based on the events."""
-
-        # * Reset static vars because the same Parser
-        # * instance can be used to parse again
-        self.__reset_static_vars()
-
+        display some minimal information based on the events.
+        """
         # * Argument validation
         self.__proj = proj = Project()
         if isinstance(flp, (Path, str)):
@@ -318,7 +308,7 @@ class Parser:
             raise InvalidHeaderSizeError(hdr_size)
         proj.misc.format = Misc.Format(r.read_h())
         proj.misc.channel_count = r.read_H()
-        proj.misc.ppq = _FLObject._ppq = r.read_H()
+        proj.misc.ppq = r.read_H()
         data_magic = r.read(4)
         if data_magic != DATA_MAGIC:
             raise InvalidMagicError(data_magic)
@@ -335,8 +325,8 @@ class Parser:
 
         # * Modify parsing logic as per FL version
         # TODO: This can be as less as 16. Also insert slots were once 8.
-        Insert.max_count = 127 if _FLObject._fl_version.as_float() >= 12.89 else 104
-        self.__cur_ins = Insert()
+        self.__max_counts.inserts = 127 if self.__fl_version.as_float() > 12.89 else 104
+        self.__cur_ins = Insert(self.__proj, self.__max_counts)
 
         # * Build an object model
         # TODO: Parse in multiple layers
@@ -352,22 +342,21 @@ class Parser:
                 self.__proj.controllers.append(controller)
             elif ev.id in Pattern.EventID.__members__.values():
                 self.__parse_pattern(ev)
-            elif ev.id in Parser.__CHANNEL_EVENTS and parse_channel:
+            elif ev.id in CHANNEL_EVENTS and parse_channel:
                 self.__parse_channel(ev)
             elif ev.id in TimeMarker.EventID.__members__.values():
                 self.__parse_timemarker(ev)
-            elif ev.id in Parser.__ARRANGEMENT_EVENTS:
+            elif ev.id in ARRANGEMENT_EVENTS:
                 parse_channel = False
                 self.__parse_arrangement(ev)
-            elif ev.id in Parser.__INSERT_EVENTS and not parse_channel:
+            elif ev.id in INSERT_EVENTS and not parse_channel:
                 self.__parse_insert(ev)
             elif ev.id == InsertParamsEvent.ID:
                 ev.id = InsertParamsEvent.ID
 
                 # Append the last insert first
                 self.__proj.inserts.append(self.__cur_ins)
-
-                insert_params_ev = InsertParamsEvent(ev.data)
+                insert_params_ev = InsertParamsEvent(ev)
                 if not insert_params_ev.parse(self.__proj.inserts):
                     self.__proj._unparsed_events.append(ev)
             else:

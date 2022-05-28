@@ -50,8 +50,8 @@ class InsertParamsEvent(_DataEvent):
 
     ID = DATA + 17
 
-    def __init__(self, data: bytes):
-        super().__init__(InsertParamsEvent.ID, data)
+    def __init__(self, ev: _DataEvent):
+        super().__init__(ev.index, InsertParamsEvent.ID, ev.data)
 
     def parse(self, inserts: List[Insert]) -> bool:
         if not len(self.data) % 12 == 0:  # pragma: no cover
@@ -101,7 +101,7 @@ class InsertParamsEvent(_DataEvent):
                 ins.eq.band_q = msg
             elif id == self.EventID.HighQ:
                 ins.eq.high_q = msg
-            elif id in range(self.EventID.SendLevelStart, Insert.max_count + 1):
+            elif id in range(self.EventID.SendLevelStart, len(inserts) + 1):
                 route_id = id - self.EventID.SendLevelStart
                 ins.route_volumes[route_id] = msg
         return True

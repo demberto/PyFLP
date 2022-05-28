@@ -16,7 +16,7 @@ from typing import Any, Optional
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent
+from pyflp._event import _DataEvent, EventID
 from pyflp._flobject import _FLObject
 from pyflp._properties import _EnumProperty
 
@@ -70,10 +70,8 @@ class InsertParametersEvent(_DataEvent):
 
     _chunk_size = 12
 
-    def __init__(self, data: bytes):
-        from pyflp.insert.insert import Insert
-
-        super().__init__(Insert.EventID.Parameters, data)
+    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+        super().__init__(index, id_, data)
         self.__r = r = BytesIOEx(data)
         self._u1 = r.read_I()
         self.flags = InsertFlags(r.read_I())

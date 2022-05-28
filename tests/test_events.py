@@ -27,28 +27,28 @@ from pyflp._event import (
 from pyflp.constants import BYTE, DATA, DWORD, TEXT, WORD
 
 
-def test_equality():
-    assert _ByteEvent(BYTE, b"\x00") == _ByteEvent(BYTE, b"\x00")
+def test_equality(byteevent, wordevent):
+    assert byteevent(BYTE, b"\x00") == byteevent(BYTE, b"\x00")
     with pytest.raises(TypeError):
-        _ByteEvent(BYTE, b"\x00") == _WordEvent(WORD, b"\x00")
+        byteevent(BYTE, b"\x00") == wordevent(WORD, b"\x00")
 
 
-def test_inequality():
-    assert _ByteEvent(BYTE, b"\x00") != _ByteEvent(BYTE, b"\xFF")
+def test_inequality(byteevent, wordevent):
+    assert byteevent(BYTE, b"\x00") != byteevent(BYTE, b"\xFF")
     with pytest.raises(TypeError):
-        _ByteEvent(BYTE, b"\x00") != _WordEvent(WORD, b"\xFF")
+        byteevent(BYTE, b"\x00") != wordevent(WORD, b"\xFF")
 
 
-def test_byte_event():
+def test_byte_event(byteevent, wordevent):
     with pytest.raises(ValueError):
-        e = _ByteEvent(WORD, b"\x00")
+        e = byteevent(WORD, b"\x00")
     with pytest.raises(TypeError):
-        e = _ByteEvent(BYTE, b"")
-    e = _ByteEvent(BYTE, b"\x00")
+        e = byteevent(BYTE, b"")
+    e = byteevent(BYTE, b"\x00")
     assert not e.to_bool()
     assert e.to_int8() == e.to_uint8()
     assert e.size == 2
-    assert e == _ByteEvent(BYTE, b"\x00")
+    assert e == byteevent(BYTE, b"\x00")
     for data in (b"\x01", 1, True):
         e.dump(data)
         assert e.to_bool()
@@ -59,8 +59,8 @@ def test_byte_event():
             e.dump(overflow)
     with pytest.raises(TypeError):
         e.dump("s")
-    assert e != _ByteEvent(BYTE, b"\xFF")
-    w = _WordEvent(WORD, b"\x00\x00")
+    assert e != byteevent(BYTE, b"\xFF")
+    w = wordevent(WORD, b"\x00\x00")
     with pytest.raises(TypeError):
         e == w
     with pytest.raises(TypeError):
@@ -69,14 +69,14 @@ def test_byte_event():
     assert e.to_bool()
 
 
-def test_word_event():
+def test_word_event(wordevent):
     with pytest.raises(ValueError):
-        e = _WordEvent(DWORD, b"\x00")
+        e = wordevent(DWORD, b"\x00")
     with pytest.raises(TypeError):
-        e = _WordEvent(WORD, b"")
-    e = _WordEvent(WORD, b"\x00\x00")
+        e = wordevent(WORD, b"")
+    e = wordevent(WORD, b"\x00\x00")
     assert e.size == 3
-    assert e == _WordEvent(WORD, b"\x00\x00")
+    assert e == wordevent(WORD, b"\x00\x00")
     for data in (b"\x00\x00", 0):
         e.dump(data)
         assert e.to_int16() == e.to_uint16()
@@ -88,17 +88,17 @@ def test_word_event():
         e.dump(65536)
     with pytest.raises(TypeError):
         e.dump("s")
-    assert e != _WordEvent(WORD, b"\x00\x01")
+    assert e != wordevent(WORD, b"\x00\x01")
 
 
-def test_dword_event():
+def test_dword_event(dwordevent):
     with pytest.raises(ValueError):
-        e = _DWordEvent(TEXT, b"\x00\x00\x00\x00")
+        e = dwordevent(TEXT, b"\x00\x00\x00\x00")
     with pytest.raises(TypeError):
-        e = _DWordEvent(DWORD, b"")
-    e = _DWordEvent(DWORD, b"\x00\x00\x00\x00")
+        e = dwordevent(DWORD, b"")
+    e = dwordevent(DWORD, b"\x00\x00\x00\x00")
     assert e.size == 5
-    assert e == _DWordEvent(DWORD, b"\x00\x00\x00\x00")
+    assert e == dwordevent(DWORD, b"\x00\x00\x00\x00")
     for data in (b"\x00\x00\x00\x00", 0):
         e.dump(data)
         assert e.to_int32() == e.to_uint32()
@@ -110,30 +110,30 @@ def test_dword_event():
         e.dump(_DWordEvent.DWORD_MAX + 1)
     with pytest.raises(TypeError):
         e.dump("s")
-    assert e != _DWordEvent(DWORD, b"\x00\x00\x00\x01")
+    assert e != dwordevent(DWORD, b"\x00\x00\x00\x01")
 
 
-def test_text_event():
+def test_text_event(textevent):
     with pytest.raises(ValueError):
-        e = _TextEvent(DATA, b"t\x00e\x00x\x00t\x00\0")
+        e = textevent(DATA, b"t\x00e\x00x\x00t\x00\0", True)
     with pytest.raises(TypeError):
-        e = _TextEvent(TEXT, "string")
-    e = _TextEvent(TEXT, b"t\x00e\x00x\x00t\x00\0")
+        e = textevent(TEXT, "string")
+    e = textevent(TEXT, b"t\x00e\x00x\x00t\x00\0", True)
     s = e.size
     assert s == 11
     assert e.to_str() == "text"
-    ascii_event = _TextEvent(TEXT, b"more", False)
+    ascii_event = textevent(TEXT, b"more", False)
     assert ascii_event.size == 6
     with pytest.raises(TypeError):
         ascii_event.dump(0)
 
 
-def test_data_event():
+def test_data_event(dataevent):
     with pytest.raises(ValueError):
-        e = _DataEvent(BYTE, b"data")
+        e = dataevent(BYTE, b"data")
     with pytest.raises(TypeError):
-        e = _DataEvent(DATA, 0)
-    e = _DataEvent(DATA, b"data")
+        e = dataevent(DATA, 0)
+    e = dataevent(DATA, b"data")
     assert e.size == 6
     e.dump(b"moredata")
     with pytest.raises(TypeError):
@@ -141,8 +141,8 @@ def test_data_event():
     assert e.size == 10
 
 
-def test_color_event():
-    e = _ColorEvent(128, b"\x48\x51\x56\x00")
+def test_color_event(colorevent):
+    e = colorevent(128, b"\x48\x51\x56\x00")
     assert e.to_color() == Color("#485156")
     with pytest.raises(TypeError):
         e.dump(0)

@@ -17,7 +17,7 @@ from typing import Optional, ValuesView
 import colour
 
 from pyflp._event import _DataEvent, _DWordEventType, _EventType, _TextEvent, _WordEvent
-from pyflp._flobject import _MaxInstancedFLObject
+from pyflp._flobject import _FLObject
 from pyflp._properties import (
     _BoolProperty,
     _ColorProperty,
@@ -37,9 +37,7 @@ from pyflp.plugin.effects.stereo_enhancer import FStereoEnhancer
 from pyflp.plugin.vst import VSTPlugin
 
 
-class InsertSlot(_MaxInstancedFLObject):
-    max_count = 10  # TODO: Older versions had 8, maybe lesser as well
-
+class InsertSlot(_FLObject):
     @enum.unique
     class EventID(enum.IntEnum):
         """Event IDs used by `InsertSlot`."""
@@ -77,7 +75,7 @@ class InsertSlot(_MaxInstancedFLObject):
     color: Optional[colour.Color] = _ColorProperty()
     """Color."""
 
-    index: Optional[int] = _UIntProperty(max_=max_count)
+    index: Optional[int] = _UIntProperty()
     """Index (FL12.3+); occurs irrespective of whether slot is used or not."""
 
     enabled: Optional[bool] = _BoolProperty()

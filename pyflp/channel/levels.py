@@ -13,7 +13,7 @@
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent
+from pyflp._event import _DataEvent, EventID
 from pyflp._flobject import _FLObject
 from pyflp._properties import _IntProperty
 
@@ -25,10 +25,8 @@ class ChannelLevelsEvent(_DataEvent):
 
     _chunk_size = 24
 
-    def __init__(self, data: bytes):
-        from pyflp.channel.channel import Channel
-
-        super().__init__(Channel.EventID.Levels, data)
+    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+        super().__init__(index, id_, data)
         self.__r = r = BytesIOEx(data)
         self.pan = r.read_i()
         self.volume = r.read_i()

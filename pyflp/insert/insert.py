@@ -17,7 +17,7 @@ from typing import List, Optional
 import colour
 
 from pyflp._event import _DataEventType, _DWordEvent, _EventType, _TextEvent, _WordEvent
-from pyflp._flobject import _MaxInstancedFLObject
+from pyflp._flobject import MaxInstances, _FLObject
 from pyflp._properties import _ColorProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp._validators import _IntValidator, _UIntValidator
 from pyflp.constants import DATA, DWORD, TEXT, WORD
@@ -25,10 +25,8 @@ from pyflp.insert.parameters import InsertFlags, InsertParameters
 from pyflp.insert.slot import InsertSlot
 
 
-class Insert(_MaxInstancedFLObject):
-    # Parser will decide a value for max_count
-
-    class EQ(_MaxInstancedFLObject):
+class Insert(_FLObject):
+    class EQ(_FLObject):
         """Insert post EQ.
 
         [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/mixer_trackprops.htm)
@@ -158,8 +156,9 @@ class Insert(_MaxInstancedFLObject):
 
     @route_volumes.setter
     def route_volumes(self, value: List[int]):
-        if len(value) != Insert.max_count:
-            raise ValueError(f"Expected a list of size {Insert.max_count}")
+        num_inserts = self._max_instances.inserts
+        if len(value) != num_inserts:
+            raise ValueError(f"Expected a list of size {num_inserts}")
         self._route_volumes = value
 
     @property
@@ -181,7 +180,7 @@ class Insert(_MaxInstancedFLObject):
         if e.id == InsertSlot.EventID.Index:
             self._cur_slot.parse_event(e)
             self._slots.append(self._cur_slot)
-            if len(self._slots) < InsertSlot.max_count:
+            if len(self._slots) < self._max_instances.slots:
                 self._cur_slot = InsertSlot()
         elif e.id in (
             InsertSlot.EventID.Color,
@@ -229,11 +228,10 @@ class Insert(_MaxInstancedFLObject):
             events.extend(slot._save())
         return events
 
-    def __init__(self):
-        super().__init__()
-        InsertSlot._count = Insert.EQ._count = 0
+    def __init__(self, project, max_instances: MaxInstances):
+        super().__init__(project, max_instances)
         self._slots: List[InsertSlot] = []
         self._cur_slot = InsertSlot()
         self._eq = Insert.EQ()
-        self._route_volumes = [int()] * Insert.max_count
-        self.index = Insert._count - 2
+        self._route_volumes: List[int] = []
+        self.index = len(project.inserts) - 1

@@ -17,7 +17,7 @@ from typing import List
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent
+from pyflp._event import _DataEvent, EventID
 from pyflp._flobject import _FLObject
 from pyflp._properties import _FloatProperty, _UIntProperty
 
@@ -65,10 +65,8 @@ class PatternController(_FLObject):
 
 
 class PatternControllersEvent(_DataEvent):
-    def __init__(self, data: bytes):
-        from pyflp.pattern.pattern import Pattern
-
-        super().__init__(Pattern.EventID.Controllers, data)
+    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+        super().__init__(index, id_, data)
         self.controllers: List[PatternController] = []
         dl = len(data)
         if dl % 12 != 0:  # pragma: no cover

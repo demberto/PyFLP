@@ -25,7 +25,7 @@ from pyflp._event import (
     _TextEvent,
     _WordEvent,
 )
-from pyflp._flobject import _FLObject, _MaxInstancedFLObject
+from pyflp._flobject import _FLObject
 from pyflp._properties import (
     _BoolProperty,
     _EnumProperty,
@@ -35,12 +35,11 @@ from pyflp._properties import (
 )
 from pyflp._validators import _OneOfValidator
 from pyflp.constants import DATA, DWORD, TEXT, VALID_PPQS, WORD
-from pyflp.utils import FLVersion
 
 __all__ = ["Misc"]
 
 
-class Misc(_MaxInstancedFLObject):
+class Misc(_FLObject):
     """Used for storing one time events, which don't fall into any other category.
 
     [Project Info](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/songsettings_songinfo.htm)
@@ -238,7 +237,6 @@ class Misc(_MaxInstancedFLObject):
             )
         self._events["version"].dump(value)
         self._version = value
-        _FLObject._fl_version = FLVersion(value)
         try:
             temp = int(split[3])
         except IndexError:

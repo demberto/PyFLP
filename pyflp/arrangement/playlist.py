@@ -15,13 +15,14 @@ import abc
 import dataclasses
 import enum
 import warnings
-from typing import Dict, List
+from typing import Dict, List, TypeVar
 
 from bytesioex import BytesIOEx
 
 from pyflp._event import _DataEventType
-from pyflp._flobject import _FLObject, _MaxInstancedFLObject
+from pyflp._flobject import _FLObject
 from pyflp.constants import DATA
+from pyflp.utils import FLVersion
 
 
 @dataclasses.dataclass
@@ -45,10 +46,10 @@ class PatternPlaylistItem(_PlaylistItem):
     pattern: int  # TODO
 
 
-class Playlist(_MaxInstancedFLObject):
-    def __json__(self) -> NoReturn:
-        raise NotImplementedError
+PlaylistItemType = TypeVar("PlaylistItemType", bound=_PlaylistItem)
 
+
+class Playlist(_FLObject):
     @enum.unique
     class EventID(enum.IntEnum):
         """Events used by `Playlist`."""
@@ -62,7 +63,7 @@ class Playlist(_MaxInstancedFLObject):
 
     # * Properties
     @property
-    def items(self) -> Dict[int, List[_PlaylistItem]]:
+    def items(self) -> Dict[int, List[PlaylistItemType]]:
         return self._items
 
     # * Parsing logic
@@ -85,7 +86,7 @@ class Playlist(_MaxInstancedFLObject):
                 item_idx = r.read_H()  # 8
                 length = r.read_I()  # 12
                 track = r.read_i()  # 16
-                if self._fl_version.major >= 20:
+                if FLVersion(self._project.misc.version).major >= 20:
                     track = 499 - track
                 else:
                     track = 198 - track
@@ -100,8 +101,9 @@ class Playlist(_MaxInstancedFLObject):
                     track_events = []
 
                 if item_idx <= pattern_base:
-                    start_offset = int(r.read_f() * _FLObject._ppq)  # 28
-                    end_offset = int(r.read_f() * _FLObject._ppq)  # 32
+                    ppq = self._project.misc.ppq
+                    start_offset = int(r.read_f() * ppq)  # 28
+                    end_offset = int(r.read_f() * ppq)  # 32
 
                     # Cannot access tracks from here; handled by Parser
                     track_events.append(
@@ -129,6 +131,6 @@ class Playlist(_MaxInstancedFLObject):
                         )
                     )
 
-    def __init__(self):
-        super().__init__()
-        self._items: Dict[int, List[_PlaylistItem]] = {}
+    def __init__(self, project):
+        super().__init__(project, None)
+        self._items: Dict[int, List[PlaylistItemType]] = {}

@@ -16,10 +16,10 @@ from typing import Optional, ValuesView
 from bytesioex import BytesIOEx
 
 from pyflp._event import _DataEventType, _EventType
-from pyflp._flobject import _FLObject, _FLOBjectAbstractMeta
+from pyflp._flobject import _FLObject
 
 
-class _Plugin(_FLObject, metaclass=_FLOBjectAbstractMeta):
+class _Plugin(_FLObject):
     """Represents a native or VST2/VST3 effect or instrument.
 
     Parses only `Channel.EventID.Plugin`/`InsertSlot.EventID.Plugin`.

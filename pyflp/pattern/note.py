@@ -17,7 +17,7 @@ from typing import List
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent
+from pyflp._event import _DataEvent, EventID
 from pyflp._flobject import _FLObject
 from pyflp._properties import _IntProperty, _UIntProperty
 
@@ -90,10 +90,8 @@ class PatternNote(_FLObject):
 
 
 class PatternNotesEvent(_DataEvent):
-    def __init__(self, data: bytes):
-        from pyflp.pattern.pattern import Pattern
-
-        super().__init__(Pattern.EventID.Notes, data)
+    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+        super().__init__(index, id_, data)
         self.notes: List[PatternNote] = []
         if len(data) % 24 != 0:  # pragma: no cover
             warnings.warn("Unexpected data size; expected a divisible of 24.")

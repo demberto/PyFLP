@@ -32,14 +32,10 @@ class Arrangement(_FLObject):
 
     _props = ("name", "index", "")
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, project):
+        super().__init__(project, None)
         self._timemarkers = []
         self._tracks = []
-
-        Playlist._count = 0
-        TimeMarker._count = 0
-        Track._count = 0
 
     @enum.unique
     class EventID(enum.IntEnum):
@@ -75,7 +71,7 @@ class Arrangement(_FLObject):
     def parse_event(self, e: _EventType):
         if e.id in Playlist.EventID.__members__.values():
             if not hasattr(self, "_playlist"):
-                self._playlist = Playlist()
+                self._playlist = Playlist(self._project)
             self._playlist.parse_event(e)
         elif e.id == Track.EventID.Name:
             self._cur_track.parse_event(e)

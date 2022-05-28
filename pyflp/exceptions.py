@@ -17,7 +17,6 @@ __all__ = [
     "InvalidHeaderSizeError",
     "InvalidMagicError",
     "OperationNotPermittedError",
-    "MaxInstancesError",
 ]
 
 
@@ -47,17 +46,6 @@ class InvalidHeaderSizeError(Error):
 
 class InvalidMagicError(Error):
     """Invalid header magic number"""
-
-
-class MaxInstancesError(Error):
-    """Maximum number of instances already initialised"""
-
-    def __init__(self, flobject_t):
-        self.__type = flobject_t.__name__
-        self.__max_count = flobject_t.max_count
-
-    def __repr__(self) -> str:
-        return f"{self.__type}: {self.__max_count} instances already initialised."
 
 
 class OperationNotPermittedError(Error):
