@@ -98,6 +98,3 @@ class TimeMarker(_FLObject):
     def _parse_text_event(self, e: _TextEvent):
         if e.id == TimeMarker.EventID.Name:
             self._parse_s(e, "name")
-
-    def __init__(self):
-        super().__init__()

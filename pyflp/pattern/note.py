@@ -20,7 +20,6 @@ from bytesioex import BytesIOEx
 from pyflp._event import _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _IntProperty, _UIntProperty
-from pyflp._validators import _IntValidator, _UIntValidator
 
 __all__ = ["PatternNote", "PatternNotesEvent"]
 

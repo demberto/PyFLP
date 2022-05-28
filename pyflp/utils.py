@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-from dataclasses import dataclass, field
+import dataclasses as dt
 
 
 def isascii(s: str) -> bool:
@@ -36,16 +36,16 @@ def buflen_to_varint(buffer: bytes) -> bytes:
     return bytes(ret)
 
 
-@dataclass
+@dt.dataclass
 class FLVersion:
-    string: str = field(repr=False)
-    major: int = field(init=False)
-    minor: int = field(init=False)
-    revision: int = field(init=False)
-    build: int = field(init=False)
+    string: dt.InitVar[str]
+    major: int = dt.field(init=False)
+    minor: int = dt.field(init=False)
+    revision: int = dt.field(init=False)
+    build: int = dt.field(init=False)
 
-    def __post_init__(self):
-        split = self.string.split(".")
+    def __post_init__(self, string: str):
+        split = string.split(".")
         self.major = int(split[0])
         self.minor = int(split[1])
         self.revision = int(split[2])

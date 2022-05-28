@@ -58,10 +58,7 @@ class Channel(_FLObject):
 
     def __init__(self):
         super().__init__()
-
-        # Layer children count, used for unique dictionary keys in self._events.
-        self._children = []
-        self.__children_count = 0
+        self._layer_children = []
 
         # Since default event isn't stored and having this event means it is zipped.
         self._zipped = False
@@ -286,7 +283,7 @@ class Channel(_FLObject):
     def children(self) -> List[int]:
         """List of children `index`es of a Layer.
         Valid only if `kind` is `ChannelKind.Layer`."""
-        return getattr(self, "_children", [])
+        return getattr(self, "_layer_children")
 
     @property
     def fx(self) -> Optional[ChannelFX]:
@@ -416,9 +413,8 @@ class Channel(_FLObject):
         elif e.id == Channel.EventID._Panning:
             self._parse_h(e, "pan")
         elif e.id == Channel.EventID.LayerChildren:
-            self._events[f"child{self.__children_count}"] = e
-            self.__children_count += 1
-            self._children.append(e.to_uint16())
+            self._events[f"child{len(self._layer_children)}"] = e
+            self._layer_children.append(e.to_uint16())
         elif e.id == Channel.EventID.Swing:
             self._parse_H(e, "swing")
 

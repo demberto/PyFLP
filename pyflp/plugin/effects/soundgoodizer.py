@@ -56,6 +56,3 @@ class Soundgoodizer(_EffectPlugin):
         r.seek(4)  # 3, 0, 0, 0
         self._mode = r.read_I()
         self._amount = r.read_I()
-
-    def __init__(self):
-        super().__init__()

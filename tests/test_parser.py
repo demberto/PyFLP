@@ -138,7 +138,7 @@ def test_channel(
 
     # Channel specific
     if index == 0:
-        assert set(ch.children) == set((1, 2, 3))
+        assert set(ch.children) == {1, 2, 3}
     elif index == 1:
         bb: BooBass = ch.plugin
         assert bb.bass == bb.mid == bb.high == 32767

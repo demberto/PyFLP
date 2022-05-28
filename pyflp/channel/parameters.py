@@ -31,7 +31,7 @@ class ChannelParametersEvent(_DataEvent):
         arp = c.arp = self.arp = ChannelArp()
 
         # The size of the event has increased over the years
-        self.__r = r = BytesIOEx(data)
+        r = BytesIOEx(data)
         r.seek(40)
         arp.direction = ChannelArp.Direction(r.read_I())
         arp.range = r.read_I()

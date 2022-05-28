@@ -21,11 +21,15 @@ from pyflp._flobject import _FLObject, _FLOBjectAbstractMeta
 
 class _Plugin(_FLObject, metaclass=_FLOBjectAbstractMeta):
     """Represents a native or VST2/VST3 effect or instrument.
-    Parses only `ChannelEvent.Plugin`/`InsertSlotEvent.Plugin`."""
+
+    Parses only `Channel.EventID.Plugin`/`InsertSlot.EventID.Plugin`.
+    """
 
     _chunk_size: Optional[int] = None
     """Expected size of event data passed to `parse_event`.
-    Parsing is skipped in case the size is not equal to this."""
+
+    Parsing is skipped in case the size is not equal to this.
+    """
 
     def _save(self) -> ValuesView[_EventType]:
         self._r.seek(0)

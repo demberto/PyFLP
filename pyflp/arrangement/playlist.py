@@ -15,7 +15,7 @@ import abc
 import dataclasses
 import enum
 import warnings
-from typing import Dict, List, NoReturn
+from typing import Dict, List
 
 from bytesioex import BytesIOEx
 

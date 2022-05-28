@@ -46,6 +46,3 @@ class FSoftClipper(_EffectPlugin):
         r = self._r
         self._threshold = r.read_I()
         self._post = r.read_I()
-
-    def __init__(self):
-        super().__init__()
