@@ -21,8 +21,8 @@ from bytesioex import BytesIOEx
 
 from pyflp._event import DataEventType
 from pyflp._flobject import _FLObject
+from pyflp._utils import FLVersion
 from pyflp.constants import DATA
-from pyflp.utils import FLVersion
 
 
 @dataclasses.dataclass

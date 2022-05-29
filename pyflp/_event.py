@@ -19,8 +19,8 @@ from typing import Type, TypeVar, Union, overload
 import colour
 from bytesioex import Byte, Int, SByte, UInt
 
+from pyflp._utils import buflen_to_varint
 from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
-from pyflp.utils import buflen_to_varint
 
 EventID = TypeVar("EventID", enum.IntEnum, int)
 

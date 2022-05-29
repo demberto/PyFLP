@@ -17,7 +17,7 @@ from typing import Any, Iterable, Optional, Type, Union
 
 import colour
 
-from pyflp.utils import isascii
+from pyflp._utils import isascii
 
 
 class _Validator(abc.ABC):

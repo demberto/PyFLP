@@ -30,6 +30,7 @@ from pyflp._event import (
     _WordEvent,
 )
 from pyflp._flobject import MaxInstances
+from pyflp._utils import FLVersion
 from pyflp.arrangement.arrangement import Arrangement
 from pyflp.arrangement.playlist import Playlist
 from pyflp.arrangement.timemarker import TimeMarker
@@ -67,7 +68,6 @@ from pyflp.pattern.note import PatternNotesEvent
 from pyflp.pattern.pattern import Pattern
 from pyflp.plugin.vst import VSTPluginEvent
 from pyflp.project import Project
-from pyflp.utils import FLVersion
 
 __all__ = ["Parser"]
 
