@@ -1,3 +1,3 @@
 # Utils
 
-::: pyflp.utils
+::: pyflp._utils

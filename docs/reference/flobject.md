@@ -6,5 +6,3 @@ dispatched by `Parser` and saving them back by calling `dump` methods of
 instantiate it based upon the event ID.
 
 ::: pyflp._flobject._FLObject
-
-::: pyflp._flobject._MaxInstancedFLObject

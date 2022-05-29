@@ -1,5 +1,6 @@
 bytesioex
 colour
 mkdocs-autorefs
+mkdocs-include-markdown-plugin
 mkdocs-material
 mkdocstrings[python]>=0.18.0

@@ -1,16 +1,17 @@
 site_name: PyFLP
 site_url: https://pyflp.rtfd.io/
-site_description: Library to read and edit FL Studio project (.flp) files
+site_description: FL Studio project file parser
 site_author: demberto
 repo_url: https://github.com/demberto/PyFLP/
 copyright: (c) demberto 2021
 nav:
   - Overview: index.md
+  - Installation: installation.md
   - Handbook: handbook.md
   - FLP Format: flp-format.md
   - Reference: reference.md
   - Contributing: contributing.md
-  - Issues: https://github.com/demberto/PyFLP/issues
+  - Report a bug: https://github.com/demberto/PyFLP/issues
 theme:
   name: material
   palette:
@@ -25,6 +26,7 @@ theme:
 markdown_extensions:
   - admonition
 plugins:
+  - include-markdown
   - search
   - autorefs
   - mkdocstrings:

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for Fruity Stereo Enhancer @@nickberry17
+- Instructions for alternate methods to install PyFLP.
 
 ### Changed
 

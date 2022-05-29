@@ -3,19 +3,19 @@
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-![GitHub Workflow Status][workflow-shield]
+[![GitHub Workflow Status][workflow-shield]][workflow-shield]
 [![Documentation Status][docs-shield]][docs-link]
 [![codecov][codecov-badge]][codecov-link]
 [![CodeFactor][codefactor-badge]][codefactor-link]
 [![PyPI - License][license-shield]][license-link]
-![PyPI - Version][version-shield]
-![PyPI - Python Version][pyversions-shield]
+[![PyPI - Version][version-shield]][version-shield]
+[![PyPI - Python Version][pyversions-shield]][pyversions-shield]
 [![Contributor Covenant][covenant-shield]][covenant-link]
 [![Code Style: Black][black-shield]][black-link]
 
 # PyFLP
 
-PyFLP is a parser written in Python for FL Studio project (.flp) files.
+PyFLP is a parser for FL Studio project (.flp) files written in Python.
 
 You should also check [FLPInfo](https://github.com/demberto/FLPInfo), a command
 line utility that shows basic information about an FLP.
@@ -27,6 +27,8 @@ PyFLP requires Python 3.6+
 ```
 pip install --upgrade pyflp
 ```
+
+[Alternate ways to install](https://pyflp.rtfd.io/en/latest/installation).
 
 ## ▶ Usage
 
@@ -65,11 +67,12 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+This project follows the [all-contributors] specification. Contributions of
+any kind are welcome!
 
 ## © License
 
-**PyFLP** has been licensed under the [GNU Public License v3][gpl3-link].
+The code in this project has been licensed under the [GNU Public License v3][gpl3-link].
 
 <!-- BADGES / SHIELDS -->
 [black-shield]: https://img.shields.io/badge/code%20style-black-black
@@ -83,6 +86,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 [workflow-shield]: https://img.shields.io/github/workflow/status/demberto/pyflp/main
 
 <!-- LINKS -->
+[all-contributors]: https://github.com/all-contributors/all-contributors
 [black-link]: https://github.com/psf/black
 [codecov-link]: https://codecov.io/gh/demberto/PyFLP
 [codefactor-link]: https://www.codefactor.io/repository/github/demberto/pyflp
