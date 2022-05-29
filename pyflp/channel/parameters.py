@@ -13,7 +13,7 @@
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent, EventID
+from pyflp._event import EventID, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp.channel.arp import ChannelArp
 

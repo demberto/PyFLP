@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-from pyflp._event import _DataEventType
+from pyflp._event import DataEventType
 from pyflp._properties import _IntProperty, _UIntProperty
 from pyflp.plugin._plugin import _EffectPlugin
 
@@ -24,7 +24,7 @@ class FSend(_EffectPlugin):
     [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/Fruity%20Send.htm)
     """
 
-    _chunk_size = 16
+    CHUNK_SIZE = 16
 
     def _setprop(self, n, v):
         r = self._r
@@ -54,7 +54,7 @@ class FSend(_EffectPlugin):
     """Target insert index; depends on insert routing. Default: -1 (Master)."""
 
     # * Parsing logic
-    def _parse_data_event(self, e: _DataEventType) -> None:
+    def _parse_data_event(self, e: DataEventType) -> None:
         super()._parse_data_event(e)
         r = self._r
         self._pan = r.read_I()

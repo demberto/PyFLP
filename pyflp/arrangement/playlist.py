@@ -19,7 +19,7 @@ from typing import Dict, List, TypeVar
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEventType
+from pyflp._event import DataEventType
 from pyflp._flobject import _FLObject
 from pyflp.constants import DATA
 from pyflp.utils import FLVersion
@@ -67,8 +67,8 @@ class Playlist(_FLObject):
         return self._items
 
     # * Parsing logic
-    def _parse_data_event(self, event: _DataEventType):
-        if event.id == Playlist.EventID.Events:
+    def _parse_data_event(self, event: DataEventType):
+        if event.id_ == Playlist.EventID.Events:
             self._events["event"] = event
 
             # Validation

@@ -21,7 +21,7 @@ from typing import List, Optional, Set, Union
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _EventType
+from pyflp._event import EventType
 from pyflp.arrangement.arrangement import Arrangement
 from pyflp.channel.channel import Channel
 from pyflp.channel.filter import Filter
@@ -50,7 +50,7 @@ class Project:
     )
 
     def __init__(self) -> None:
-        self.events: List[_EventType] = []
+        self.events: List[EventType] = []
         self.save_path: Optional[Path] = None
         self.misc = Misc()
         self.patterns: List[Pattern] = []
@@ -59,7 +59,7 @@ class Project:
         self.arrangements: List[Arrangement] = []
         self.inserts: List[Insert] = []
         self.controllers: List[Controller] = []
-        self._unparsed_events: List[_EventType] = []
+        self._unparsed_events: List[EventType] = []
 
     def __repr__(self) -> str:
         return "<Project {}, {}, {}, {}, {}, {}, {}>".format(
@@ -174,7 +174,7 @@ class Project:
         os.chdir(cwd)
 
     # * Save logic
-    def __save_state(self) -> List[_EventType]:
+    def __save_state(self) -> List[EventType]:
         """Calls `_save` for all `_FLObject`s and returns a sorted list of the received events
 
         Returns:
@@ -182,7 +182,7 @@ class Project:
         """
         from pyflp._flobject import _FLObject
 
-        event_store: List[_EventType] = []
+        event_store: List[EventType] = []
 
         # Misc
         misc_events = list(self.misc._save())
@@ -214,7 +214,7 @@ class Project:
 
         # Insert params event
         for e in self.events:
-            if e.id == InsertParamsEvent.ID:
+            if e.id_ == InsertParamsEvent.ID:
                 event_store.append(e)
 
         # ? Assign event store to self.events

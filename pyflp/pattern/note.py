@@ -17,7 +17,7 @@ from typing import List
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent, EventID
+from pyflp._event import EventID, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _IntProperty, _UIntProperty
 

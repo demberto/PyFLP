@@ -14,10 +14,9 @@
 import enum
 from typing import Optional
 
-from pyflp._event import _DWordEventType, _WordEvent
+from pyflp._event import DWordEventType, _WordEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _EnumProperty, _IntProperty, _UIntProperty
-from pyflp._validators import _UIntValidator
 from pyflp.constants import DWORD, WORD
 
 __all__ = ["ChannelFX", "ChannelFXReverb"]
@@ -61,10 +60,10 @@ class ChannelFXReverb(_FLObject):
     kind: Optional[Kind] = _Kind(Kind)
     """See `Kind`."""
 
-    mix: Optional[int] = _Mix(_UIntValidator(256))
+    mix: Optional[int] = _Mix(max_=256)
     """Reverb mix (dry/wet). Min: 0, Max: 256, Default: 0."""
 
-    def _parse_dword_event(self, e: _DWordEventType) -> None:
+    def _parse_dword_event(self, e: DWordEventType) -> None:
         self._events["reverb"] = e
         value = e.to_uint32()
         default = self.Kind.default()
@@ -130,19 +129,19 @@ class ChannelFX(_FLObject):
     stereo_delay: Optional[int] = _IntProperty()
 
     def _parse_word_event(self, e: _WordEvent) -> None:
-        if e.id == ChannelFX.EventID.CutOff:
+        if e.id_ == ChannelFX.EventID.CutOff:
             self._parse_H(e, "cutoff")
-        elif e.id == ChannelFX.EventID.PreAmp:
+        elif e.id_ == ChannelFX.EventID.PreAmp:
             self._parse_H(e, "pre_amp")
-        elif e.id == ChannelFX.EventID.FadeOut:
+        elif e.id_ == ChannelFX.EventID.FadeOut:
             self._parse_H(e, "fade_out")
-        elif e.id == ChannelFX.EventID.Resonance:
+        elif e.id_ == ChannelFX.EventID.Resonance:
             self._parse_H(e, "resonance")
-        elif e.id == ChannelFX.EventID.FadeIn:
+        elif e.id_ == ChannelFX.EventID.FadeIn:
             self._parse_H(e, "fade_in")
-        elif e.id == ChannelFX.EventID.StereoDelay:
+        elif e.id_ == ChannelFX.EventID.StereoDelay:
             self._parse_H(e, "stereo_delay")
 
-    def _parse_dword_event(self, e: _DWordEventType) -> None:
-        if e.id == ChannelFX.EventID.Reverb:
+    def _parse_dword_event(self, e: DWordEventType) -> None:
+        if e.id_ == ChannelFX.EventID.Reverb:
             self._parse_flobject(e, "reverb", ChannelFXReverb())

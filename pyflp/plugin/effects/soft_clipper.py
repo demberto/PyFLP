@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-from pyflp._event import _DataEventType
+from pyflp._event import DataEventType
 from pyflp._properties import _IntProperty, _UIntProperty
 from pyflp.plugin._plugin import _EffectPlugin
 
@@ -24,7 +24,7 @@ class FSoftClipper(_EffectPlugin):
     [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/Fruity%20Soft%20Clipper.htm)
     """
 
-    _chunk_size = 8
+    CHUNK_SIZE = 8
 
     def _setprop(self, n, v):
         r = self._r
@@ -41,7 +41,7 @@ class FSoftClipper(_EffectPlugin):
     post: int = _UIntProperty(max_=160)
     """Post gain. Min: 0, Max: 160, Default: 128 (80%). Linear."""
 
-    def _parse_data_event(self, e: _DataEventType) -> None:
+    def _parse_data_event(self, e: DataEventType) -> None:
         super()._parse_data_event(e)
         r = self._r
         self._threshold = r.read_I()

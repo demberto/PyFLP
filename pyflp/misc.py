@@ -18,10 +18,10 @@ from typing import Optional, ValuesView
 from bytesioex import BytesIOEx, Double
 
 from pyflp._event import (
+    DataEventType,
+    DWordEventType,
+    EventType,
     _ByteEvent,
-    _DataEventType,
-    _DWordEventType,
-    _EventType,
     _TextEvent,
     _WordEvent,
 )
@@ -343,66 +343,66 @@ class Misc(_FLObject):
 
     # * Parsing logic
     def _parse_byte_event(self, e: _ByteEvent):
-        if e.id == Misc.EventID.LoopActive:
+        if e.id_ == Misc.EventID.LoopActive:
             self._parse_bool(e, "loop_active")
-        elif e.id == Misc.EventID.ShowInfo:
+        elif e.id_ == Misc.EventID.ShowInfo:
             self._parse_bool(e, "show_info")
-        elif e.id == Misc.EventID.TimeSigNum:
+        elif e.id_ == Misc.EventID.TimeSigNum:
             self._parse_B(e, "time_sig_num")
-        elif e.id == Misc.EventID.TimeSigBeat:
+        elif e.id_ == Misc.EventID.TimeSigBeat:
             self._parse_B(e, "time_sig_beat")
-        elif e.id == Misc.EventID.PanningLaw:
+        elif e.id_ == Misc.EventID.PanningLaw:
             self._events["panning_law"] = e
             data = e.to_uint8()
             try:
                 self._panning_law = self.PanningLaw(data)
             except AttributeError:
                 self._panning_law = data
-        elif e.id == Misc.EventID.PlayTruncatedNotes:
+        elif e.id_ == Misc.EventID.PlayTruncatedNotes:
             self._parse_bool(e, "play_truncated_notes")
-        elif e.id == Misc.EventID.Shuffle:
+        elif e.id_ == Misc.EventID.Shuffle:
             self._parse_B(e, "shuffle")
-        elif e.id == Misc.EventID.Registered:
+        elif e.id_ == Misc.EventID.Registered:
             self._parse_bool(e, "registered")
 
     def _parse_word_event(self, e: _WordEvent) -> None:
-        if e.id == Misc.EventID.CurrentPatternNum:
+        if e.id_ == Misc.EventID.CurrentPatternNum:
             self._parse_H(e, "cur_pattern")
-        elif e.id == Misc.EventID.MainPitch:
+        elif e.id_ == Misc.EventID.MainPitch:
             self._parse_h(e, "main_pitch")
 
-    def _parse_dword_event(self, e: _DWordEventType):
-        if e.id == Misc.EventID.Tempo:
+    def _parse_dword_event(self, e: DWordEventType):
+        if e.id_ == Misc.EventID.Tempo:
             self._parseprop(e, "tempo", e.to_uint32() / 1000)
-        elif e.id == Misc.EventID.CurrentFilterChannelNum:
+        elif e.id_ == Misc.EventID.CurrentFilterChannelNum:
             self._parse_i(e, "cur_filter")
-        elif e.id == Misc.EventID.VersionBuild:
+        elif e.id_ == Misc.EventID.VersionBuild:
             self._parse_I(e, "version_build")
-        elif e.id == Misc.EventID.SongLoopPos:
+        elif e.id_ == Misc.EventID.SongLoopPos:
             self._parse_I(e, "song_loop_pos")
 
     def _parse_text_event(self, e: _TextEvent):
-        if e.id == Misc.EventID.Title:
+        if e.id_ == Misc.EventID.Title:
             self._parse_s(e, "title")
-        elif e.id == Misc.EventID.Comment:
+        elif e.id_ == Misc.EventID.Comment:
             self._parse_s(e, "comment")
-        elif e.id == Misc.EventID.Url:
+        elif e.id_ == Misc.EventID.Url:
             self._parse_s(e, "url")
-        elif e.id == Misc.EventID._CommentRtf:
+        elif e.id_ == Misc.EventID._CommentRtf:
             self._parse_s(e, "comment")
-        elif e.id == Misc.EventID.Version:
+        elif e.id_ == Misc.EventID.Version:
             self._parse_s(e, "version")
-        elif e.id == Misc.EventID.RegName:
+        elif e.id_ == Misc.EventID.RegName:
             self._parse_s(e, "regname")
-        elif e.id == Misc.EventID.DataPath:
+        elif e.id_ == Misc.EventID.DataPath:
             self._parse_s(e, "data_path")
-        elif e.id == Misc.EventID.Genre:
+        elif e.id_ == Misc.EventID.Genre:
             self._parse_s(e, "genre")
-        elif e.id == Misc.EventID.Artists:
+        elif e.id_ == Misc.EventID.Artists:
             self._parse_s(e, "artists")
 
-    def _parse_data_event(self, e: _DataEventType):
-        if e.id == Misc.EventID.SaveTimestamp:
+    def _parse_data_event(self, e: DataEventType):
+        if e.id_ == Misc.EventID.SaveTimestamp:
             self._events["savetimestamp"] = e
             self.__stdata = BytesIOEx(e.data)
             self._start_date = Misc.__DELPHI_EPOCH + datetime.timedelta(
@@ -410,7 +410,7 @@ class Misc(_FLObject):
             )
             self._work_time = datetime.timedelta(days=self.__stdata.read_d())
 
-    def _save(self) -> ValuesView[_EventType]:
+    def _save(self) -> ValuesView[EventType]:
         tstamp = self._events.get("savetimestamp")
         if tstamp:
             self.__stdata.seek(0)

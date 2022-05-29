@@ -20,14 +20,14 @@ from typing import List, Set, Union
 from bytesioex import BytesIOEx
 
 from pyflp._event import (
+    EventList,
+    EventType,
     _ByteEvent,
     _ColorEvent,
     _DataEvent,
     _DWordEvent,
-    _EventType,
     _TextEvent,
     _WordEvent,
-    EventList,
 )
 from pyflp._flobject import MaxInstances
 from pyflp.arrangement.arrangement import Arrangement
@@ -190,21 +190,21 @@ class Parser:
                 else:
                     add_dataevent(evid, buf)
 
-    def __parse_channel(self, ev: _EventType):
+    def __parse_channel(self, ev: EventType):
         """Creates and appends `Channel` objects to `Project`.
         Dispatches `ChannelEventID` events for parsing."""
 
-        if ev.id == Channel.EventID.New:
+        if ev.id_ == Channel.EventID.New:
             self.__channel_count += 1
             self.__cur_ch = Channel()
             self.__proj.channels.append(self.__cur_ch)
         self.__cur_ch.parse_event(ev)
 
-    def __parse_pattern(self, ev: _EventType):
+    def __parse_pattern(self, ev: EventType):
         """Creates and appends `Pattern` objects to `Project`.
         Dispatches `PatternEventID` events to `Pattern` for parsing."""
 
-        if ev.id == Pattern.EventID.New and isinstance(ev, _WordEvent):
+        if ev.id_ == Pattern.EventID.New and isinstance(ev, _WordEvent):
             # Occurs twice, once with the note events only and later again
             # for metadata (name, color and a few undiscovered properties)
             # New patterns can occur for metadata as well; they are empty.
@@ -221,24 +221,24 @@ class Parser:
                 self.__proj.patterns.append(self.__cur_pat)
         self.__cur_pat.parse_event(ev)
 
-    def __parse_insert(self, ev: _EventType):
+    def __parse_insert(self, ev: EventType):
         """Creates and appends `Insert` objects to `Project`. Dispatches
         `InsertEvent` and `InsertSlotEventID` events for parsing."""
 
         self.__cur_ins.parse_event(ev)
         if (
-            ev.id == Insert.EventID.Output
+            ev.id_ == Insert.EventID.Output
             and len(self.__proj.inserts) < self.__max_counts.inserts
         ):
             self.__proj.inserts.append(self.__cur_ins)
             self.__cur_ins = Insert(self.__proj, self.__max_counts)
 
-    def __parse_arrangement(self, ev: _EventType):
+    def __parse_arrangement(self, ev: EventType):
         """Creates and appends `Arrangement` objects to `Project`. Dispatches
         `ArrangementEventID`, `PlaylistEventID` and `TrackEventID` events
         for parsing."""
 
-        if ev.id == Arrangement.EventID.New:
+        if ev.id_ == Arrangement.EventID.New:
             self.__cur_arr = Arrangement(self.__proj)
             self.__proj.arrangements.append(self.__cur_arr)
 
@@ -246,29 +246,29 @@ class Parser:
         # before ArrangementEventID.Index in certains version of FL 20.0-20.1.
         # i.e the order before was TimeMarkers -> Playlist -> Tracks.
         # Now it is in the order: Playlist -> TimeMarkers -> Tracks.
-        if ev.id == Track.EventID.Data and not self.__cur_arr.timemarkers:
+        if ev.id_ == Track.EventID.Data and not self.__cur_arr.timemarkers:
             self.__cur_arr._timemarkers = self.__tms
             self.__tms = []
         self.__cur_arr.parse_event(ev)
 
-    def __parse_filter(self, ev: _EventType):
+    def __parse_filter(self, ev: EventType):
         """Creates and appends `Filter` objects to `Project`.
         Dispatches `FilterEventID` events for parsing."""
 
-        if ev.id == Filter.EventID.Name:
+        if ev.id_ == Filter.EventID.Name:
             self.__cur_flt: Filter = Filter()
             self.__proj.filters.append(self.__cur_flt)
         self.__cur_flt.parse_event(ev)
 
-    def __parse_timemarker(self, ev: _EventType):
-        if ev.id == TimeMarker.EventID.Position:
+    def __parse_timemarker(self, ev: EventType):
+        if ev.id_ == TimeMarker.EventID.Position:
             self.__cur_tm = TimeMarker()
             self.__tms.append(self.__cur_tm)
         self.__cur_tm.parse_event(ev)
 
     def get_events(
         self, flp: Union[str, Path, bytes, io.BufferedIOBase]
-    ) -> List[_EventType]:
+    ) -> List[EventType]:
         """Just get the events; don't parse
 
         Why does this method exist?
@@ -332,27 +332,27 @@ class Parser:
         # TODO: Parse in multiple layers
         parse_channel = True
         for ev in self.__proj.events:
-            if ev.id in Misc.EventID.__members__.values():
+            if ev.id_ in Misc.EventID.__members__.values():
                 self.__proj.misc.parse_event(ev)
-            elif ev.id in Filter.EventID.__members__.values():
+            elif ev.id_ in Filter.EventID.__members__.values():
                 self.__parse_filter(ev)
-            elif ev.id == RemoteController.ID:
+            elif ev.id_ == RemoteController.ID:
                 controller = RemoteController()
                 controller.parse_event(ev)
                 self.__proj.controllers.append(controller)
-            elif ev.id in Pattern.EventID.__members__.values():
+            elif ev.id_ in Pattern.EventID.__members__.values():
                 self.__parse_pattern(ev)
-            elif ev.id in CHANNEL_EVENTS and parse_channel:
+            elif ev.id_ in CHANNEL_EVENTS and parse_channel:
                 self.__parse_channel(ev)
-            elif ev.id in TimeMarker.EventID.__members__.values():
+            elif ev.id_ in TimeMarker.EventID.__members__.values():
                 self.__parse_timemarker(ev)
-            elif ev.id in ARRANGEMENT_EVENTS:
+            elif ev.id_ in ARRANGEMENT_EVENTS:
                 parse_channel = False
                 self.__parse_arrangement(ev)
-            elif ev.id in INSERT_EVENTS and not parse_channel:
+            elif ev.id_ in INSERT_EVENTS and not parse_channel:
                 self.__parse_insert(ev)
-            elif ev.id == InsertParamsEvent.ID:
-                ev.id = InsertParamsEvent.ID
+            elif ev.id_ == InsertParamsEvent.ID:
+                ev.id_ = InsertParamsEvent.ID
 
                 # Append the last insert first
                 self.__proj.inserts.append(self.__cur_ins)

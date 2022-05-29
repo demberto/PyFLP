@@ -16,7 +16,7 @@ from typing import Any, Optional
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent, EventID
+from pyflp._event import EventID, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _EnumProperty
 
@@ -68,7 +68,7 @@ class InsertFlags(enum.IntFlag):
 class InsertParametersEvent(_DataEvent):
     """Implements `Insert.EventID.Parameters`."""
 
-    _chunk_size = 12
+    CHUNK_SIZE = 12
 
     def __init__(self, index: int, id_: EventID, data: bytes) -> None:
         super().__init__(index, id_, data)

@@ -16,7 +16,7 @@ from typing import List, Optional
 
 import colour
 
-from pyflp._event import _DataEventType, _DWordEvent, _EventType, _TextEvent, _WordEvent
+from pyflp._event import DataEventType, EventType, _DWordEvent, _TextEvent, _WordEvent
 from pyflp._flobject import MaxInstances, _FLObject
 from pyflp._properties import _ColorProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp._validators import _IntValidator, _UIntValidator
@@ -176,13 +176,13 @@ class Insert(_FLObject):
             self._parameters.flags &= ~InsertFlags.Locked
 
     # * Parsing logic
-    def parse_event(self, e: _EventType) -> None:
-        if e.id == InsertSlot.EventID.Index:
+    def parse_event(self, e: EventType) -> None:
+        if e.id_ == InsertSlot.EventID.Index:
             self._cur_slot.parse_event(e)
             self._slots.append(self._cur_slot)
             if len(self._slots) < self._max_instances.slots:
                 self._cur_slot = InsertSlot()
-        elif e.id in (
+        elif e.id_ in (
             InsertSlot.EventID.Color,
             InsertSlot.EventID.Icon,
             InsertSlot.EventID.PluginNew,
@@ -195,34 +195,34 @@ class Insert(_FLObject):
             return super().parse_event(e)
 
     def _parse_word_event(self, e: _WordEvent):
-        if e.id == Insert.EventID.Icon:
+        if e.id_ == Insert.EventID.Icon:
             self._parse_H(e, "icon")
 
     def _parse_dword_event(self, e: _DWordEvent):
-        if e.id == Insert.EventID.Input:
+        if e.id_ == Insert.EventID.Input:
             self._parse_i(e, "input")
-        elif e.id == Insert.EventID.Color:
+        elif e.id_ == Insert.EventID.Color:
             self._parse_color(e, "color")
-        elif e.id == Insert.EventID.Output:
+        elif e.id_ == Insert.EventID.Output:
             self._parse_i(e, "output")
 
     def _parse_text_event(self, e: _TextEvent):
-        if e.id == Insert.EventID.Name:
+        if e.id_ == Insert.EventID.Name:
             self._parse_s(e, "name")
 
-    def _parse_data_event(self, e: _DataEventType):
-        if e.id == Insert.EventID.Parameters:
+    def _parse_data_event(self, e: DataEventType):
+        if e.id_ == Insert.EventID.Parameters:
             self._events["parameters"] = e
             self._parameters = InsertParameters()
             self._parameters.parse_event(e)
-        elif e.id == Insert.EventID.Routing:
+        elif e.id_ == Insert.EventID.Routing:
             routing = []
             for byte in e.data:
                 route = True if byte > 0 else False
                 routing.append(route)
             self._parseprop(e, "routing", routing)
 
-    def _save(self) -> List[_EventType]:
+    def _save(self) -> List[EventType]:
         events = list(super()._save())
         for slot in self.slots:
             events.extend(slot._save())

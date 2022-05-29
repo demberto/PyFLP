@@ -13,7 +13,7 @@
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent, EventID
+from pyflp._event import EventID, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _IntProperty
 
@@ -23,7 +23,7 @@ __all__ = ["ChannelTracking", "ChannelTrackingEvent"]
 class ChannelTrackingEvent(_DataEvent):
     """Implements `Channel.EventID.Tracking`."""
 
-    _chunk_size = 16
+    CHUNK_SIZE = 16
 
     def __init__(self, index: int, id_: EventID, data: bytes) -> None:
         super().__init__(index, id_, data)

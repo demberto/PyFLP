@@ -11,5 +11,13 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-from .effects import FBalance, FFastDist, FNoteBook2, FSend, FSoftClipper, FStereoEnhancer, Soundgoodizer
+from .effects import (
+    FBalance,
+    FFastDist,
+    FNoteBook2,
+    FSend,
+    FSoftClipper,
+    FStereoEnhancer,
+    Soundgoodizer,
+)
 from .synths import BooBass

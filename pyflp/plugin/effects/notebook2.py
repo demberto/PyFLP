@@ -13,7 +13,7 @@
 
 from typing import List, Optional
 
-from pyflp._event import _DataEventType
+from pyflp._event import DataEventType
 from pyflp.plugin._plugin import _EffectPlugin
 
 __all__ = ["FNoteBook2"]
@@ -79,7 +79,7 @@ class FNoteBook2(_EffectPlugin):
         self._r.write_bool(value)
         super()._setprop("editable", value)
 
-    def _parse_data_event(self, e: _DataEventType) -> None:
+    def _parse_data_event(self, e: DataEventType) -> None:
         super()._parse_data_event(e)
         r = self._r
         r.seek(4)

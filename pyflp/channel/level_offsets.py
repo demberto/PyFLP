@@ -13,7 +13,7 @@
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent, EventID
+from pyflp._event import EventID, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _IntProperty
 
@@ -23,7 +23,7 @@ __all__ = ["ChannelLevelOffsets", "ChannelLevelOffsetsEvent"]
 class ChannelLevelOffsetsEvent(_DataEvent):
     """Implements `Channel.EventID.LevelOffsets`."""
 
-    _chunk_size = 20
+    CHUNK_SIZE = 20
 
     def __init__(self, index: int, id_: EventID, data: bytes) -> None:
         super().__init__(index, id_, data)

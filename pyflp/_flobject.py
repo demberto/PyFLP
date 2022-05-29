@@ -17,12 +17,12 @@ import enum
 from typing import Any, Dict, Iterable, Optional
 
 from pyflp._event import (
+    DataEventType,
+    DWordEventType,
+    EventType,
     _ByteEvent,
     _ColorEvent,
-    _DataEventType,
     _DWordEvent,
-    _DWordEventType,
-    _EventType,
     _TextEvent,
     _WordEvent,
 )
@@ -64,7 +64,7 @@ class _FLObject(abc.ABC):
             ev.dump(v)
 
     # * Parsing logic
-    def parse_event(self, event: _EventType) -> None:
+    def parse_event(self, event: EventType) -> None:
         """Adds and parses an event from the event store.
 
         Note: Delegates
@@ -83,12 +83,12 @@ class _FLObject(abc.ABC):
 
         # Convert event.id from an int to a member of the class event ID
         try:
-            event.id = self.EventID(event.id)
+            event.id_ = self.EventID(event.id_)
         except ValueError:
             # The delegates below should assign the proper value
             pass
 
-        id = event.id
+        id = event.id_
 
         if id >= BYTE and id < WORD:
             self._parse_byte_event(event)
@@ -107,17 +107,17 @@ class _FLObject(abc.ABC):
     def _parse_word_event(self, _: _WordEvent) -> None:  # pragma: no cover
         pass
 
-    def _parse_dword_event(self, _: _DWordEventType) -> None:  # pragma: no cover
+    def _parse_dword_event(self, _: DWordEventType) -> None:  # pragma: no cover
         pass
 
     def _parse_text_event(self, _: _TextEvent) -> None:  # pragma: no cover
         pass
 
-    def _parse_data_event(self, _: _DataEventType) -> None:  # pragma: no cover
+    def _parse_data_event(self, _: DataEventType) -> None:  # pragma: no cover
         pass
 
     # * Property parsing logic
-    def _parseprop(self, event: _EventType, key: str, value: Any):
+    def _parseprop(self, event: EventType, key: str, value: Any):
         """Reduces boilerplate for `parse_event()` delegate methods.
 
         Not to be used unless helper `_parse_*` methods aren't useful.
@@ -129,7 +129,7 @@ class _FLObject(abc.ABC):
         """`self._parseprop` for boolean properties."""
         self._parseprop(event, key, event.to_bool())
 
-    def _parse_B(self, event: _ByteEvent, key: str):
+    def _parse_B(self, event: _ByteEvent, key: str):  # noqa
         """`self._parseprop` for uint8 properties."""
         self._parseprop(event, key, event.to_uint8())
 
@@ -137,7 +137,7 @@ class _FLObject(abc.ABC):
         """`self._parseprop` for int8 properties."""
         self._parseprop(event, key, event.to_int8())
 
-    def _parse_H(self, event: _WordEvent, key: str):
+    def _parse_H(self, event: _WordEvent, key: str):  # noqa
         """`self._parseprop` for uint16 properties."""
         self._parseprop(event, key, event.to_uint16())
 
@@ -145,7 +145,7 @@ class _FLObject(abc.ABC):
         """`self._parseprop` for int16 properties."""
         self._parseprop(event, key, event.to_int16())
 
-    def _parse_I(self, event: _DWordEvent, key: str):
+    def _parse_I(self, event: _DWordEvent, key: str):  # noqa
         """`self._parseprop` for uint32 properties."""
         self._parseprop(event, key, event.to_uint32())
 
@@ -161,7 +161,7 @@ class _FLObject(abc.ABC):
         """`self._parseprop` for Color properties."""
         self._parseprop(event, key, event.to_color())
 
-    def _parse_flobject(self, event: _EventType, key: str, value: Any):
+    def _parse_flobject(self, event: EventType, key: str, value: Any):
         """`self._parseprop` for `FLObject` properties.
 
         e.g `Channel.delay` is of type `ChannelDelay` which is itself an
@@ -173,11 +173,11 @@ class _FLObject(abc.ABC):
         obj: _FLObject = getattr(self, "_" + key)
         obj.parse_event(event)
 
-    def _save(self) -> Iterable[_EventType]:
+    def _save(self) -> Iterable[EventType]:
         """Returns the events stored in `self._events` as an iterable."""
         return self._events.values()
 
     def __init__(self, project=None, max_instances: Optional[MaxInstances] = None):
         self._project = project
         self._max_instances = max_instances
-        self._events: Dict[str, _EventType] = {}
+        self._events: Dict[str, EventType] = {}

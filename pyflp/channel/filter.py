@@ -36,5 +36,5 @@ class Filter(_FLObject):
     """Name of the filter channel."""
 
     def _parse_text_event(self, e: _TextEvent):
-        if e.id == Filter.EventID.Name:
+        if e.id_ == Filter.EventID.Name:
             self._parse_s(e, "name")

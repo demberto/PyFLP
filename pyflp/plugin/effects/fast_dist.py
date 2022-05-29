@@ -13,7 +13,7 @@
 
 import enum
 
-from pyflp._event import _DataEventType
+from pyflp._event import DataEventType
 from pyflp._properties import _EnumProperty, _IntProperty, _UIntProperty
 from pyflp.plugin._plugin import _EffectPlugin
 
@@ -26,7 +26,7 @@ class FFastDist(_EffectPlugin):
     [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/Fruity%20Fast%20Dist.htm)
     """
 
-    _chunk_size = 20
+    CHUNK_SIZE = 20
 
     class Kind(enum.IntEnum):
         """One of the distortion types. Used by `kind`."""
@@ -65,7 +65,7 @@ class FFastDist(_EffectPlugin):
     """Post gain. Min: 0 (0%), Max: 128 (100%), Default: 128 (100%). Linear."""
 
     # * Parsing logic
-    def _parse_data_event(self, e: _DataEventType) -> None:
+    def _parse_data_event(self, e: DataEventType) -> None:
         super()._parse_data_event(e)
         r = self._r
         self._pre = r.read_I()

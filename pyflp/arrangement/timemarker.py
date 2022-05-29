@@ -18,7 +18,7 @@ try:
 except ImportError:
     from typing_extensions import Literal
 
-from pyflp._event import _ByteEvent, _DWordEventType, _TextEvent
+from pyflp._event import DWordEventType, _ByteEvent, _TextEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _EnumProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp._validators import _OneOfValidator
@@ -80,13 +80,13 @@ class TimeMarker(_FLObject):
 
     # * Parsing logic
     def _parse_byte_event(self, e: _ByteEvent):
-        if e.id == TimeMarker.EventID.Numerator:
+        if e.id_ == TimeMarker.EventID.Numerator:
             self._parse_B(e, "numerator")
-        elif e.id == TimeMarker.EventID.Denominator:
+        elif e.id_ == TimeMarker.EventID.Denominator:
             self._parse_B(e, "denominator")
 
-    def _parse_dword_event(self, e: _DWordEventType):
-        if e.id == TimeMarker.EventID.Position:
+    def _parse_dword_event(self, e: DWordEventType):
+        if e.id_ == TimeMarker.EventID.Position:
             pos = e.to_uint32()
             if pos >= TimeMarker.Kind.Signature:
                 self._kind = TimeMarker.Kind.Signature
@@ -96,5 +96,5 @@ class TimeMarker(_FLObject):
             self._parseprop(e, "position", pos)
 
     def _parse_text_event(self, e: _TextEvent):
-        if e.id == TimeMarker.EventID.Name:
+        if e.id_ == TimeMarker.EventID.Name:
             self._parse_s(e, "name")

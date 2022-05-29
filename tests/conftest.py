@@ -19,13 +19,13 @@ import pytest
 from pyflp import Parser, Project
 from pyflp._event import (
     EventList,
-    _ByteEvent,
     EventType,
-    _WordEvent,
-    _DWordEvent,
+    _ByteEvent,
     _ColorEvent,
     _DataEvent,
+    _DWordEvent,
     _TextEvent,
+    _WordEvent,
 )
 
 curdir = os.path.dirname(__file__)
@@ -39,8 +39,6 @@ def proj() -> Project:
 
 
 # Pass a parameter to a fixture function: https://stackoverflow.com/a/68286553
-
-
 @pytest.fixture
 def event() -> EventType:
     def _event(typ, id_, data, *args):
@@ -88,8 +86,10 @@ def textevent(event) -> _TextEvent:
 
     yield _textevent
 
+
 @pytest.fixture
 def dataevent(event) -> _DataEvent:
     def _dataevent(id_, data):
         return event(_DataEvent, id_, data)
+
     yield _dataevent

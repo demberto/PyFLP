@@ -17,7 +17,7 @@ from typing import Any, List, Optional
 import colour
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent, _TextEvent, EventID
+from pyflp._event import EventID, _DataEvent, _TextEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import (
     _BoolProperty,
@@ -216,7 +216,7 @@ class Track(_FLObject):
 
     # * Parsing logic
     def _parse_text_event(self, event: _TextEvent):
-        if event.id == Track.EventID.Name:
+        if event.id_ == Track.EventID.Name:
             self._parse_s(event, "name")
 
     def _parse_data_event(self, e: TrackDataEvent):
@@ -237,6 +237,6 @@ class Track(_FLObject):
         self._grouped = e.grouped
         self._locked = e.locked
 
-    def __init__(self, project = None, max_instances = None):
+    def __init__(self, project=None, max_instances=None):
         super().__init__(project, max_instances)
         self._items: List[PlaylistItemType] = []

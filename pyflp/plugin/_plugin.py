@@ -15,7 +15,7 @@ from typing import Optional, ValuesView
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEventType, _EventType
+from pyflp._event import DataEventType, EventType
 from pyflp._flobject import _FLObject
 
 
@@ -25,22 +25,22 @@ class _Plugin(_FLObject):
     Parses only `Channel.EventID.Plugin`/`InsertSlot.EventID.Plugin`.
     """
 
-    _chunk_size: Optional[int] = None
+    CHUNK_SIZE: Optional[int] = None
     """Expected size of event data passed to `parse_event`.
 
     Parsing is skipped in case the size is not equal to this.
     """
 
-    def _save(self) -> ValuesView[_EventType]:
+    def _save(self) -> ValuesView[EventType]:
         self._r.seek(0)
         self._events["plugin"].dump(self._r.read())
         return super()._save()
 
-    def _parse_data_event(self, e: _DataEventType) -> None:
+    def _parse_data_event(self, e: DataEventType) -> None:
         self._events["plugin"] = e
-        if self._chunk_size is not None:
+        if self.CHUNK_SIZE is not None:
             dl = len(e.data)
-            if dl != self._chunk_size:  # pragma: no cover
+            if dl != self.CHUNK_SIZE:  # pragma: no cover
                 return
         self._r = BytesIOEx(e.data)
 

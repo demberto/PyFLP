@@ -48,13 +48,13 @@ class _Event(abc.ABC):
 
     def to_raw(self) -> bytes:
         """Used by Project.save(). Overriden by `_VariabledSizedEvent`."""
-        return int.to_bytes(self.id, 1, "little") + self.data
+        return int.to_bytes(self.id_, 1, "little") + self.data
 
     def __repr__(self) -> str:
         cls = type(self).__name__
-        sid = str(self.id)
-        iid = int(self.id)
-        if isinstance(self.id, enum.IntEnum):
+        sid = str(self.id_)
+        iid = int(self.id_)
+        if isinstance(self.id_, enum.IntEnum):
             return f"{cls!r} id={sid!r}, {iid!r}"
         return f"{cls!r} id={iid!r}"
 
@@ -63,14 +63,14 @@ class _Event(abc.ABC):
             raise TypeError(
                 f"Cannot compare equality between an 'Event' and {type(o)!r}"
             )
-        return self.id == o.id and self.data == o.data
+        return self.id_ == o.id_ and self.data == o.data
 
     def __ne__(self, o: object) -> bool:
         if not isinstance(o, type(self)):
             raise TypeError(
                 f"Cannot compare inequality between an 'Event' and {type(o)!r}"
             )
-        return self.id != o.id or self.data != o.data
+        return self.id_ != o.id_ or self.data != o.data
 
     def __init__(self, index: int, id: EventID, data: bytes):
         """
@@ -78,13 +78,10 @@ class _Event(abc.ABC):
             id (EventID): An event ID from **0** to **255**.
             data (bytes): A `bytes` object.
         """
-        self.id = id
+        self.id_ = id
         self._data = data
         self._index = index
         super().__init__()
-
-
-_EventType = TypeVar("_EventType", bound=_Event)
 
 
 class _VariableSizedEvent(_Event):
@@ -98,13 +95,13 @@ class _VariableSizedEvent(_Event):
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
-        iid = int(self.id)
-        if isinstance(self.id, enum.IntEnum):
-            return f"<{cls!r} id={self.id.name!r} ({iid!r}), size={self.size!r}>"
+        iid = int(self.id_)
+        if isinstance(self.id_, enum.IntEnum):
+            return f"<{cls!r} id={self.id_.name!r} ({iid!r}), size={self.size!r}>"
         return f"<{cls!r} id={iid!r}, size={self.size!r}>"
 
     def to_raw(self) -> bytes:
-        id = int.to_bytes(self.id, 1, "little")
+        id = int.to_bytes(self.id_, 1, "little")
         length = buflen_to_varint(self.data) if self.data else b"\x00"
         data = self.data
         return id + length + data if self.data else id + length
@@ -162,7 +159,7 @@ class _ByteEvent(_Event):
 
     def __repr__(self) -> str:
         b = self.to_int8()
-        B = self.to_uint8()
+        B = self.to_uint8()  # noqa
         if b == B:
             msg = f"B={B!r}"
         else:
@@ -229,7 +226,7 @@ class _WordEvent(_Event):
 
     def __repr__(self) -> str:
         h = self.to_int16()
-        H = self.to_uint16()
+        H = self.to_uint16()  # noqa
         if h == H:
             msg = f"H={H!r}"
         else:
@@ -384,13 +381,13 @@ class _TextEvent(_VariableSizedEvent):
         if not isinstance(text, str):
             raise TypeError(f"Expected an str object; got {type(text)!r}")
         # Version event (199) is always ASCII
-        if self._uses_unicode and self.id != 199:
+        if self._uses_unicode and self.id_ != 199:
             self._data = text.encode("utf-16-le") + b"\0\0"
         else:
             self._data = text.encode("ascii") + b"\0"
 
     def to_str(self) -> str:
-        if self._uses_unicode and self.id != 199:
+        if self._uses_unicode and self.id_ != 199:
             return self.as_uf16(self.data)
         return self.as_ascii(self.data)
 
@@ -429,9 +426,8 @@ class _DataEvent(_VariableSizedEvent):
     The task of parsing is completely handled by one of the FLObject subclasses,
     hence no `to_*` conversion method is provided."""
 
-    _chunk_size = None
-    """Used by subclasses. Parsing is cancelled if this is
-    not equal to size of bytes passed to `__init__`."""
+    CHUNK_SIZE = None
+    """Parsing is not done if size of `data` argument is not equal to this."""
 
     def dump(self, new_bytes: bytes):
         """Dumps a blob of bytes to event data as is; no conversions of any-type.
@@ -464,13 +460,15 @@ class _DataEvent(_VariableSizedEvent):
             raise ValueError(f"Expected an event ID from 209 to 255; got {id!r}")
         if not isinstance(data, bytes):
             raise TypeError(f"Expected a bytes object; got {type(data)!r}")
-        super().__init__(id, data)
-        if self._chunk_size is not None:  # pragma: no cover
-            if len(data) != self._chunk_size:
+        super().__init__(index, id, data)
+        if self.CHUNK_SIZE is not None:  # pragma: no cover
+            if len(data) != self.CHUNK_SIZE:
                 return
 
 
-_DataEventType = TypeVar("_DataEventType", bound=_DataEvent)
+EventType = TypeVar("EventType", bound=_Event)
+DWordEventType = TypeVar("DWordEventType", bound=_DWordEvent)
+DataEventType = TypeVar("DataEventType", bound=_DataEvent)
 
 
 class EventList(collections.UserList):
@@ -479,7 +477,7 @@ class EventList(collections.UserList):
         event = self.create(event_t, id_, data, *args)
         super().append(event)
 
-    def append_event(self, event: _EventType) -> None:
+    def append_event(self, event: EventType) -> None:
         """For use with `create`."""
         super().append(event)
 
@@ -521,6 +519,6 @@ class EventList(collections.UserList):
 
     def create(
         self, event_t: Type[_Event], id_: EventID, data: bytes, *args
-    ) -> _EventType:
+    ) -> EventType:
         """Create an event object and return it."""
         return event_t(len(self.data), id_, data, *args)

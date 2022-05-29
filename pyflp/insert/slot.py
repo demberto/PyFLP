@@ -16,7 +16,7 @@ from typing import Optional, ValuesView
 
 import colour
 
-from pyflp._event import _DataEvent, _DWordEventType, _EventType, _TextEvent, _WordEvent
+from pyflp._event import DWordEventType, EventType, _DataEvent, _TextEvent, _WordEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import (
     _BoolProperty,
@@ -109,27 +109,27 @@ class InsertSlot(_FLObject):
 
     # * Parsing logic
     def _parse_word_event(self, e: _WordEvent) -> None:
-        if e.id == InsertSlot.EventID.Index:
+        if e.id_ == InsertSlot.EventID.Index:
             self._parse_H(e, "index")
 
-    def _parse_dword_event(self, e: _DWordEventType):
-        if e.id == InsertSlot.EventID.Color:
+    def _parse_dword_event(self, e: DWordEventType):
+        if e.id_ == InsertSlot.EventID.Color:
             self._parse_color(e, "color")
-        elif e.id == InsertSlot.EventID.Icon:
+        elif e.id_ == InsertSlot.EventID.Icon:
             self._parse_I(e, "icon")
 
     def _parse_text_event(self, e: _TextEvent):
-        if e.id == InsertSlot.EventID.DefaultName:
+        if e.id_ == InsertSlot.EventID.DefaultName:
             self._parse_s(e, "default_name")
-        elif e.id == InsertSlot.EventID.Name:
+        elif e.id_ == InsertSlot.EventID.Name:
             self._parse_s(e, "name")
 
     def _parse_data_event(self, e: _DataEvent):
-        if e.id == InsertSlot.EventID.PluginNew:
+        if e.id_ == InsertSlot.EventID.PluginNew:
             self._events["new"] = e
             self._new = e.data
             # TODO: Parsing similar to ChannelEventID.New (same IDs)
-        elif e.id == InsertSlot.EventID.Plugin:
+        elif e.id_ == InsertSlot.EventID.Plugin:
             n = self.default_name
             if n == "Fruity Soft Clipper":
                 plugin = FSoftClipper()
@@ -151,7 +151,7 @@ class InsertSlot(_FLObject):
                 plugin = _Plugin()
             self._parse_flobject(e, "plugin", plugin)
 
-    def _save(self) -> ValuesView[_EventType]:
+    def _save(self) -> ValuesView[EventType]:
         events = super()._save()
 
         new_event = self._events.get("new")

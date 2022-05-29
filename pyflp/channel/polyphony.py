@@ -15,7 +15,7 @@ import enum
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import _DataEvent, EventID
+from pyflp._event import EventID, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _EnumProperty, _IntProperty
 
@@ -25,7 +25,7 @@ __all__ = ["ChannelPolyphony", "ChannelPolyphonyEvent"]
 class ChannelPolyphonyEvent(_DataEvent):
     """Implements `Channel.EventID.Polyphony`."""
 
-    _chunk_size = 9
+    CHUNK_SIZE = 9
 
     def __init__(self, index: int, id_: EventID, data: bytes) -> None:
         super().__init__(index, id_, data)

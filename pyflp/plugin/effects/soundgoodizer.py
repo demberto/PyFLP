@@ -13,7 +13,7 @@
 
 import enum
 
-from pyflp._event import _DataEventType
+from pyflp._event import DataEventType
 from pyflp._properties import _EnumProperty, _UIntProperty
 from pyflp.plugin._plugin import _EffectPlugin
 
@@ -26,7 +26,7 @@ class Soundgoodizer(_EffectPlugin):
     [Manual](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/Soundgoodizer.htm)
     """
 
-    _chunk_size = 12
+    CHUNK_SIZE = 12
 
     class Mode(enum.IntEnum):
         """One of the Soundgoodizer modes. Used by `Soundgoodizer.mode`."""
@@ -50,7 +50,7 @@ class Soundgoodizer(_EffectPlugin):
     amount: int = _UIntProperty(max_=1000)
     """Amount. Min: 0, Max: 1000, Default: 600. Logarithmic."""
 
-    def _parse_data_event(self, e: _DataEventType) -> None:
+    def _parse_data_event(self, e: DataEventType) -> None:
         super()._parse_data_event(e)
         r = self._r
         r.seek(4)  # 3, 0, 0, 0

@@ -21,7 +21,6 @@ from bytesioex import BytesIOEx, UInt, ULong
 from pyflp._event import _DataEvent, _VariableSizedEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _BytesProperty, _IntProperty, _StrProperty, _UIntProperty
-from pyflp._validators import _StrValidator, _UIntValidator
 from pyflp.plugin._plugin import _Plugin
 
 __all__ = ["VSTPlugin", "VSTPluginEvent"]
@@ -43,7 +42,7 @@ class _QWordVariableEvent(_VariableSizedEvent):
             self.data = new_data
 
     def to_raw(self) -> bytes:
-        id = UInt.pack(self.id)
+        id = UInt.pack(self.id_)
         data = self.data
 
         # IL chose to use 8 byte integers for a VST plugin parameters
@@ -51,9 +50,6 @@ class _QWordVariableEvent(_VariableSizedEvent):
         length = ULong.pack(len(data))
 
         return id + length + data if data else id + length
-
-    def __init__(self, id: "_VSTPluginParser.EventID", data: bytes):
-        super().__init__(id, data)
 
 
 class _VSTPluginParser(_FLObject):
@@ -84,18 +80,18 @@ class _VSTPluginParser(_FLObject):
 
     def parse_event(self, e: _QWordVariableEvent) -> None:
         data = e.data
-        self._events[str(e.id).split(".")[-1]] = e
-        if e.id == self.EventID.vendor:
+        self._events[str(e.id_).split(".")[-1]] = e
+        if e.id_ == self.EventID.vendor:
             self.vendor = data.decode("ascii")
-        elif e.id == self.EventID.plugin_path:
+        elif e.id_ == self.EventID.plugin_path:
             self.plugin_path = data.decode("ascii")
-        elif e.id == self.EventID.name:
+        elif e.id_ == self.EventID.name:
             self.name = data.decode("ascii")
-        elif e.id == self.EventID.fourcc:
+        elif e.id_ == self.EventID.fourcc:
             self.fourcc = data.decode("ascii")
-        elif e.id == self.EventID.guid:
+        elif e.id_ == self.EventID.guid:
             self.guid = data.decode("ascii")
-        elif e.id == self.EventID.state:
+        elif e.id_ == self.EventID.state:
             self.state = data
 
 
@@ -154,10 +150,10 @@ class VSTPlugin(_Plugin):
         super()._setprop(n, v)
 
     # * Properties
-    midi_in: Optional[int] = _UIntProperty(_UIntValidator(255))
+    midi_in: Optional[int] = _UIntProperty(max_=255)
     """MIDI Input Port. Min: 0, Max: 255, Default: TODO."""
 
-    midi_out: Optional[int] = _UIntProperty(_UIntValidator(255))
+    midi_out: Optional[int] = _UIntProperty(max_=255)
     """MIDI Output Port. Min: 0, Max: 255, Default: TODO."""
 
     pb_range: Optional[int] = _UIntProperty()
@@ -187,27 +183,26 @@ class VSTPlugin(_Plugin):
     vst_number: Optional[int] = _UIntProperty()
     """TODO. Maybe related to Waveshells."""
 
-    fourcc: Optional[str] = _StrProperty(
-        _StrValidator(minsize=4, maxsize=4, mustascii=True)
-    )
-    """FourCC e.g. "GtYc" or "Syl1" - a unique VST ID, as
-    reserved by plugin dev on Steinberg portal (in ASCII)."""
+    fourcc: Optional[str] = _StrProperty(minsize=4, maxsize=4, mustascii=True)
+    """FourCC e.g. "GtYc" or "Syl1" - a unique VST ID.
 
-    guid: Optional[str] = _StrProperty(_StrValidator(minsize=16, mustascii=True))
+    Reserved by plugin dev on Steinberg portal (in ASCII)."""
+
+    guid: Optional[str] = _StrProperty(minsize=16, mustascii=True)
     """Waveshell unique plugin ID. Minimum size: 16."""
 
     state: bytes = _BytesProperty()
-    """The actual plugin data. Plugin specific. Can be a list
-    of floats/ints, but devs generally use their own format."""
+    """The actual plugin data. Plugin specific.
 
-    name: str = _StrProperty(_StrValidator(mustascii=True))
+    Can be a list of floats/ints, but devs generally use their own format."""
+
+    name: str = _StrProperty(mustascii=True)
     """Factory name for VSTs (in ASCII)."""
 
-    plugin_path: str = _StrProperty(_StrValidator(mustascii=True))
-    """The absolute path to the plugin .dll on the disk in ASCII. *Why is
-    this required? FL already creates a .fst when it discovers a plugin.*"""
+    plugin_path: str = _StrProperty(mustascii=True)
+    """The absolute path to the plugin .dll on the disk in ASCII."""
 
-    vendor: str = _StrProperty(_StrValidator(mustascii=True))
+    vendor: str = _StrProperty(mustascii=True)
     """Plugin developer name (in ASCII)."""
 
     def parse_event(self, e: VSTPluginEvent) -> None:

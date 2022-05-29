@@ -18,10 +18,10 @@ from typing import Dict, List, Optional, Tuple
 import colour
 
 from pyflp._event import (
+    DataEventType,
+    DWordEventType,
+    EventType,
     _ByteEvent,
-    _DataEventType,
-    _DWordEventType,
-    _EventType,
     _TextEvent,
     _WordEvent,
 )
@@ -374,79 +374,79 @@ class Channel(_FLObject):
         self._cut_group = value
 
     # * Parsing logic
-    def parse_event(self, e: _EventType) -> None:
-        if e.id in ChannelFX.EventID.__members__.values():
+    def parse_event(self, e: EventType) -> None:
+        if e.id_ in ChannelFX.EventID.__members__.values():
             if not hasattr(self, "_fx"):
                 self._fx = ChannelFX()
             return self._fx.parse_event(e)
         return super().parse_event(e)
 
     def _parse_byte_event(self, e: _ByteEvent):
-        if e.id == Channel.EventID.Enabled:
+        if e.id_ == Channel.EventID.Enabled:
             self._parse_bool(e, "enabled")
-        elif e.id == Channel.EventID._Vol:
+        elif e.id_ == Channel.EventID._Vol:
             self._parse_B(e, "volume")
-        elif e.id == Channel.EventID._Pan:
+        elif e.id_ == Channel.EventID._Pan:
             self._parse_b(e, "pan")
-        elif e.id == Channel.EventID.Kind:
+        elif e.id_ == Channel.EventID.Kind:
             self._events["kind"] = e
             kind = e.to_uint8()
             try:
                 self._kind = Channel.Kind(kind)
             except AttributeError:
                 self._kind = kind
-        elif e.id == Channel.EventID.Zipped:
+        elif e.id_ == Channel.EventID.Zipped:
             self._parse_bool(e, "zipped")
-        elif e.id == Channel.EventID.UseLoopPoints:
+        elif e.id_ == Channel.EventID.UseLoopPoints:
             self._parse_bool(e, "use_loop_points")
-        elif e.id == Channel.EventID.TargetInsert:
+        elif e.id_ == Channel.EventID.TargetInsert:
             self._parse_b(e, "target_insert")
-        elif e.id == Channel.EventID.Locked:
+        elif e.id_ == Channel.EventID.Locked:
             self._parse_bool(e, "locked")
 
     def _parse_word_event(self, e: _WordEvent):
-        if e.id == Channel.EventID.New:
+        if e.id_ == Channel.EventID.New:
             self._parse_H(e, "index")
-        elif e.id == Channel.EventID._Volume:
+        elif e.id_ == Channel.EventID._Volume:
             self._parse_H(e, "volume")
-        elif e.id == Channel.EventID._Panning:
+        elif e.id_ == Channel.EventID._Panning:
             self._parse_h(e, "pan")
-        elif e.id == Channel.EventID.LayerChildren:
+        elif e.id_ == Channel.EventID.LayerChildren:
             self._events[f"child{len(self._layer_children)}"] = e
             self._layer_children.append(e.to_uint16())
-        elif e.id == Channel.EventID.Swing:
+        elif e.id_ == Channel.EventID.Swing:
             self._parse_H(e, "swing")
 
-    def _parse_dword_event(self, e: _DWordEventType):
-        if e.id == Channel.EventID.Color:
+    def _parse_dword_event(self, e: DWordEventType):
+        if e.id_ == Channel.EventID.Color:
             self._parse_color(e, "color")
-        elif e.id == Channel.EventID.CutSelfCutBy:
+        elif e.id_ == Channel.EventID.CutSelfCutBy:
             self._parseprop(e, "cut_group", struct.unpack("2H", e.data))
-        elif e.id == Channel.EventID.RootNote:
+        elif e.id_ == Channel.EventID.RootNote:
             self._parse_I(e, "root_note")
-        elif e.id == Channel.EventID.StretchTime:
+        elif e.id_ == Channel.EventID.StretchTime:
             self._parse_I(e, "stretch_time")
-        elif e.id == Channel.EventID.SamplerFlags:
+        elif e.id_ == Channel.EventID.SamplerFlags:
             self._parse_I(e, "sampler_flags")
-        elif e.id == Channel.EventID.LayerFlags:
+        elif e.id_ == Channel.EventID.LayerFlags:
             self._parse_I(e, "layer_flags")
-        elif e.id == Channel.EventID.FilterChannelNum:
+        elif e.id_ == Channel.EventID.FilterChannelNum:
             self._parse_i(e, "filter_channel")
-        elif e.id == Channel.EventID.Icon:
+        elif e.id_ == Channel.EventID.Icon:
             self._parse_I(e, "icon")
-        elif e.id == Channel.EventID.AUSampleRate:
+        elif e.id_ == Channel.EventID.AUSampleRate:
             self._parse_I(e, "au_sample_rate")
 
     def _parse_text_event(self, e: _TextEvent):
-        if e.id == Channel.EventID.DefaultName:
+        if e.id_ == Channel.EventID.DefaultName:
             self._parse_s(e, "default_name")
-        elif e.id == Channel.EventID.SamplePath:
+        elif e.id_ == Channel.EventID.SamplePath:
             self._parse_s(e, "sample_path")
-        elif e.id == Channel.EventID.Name:
+        elif e.id_ == Channel.EventID.Name:
             self._parse_s(e, "name")
 
-    def _parse_data_event(self, e: _DataEventType) -> None:
-        if e.id == Channel.EventID.Plugin:
+    def _parse_data_event(self, e: DataEventType) -> None:
+        if e.id_ == Channel.EventID.Plugin:
             if self.default_name == "BooBass":
                 plugin = BooBass()
             elif self.default_name == "Fruity Wrapper":
@@ -454,17 +454,17 @@ class Channel(_FLObject):
             else:
                 plugin = _Plugin()
             self._parse_flobject(e, "plugin", plugin)
-        elif e.id == Channel.EventID.Delay:
+        elif e.id_ == Channel.EventID.Delay:
             self._parse_flobject(e, "delay", ChannelDelay())
-        elif e.id == Channel.EventID.Polyphony:
+        elif e.id_ == Channel.EventID.Polyphony:
             self._parse_flobject(e, "polyphony", ChannelPolyphony())
-        elif e.id == Channel.EventID.LevelOffsets:
+        elif e.id_ == Channel.EventID.LevelOffsets:
             self._parse_flobject(e, "level_offsets", ChannelLevelOffsets())
-        elif e.id == Channel.EventID.Levels:
+        elif e.id_ == Channel.EventID.Levels:
             self._parse_flobject(e, "levels", ChannelLevels())
             self._volume = self.levels.volume
             self._pan = self.levels.pan
-        elif e.id == Channel.EventID.Tracking:
+        elif e.id_ == Channel.EventID.Tracking:
             self.__tracking_events.append(e)
             ct = ChannelTracking()
             ct.parse_event(e)
@@ -472,10 +472,10 @@ class Channel(_FLObject):
                 self._tracking_vol = ct
             else:
                 self._tracking_key = ct
-        elif e.id == Channel.EventID.Parameters:
+        elif e.id_ == Channel.EventID.Parameters:
             self._events["parameters"] = e
             self._arp = e.arp
-        elif e.id == Channel.EventID.EnvelopeLFO:
+        elif e.id_ == Channel.EventID.EnvelopeLFO:
             idx = len(self.__envlfo_events)
             name = EnvelopeLFONames[idx]
             self.__envlfo_events.append(e)
@@ -483,7 +483,7 @@ class Channel(_FLObject):
             el.parse_event(e)
             self._env_lfos[name] = el
 
-    def _save(self) -> List[_EventType]:
+    def _save(self) -> List[EventType]:
         if self.plugin:
             self.plugin._save()
         events = list(super()._save())

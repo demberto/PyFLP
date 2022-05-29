@@ -18,9 +18,9 @@ from typing import TYPE_CHECKING, List, Optional, ValuesView
 import colour
 
 from pyflp._event import (
-    _DataEventType,
-    _DWordEventType,
-    _EventType,
+    DataEventType,
+    DWordEventType,
+    EventType,
     _TextEvent,
     _WordEvent,
 )
@@ -99,33 +99,33 @@ class Pattern(_FLObject):
         self._events["index (metadata)"] = e
 
     def _parse_word_event(self, e: _WordEvent):
-        if e.id == Pattern.EventID.New:
+        if e.id_ == Pattern.EventID.New:
             self._parse_H(e, "index")
 
-    def _parse_dword_event(self, e: _DWordEventType):
-        if e.id == Pattern.EventID.Color:
+    def _parse_dword_event(self, e: DWordEventType):
+        if e.id_ == Pattern.EventID.Color:
             self._parse_color(e, "color")
 
     def _parse_text_event(self, e: _TextEvent):
-        if e.id == Pattern.EventID.Name:
+        if e.id_ == Pattern.EventID.Name:
             self._parse_s(e, "name")
 
-    def _parse_data_event(self, e: _DataEventType):
-        if e.id == Pattern.EventID.Notes:
+    def _parse_data_event(self, e: DataEventType):
+        if e.id_ == Pattern.EventID.Notes:
             if TYPE_CHECKING:
                 if not isinstance(e, PatternNotesEvent):
                     raise TypeError
             self._events["notes"] = e
             self._notes = e.notes
 
-        elif e.id == Pattern.EventID.Controllers:
+        elif e.id_ == Pattern.EventID.Controllers:
             if TYPE_CHECKING:
                 if not isinstance(e, PatternControllersEvent):
                     raise TypeError
             self._events["controllers"] = e
             self._controllers = e.controllers
 
-    def _save(self) -> ValuesView[_EventType]:
+    def _save(self) -> ValuesView[EventType]:
         events = super()._save()
 
         # Note events
