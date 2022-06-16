@@ -12,17 +12,26 @@
 # <https://www.gnu.org/licenses/>.
 
 import enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import colour
 
-from pyflp._event import DataEventType, EventType, _DWordEvent, _TextEvent, _WordEvent
+from pyflp._event import (
+    DataEventType,
+    DWordEventType,
+    EventType,
+    TextEventType,
+    WordEventType,
+)
 from pyflp._flobject import MaxInstances, _FLObject
 from pyflp._properties import _ColorProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp._validators import _IntValidator, _UIntValidator
 from pyflp.constants import DATA, DWORD, TEXT, WORD
 from pyflp.insert.parameters import InsertFlags, InsertParameters
 from pyflp.insert.slot import InsertSlot
+
+if TYPE_CHECKING:
+    from pyflp.project import Project
 
 
 class Insert(_FLObject):
@@ -111,7 +120,7 @@ class Insert(_FLObject):
         return self._parameters.flags
 
     @flags.setter
-    def flags(self, value: InsertFlags):
+    def flags(self, value: InsertFlags) -> None:
         self._parameters.flags = value
 
     @property
@@ -127,7 +136,7 @@ class Insert(_FLObject):
             return InsertFlags.Enabled in flags
 
     @enabled.setter
-    def enabled(self, value: bool):
+    def enabled(self, value: bool) -> None:
         # https://stackoverflow.com/a/66667330
         if value:
             self._parameters.flags |= InsertFlags.Enabled
@@ -169,7 +178,7 @@ class Insert(_FLObject):
             return InsertFlags.Locked in flags
 
     @locked.setter
-    def locked(self, value: bool):
+    def locked(self, value: bool) -> None:
         if value:
             self._parameters.flags |= InsertFlags.Locked
         else:
@@ -194,11 +203,11 @@ class Insert(_FLObject):
         else:
             return super().parse_event(e)
 
-    def _parse_word_event(self, e: _WordEvent):
+    def _parse_word_event(self, e: WordEventType) -> None:
         if e.id_ == Insert.EventID.Icon:
             self._parse_H(e, "icon")
 
-    def _parse_dword_event(self, e: _DWordEvent):
+    def _parse_dword_event(self, e: DWordEventType) -> None:
         if e.id_ == Insert.EventID.Input:
             self._parse_i(e, "input")
         elif e.id_ == Insert.EventID.Color:
@@ -206,11 +215,11 @@ class Insert(_FLObject):
         elif e.id_ == Insert.EventID.Output:
             self._parse_i(e, "output")
 
-    def _parse_text_event(self, e: _TextEvent):
+    def _parse_text_event(self, e: TextEventType) -> None:
         if e.id_ == Insert.EventID.Name:
             self._parse_s(e, "name")
 
-    def _parse_data_event(self, e: DataEventType):
+    def _parse_data_event(self, e: DataEventType) -> None:
         if e.id_ == Insert.EventID.Parameters:
             self._events["parameters"] = e
             self._parameters = InsertParameters()
@@ -223,12 +232,12 @@ class Insert(_FLObject):
             self._parseprop(e, "routing", routing)
 
     def _save(self) -> List[EventType]:
-        events = list(super()._save())
+        events = super()._save()
         for slot in self.slots:
             events.extend(slot._save())
         return events
 
-    def __init__(self, project, max_instances: MaxInstances):
+    def __init__(self, project: "Project", max_instances: MaxInstances):
         super().__init__(project, max_instances)
         self._slots: List[InsertSlot] = []
         self._cur_slot = InsertSlot()

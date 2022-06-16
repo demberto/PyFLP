@@ -26,13 +26,13 @@ class FSoftClipper(_EffectPlugin):
 
     CHUNK_SIZE = 8
 
-    def _setprop(self, n, v):
+    def _setprop(self, n: str, v: int) -> None:
         r = self._r
         if n == "threshold":
             r.seek(0)
         elif n == "post":
             r.seek(4)
-        r.write_I(0)
+        r.write_I(v)
 
     # * Properties
     threshold: int = _IntProperty(min_=1, max_=127)

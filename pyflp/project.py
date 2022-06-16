@@ -91,7 +91,7 @@ class Project:
                     ret += 1
         return ret
 
-    def create_zip(self, path: Union[str, Path] = ""):
+    def create_zip(self, path: Union[str, Path] = "") -> None:
         """Exports a ZIP looped package of an FLP.
         Importing stock sample Works only on Windows
 
@@ -203,14 +203,7 @@ class Project:
         ):
             objs: List[_FLObject] = getattr(self, param)
             for obj in objs:
-                events = obj._save()
-                try:
-                    obj_events = list(events)
-                except TypeError:
-                    # events is None
-                    continue
-                else:
-                    event_store.extend(obj_events)
+                event_store.extend(obj._save())
 
         # Insert params event
         for e in self.events:
@@ -272,7 +265,7 @@ class Project:
         return stream.read()
 
     # TODO Implement saving for ZIP looped packages
-    def save(self, save_path: Union[Path, str] = ""):
+    def save(self, save_path: Union[Path, str] = "") -> None:
         """Saves `Project` to disk.
 
         Args:

@@ -17,7 +17,7 @@ from typing import Any, List, Optional
 import colour
 from bytesioex import BytesIOEx
 
-from pyflp._event import EventID, _DataEvent, _TextEvent
+from pyflp._event import EventIDType, _DataEvent, _TextEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import (
     _BoolProperty,
@@ -37,7 +37,7 @@ __all__ = ["Track", "TrackDataEvent"]
 class TrackDataEvent(_DataEvent):
     """Implements `TrackEventID.Data` for `Track`."""
 
-    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+    def __init__(self, index: int, id_: EventIDType, data: bytes) -> None:
         super().__init__(index, id_, data)
         self.__r = r = BytesIOEx(data)
         self.number = r.read_I()  # 4

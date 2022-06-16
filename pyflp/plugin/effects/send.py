@@ -26,7 +26,7 @@ class FSend(_EffectPlugin):
 
     CHUNK_SIZE = 16
 
-    def _setprop(self, n, v):
+    def _setprop(self, n: str, v: int) -> None:
         r = self._r
         if n == "dry":
             r.seek(0)

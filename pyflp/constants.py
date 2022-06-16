@@ -11,18 +11,23 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-BYTE = 0
-WORD = 64
-DWORD = 128
-TEXT = 192
-DATA = 208
+try:
+    from typing import Final
+except ImportError:
+    from typing_extensions import Final
 
-HEADER_MAGIC = b"FLhd"
-HEADER_SIZE = 6
-DATA_MAGIC = b"FLdt"
-VALID_PPQS = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
+BYTE: Final = 0
+WORD: Final = 64
+DWORD: Final = 128
+TEXT: Final = 192
+DATA: Final = 208
 
-DATA_TEXT_EVENTS = (
+HEADER_MAGIC: Final = b"FLhd"
+HEADER_SIZE: Final = 6
+DATA_MAGIC: Final = b"FLdt"
+VALID_PPQS: Final = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
+
+DATA_TEXT_EVENTS: Final = (
     TEXT + 49,  # Arrangement.EventID.Name
     TEXT + 39,  # FilterChannel.EventID.Name
     TEXT + 47,  # Track.EventID.Name

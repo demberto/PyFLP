@@ -40,7 +40,7 @@ class ChannelArp(_FLObject):
         Random = 5
 
     # * Properties
-    direction: Direction = _EnumProperty(Direction)
+    direction: Optional[Direction] = _EnumProperty(Direction)
 
     range: Optional[int] = _UIntProperty()
     """Range (in octaves)."""

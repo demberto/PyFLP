@@ -12,7 +12,10 @@
 # <https://www.gnu.org/licenses/>.
 
 import abc
-from typing import TYPE_CHECKING, Any, NoReturn
+import enum
+from typing import TYPE_CHECKING, Generic, NoReturn, Optional, TypeVar
+
+import colour
 
 from pyflp._validators import (
     _BoolValidator,
@@ -27,16 +30,18 @@ from pyflp._validators import (
 from pyflp.exceptions import OperationNotPermittedError
 
 if TYPE_CHECKING:
-    from pyflp._flobject import _FLObject
-    from pyflp._validators import _Validator
+    from pyflp._flobject import _FLObjectType
+    from pyflp._validators import _ValidatorType
+
+_T = TypeVar("_T")
 
 
-class _Property(abc.ABC):
+class _Property(abc.ABC, Generic[_T]):
     """Base class for property descriptors used in `FLObject` subclasses.
 
     https://stackoverflow.com/a/69599069"""
 
-    def __init__(self, validator: "_Validator"):
+    def __init__(self, validator: "_ValidatorType") -> None:
         self.__validator = validator
 
     def __repr__(self) -> str:
@@ -46,11 +51,11 @@ class _Property(abc.ABC):
             f'validator="{repr(self.__validator)}">'
         )
 
-    def __set_name__(self, owner, name: str):
+    def __set_name__(self, _, name: str) -> None:
         self.__public_name = name
         self.__private_name = "_" + name
 
-    def __get__(self, obj: "_FLObject", objtype=None) -> Any:
+    def __get__(self, obj: "_FLObjectType", _=None) -> Optional[_T]:
         if obj is None:
             return self
         return getattr(obj, self.__private_name, None)
@@ -58,7 +63,7 @@ class _Property(abc.ABC):
     def __delete__(self, obj) -> NoReturn:
         raise OperationNotPermittedError("Properties cannot be deleted", obj)
 
-    def __set__(self, obj: "_FLObject", value) -> None:
+    def __set__(self, obj: "_FLObjectType", value) -> None:
         self.__validator.validate(value)
         setattr(obj, self.__private_name, value)
 
@@ -67,51 +72,54 @@ class _Property(abc.ABC):
         obj._setprop(self.__public_name, value)
 
 
-class _BoolProperty(_Property):
-    def __init__(self):
+class _BoolProperty(_Property[bool]):
+    def __init__(self) -> None:
         super().__init__(_BoolValidator())
 
 
-class _BytesProperty(_Property):
-    def __init__(self, validator=None, **kwargs):
+class _BytesProperty(_Property[bytes]):
+    def __init__(self, validator: Optional[_BytesValidator] = None, **kwargs) -> None:
         if validator is None:
             validator = _BytesValidator(**kwargs)
         super().__init__(validator)
 
 
-class _ColorProperty(_Property):
-    def __init__(self):
+class _ColorProperty(_Property[colour.Color]):
+    def __init__(self) -> None:
         super().__init__(_ColorValidator())
 
 
-class _EnumProperty(_Property):
-    def __init__(self, enum):
+_Enum = TypeVar("_Enum", bound=enum.Enum)
+
+
+class _EnumProperty(_Property[_Enum]):
+    def __init__(self, enum: _Enum) -> None:
         super().__init__(_EnumValidator(enum))
 
 
-class _FloatProperty(_Property):
-    def __init__(self, validator=None, **kwargs):
+class _FloatProperty(_Property[float]):
+    def __init__(self, validator: Optional[_FloatValidator] = None, **kwargs) -> None:
         if validator is None:
             validator = _FloatValidator(**kwargs)
         super().__init__(validator)
 
 
-class _IntProperty(_Property):
-    def __init__(self, validator=None, **kwargs):
+class _IntProperty(_Property[int]):
+    def __init__(self, validator: Optional[_IntValidator] = None, **kwargs) -> None:
         if validator is None:
             validator = _IntValidator(**kwargs)
         super().__init__(validator)
 
 
-class _StrProperty(_Property):
-    def __init__(self, validator=None, **kwargs):
+class _StrProperty(_Property[str]):
+    def __init__(self, validator: Optional[_StrValidator] = None, **kwargs) -> None:
         if validator is None:
             validator = _StrValidator(**kwargs)
         super().__init__(validator)
 
 
-class _UIntProperty(_Property):
-    def __init__(self, validator=None, **kwargs):
+class _UIntProperty(_Property[int]):
+    def __init__(self, validator: Optional[_UIntValidator] = None, **kwargs) -> None:
         if validator is None:
             validator = _UIntValidator(**kwargs)
         super().__init__(validator)

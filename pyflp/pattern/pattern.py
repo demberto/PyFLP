@@ -13,7 +13,7 @@
 
 import enum
 import io
-from typing import TYPE_CHECKING, List, Optional, ValuesView
+from typing import TYPE_CHECKING, List, Optional
 
 import colour
 
@@ -21,8 +21,8 @@ from pyflp._event import (
     DataEventType,
     DWordEventType,
     EventType,
-    _TextEvent,
-    _WordEvent,
+    TextEventType,
+    WordEventType,
 )
 from pyflp._flobject import _FLObject
 from pyflp._properties import _ColorProperty, _StrProperty
@@ -93,12 +93,11 @@ class Pattern(_FLObject):
         return getattr(self, "_controllers", [])
 
     # * Parsing logic
-    def parse_index1(self, e: _WordEvent):
-        """Thanks to FL for storing data of a single
-        pattern at 2 different places."""
+    def parse_index1(self, e: WordEventType):
+        """Thanks to FL for storing data of a single pattern at 2 different places."""
         self._events["index (metadata)"] = e
 
-    def _parse_word_event(self, e: _WordEvent):
+    def _parse_word_event(self, e: WordEventType):
         if e.id_ == Pattern.EventID.New:
             self._parse_H(e, "index")
 
@@ -106,7 +105,7 @@ class Pattern(_FLObject):
         if e.id_ == Pattern.EventID.Color:
             self._parse_color(e, "color")
 
-    def _parse_text_event(self, e: _TextEvent):
+    def _parse_text_event(self, e: TextEventType):
         if e.id_ == Pattern.EventID.Name:
             self._parse_s(e, "name")
 
@@ -125,9 +124,7 @@ class Pattern(_FLObject):
             self._events["controllers"] = e
             self._controllers = e.controllers
 
-    def _save(self) -> ValuesView[EventType]:
-        events = super()._save()
-
+    def _save(self) -> List[EventType]:
         # Note events
         notes = self.notes
         notes_ev = self._events.get("notes")
@@ -148,7 +145,7 @@ class Pattern(_FLObject):
             ctrls_data.seek(0)
             ctrls_ev.dump(ctrls_data.read())
 
-        return events
+        return super()._save()
 
     # * Utility methods
     def is_empty(self) -> bool:

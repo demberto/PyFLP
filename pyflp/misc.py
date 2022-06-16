@@ -13,17 +13,17 @@
 
 import datetime
 import enum
-from typing import Optional, ValuesView
+from typing import List, Optional
 
 from bytesioex import BytesIOEx, Double
 
 from pyflp._event import (
+    ByteEventType,
     DataEventType,
     DWordEventType,
     EventType,
-    _ByteEvent,
-    _TextEvent,
-    _WordEvent,
+    TextEventType,
+    WordEventType,
 )
 from pyflp._flobject import _FLObject
 from pyflp._properties import (
@@ -274,11 +274,12 @@ class Misc(_FLObject):
         self._events["tempo"].dump(v)
         self._tempo = v
 
-    # ! TODO: Fix parsing
     @property
     def start_date(self) -> Optional[datetime.datetime]:
-        """The date when the project was started. Stored in
-        microseconds since Delphi epoch (31-December-1899)."""
+        """The date when the project was started.
+
+        Stored in microseconds since Delphi epoch (31-December-1899).
+        """
         return getattr(self, "_start_date", None)
 
     @start_date.setter
@@ -342,7 +343,7 @@ class Misc(_FLObject):
     """Whether project was saved in a purchased copy of FL or in trial mode."""
 
     # * Parsing logic
-    def _parse_byte_event(self, e: _ByteEvent):
+    def _parse_byte_event(self, e: ByteEventType):
         if e.id_ == Misc.EventID.LoopActive:
             self._parse_bool(e, "loop_active")
         elif e.id_ == Misc.EventID.ShowInfo:
@@ -365,7 +366,7 @@ class Misc(_FLObject):
         elif e.id_ == Misc.EventID.Registered:
             self._parse_bool(e, "registered")
 
-    def _parse_word_event(self, e: _WordEvent) -> None:
+    def _parse_word_event(self, e: WordEventType) -> None:
         if e.id_ == Misc.EventID.CurrentPatternNum:
             self._parse_H(e, "cur_pattern")
         elif e.id_ == Misc.EventID.MainPitch:
@@ -381,7 +382,7 @@ class Misc(_FLObject):
         elif e.id_ == Misc.EventID.SongLoopPos:
             self._parse_I(e, "song_loop_pos")
 
-    def _parse_text_event(self, e: _TextEvent):
+    def _parse_text_event(self, e: TextEventType):
         if e.id_ == Misc.EventID.Title:
             self._parse_s(e, "title")
         elif e.id_ == Misc.EventID.Comment:
@@ -410,7 +411,7 @@ class Misc(_FLObject):
             )
             self._work_time = datetime.timedelta(days=self.__stdata.read_d())
 
-    def _save(self) -> ValuesView[EventType]:
+    def _save(self) -> List[EventType]:
         tstamp = self._events.get("savetimestamp")
         if tstamp:
             self.__stdata.seek(0)

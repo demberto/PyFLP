@@ -13,7 +13,7 @@
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import EventID, _DataEvent
+from pyflp._event import EventIDType, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp.channel.arp import ChannelArp
 
@@ -23,7 +23,7 @@ __all__ = ["ChannelParameters", "ChannelParametersEvent"]
 class ChannelParametersEvent(_DataEvent):
     """Implements `Channel.EventID.Parameters`."""
 
-    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+    def __init__(self, index: int, id_: EventIDType, data: bytes) -> None:
         super().__init__(index, id_, data)
         c = ChannelParameters()
         arp = c.arp = self.arp = ChannelArp()
@@ -50,7 +50,7 @@ class ChannelParameters(_FLObject):
         self.arp = ChannelArp()
 
     def _save(self) -> ChannelParametersEvent:
-        e = tuple(self._events.values())[0]
+        e = super()._save()[0]
         oldlen = len(e._data)
         r = BytesIOEx(e._data)
         if oldlen > 40:
@@ -69,3 +69,4 @@ class ChannelParameters(_FLObject):
         newbuf = r.read(oldlen)
         r.seek(0)
         r.write(newbuf)
+        return e

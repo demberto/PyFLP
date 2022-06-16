@@ -12,11 +12,17 @@
 # <https://www.gnu.org/licenses/>.
 
 import enum
-from typing import Optional, ValuesView
+from typing import List, Optional
 
 import colour
 
-from pyflp._event import DWordEventType, EventType, _DataEvent, _TextEvent, _WordEvent
+from pyflp._event import (
+    DataEventType,
+    DWordEventType,
+    EventType,
+    TextEventType,
+    WordEventType,
+)
 from pyflp._flobject import _FLObject
 from pyflp._properties import (
     _BoolProperty,
@@ -70,10 +76,8 @@ class InsertSlot(_FLObject):
     """'Fruity Wrapper' for VST/AU plugins. Factory name for native plugins."""
 
     icon: Optional[int] = _IntProperty()
-    """Icon."""
 
     color: Optional[colour.Color] = _ColorProperty()
-    """Color."""
 
     index: Optional[int] = _UIntProperty()
     """Index (FL12.3+); occurs irrespective of whether slot is used or not."""
@@ -92,7 +96,7 @@ class InsertSlot(_FLObject):
         return getattr(self, "_plugin", None)
 
     @plugin.setter
-    def plugin(self, value: _Plugin):
+    def plugin(self, value: _Plugin) -> None:
         self._plugin = value
 
     @property
@@ -100,7 +104,7 @@ class InsertSlot(_FLObject):
         return getattr(self, "_new", None)
 
     @new.setter
-    def new(self, value: bytes):
+    def new(self, value: bytes) -> None:
         self._new = value
 
     name: Optional[str] = _StrProperty()
@@ -108,23 +112,23 @@ class InsertSlot(_FLObject):
     for VST/AU plugins, if a user-given name is not given."""
 
     # * Parsing logic
-    def _parse_word_event(self, e: _WordEvent) -> None:
+    def _parse_word_event(self, e: WordEventType) -> None:
         if e.id_ == InsertSlot.EventID.Index:
             self._parse_H(e, "index")
 
-    def _parse_dword_event(self, e: DWordEventType):
+    def _parse_dword_event(self, e: DWordEventType) -> None:
         if e.id_ == InsertSlot.EventID.Color:
             self._parse_color(e, "color")
         elif e.id_ == InsertSlot.EventID.Icon:
             self._parse_I(e, "icon")
 
-    def _parse_text_event(self, e: _TextEvent):
+    def _parse_text_event(self, e: TextEventType) -> None:
         if e.id_ == InsertSlot.EventID.DefaultName:
             self._parse_s(e, "default_name")
         elif e.id_ == InsertSlot.EventID.Name:
             self._parse_s(e, "name")
 
-    def _parse_data_event(self, e: _DataEvent):
+    def _parse_data_event(self, e: DataEventType) -> None:
         if e.id_ == InsertSlot.EventID.PluginNew:
             self._events["new"] = e
             self._new = e.data
@@ -151,9 +155,7 @@ class InsertSlot(_FLObject):
                 plugin = _Plugin()
             self._parse_flobject(e, "plugin", plugin)
 
-    def _save(self) -> ValuesView[EventType]:
-        events = super()._save()
-
+    def _save(self) -> List[EventType]:
         new_event = self._events.get("new")
         if new_event:
             new_event.dump(self._new)
@@ -161,7 +163,7 @@ class InsertSlot(_FLObject):
         if self.plugin:
             self.plugin._save()
 
-        return events
+        return super()._save()
 
     # * Utility methods
     def is_used(self) -> bool:
@@ -170,6 +172,4 @@ class InsertSlot(_FLObject):
 
     def get_name(self) -> Optional[str]:
         """Returns the name that will be shown in FL."""
-        if self.name:
-            return self.name
-        return self.default_name
+        return self.name or self.default_name

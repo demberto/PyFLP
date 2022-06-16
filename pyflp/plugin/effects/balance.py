@@ -26,7 +26,7 @@ class FBalance(_EffectPlugin):
 
     CHUNK_SIZE = 8
 
-    def _setprop(self, n, v):
+    def _setprop(self, n: str, v: int) -> None:
         r = self._r
         if n == "pan":
             r.seek(0)

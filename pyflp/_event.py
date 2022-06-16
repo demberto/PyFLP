@@ -14,7 +14,7 @@
 import abc
 import collections
 import enum
-from typing import Type, TypeVar, Union, overload
+from typing import Any, Type, TypeVar, Union, overload
 
 import colour
 from bytesioex import Byte, Int, SByte, UInt
@@ -22,7 +22,7 @@ from bytesioex import Byte, Int, SByte, UInt
 from pyflp._utils import buflen_to_varint
 from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
 
-EventID = TypeVar("EventID", enum.IntEnum, int)
+EventIDType = TypeVar("EventIDType", enum.IntEnum, int)
 
 
 class _Event(abc.ABC):
@@ -43,7 +43,7 @@ class _Event(abc.ABC):
         return self._data
 
     @abc.abstractmethod
-    def dump(self, new_data):
+    def dump(self, new_data: Any) -> None:
         """Converts Python types into bytes objects and stores it."""
 
     def to_raw(self) -> bytes:
@@ -72,7 +72,7 @@ class _Event(abc.ABC):
             )
         return self.id_ != o.id_ or self.data != o.data
 
-    def __init__(self, index: int, id: EventID, data: bytes):
+    def __init__(self, index: int, id: EventIDType, data: bytes) -> None:
         """
         Args:
             id (EventID): An event ID from **0** to **255**.
@@ -114,7 +114,7 @@ class _ByteEvent(_Event):
     def size(self) -> int:
         return 2
 
-    def dump(self, new_data: Union[bytes, int, bool]):
+    def dump(self, new_data: Union[bytes, int, bool]) -> None:
         """Dumps a single byte of data; either a bool, int or a bytes object to event data.
 
         Args:
@@ -158,15 +158,15 @@ class _ByteEvent(_Event):
         return self.to_int8() != 0
 
     def __repr__(self) -> str:
-        b = self.to_int8()
-        B = self.to_uint8()  # noqa
-        if b == B:
-            msg = f"B={B!r}"
+        i8 = self.to_int8()
+        u8 = self.to_uint8()
+        if i8 == u8:
+            msg = f"B={u8!r}"
         else:
-            msg = f"b={b!r}, B={B!r}"
+            msg = f"b={i8!r}, B={u8!r}"
         return f"<{super().__repr__()!r}, {msg!r}>"
 
-    def __init__(self, index: int, id: EventID, data: bytes):
+    def __init__(self, index: int, id: EventIDType, data: bytes):
         """
         Args:
             id (EventID): An event ID from **0** to **63**.
@@ -191,7 +191,7 @@ class _WordEvent(_Event):
     def size(self) -> int:
         return 3
 
-    def dump(self, new_data: Union[bytes, int]):
+    def dump(self, new_data: Union[bytes, int]) -> None:
         """Dumps 2 bytes of data; either an int or a bytes object to event data.
 
         Args:
@@ -233,7 +233,7 @@ class _WordEvent(_Event):
             msg = f"h={h!r}, H={H!r}"
         return f"<{super().__repr__()!r}, {msg!r}>"
 
-    def __init__(self, index: int, id: EventID, data: bytes):
+    def __init__(self, index: int, id: EventIDType, data: bytes) -> None:
         """
         Args:
             id (EventID): An event ID from **64** to **127**.
@@ -263,7 +263,7 @@ class _DWordEvent(_Event):
     def size(self) -> int:
         return 5
 
-    def dump(self, new_data: Union[bytes, int]):
+    def dump(self, new_data: Union[bytes, int]) -> None:
         """Dumps 4 bytes of data; either an int or a bytes object to event data.
 
         Args:
@@ -315,7 +315,7 @@ class _DWordEvent(_Event):
             msg = f"i={i32!r}, I={u32!r}"
         return f"<{super().__repr__()!r}, {msg!r}>"
 
-    def __init__(self, index: int, id: EventID, data: bytes):
+    def __init__(self, index: int, id: EventIDType, data: bytes) -> None:
         """
         Args:
             id (EventID): An event ID from **128** to **191**.
@@ -336,7 +336,7 @@ class _DWordEvent(_Event):
 class _ColorEvent(_DWordEvent):
     """Represents a 4 byte event which stores a color."""
 
-    def dump(self, new_color: colour.Color):
+    def dump(self, new_color: colour.Color) -> None:
         """Dumps a `colour.Color` to event data.
 
         Args:
@@ -358,14 +358,14 @@ class _TextEvent(_VariableSizedEvent):
     """Represents a variable sized event used for storing strings."""
 
     @staticmethod
-    def as_ascii(buf: bytes):
+    def as_ascii(buf: bytes) -> str:
         return buf.decode("ascii", errors="ignore").strip("\0")
 
     @staticmethod
-    def as_uf16(buf: bytes):
+    def as_uf16(buf: bytes) -> str:
         return buf.decode("utf-16", errors="ignore").strip("\0")
 
-    def dump(self, new_data: str):
+    def dump(self, new_data: str) -> None:
         """Dumps a string to the event data. non UTF-16 data for UTF-16 type
         projects and non ASCII data for older projects will be removed before
         dumping.
@@ -397,7 +397,7 @@ class _TextEvent(_VariableSizedEvent):
     def __init__(
         self,
         index: int,
-        id: EventID,
+        id: EventIDType,
         data: bytes,
         uses_unicode: bool = True,
     ):
@@ -447,7 +447,7 @@ class _DataEvent(_VariableSizedEvent):
             )
         self._data = new_bytes
 
-    def __init__(self, index: int, id: EventID, data: bytes):
+    def __init__(self, index: int, id: EventIDType, data: bytes):
         """
         Args:
             id (EventID): An event ID in from **208** to **255**.
@@ -467,12 +467,18 @@ class _DataEvent(_VariableSizedEvent):
 
 
 EventType = TypeVar("EventType", bound=_Event)
+ByteEventType = TypeVar("ByteEventType", bound=_ByteEvent)
+WordEventType = TypeVar("WordEventType", bound=_WordEvent)
+ColorEventType = TypeVar("ColorEventType", bound=_ColorEvent)
 DWordEventType = TypeVar("DWordEventType", bound=_DWordEvent)
+TextEventType = TypeVar("TextEventType", bound=_TextEvent)
 DataEventType = TypeVar("DataEventType", bound=_DataEvent)
 
 
 class EventList(collections.UserList):
-    def append(self, event_t: Type[_Event], id_: EventID, data: bytes, *args) -> None:
+    def append(
+        self, event_t: Type[_Event], id_: EventIDType, data: bytes, *args
+    ) -> None:
         """Create and append an event to the list."""
         event = self.create(event_t, id_, data, *args)
         super().append(event)
@@ -483,42 +489,42 @@ class EventList(collections.UserList):
 
     @overload
     def create(
-        self, event_t: Type[_ByteEvent], id_: EventID, data: bytes, *args
+        self, event_t: Type[_ByteEvent], id_: EventIDType, data: bytes, *args
     ) -> _ByteEvent:
         ...
 
     @overload
     def create(
-        self, event_t: Type[_WordEvent], id_: EventID, data: bytes, *args
+        self, event_t: Type[_WordEvent], id_: EventIDType, data: bytes, *args
     ) -> _WordEvent:
         ...
 
     @overload
     def create(
-        self, event_t: Type[_ColorEvent], id_: EventID, data: bytes, *args
+        self, event_t: Type[_ColorEvent], id_: EventIDType, data: bytes, *args
     ) -> _ColorEvent:
         ...
 
     @overload
     def create(
-        self, event_t: Type[_DWordEvent], id_: EventID, data: bytes, *args
+        self, event_t: Type[_DWordEvent], id_: EventIDType, data: bytes, *args
     ) -> _DWordEvent:
         ...
 
     @overload
     def create(
-        self, event_t: Type[_TextEvent], id_: EventID, data: bytes, *args
+        self, event_t: Type[_TextEvent], id_: EventIDType, data: bytes, *args
     ) -> _TextEvent:
         ...
 
     @overload
     def create(
-        self, event_t: Type[_DataEvent], id_: EventID, data: bytes, *args
+        self, event_t: Type[_DataEvent], id_: EventIDType, data: bytes, *args
     ) -> _DataEvent:
         ...
 
     def create(
-        self, event_t: Type[_Event], id_: EventID, data: bytes, *args
+        self, event_t: Type[_Event], id_: EventIDType, data: bytes, *args
     ) -> EventType:
         """Create an event object and return it."""
         return event_t(len(self.data), id_, data, *args)

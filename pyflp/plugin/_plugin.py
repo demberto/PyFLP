@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-from typing import Optional, ValuesView
+from typing import List, Optional
 
 from bytesioex import BytesIOEx
 
@@ -31,7 +31,7 @@ class _Plugin(_FLObject):
     Parsing is skipped in case the size is not equal to this.
     """
 
-    def _save(self) -> ValuesView[EventType]:
+    def _save(self) -> List[EventType]:
         self._r.seek(0)
         self._events["plugin"].dump(self._r.read())
         return super()._save()

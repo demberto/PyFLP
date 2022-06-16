@@ -30,7 +30,7 @@ class ChannelFXReverb(_FLObject):
     """
 
     class _Mix(_UIntProperty):
-        def __set__(self, obj, value):
+        def __set__(self, obj: "ChannelFXReverb", value) -> None:
 
             # Update obj._kind and obj._mix
             super().__set__(obj, value)
@@ -39,7 +39,7 @@ class ChannelFXReverb(_FLObject):
             obj._events["reverb"].dump(buf)
 
     class _Kind(_EnumProperty):
-        def __set__(self, obj, value):
+        def __set__(self, obj: "ChannelFXReverb", value) -> None:
 
             # Update obj._kind and obj._mix
             super().__set__(obj, value)

@@ -15,7 +15,7 @@ import abc
 import dataclasses
 import enum
 import warnings
-from typing import Dict, List, TypeVar
+from typing import TYPE_CHECKING, Dict, List, TypeVar
 
 from bytesioex import BytesIOEx
 
@@ -23,6 +23,9 @@ from pyflp._event import DataEventType
 from pyflp._flobject import _FLObject
 from pyflp._utils import FLVersion
 from pyflp.constants import DATA
+
+if TYPE_CHECKING:
+    from pyflp.project import Project
 
 
 @dataclasses.dataclass
@@ -131,6 +134,6 @@ class Playlist(_FLObject):
                         )
                     )
 
-    def __init__(self, project):
+    def __init__(self, project: "Project") -> None:
         super().__init__(project, None)
         self._items: Dict[int, List[PlaylistItemType]] = {}

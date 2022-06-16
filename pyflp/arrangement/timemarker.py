@@ -12,13 +12,14 @@
 # <https://www.gnu.org/licenses/>.
 
 import enum
+from typing import Any
 
 try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
 
-from pyflp._event import DWordEventType, _ByteEvent, _TextEvent
+from pyflp._event import ByteEventType, DWordEventType, TextEventType
 from pyflp._flobject import _FLObject
 from pyflp._properties import _EnumProperty, _IntProperty, _StrProperty, _UIntProperty
 from pyflp._validators import _OneOfValidator
@@ -56,7 +57,7 @@ class TimeMarker(_FLObject):
         Signature = 134217728
         """Specifies a change in the time signature."""
 
-    def _setprop(self, n, v):
+    def _setprop(self, n: str, v: Any) -> None:
         if n == "kind":
             if v == TimeMarker.Kind.Marker and self.kind == TimeMarker.Kind.Signature:
                 self.position -= TimeMarker.Kind.Signature
@@ -79,13 +80,13 @@ class TimeMarker(_FLObject):
     denominator: Literal[2, 4, 8, 16] = _UIntProperty(_OneOfValidator((2, 4, 8, 16)))
 
     # * Parsing logic
-    def _parse_byte_event(self, e: _ByteEvent):
+    def _parse_byte_event(self, e: ByteEventType) -> None:
         if e.id_ == TimeMarker.EventID.Numerator:
             self._parse_B(e, "numerator")
         elif e.id_ == TimeMarker.EventID.Denominator:
             self._parse_B(e, "denominator")
 
-    def _parse_dword_event(self, e: DWordEventType):
+    def _parse_dword_event(self, e: DWordEventType) -> None:
         if e.id_ == TimeMarker.EventID.Position:
             pos = e.to_uint32()
             if pos >= TimeMarker.Kind.Signature:
@@ -95,6 +96,6 @@ class TimeMarker(_FLObject):
                 self._kind = TimeMarker.Kind.Marker
             self._parseprop(e, "position", pos)
 
-    def _parse_text_event(self, e: _TextEvent):
+    def _parse_text_event(self, e: TextEventType) -> None:
         if e.id_ == TimeMarker.EventID.Name:
             self._parse_s(e, "name")

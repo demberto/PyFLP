@@ -33,7 +33,7 @@ class _QWordVariableEvent(_VariableSizedEvent):
             return 9 + len(self.data)
         return 9
 
-    def dump(self, new_data: Union[str, bytes]):
+    def dump(self, new_data: Union[str, bytes]) -> None:
         if not isinstance(new_data, (bytes, str)):
             raise TypeError("Expected a bytes or an str object")
         if isinstance(new_data, str):
@@ -97,8 +97,8 @@ class _VSTPluginParser(_FLObject):
 
 # ! Very wrong OOP going on here
 class VSTPluginEvent(_DataEvent):
-    def __init__(self, index: int, id, data: bytes):
-        super().__init__(index, id, data)
+    def __init__(self, index: int, id_, data: bytes):
+        super().__init__(index, id_, data)
         self._parser = _VSTPluginParser()
         self._event_count = 0
         r = BytesIOEx(data)

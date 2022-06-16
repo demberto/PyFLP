@@ -26,7 +26,7 @@ class FStereoEnhancer(_EffectPlugin):
         LEFT = 1
         RIGHT = 2
 
-    def _setprop(self, n, v):
+    def _setprop(self, n: str, v: int) -> None:
         r = self._r
         if n == "pan":
             r.seek(0)

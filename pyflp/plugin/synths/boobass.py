@@ -23,7 +23,7 @@ class BooBass(_SynthPlugin):
 
     CHUNK_SIZE = 16
 
-    def _setprop(self, n: str, v: int):
+    def _setprop(self, n: str, v: int) -> None:
         r = self._r
         if n == "bass":
             r.seek(4)

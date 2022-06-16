@@ -42,10 +42,10 @@ class FNoteBook2(_EffectPlugin):
     @property
     def pages(self) -> List[str]:
         """List of strings. One string per page."""
-        return getattr(self, "_pages", [])
+        return self._pages
 
     @pages.setter
-    def pages(self, value: List[str]):
+    def pages(self, value: List[str]) -> None:
         self._r.seek(8)
         for page_num, page in enumerate(value):
             self._r.write_I(page_num)  # TODO: or page_num + 1?
@@ -60,7 +60,7 @@ class FNoteBook2(_EffectPlugin):
         return getattr(self, "_active_page", None)
 
     @active_page.setter
-    def active_page(self, value: int):
+    def active_page(self, value: int) -> None:
         num_pages = len(self._pages) + 1
         if value not in range(1, num_pages):
             raise ValueError(f"Expected a value in (1, {num_pages})")
@@ -74,7 +74,7 @@ class FNoteBook2(_EffectPlugin):
         return getattr(self, "_editable", None)
 
     @editable.setter
-    def editable(self, value: bool):
+    def editable(self, value: bool) -> None:
         self._r.seek(-1, 2)
         self._r.write_bool(value)
         super()._setprop("editable", value)
@@ -93,6 +93,6 @@ class FNoteBook2(_EffectPlugin):
             self._pages.append(buffer.decode("utf-16", errors="ignore"))
         self._editable = r.read_bool()
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._pages = []
         super().__init__()

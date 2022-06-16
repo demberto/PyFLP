@@ -13,7 +13,7 @@
 
 import abc
 import enum
-from typing import Any, Iterable, Optional, Type, Union
+from typing import Any, Iterable, Optional, TypeVar
 
 import colour
 
@@ -31,10 +31,13 @@ class _Validator(abc.ABC):
         pass
 
 
+_ValidatorType = TypeVar("_ValidatorType", bound=_Validator)
+
+
 class _OneOfValidator(_Validator):
     """Validates whether a value exists in a given set of options."""
 
-    def __init__(self, options: Iterable):
+    def __init__(self, options: Iterable[Any]):
         self.__options = options
 
     def __repr__(self) -> str:
@@ -48,13 +51,13 @@ class _OneOfValidator(_Validator):
 class _BoolValidator(_OneOfValidator):
     """Validates whether a value equals `True` or `False`."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__((True, False))
 
     def __repr__(self) -> str:
         return "<BoolValidator>"
 
-    def validate(self, value: Any):
+    def validate(self, value: Any) -> None:
         if not isinstance(value, bool):
             raise TypeError(f"Expected {value!r} to be a bool")
 
@@ -62,16 +65,16 @@ class _BoolValidator(_OneOfValidator):
 class _EnumValidator(_OneOfValidator):
     """Validates whether a value exists in a particular `enum` class."""
 
-    _Enum = Union[Type[enum.Enum], Type[enum.IntEnum], Type[enum.IntFlag]]
+    _Enum = TypeVar("_Enum", bound=enum.Enum)
 
-    def __init__(self, enum: _Enum):
+    def __init__(self, enum: _Enum) -> None:
         self.__enum = enum
         super().__init__(tuple(enum))
 
     def __repr__(self) -> str:
         return f'<EnumValidator enum="{self.__enum.__name__}>"'
 
-    def validate(self, value: Any):
+    def validate(self, value: Any) -> None:
         if issubclass(self.__enum, (enum.IntEnum, enum.IntFlag)):
             if not isinstance(value, int):
                 raise TypeError(f"Expected {value!r} to be an int")
@@ -108,7 +111,7 @@ class _IntValidator(_IntFloatValidatorBase):
 class _UIntValidator(_IntValidator):
     """A specialization of `_IntValidator` for validating positive integers."""
 
-    def __init__(self, max_: Optional[int] = None):
+    def __init__(self, max_: Optional[int] = None) -> None:
         super().__init__(min_=0, max_=max_)
 
 
@@ -133,7 +136,9 @@ class _FloatValidator(_IntFloatValidatorBase):
 class _BytesStrValidatorBase(_Validator, abc.ABC):
     """Base class for `_BytesValidator` and `_StrValidator`."""
 
-    def __init__(self, minsize: Optional[int] = None, maxsize: Optional[int] = None):
+    def __init__(
+        self, minsize: Optional[int] = None, maxsize: Optional[int] = None
+    ) -> None:
         self.__minsize = minsize
         self.__maxsize = maxsize
 
@@ -154,7 +159,7 @@ class _BytesStrValidatorBase(_Validator, abc.ABC):
 class _BytesValidator(_BytesStrValidatorBase):
     """Validates the type and size of a `bytes` object."""
 
-    def validate(self, value: Any):
+    def validate(self, value: Any) -> None:
         if not isinstance(value, bytes):
             raise TypeError(f"Expected {value!r} to be a bytes object")
         super().validate(value)
@@ -168,7 +173,7 @@ class _StrValidator(_BytesStrValidatorBase):
         minsize: Optional[int] = None,
         maxsize: Optional[int] = None,
         mustascii: bool = False,
-    ):
+    ) -> None:
         super().__init__(minsize, maxsize)
         self.__mustascii = mustascii
 
@@ -183,6 +188,6 @@ class _StrValidator(_BytesStrValidatorBase):
 class _ColorValidator(_Validator):
     """Validates whether the type of value is `colour.Color`."""
 
-    def validate(self, value: Any):
+    def validate(self, value: Any) -> None:
         if not isinstance(value, colour.Color):
             raise TypeError(f"Expected {value!r} to be a 'colour.Color' object")

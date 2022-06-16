@@ -18,8 +18,14 @@ import pytest
 
 from pyflp import Parser, Project
 from pyflp._event import (
+    ByteEventType,
+    ColorEventType,
+    DataEventType,
+    DWordEventType,
     EventList,
     EventType,
+    TextEventType,
+    WordEventType,
     _ByteEvent,
     _ColorEvent,
     _DataEvent,
@@ -48,7 +54,7 @@ def event() -> EventType:
 
 
 @pytest.fixture
-def byteevent(event) -> _ByteEvent:
+def byteevent(event) -> ByteEventType:
     def _byteevent(id_, data):
         return event(_ByteEvent, id_, data)
 
@@ -56,7 +62,7 @@ def byteevent(event) -> _ByteEvent:
 
 
 @pytest.fixture
-def wordevent(event) -> _WordEvent:
+def wordevent(event) -> WordEventType:
     def _wordevent(id_, data):
         return event(_WordEvent, id_, data)
 
@@ -64,7 +70,7 @@ def wordevent(event) -> _WordEvent:
 
 
 @pytest.fixture
-def dwordevent(event) -> _DWordEvent:
+def dwordevent(event) -> DWordEventType:
     def _dwordevent(id_, data):
         return event(_DWordEvent, id_, data)
 
@@ -72,7 +78,7 @@ def dwordevent(event) -> _DWordEvent:
 
 
 @pytest.fixture
-def colorevent(event) -> _ColorEvent:
+def colorevent(event) -> ColorEventType:
     def _colorevent(id_, data):
         return event(_ColorEvent, id_, data)
 
@@ -80,7 +86,7 @@ def colorevent(event) -> _ColorEvent:
 
 
 @pytest.fixture
-def textevent(event) -> _TextEvent:
+def textevent(event) -> TextEventType:
     def _textevent(id_, data, uses_unicode):
         return event(_TextEvent, id_, data, uses_unicode)
 
@@ -88,7 +94,7 @@ def textevent(event) -> _TextEvent:
 
 
 @pytest.fixture
-def dataevent(event) -> _DataEvent:
+def dataevent(event) -> DataEventType:
     def _dataevent(id_, data):
         return event(_DataEvent, id_, data)
 

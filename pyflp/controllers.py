@@ -16,7 +16,7 @@ from typing import Optional  # , Union
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import EventID, _DataEvent
+from pyflp._event import EventIDType, _DataEvent
 
 # from pyflp.exceptions import OperationNotPermittedError
 from pyflp._flobject import _FLObject
@@ -67,7 +67,7 @@ class RemoteController(Controller):
 class RemoteControllerEvent(_DataEvent):
     CHUNK_SIZE = 20
 
-    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+    def __init__(self, index: int, id_: EventIDType, data: bytes) -> None:
         super().__init__(index, id_, data)
         r = BytesIOEx(data)
         self.u1 = r.read_H()

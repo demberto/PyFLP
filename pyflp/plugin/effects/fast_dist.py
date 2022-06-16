@@ -12,6 +12,7 @@
 # <https://www.gnu.org/licenses/>.
 
 import enum
+from typing import Union
 
 from pyflp._event import DataEventType
 from pyflp._properties import _EnumProperty, _IntProperty, _UIntProperty
@@ -34,7 +35,7 @@ class FFastDist(_EffectPlugin):
         A = 0
         B = 1
 
-    def _setprop(self, n, v):
+    def _setprop(self, n: str, v: Union[int, Kind]):
         r = self._r
         if n == "pre":
             r.seek(0)

@@ -12,15 +12,18 @@
 # <https://www.gnu.org/licenses/>.
 
 import enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
-from pyflp._event import EventType, _DataEvent, _TextEvent, _WordEvent
+from pyflp._event import DataEventType, EventType, TextEventType, WordEventType
 from pyflp._flobject import _FLObject
 from pyflp._properties import _StrProperty, _UIntProperty
 from pyflp.arrangement.playlist import Playlist
 from pyflp.arrangement.timemarker import TimeMarker
 from pyflp.arrangement.track import Track
 from pyflp.constants import TEXT, WORD
+
+if TYPE_CHECKING:
+    from pyflp.project import Project
 
 __all__ = ["Arrangement"]
 
@@ -32,10 +35,11 @@ class Arrangement(_FLObject):
 
     _props = ("name", "index", "")
 
-    def __init__(self, project):
+    def __init__(self, project: "Project") -> None:
         super().__init__(project, None)
-        self._timemarkers = []
-        self._tracks = []
+        self._playlist: Optional[Playlist] = None
+        self._timemarkers: List[TimeMarker] = []
+        self._tracks: List[Track] = []
 
     @enum.unique
     class EventID(enum.IntEnum):
@@ -48,19 +52,19 @@ class Arrangement(_FLObject):
         """Marks the beginning of an arrangement. See `Arrangement.index`."""
 
     # * Properties
-    name: str = _StrProperty()
+    name: Optional[str] = _StrProperty()
 
-    index: int = _UIntProperty()
+    index: Optional[int] = _UIntProperty()
 
     @property
     def tracks(self) -> List[Track]:
         """A list of `Track` objects of an arrangement contains."""
-        return getattr(self, "_tracks", [])
+        return self._tracks
 
     @property
     def playlist(self) -> Optional[Playlist]:
         """The `Playlist` of an arrangement."""
-        return getattr(self, "_playlist", None)
+        return self._playlist
 
     @property
     def timemarkers(self) -> List[TimeMarker]:
@@ -68,9 +72,9 @@ class Arrangement(_FLObject):
         return getattr(self, "_timemarkers", [])
 
     # * Parsing logic
-    def parse_event(self, e: EventType):
+    def parse_event(self, e: EventType) -> None:
         if e.id_ in Playlist.EventID.__members__.values():
-            if not hasattr(self, "_playlist"):
+            if not self._playlist:
                 self._playlist = Playlist(self._project)
             self._playlist.parse_event(e)
         elif e.id_ == Track.EventID.Name:
@@ -79,32 +83,32 @@ class Arrangement(_FLObject):
         else:
             super().parse_event(e)
 
-    def _parse_word_event(self, e: _WordEvent):
+    def _parse_word_event(self, e: WordEventType) -> None:
         if e.id_ == Arrangement.EventID.New:
             self._parse_H(e, "index")
 
-    def _parse_text_event(self, e: _TextEvent):
+    def _parse_text_event(self, e: TextEventType) -> None:
         if e.id_ == Arrangement.EventID.Name:
             self._parse_s(e, "name")
 
-    def _parse_data_event(self, e: _DataEvent):
+    def _parse_data_event(self, e: DataEventType) -> None:
         if e.id_ == Track.EventID.Data:
             self._cur_track = Track()
             self._cur_track.parse_event(e)
             self._tracks.append(self._cur_track)
 
     def _save(self) -> List[EventType]:
-        events = list(super()._save())
+        events = super()._save()
 
         if self.playlist:
-            events.extend(list(self.playlist._save()))
+            events.extend(self.playlist._save())
 
         if self.timemarkers:
             for timemarker in self.timemarkers:
-                events.extend(list(timemarker._save()))
+                events.extend(timemarker._save())
 
         if self.tracks:
             for track in self.tracks:
-                events.extend(list(track._save()))
+                events.extend(track._save())
 
         return events

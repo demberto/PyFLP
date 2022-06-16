@@ -15,11 +15,12 @@ import enum
 import io
 import zipfile
 from pathlib import Path
-from typing import List, Set, Union
+from typing import List, Optional, Set, Union
 
 from bytesioex import BytesIOEx
 
 from pyflp._event import (
+    EventIDType,
     EventList,
     EventType,
     _ByteEvent,
@@ -98,7 +99,7 @@ class Parser:
         self.__events = EventList()
         self.__channel_count = 0
         self.__max_counts = MaxInstances()
-        self.__fl_version: FLVersion = None
+        self.__fl_version: Optional[FLVersion] = None
         self.__uses_unicode = True
 
         # Timemarkers can occur anywhere before an arrangement
@@ -116,14 +117,14 @@ class Parser:
     def __build_event_store(self) -> None:
         """Gathers all events into a single list."""
 
-        def add_dwordevent(id_, buf):
+        def add_dwordevent(id_: EventIDType, buf: bytes) -> None:
             if id_ in COLOR_EVENTS:
                 typ = _ColorEvent
             else:
                 typ = _DWordEvent
             self.__events.append(typ, id_, buf)
 
-        def add_textevent(id_, buf):
+        def add_textevent(id_: EventIDType, buf: bytes) -> None:
             if id_ == Misc.EventID.Version:
                 self.__fl_version = FLVersion(_TextEvent.as_ascii(buf))
                 if self.__fl_version.as_float() < 11.5:
@@ -136,7 +137,7 @@ class Parser:
                 self.__cur_plug_is_vst = True
             self.__events.append_event(ev)
 
-        def add_dataevent(id_, buf):
+        def add_dataevent(id_: EventIDType, buf: bytes) -> None:
             if id_ == Track.EventID.Data:
                 typ = TrackDataEvent
             elif id_ == Channel.EventID.Delay:
@@ -190,7 +191,7 @@ class Parser:
                 else:
                     add_dataevent(evid, buf)
 
-    def __parse_channel(self, ev: EventType):
+    def __parse_channel(self, ev: EventType) -> None:
         """Creates and appends `Channel` objects to `Project`.
         Dispatches `ChannelEventID` events for parsing."""
 
@@ -200,7 +201,7 @@ class Parser:
             self.__proj.channels.append(self.__cur_ch)
         self.__cur_ch.parse_event(ev)
 
-    def __parse_pattern(self, ev: EventType):
+    def __parse_pattern(self, ev: EventType) -> None:
         """Creates and appends `Pattern` objects to `Project`.
         Dispatches `PatternEventID` events to `Pattern` for parsing."""
 
@@ -221,7 +222,7 @@ class Parser:
                 self.__proj.patterns.append(self.__cur_pat)
         self.__cur_pat.parse_event(ev)
 
-    def __parse_insert(self, ev: EventType):
+    def __parse_insert(self, ev: EventType) -> None:
         """Creates and appends `Insert` objects to `Project`. Dispatches
         `InsertEvent` and `InsertSlotEventID` events for parsing."""
 
@@ -233,7 +234,7 @@ class Parser:
             self.__proj.inserts.append(self.__cur_ins)
             self.__cur_ins = Insert(self.__proj, self.__max_counts)
 
-    def __parse_arrangement(self, ev: EventType):
+    def __parse_arrangement(self, ev: EventType) -> None:
         """Creates and appends `Arrangement` objects to `Project`. Dispatches
         `ArrangementEventID`, `PlaylistEventID` and `TrackEventID` events
         for parsing."""
@@ -251,7 +252,7 @@ class Parser:
             self.__tms = []
         self.__cur_arr.parse_event(ev)
 
-    def __parse_filter(self, ev: EventType):
+    def __parse_filter(self, ev: EventType) -> None:
         """Creates and appends `Filter` objects to `Project`.
         Dispatches `FilterEventID` events for parsing."""
 
@@ -260,7 +261,7 @@ class Parser:
             self.__proj.filters.append(self.__cur_flt)
         self.__cur_flt.parse_event(ev)
 
-    def __parse_timemarker(self, ev: EventType):
+    def __parse_timemarker(self, ev: EventType) -> None:
         if ev.id_ == TimeMarker.EventID.Position:
             self.__cur_tm = TimeMarker()
             self.__tms.append(self.__cur_tm)
@@ -363,7 +364,7 @@ class Parser:
                 self.__proj._unparsed_events.append(ev)
 
         # * Post-parse steps
-        # Now dispatch all playlist events to track, Playlist can be empty as well
+        # Now move all playlist events to track, Playlist can be empty as well
         # Cannot parse playlist events in arrangement, because certain FL versions
         # dump only used tracks. This is not the case anymore.
         for arrangement in self.__proj.arrangements:

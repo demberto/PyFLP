@@ -14,20 +14,22 @@
 import abc
 import dataclasses
 import enum
-from typing import Any, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar
 
 from pyflp._event import (
+    ByteEventType,
+    ColorEventType,
     DataEventType,
     DWordEventType,
     EventType,
-    _ByteEvent,
-    _ColorEvent,
-    _DWordEvent,
-    _TextEvent,
-    _WordEvent,
+    TextEventType,
+    WordEventType,
 )
 from pyflp._properties import _Property
 from pyflp.constants import BYTE, DATA, DATA_TEXT_EVENTS, DWORD, TEXT, WORD
+
+if TYPE_CHECKING:
+    from pyflp.project import Project
 
 
 @dataclasses.dataclass
@@ -55,7 +57,7 @@ class _FLObject(abc.ABC):
                 reprs.append(f"{k}={attr!r}")
         return f"<{type(self).__name__} {', '.join(reprs)}>"
 
-    def _setprop(self, n, v):
+    def _setprop(self, n: str, v: Any) -> None:
         """Dumps a property value to the underlying event
         provided `_events` has a key with name `n`."""
 
@@ -101,23 +103,23 @@ class _FLObject(abc.ABC):
         else:
             self._parse_data_event(event)
 
-    def _parse_byte_event(self, _: _ByteEvent) -> None:  # pragma: no cover
+    def _parse_byte_event(self, _: ByteEventType) -> None:  # pragma: no cover
         pass
 
-    def _parse_word_event(self, _: _WordEvent) -> None:  # pragma: no cover
+    def _parse_word_event(self, _: WordEventType) -> None:  # pragma: no cover
         pass
 
     def _parse_dword_event(self, _: DWordEventType) -> None:  # pragma: no cover
         pass
 
-    def _parse_text_event(self, _: _TextEvent) -> None:  # pragma: no cover
+    def _parse_text_event(self, _: TextEventType) -> None:  # pragma: no cover
         pass
 
     def _parse_data_event(self, _: DataEventType) -> None:  # pragma: no cover
         pass
 
     # * Property parsing logic
-    def _parseprop(self, event: EventType, key: str, value: Any):
+    def _parseprop(self, event: EventType, key: str, value: Any) -> None:
         """Reduces boilerplate for `parse_event()` delegate methods.
 
         Not to be used unless helper `_parse_*` methods aren't useful.
@@ -125,43 +127,43 @@ class _FLObject(abc.ABC):
         self._events[key] = event
         setattr(self, "_" + key, value)
 
-    def _parse_bool(self, event: _ByteEvent, key: str):
-        """`self._parseprop` for boolean properties."""
+    def _parse_bool(self, event: ByteEventType, key: str) -> None:
+        """`self._parseprop` for bool properties."""
         self._parseprop(event, key, event.to_bool())
 
-    def _parse_B(self, event: _ByteEvent, key: str):  # noqa
+    def _parse_B(self, event: ByteEventType, key: str) -> None:  # noqa
         """`self._parseprop` for uint8 properties."""
         self._parseprop(event, key, event.to_uint8())
 
-    def _parse_b(self, event: _ByteEvent, key: str):
+    def _parse_b(self, event: ByteEventType, key: str) -> None:
         """`self._parseprop` for int8 properties."""
         self._parseprop(event, key, event.to_int8())
 
-    def _parse_H(self, event: _WordEvent, key: str):  # noqa
+    def _parse_H(self, event: WordEventType, key: str) -> None:  # noqa
         """`self._parseprop` for uint16 properties."""
         self._parseprop(event, key, event.to_uint16())
 
-    def _parse_h(self, event: _WordEvent, key: str):
+    def _parse_h(self, event: WordEventType, key: str) -> None:
         """`self._parseprop` for int16 properties."""
         self._parseprop(event, key, event.to_int16())
 
-    def _parse_I(self, event: _DWordEvent, key: str):  # noqa
+    def _parse_I(self, event: DWordEventType, key: str) -> None:  # noqa
         """`self._parseprop` for uint32 properties."""
         self._parseprop(event, key, event.to_uint32())
 
-    def _parse_i(self, event: _DWordEvent, key: str):
+    def _parse_i(self, event: DWordEventType, key: str) -> None:
         """`self._parseprop` for int32 properties."""
         self._parseprop(event, key, event.to_int32())
 
-    def _parse_s(self, event: _TextEvent, key: str):
+    def _parse_s(self, event: TextEventType, key: str) -> None:
         """`self._parseprop` for string properties."""
         self._parseprop(event, key, event.to_str())
 
-    def _parse_color(self, event: _ColorEvent, key: str = "color"):
+    def _parse_color(self, event: ColorEventType, key: str = "color") -> None:
         """`self._parseprop` for Color properties."""
         self._parseprop(event, key, event.to_color())
 
-    def _parse_flobject(self, event: EventType, key: str, value: Any):
+    def _parse_flobject(self, event: EventType, key: str, value: Any) -> None:
         """`self._parseprop` for `FLObject` properties.
 
         e.g `Channel.delay` is of type `ChannelDelay` which is itself an
@@ -173,11 +175,18 @@ class _FLObject(abc.ABC):
         obj: _FLObject = getattr(self, "_" + key)
         obj.parse_event(event)
 
-    def _save(self) -> Iterable[EventType]:
-        """Returns the events stored in `self._events` as an iterable."""
-        return self._events.values()
+    def _save(self) -> List[EventType]:
+        """Dumps pending changes into the events and returns them a list."""
+        return list(self._events.values())
 
-    def __init__(self, project=None, max_instances: Optional[MaxInstances] = None):
+    def __init__(
+        self,
+        project: "Optional[Project]" = None,
+        max_instances: Optional[MaxInstances] = None,
+    ) -> None:
         self._project = project
         self._max_instances = max_instances
         self._events: Dict[str, EventType] = {}
+
+
+_FLObjectType = TypeVar("_FLObjectType", bound=_FLObject)

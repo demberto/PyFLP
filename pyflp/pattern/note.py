@@ -17,7 +17,7 @@ from typing import List
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import EventID, _DataEvent
+from pyflp._event import EventIDType, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _IntProperty, _UIntProperty
 
@@ -90,7 +90,7 @@ class PatternNote(_FLObject):
 
 
 class PatternNotesEvent(_DataEvent):
-    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+    def __init__(self, index: int, id_: EventIDType, data: bytes) -> None:
         super().__init__(index, id_, data)
         self.notes: List[PatternNote] = []
         if len(data) % 24 != 0:  # pragma: no cover

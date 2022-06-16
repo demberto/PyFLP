@@ -13,17 +13,17 @@
 
 import enum
 import struct
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import colour
 
 from pyflp._event import (
+    ByteEventType,
     DataEventType,
     DWordEventType,
     EventType,
-    _ByteEvent,
-    _TextEvent,
-    _WordEvent,
+    TextEventType,
+    WordEventType,
 )
 from pyflp._flobject import _FLObject
 from pyflp._properties import (
@@ -57,7 +57,7 @@ class Channel(_FLObject):
 
     def __init__(self):
         super().__init__()
-        self._layer_children = []
+        self._layer_children: List[int] = []
 
         # Since default event isn't stored and having this event means it is zipped.
         self._zipped = False
@@ -69,7 +69,7 @@ class Channel(_FLObject):
         self._env_lfos: Dict[str, ChannelEnvelopeLFO] = {}
         self.__envlfo_events: List[ChannelEnvelopeLFOEvent] = []
 
-    def _setprop(self, n, v):
+    def _setprop(self, n: str, v: Any) -> None:
         if n == "volume":
             self.levels.volume = v
         elif n == "pan":
@@ -224,7 +224,7 @@ class Channel(_FLObject):
 
     See `name` also."""
 
-    index: int = _UIntProperty()
+    index: Optional[int] = _UIntProperty()
 
     volume: Optional[int] = _UIntProperty(max_=12800)
     """Min: 0, Max: 12800, Default: 10000."""
@@ -232,7 +232,7 @@ class Channel(_FLObject):
     pan: Optional[int] = _UIntProperty(max_=12800)
     """Min: 0, Max: 12800, Default: 6400."""
 
-    color: colour.Color = _ColorProperty()
+    color: Optional[colour.Color] = _ColorProperty()
 
     target_insert: Optional[int] = _IntProperty(min_=-1)
     """The index of the `Insert` the channel is routed to."""
@@ -247,16 +247,8 @@ class Channel(_FLObject):
     """Whether the channel is locked in the channel rack. Paired with
     the `Channel.enabled`, it represents actual state of the channel."""
 
-    @property
-    def zipped(self) -> bool:
-        """Whether the channel is in zipped state."""
-        return getattr(self, "_zipped", False)
-
-    @zipped.setter
-    def zipped(self, value: bool):
-        if not isinstance(value, bool):
-            raise TypeError
-        self._setprop("zipped", value)
+    zipped: bool = _BoolProperty()
+    """Whether the channel is in zipped state."""
 
     root_note: Optional[int] = _IntProperty()
     """Miscellaneous settings -> Root note. Min: 0 (C0), Max: 131 (B10)"""
@@ -381,7 +373,7 @@ class Channel(_FLObject):
             return self._fx.parse_event(e)
         return super().parse_event(e)
 
-    def _parse_byte_event(self, e: _ByteEvent):
+    def _parse_byte_event(self, e: ByteEventType) -> None:
         if e.id_ == Channel.EventID.Enabled:
             self._parse_bool(e, "enabled")
         elif e.id_ == Channel.EventID._Vol:
@@ -404,7 +396,7 @@ class Channel(_FLObject):
         elif e.id_ == Channel.EventID.Locked:
             self._parse_bool(e, "locked")
 
-    def _parse_word_event(self, e: _WordEvent):
+    def _parse_word_event(self, e: WordEventType) -> None:
         if e.id_ == Channel.EventID.New:
             self._parse_H(e, "index")
         elif e.id_ == Channel.EventID._Volume:
@@ -417,7 +409,7 @@ class Channel(_FLObject):
         elif e.id_ == Channel.EventID.Swing:
             self._parse_H(e, "swing")
 
-    def _parse_dword_event(self, e: DWordEventType):
+    def _parse_dword_event(self, e: DWordEventType) -> None:
         if e.id_ == Channel.EventID.Color:
             self._parse_color(e, "color")
         elif e.id_ == Channel.EventID.CutSelfCutBy:
@@ -437,7 +429,7 @@ class Channel(_FLObject):
         elif e.id_ == Channel.EventID.AUSampleRate:
             self._parse_I(e, "au_sample_rate")
 
-    def _parse_text_event(self, e: _TextEvent):
+    def _parse_text_event(self, e: TextEventType) -> None:
         if e.id_ == Channel.EventID.DefaultName:
             self._parse_s(e, "default_name")
         elif e.id_ == Channel.EventID.SamplePath:

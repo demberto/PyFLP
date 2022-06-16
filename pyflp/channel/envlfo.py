@@ -16,7 +16,7 @@ from typing import Any
 
 from bytesioex import BytesIOEx
 
-from pyflp._event import EventID, _DataEvent
+from pyflp._event import EventIDType, _DataEvent
 from pyflp._flobject import _FLObject
 from pyflp._properties import _BoolProperty, _EnumProperty, _IntProperty, _UIntProperty
 from pyflp._validators import _IntValidator
@@ -29,7 +29,7 @@ EnvelopeLFONames = ("Panning", "Volume", "Pitch", "Mod X", "Mod Y")
 class ChannelEnvelopeLFOEvent(_DataEvent):
     CHUNK_SIZE = 68
 
-    def __init__(self, index: int, id_: EventID, data: bytes) -> None:
+    def __init__(self, index: int, id_: EventIDType, data: bytes) -> None:
         super().__init__(index, id_, data)
         self.__r = r = BytesIOEx(data)
         self.__flags = ChannelEnvelopeLFO._Flags(r.read_I())  # 4

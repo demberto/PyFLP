@@ -23,6 +23,11 @@ from pyflp._event import _DataEvent
 from pyflp.constants import DATA
 from pyflp.insert.insert import Insert
 
+try:
+    from typing import Final
+except ImportError:
+    from typing_extensions import Final
+
 __all__ = ["InsertParamsEvent"]
 
 
@@ -48,7 +53,7 @@ class InsertParamsEvent(_DataEvent):
         BandQ = 225
         HighQ = 226
 
-    ID = DATA + 17
+    ID: Final = DATA + 17
 
     def __init__(self, ev: _DataEvent):
         super().__init__(ev.index, InsertParamsEvent.ID, ev.data)

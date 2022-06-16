@@ -16,14 +16,7 @@
 import pytest
 from colour import Color
 
-from pyflp._event import (
-    _ByteEvent,
-    _ColorEvent,
-    _DataEvent,
-    _DWordEvent,
-    _TextEvent,
-    _WordEvent,
-)
+from pyflp._event import _DWordEvent
 from pyflp.constants import BYTE, DATA, DWORD, TEXT, WORD
 
 
