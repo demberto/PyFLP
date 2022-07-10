@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.1] - Unreleased
+## [1.1.1] - 2022-07-10
+
+### Added
+
+- Avoid mkdocs warnings in tox.
 
 ### Changed
 
@@ -14,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- [#8](https://github.com/demberto/PyFLP/issues/8).
 - Type hints and type variables are much better.
 - `FSoftClipper` property setter typo caused it to be set to zero.
 - `ChannelParameters._save()` didn't return an event.
