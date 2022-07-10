@@ -90,7 +90,8 @@ class _VSTPluginParser(_FLObject):
         elif e.id_ == self.EventID.fourcc:
             self.fourcc = data.decode("ascii")
         elif e.id_ == self.EventID.guid:
-            self.guid = data.decode("ascii")
+            # TODO #8
+            self.guid = data  # .decode("ascii")
         elif e.id_ == self.EventID.state:
             self.state = data
 
@@ -188,8 +189,8 @@ class VSTPlugin(_Plugin):
 
     Reserved by plugin dev on Steinberg portal (in ASCII)."""
 
-    guid: Optional[str] = _StrProperty(minsize=16, mustascii=True)
-    """Waveshell unique plugin ID. Minimum size: 16."""
+    # TODO Thought it was related to Waveshells only but see issue #8
+    guid: Optional[bytes] = _BytesProperty()
 
     state: bytes = _BytesProperty()
     """The actual plugin data. Plugin specific.

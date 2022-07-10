@@ -55,8 +55,12 @@ class PatternNote(_FLObject):
     release: int = _UIntProperty(max_=128)
     """Min: 0, Max: 128."""
 
-    midi_channel: int = _UIntProperty(max_=15)
-    """A.k.a note color. Min: 0, Max: 15."""
+    # See issue #8
+    midi_channel: int = _UIntProperty()
+    """For note colors, min: 0, max: 15.
+
+    128 for MIDI dragged into the piano roll.
+    """
 
     pan: int = _IntProperty(min_=-64, max_=64)
     """Min: -64, Max: 64."""
