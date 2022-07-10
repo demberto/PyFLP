@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Wait action in CI workflow.
+- `setup-cfg-fmt` pre-commit hook, [why?](https://github.com/asottile/setup-cfg-fmt/issues/147)
 
 ## [1.1.0] - 2022-05-29
 
