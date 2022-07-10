@@ -10,12 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `_FLObject._save` always returns a list now.
+- CI: Merge `dev` and `publish` workflows into one.
 
 ### Fixed
 
 - Type hints and type variables are much better.
 - `FSoftClipper` property setter typo caused it to be set to zero.
 - `ChannelParameters._save()` didn't return an event.
+
+### Removed
+
+- Wait action in CI workflow.
 
 ## [1.1.0] - 2022-05-29
 
