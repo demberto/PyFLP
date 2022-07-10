@@ -56,8 +56,8 @@ regex = '''
   '''
 
 [tool.tbump.git]
-message_template = "Bump to {new_version}"
-tag_template = "{new_version}"
+message_template = "version: bump to {new_version}"
+tag_template = "v{new_version}"
 
 # For each file to patch, add a [[tool.tbump.file]] config
 # section containing the path of the file, relative to the
