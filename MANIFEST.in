@@ -6,7 +6,7 @@ recursive-include docs *.txt
 recursive-include pyflp *.py
 recursive-include tests *.md
 recursive-include tests *.py
-recursive-include tests *.flp
+recursive-include tests *.zip
 recursive-include *.yaml
 recursive-include *.yml
 include VERSION
