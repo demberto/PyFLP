@@ -1,0 +1,17 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "coverage: all",
+      "type": "shell",
+      "command": "coverage run -m pytest && coverage combine && coverage report && coverage html && start htmlcov/index.html"
+    },
+    {
+      "label": "venv: activate",
+      "type": "shell",
+      "command": "./venv/Scripts/activate"
+    }
+  ]
+}
