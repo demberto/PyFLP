@@ -11,6 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
+import sys
 from typing import List, Optional
 
 from pyflp._event import DataEventType
@@ -27,7 +28,8 @@ class FNoteBook2(_EffectPlugin):
 
     # 0,0,0,0 4b
     # active page number 4b
-    # page number 4b - (data length / 2) varint - text in utf16 for each page
+    # page number 4b - (data length / 2) varint - text in utf16 or utf8
+    # for each page
     # 255, 255, 255, 255 4b
     # Editing enabled or disabled 1b
 
@@ -49,7 +51,8 @@ class FNoteBook2(_EffectPlugin):
         self._r.seek(8)
         for page_num, page in enumerate(value):
             self._r.write_I(page_num)  # TODO: or page_num + 1?
-            wstr = page.encode("utf-16", errors="ignore")
+            enc = "utf-8" if sys.platform == "darwin" else "utf-16"
+            wstr = page.encode(enc, errors="ignore")
             self._r.write_v(len(wstr))
             self._r.write(wstr)  # NULL bytes are not appended at the end
         self._pages = value
@@ -90,7 +93,8 @@ class FNoteBook2(_EffectPlugin):
                 break
             size = r.read_v()
             buffer = r.read(size * 2)
-            self._pages.append(buffer.decode("utf-16", errors="ignore"))
+            enc = "utf-8" if sys.platform == "darwin" else "utf-16"
+            self._pages.append(buffer.decode(enc, errors="ignore"))
         self._editable = r.read_bool()
 
     def __init__(self) -> None:
