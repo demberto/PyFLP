@@ -62,7 +62,7 @@ class PatternNote(_FLObject):
     128 for MIDI dragged into the piano roll.
     """
 
-    pan: int = _IntProperty(min_=-64, max_=64)
+    pan: int = _IntProperty(min_=-128, max_=128)
     """Min: -64, Max: 64."""
 
     velocity: int = _UIntProperty(max_=128)
