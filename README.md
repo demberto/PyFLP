@@ -28,7 +28,7 @@ PyFLP requires Python 3.6+
 pip install --upgrade pyflp
 ```
 
-[Alternate ways to install](https://pyflp.rtfd.io/en/latest/installation).
+[Alternate ways to install](https://pyflp.rtfd.io/en/stable/installation).
 
 ## ▶ Usage
 
@@ -37,7 +37,7 @@ from pyflp import Parser
 project = Parser().parse("/path/to/efelpee.flp")
 ```
 
-More [examples](https://pyflp.rtfd.io/en/latest/handbook/)
+More [examples](https://pyflp.rtfd.io/en/stable/handbook/)
 
 ## 🙏 Acknowledgements
 
@@ -79,7 +79,7 @@ The code in this project has been licensed under the [GNU Public License v3][gpl
 [codecov-badge]: https://codecov.io/gh/demberto/PyFLP/branch/master/graph/badge.svg?token=RGSRMMF8PF
 [codefactor-badge]: https://www.codefactor.io/repository/github/demberto/pyflp/badge
 [covenant-shield]: https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg
-[docs-shield]: https://readthedocs.org/projects/pyflp/badge/?version=latest
+[docs-shield]: https://readthedocs.org/projects/pyflp/badge/?version=stable
 [license-shield]: https://img.shields.io/pypi/l/pyflp
 [pyversions-shield]: https://img.shields.io/pypi/pyversions/pyflp
 [version-shield]: https://img.shields.io/pypi/v/pyflp
@@ -92,6 +92,6 @@ The code in this project has been licensed under the [GNU Public License v3][gpl
 [codefactor-link]: https://www.codefactor.io/repository/github/demberto/pyflp
 [contributors-guide]: https://github.com/demberto/PyFLP/blob/master/CONTRIBUTING.md
 [covenant-link]: https://github.com/demberto/PyFLP/blob/master/CODE_OF_CONDUCT.md
-[docs-link]: https://pyflp.readthedocs.io/en/latest/
+[docs-link]: https://pyflp.readthedocs.io/en/stable/
 [gpl3-link]: https://www.gnu.org/licenses/gpl-3.0.en.html
 [license-link]: https://github.com/demberto/PyFLP/blob/master/LICENSE
