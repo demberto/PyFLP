@@ -8,7 +8,7 @@ recursive-include docs *.txt
 recursive-include pyflp *.py
 recursive-include tests *.md
 recursive-include tests *.py
-recursive-include tests *.zip
+recursive-include tests *.flp
 include *.txt
 include *.yaml
 include *.yml

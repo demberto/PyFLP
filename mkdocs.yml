@@ -8,23 +8,16 @@ nav:
   - Overview: index.md
   - Installation: installation.md
   - Handbook: handbook.md
+  - Models: models.md
   - FLP Format: flp-format.md
-  - Reference: reference.md
   - Contributing: contributing.md
   - Report a bug: https://github.com/demberto/PyFLP/issues
-theme:
-  name: material
-  palette:
-    - scheme: default
-      toggle:
-        icon: material/toggle-switch-off-outline
-        name: Switch to dark mode
-    - scheme: slate
-      toggle:
-        icon: material/toggle-switch
-        name: Switch to light mode
 markdown_extensions:
-  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 plugins:
   - include-markdown
   - search
@@ -32,7 +25,12 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          rendering:
+          options:
+            heading_level: 5
+            show_bases: no
             show_if_no_docstring: yes
+            show_root_full_path: no
+            show_root_heading: yes
+            show_source: no
       watch:
         - pyflp

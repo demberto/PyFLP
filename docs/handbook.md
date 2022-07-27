@@ -1,66 +1,48 @@
 # Handbook
 
-PyFLP can be used for automation purposes e.g. finding/setting project titles,
-artists names, genre etc. and also by people who are interested more about the
-FLP format. You can even repair a broken FLP, *ofcourse by yourself*.
+## Parsing
 
-## Initialisation
-
-```Python
-from pyflp import Parser
-project = Parser(verbose=True).parse("/path/to/efelpee.flp")
+```py
+import pyflp
+project = pyflp.parse("/path/to/parse.flp")
 ```
 
 ## Saving
 
-```Python
-project.save(save_path="/path/to/save.flp")
+```py
+import pyflp
+pyflp.save(project, "/path/to/save.flp")
 ```
 
 ### Get some channel information
 
-```Python
+```py
 for channel in project.channels:
-    print(channel.name)     # Channel name
-    print(channel.kind)     # Sampler, Audio, Instrument, Layer, ...
-    # The location of a sample used in a sampler or plain audio
-    print(channel.sample_path)
+    print(channel.name)         # (1)
+    print(channel.type)         # (2)
+    print(channel.sample_path)  # (3)
 ```
+
+1. The user set name of a channel as is visible in FL Studio.
+2. Sampler, Audio, Instrument, Layer, see `ChannelType`.
+3. The location of a sample used in a sampler or plain audio
 
 There's a lot more information you can get (almost every type of information
 stored about a channel).
 
-!!! tip "For more information"
-    See [Channel](reference/channel.md).
-
 ### What about patterns?
 
-```Python
+```py
 for pattern in project.patterns:
     print(pattern.name)
-    print(len(pattern.notes))   # The total amount of notes a pattern holds
+    print(len(pattern.notes))   # (1)
 ```
 
-#### You can even get information about a particular note
+1. The total number of notes in a pattern.
 
-```Python
-...
+You can even get information about a particular note
+
+```py
 for note in pattern.notes:
     print(note.key)
-```
-
-!!! tip "For more information"
-    See [Pattern](reference/pattern.md) and [PatternNote](reference/pattern.md#PatternNote)
-
-!!! hint "Docstrings"
-    Almost all properties have a meaningful docstring, and many classes have a
-    direct link to the FL Studio manual page to point out what they implement.
-
-!!! note
-    There is much more, check the [Reference](reference.md)
-
-### Export it as a ZIP looped package
-
-```Python
-project.create_zip(path="/path/to/flp.zip")
 ```

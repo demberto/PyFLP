@@ -11,5 +11,21 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-from .parser import Parser
-from .project import Project
+"""
+PyFLP - FL Studio project file parser
+=====================================
+
+To load a project file:
+
+    >>> import pyflp
+    >>> project = pyflp.parse("/path/to/parse.flp")
+
+To save a project back:
+
+    >>> pyflp.save(project, "/path/to/save.flp")
+
+Full docs are available at https://pyflp.rtfd.io.
+"""
+
+from .reader import parse
+from .writer import save
