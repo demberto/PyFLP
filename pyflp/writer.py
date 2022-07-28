@@ -127,8 +127,11 @@ def save(project: Project, file: os.PathLike) -> None:
             props["arp.slide"] = arp.slide
             props["arp.repeat"] = arp.repeat
 
+        # TODO default_name event needs to be updated if plugin type changes
         elif id == EventID.ChPlugin and parse_channel:
-            pass
+            plugin = cur_channel.plugin
+            if getattr(plugin, "DEFAULT_NAME", None) == cur_channel.default_name:
+                props.update(dataclasses.asdict(plugin))
 
         elif id == EventID.ChPlugWrapper and parse_channel:
             pass

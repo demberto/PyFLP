@@ -24,6 +24,7 @@ from typing import ClassVar, Dict, List, Optional, TypeVar
 import colour
 
 from .events import *
+from .events import PluginEvent
 
 __all__ = [
     "DELPHI_EPOCH",
@@ -60,6 +61,7 @@ __all__ = [
     "FruityFastDist",
     "FruityFastDistEvent",
     "FruityNotebook2",
+    "FruityNotebook2Event",
     "FruitySend",
     "FruitySendEvent",
     "FruitySoftClipper",
@@ -371,7 +373,7 @@ class EventID(IntEnum):
     # Plugin wrapper data, windows pos of plugin etc, currently
     # selected plugin wrapper page; minimized, closed or not
     ChPlugWrapper = SlotPlugWrapper = (DATA + 4, UnknownDataEvent)  # TODO
-    ChPlugin = SlotPlugin = (DATA + 5, UnknownDataEvent)
+    ChPlugin = SlotPlugin = (DATA + 5, PluginEvent)
     ChParameters = (DATA + 7, ChannelParametersEvent)
     ChEnvelopeLFO = (DATA + 10, ChannelEnvelopeLFOEvent)
     ChLevels = (DATA + 11, ChannelLevelsEvent)
@@ -968,6 +970,8 @@ class InsertRoute:
 
 @dataclass
 class InsertSlot:
+    """Represents an effect slot in an `Insert` / mixer channel."""
+
     color: Optional[colour.Color] = None
     controllers: List[RemoteController] = field(default_factory=list)
     default_name: Optional[str] = None
@@ -981,10 +985,13 @@ class InsertSlot:
 
     name: Optional[str] = None
     plugin: Optional[object] = None
+    """The effect loaded into the slot."""
 
 
 @dataclass
 class Insert:
+    """Represents a channel in the mixer."""
+
     bypassed: Optional[bool] = None
     """All slots are bypassed."""
 
@@ -1106,13 +1113,14 @@ class PluginIOInfo:
 
 @dataclass
 class VSTPlugin:
+    DEFAULT_NAME: ClassVar[str] = "Fruity Wrapper"
     fourcc: Optional[str] = None
     """A unique four character code identifying the plugin.
 
     A database can be found on Steinberg's developer portal.
     """
 
-    guid: Optional[bytes] = None  # Related: Issue #8
+    guid: Optional[bytes] = None  # See issue #8
     midi_in: Optional[int] = None
     """MIDI Input Port. Min: 0, Max: 255."""
 
@@ -1140,13 +1148,14 @@ class VSTPlugin:
     vst_number: Optional[int] = None  # TODO
 
 
-class BooBassEvent(StructEventBase):
+class BooBassEvent(PluginEvent):
     SIZE = 16
     PROPS = dict.fromkeys(("_u1", "bass", "mid", "high"), "I")  # _u1 = [1, 0, 0, 0]
 
 
 @dataclass
 class BooBass:
+    DEFAULT_NAME: ClassVar[str] = "BooBass"
     bass: Optional[int] = None
     """Min: 0, Max: 65535, Default: 32767."""
 
@@ -1157,13 +1166,14 @@ class BooBass:
     """Min: 0, Max: 65535, Default: 32767."""
 
 
-class FruityBalanceEvent(StructEventBase):
+class FruityBalanceEvent(PluginEvent):
     SIZE = 8
     PROPS = {"pan": "I", "volume": "I"}
 
 
 @dataclass
 class FruityBalance:
+    DEFAULT_NAME: ClassVar[str] = "Fruity Balance"
     pan: Optional[int] = None
     """Min: -128, Max: 127, Default: 0 (0.50, Centred). Linear."""
 
@@ -1171,7 +1181,7 @@ class FruityBalance:
     """Min: 0, Max: 320, Default: 256 (0.80, 0dB). Logarithmic."""
 
 
-class FruityFastDistEvent(StructEventBase):
+class FruityFastDistEvent(PluginEvent):
     SIZE = 20
     PROPS = dict.fromkeys(("pre", "threshold", "kind", "mix", "post"), "I")
 
@@ -1183,6 +1193,7 @@ class FruityFastDistKind(IntEnum):
 
 @dataclass
 class FruityFastDist:
+    DEFAULT_NAME: ClassVar[str] = "Fruity Fast Dist"
     kind: Optional[FruityFastDistKind] = None
     mix: Optional[int] = None
     """Min: 0 (0%), Max: 128 (100%), Default: 128 (100%). Linear."""
@@ -1200,18 +1211,39 @@ class FruityFastDist:
 @dataclass
 class FruityNotebook2:
     CODEC: ClassVar[str] = "utf-16-le" if platform() == "Windows" else "utf-8"
+    DEFAULT_NAME: ClassVar[str] = "Fruity Notebook 2"
     active_page: Optional[int] = None
     editable: Optional[bool] = None
     pages: List[str] = field(default_factory=list)
 
 
-class FruitySendEvent(StructEventBase):
+class FruityNotebook2Event(PluginEvent):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data, False)
+        self.props = {"pages": []}
+
+        self.stream.seek(4)
+        self.props["active_page"] = self.stream.read_I()
+        while True:
+            page_num = self.stream.read_i()
+            if page_num == -1:
+                break
+
+            size = self.stream.read_v()
+            raw = self.stream.read(size)
+            page = raw.decode(FruityNotebook2.CODEC)
+            self.props["pages"].append(page)
+        self.props["editable"] = self.stream.read_bool()
+
+
+class FruitySendEvent(PluginEvent):
     SIZE = 16
     PROPS = dict.fromkeys(("pan", "dry", "volume", "send_to"), "I")
 
 
 @dataclass
 class FruitySend:
+    DEFAULT_NAME: ClassVar[str] = "Fruity Send"
     dry: Optional[int] = None
     """Min: 0 (0%), Max: 256 (100%), Default: 256 (100%). Linear."""
 
@@ -1225,13 +1257,14 @@ class FruitySend:
     """Min: 0 (-INF db, 0.00), Max: 320 (5.6 dB, 1.90), Default: 256 (0.0 dB, 1.00). Logarithmic."""  # noqa
 
 
-class FruitySoftClipperEvent(StructEventBase):
+class FruitySoftClipperEvent(PluginEvent):
     SIZE = 8
     PROPS = {"threshold": "I", "post": "I"}
 
 
 @dataclass
 class FruitySoftClipper:
+    DEFAULT_NAME: ClassVar[str] = "Fruity Soft Clipper"
     post: Optional[int] = None
     """Min: 0, Max: 160, Default: 128 (80%). Linear."""
 
@@ -1239,7 +1272,7 @@ class FruitySoftClipper:
     """Min: 1, Max: 127, Default: 100 (0.60, -4.4dB). Logarithmic."""
 
 
-class SoundgoodizerEvent(StructEventBase):
+class SoundgoodizerEvent(PluginEvent):
     SIZE = 12
     PROPS = dict.fromkeys(("_u1", "mode", "amount"), "I")
 
@@ -1253,12 +1286,13 @@ class SoundgoodizerMode(IntEnum):
 
 @dataclass
 class Soundgoodizer:
+    DEFAULT_NAME: ClassVar[str] = "Soundgoodizer"
     mode: Optional[SoundgoodizerMode] = None
     amount: Optional[int] = None
     """Min: 0, Max: 1000, Default: 600. Logarithmic."""
 
 
-class FruityStereoEnhancerEvent(StructEventBase):
+class FruityStereoEnhancerEvent(PluginEvent):
     SIZE = 24
     PROPS = dict.fromkeys(
         (
@@ -1286,6 +1320,7 @@ class StereoEnhancerPhaseInversion(IntEnum):
 
 @dataclass
 class FruityStereoEnhancer:
+    DEFAULT_NAME: ClassVar[str] = "Fruity Stereo Enhancer"
     effect_position: Optional[StereoEnhancerEffectPosition] = None
     """Default: StereoEnhancerEffectPosition.Post."""
 

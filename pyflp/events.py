@@ -46,6 +46,7 @@ __all__ = [
     "I16Event",
     "I32Event",
     "NEW_TEXT_IDS",
+    "PluginEvent",
     "StrEventBase",
     "StructEventBase",
     "TEXT",
@@ -435,9 +436,10 @@ class StructEventBase(DataEventBase, abc.ABC):
     SIZE: int = 0
     PROPS: dict[str, Union[str, int]] = {}
 
-    def __init__(self, id: int, data: bytes) -> None:
+    def __init__(self, id: int, data: bytes, truncate=True) -> None:
         super().__init__(id, data)
         self.props: Dict[str, Any] = {}
+        self._truncate = truncate
 
         if self.SIZE != 0 and len(data) != self.SIZE:
             warnings.warn(f"Expected chunk size {self.SIZE} for {id}; got {len(data)}")
@@ -450,6 +452,10 @@ class StructEventBase(DataEventBase, abc.ABC):
                 self.props[name] = self.stream.read(type_or_size)
 
     def __bytes__(self) -> bytes:
+        self.stream.seek(0)
+        if self._truncate:
+            self.stream.truncate(self.stream_len)  # Prevent accidental oversizing
+
         for name, type_or_size in self.PROPS.items():
             value = self.props[name]
             if isinstance(type_or_size, str) and value is not None:
@@ -457,11 +463,15 @@ class StructEventBase(DataEventBase, abc.ABC):
                 writefunc(value)
             else:
                 self.stream.write(value)
-        self.stream.truncate(self.stream_len)  # Prevent accidental oversizing
         return super().__bytes__()
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__} id={self.id!r}, size={self.stream_len}, props={self.props!r}>"  # noqa
+
+
+class PluginEvent(StructEventBase):
+    def __init__(self, data: bytes, truncate=True) -> None:
+        super().__init__(DATA + 5, data, truncate)
 
 
 class DataArrayEvent(DataEventBase):

@@ -112,7 +112,11 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
             else:
                 event_type = UnknownDataEvent
 
-        events.append(event_type(id, value))
+        if event_type == PluginEvent:
+            event = event_type(value)
+        else:
+            event = event_type(id, value)
+        events.append(event)
 
     cur_arrangement = Arrangement()
     project.arrangements[0] = cur_arrangement  # For projects not having one
@@ -233,11 +237,12 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                 arp.repeat = props["arp.repeat"]
 
             elif id == EventID.ChPlugin and parse_channel:
-                default_name = cur_channel.default_name
-                if default_name == "BooBass":
-                    cur_channel.plugin = BooBass()
-                elif default_name == "Fruity Wrapper":
-                    cur_channel.plugin = VSTPlugin()
+                for plugin_t, event_t in {BooBass: BooBassEvent}.items():
+                    if cur_channel.default_name == plugin_t.DEFAULT_NAME:
+                        event = event_t(event._raw)
+                        cur_channel.plugin = plugin = plugin_t()
+                        for field in dataclasses.fields(plugin):
+                            setattr(plugin, field.name, event.props[field.name])
 
             elif id == EventID.ChPolyphony:
                 polyphony = cur_channel.polyphony
@@ -416,55 +421,19 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
             elif id == EventID.SlotPlugin:
                 default_name = cur_slot.default_name
 
-                if default_name == "Fruity Notebook 2":
-                    stream.seek(4)
-                    cur_slot.plugin = fnb2 = FruityNotebook2()
-                    fnb2.active_page = stream.read_I()
-
-                    while True:
-                        page_num = stream.read_i()
-                        if page_num == -1:
-                            break
-
-                        raw = stream.read(stream.read_v())
-                        page = raw.decode(FruityNotebook2.CODEC)
-                        fnb2.pages.append(page)
-                    fnb2.editable = stream.read_bool()
-                    continue
-
-                elif default_name == "Fruity Wrapper":
-                    plugin_t = VSTPlugin
-                    continue
-
-                elif default_name == "Fruity Balance":
-                    event_t = FruityBalanceEvent
-                    plugin_t = FruityBalance
-
-                elif default_name == "Fruity Fast Dist":
-                    event_t = FruityFastDistEvent
-                    plugin_t = FruityFastDist
-
-                elif default_name == "Fruity Send":
-                    event_t = FruitySendEvent
-                    plugin_t = FruitySend
-
-                elif default_name == "Fruity Soft Clipper":
-                    event_t = FruitySoftClipperEvent
-                    plugin_t = FruitySoftClipper
-
-                elif default_name == "Fruity Stereo Enhancer":
-                    event_t = FruityStereoEnhancerEvent
-                    plugin_t = FruityStereoEnhancer
-
-                elif default_name == "Soundgoodizer":
-                    event_t = SoundgoodizerEvent
-                    plugin_t = Soundgoodizer
-
-                else:
-                    continue
-
-                event = event_t(id, value)
-                cur_slot.plugin = plugin_t(**event.props)
+                for plugin_t, event_t in {
+                    FruityBalance: FruityBalanceEvent,
+                    FruityFastDist: FruityFastDistEvent,
+                    FruityNotebook2: FruityNotebook2Event,
+                    FruitySend: FruitySendEvent,
+                    FruitySoftClipper: FruitySoftClipperEvent,
+                    FruityStereoEnhancer: FruityStereoEnhancerEvent,
+                }.items():
+                    if default_name == plugin_t.DEFAULT_NAME:
+                        event = event_t(event._raw)
+                        cur_slot.plugin = plugin = plugin_t()
+                        for field in dataclasses.fields(plugin):
+                            setattr(plugin, field.name, event.props[field.name])
 
             elif id == EventID.PatNew:
                 try:
