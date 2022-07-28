@@ -653,7 +653,7 @@ class Channel:
     Valid only if for layer channels (i.e. `ChannelType.Layer`).
     """
 
-    color: Optional[colour.Color] = None
+    color: colour.Color = field(default_factory=colour.Color)
     controllers: List[RemoteController] = field(default_factory=list)
     cut_group: List[int] = field(default_factory=list)
     """Cut group in the form of (Cut self, cut by)."""
@@ -782,7 +782,7 @@ class PatternController:
 
 @dataclass
 class Pattern:
-    color: Optional[colour.Color] = None
+    color: colour.Color = field(default_factory=colour.Color)
     controllers: List[PatternController] = field(default_factory=list)
     name: Optional[str] = None
     notes: List[PatternNote] = field(default_factory=list)
@@ -856,7 +856,7 @@ class TimeMarker:
 
 @dataclass
 class Track:
-    color: Optional[colour.Color] = None
+    color: colour.Color = field(default_factory=colour.Color)
     enabled: Optional[bool] = None
     grouped: Optional[bool] = None
     """Whether grouped with the track above (index - 1) or not."""
@@ -972,7 +972,7 @@ class InsertRoute:
 class InsertSlot:
     """Represents an effect slot in an `Insert` / mixer channel."""
 
-    color: Optional[colour.Color] = None
+    color: colour.Color = field(default_factory=colour.Color)
     controllers: List[RemoteController] = field(default_factory=list)
     default_name: Optional[str] = None
     """'Fruity Wrapper' for VST/AU plugins or factory name for native plugins."""
@@ -996,7 +996,7 @@ class Insert:
     """All slots are bypassed."""
 
     channels_swapped: Optional[bool] = None
-    color: Optional[colour.Color] = None
+    color: colour.Color = field(default_factory=colour.Color)
     docked_to: Optional[InsertDock] = None
     enabled: Optional[bool] = None
     """Whether an insert in the mixer is enabled or disabled."""
