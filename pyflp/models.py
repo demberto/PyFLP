@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum, IntFlag, auto
 from platform import platform
-from typing import ClassVar, Dict, List, Optional, TypeVar
+from typing import ClassVar, Dict, Iterator, List, Optional, TypeVar
 
 import colour
 
@@ -1031,6 +1031,9 @@ class Insert:
     Max: 16000 (125% / 5.6dB / 1.90).
     Default: 12800 (100% / 0.0dB / 1.00).
     """
+
+    def __iter__(self) -> Iterator[InsertSlot]:
+        return iter(self.slots)
 
 
 class PanLaw(IntEnum):
