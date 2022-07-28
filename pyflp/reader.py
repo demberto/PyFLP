@@ -261,10 +261,10 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
             elif id == EventID.ChReverb:
                 reverb = cur_channel.fx.reverb
                 if value >= ChannelReverbType.B:
-                    reverb.kind = ChannelReverbType.B
+                    reverb.type = ChannelReverbType.B
                     reverb.mix = value - ChannelReverbType.B
                 else:
-                    reverb.kind = ChannelReverbType.A
+                    reverb.type = ChannelReverbType.A
                     reverb.mix = value
 
             elif id == EventID.ChRootNote:

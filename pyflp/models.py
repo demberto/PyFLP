@@ -501,7 +501,7 @@ class ChannelTime:
 
 @dataclass
 class ChannelReverb:
-    kind: Optional[ChannelReverbType] = None
+    type: Optional[ChannelReverbType] = None
     mix: Optional[int] = 0
     """Reverb mix (dry/wet). Min: 0, Max: 256, Default: 0."""
 
