@@ -830,6 +830,9 @@ class VSTPlugin:
     pitch_bend: Optional[int] = None
     """Pitch bend range (in semitones)."""
 
+    plugin_path: Optional[str] = None
+    """The absolute path to the plugin binary."""
+
     state: Optional[bytes] = None
     """Plugin specific preset data blob."""
 

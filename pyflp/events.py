@@ -17,10 +17,12 @@ from typing import (
     Any,
     Dict,
     Generic,
+    List,
     Optional,
     Sized,
     SupportsBytes,
     Tuple,
+    Type,
     TypeVar,
     Union,
 )
@@ -77,6 +79,7 @@ __all__ = [
     "U64VariableEvent",
     "UnicodeEvent",
     "UnknownDataEvent",
+    "VSTPluginEvent",
     "WORD",
 ]
 
@@ -373,21 +376,27 @@ class VariableSizedEventBase(EventBase[_T], ABC):
         return id + b"\x00"
 
 
-class U64VariableEvent(VariableSizedEventBase):
-    def __len__(self):
-        if self._raw:
-            return 9 + len(self._raw)
-        return 9
+class U64VariableEvent(VariableSizedEventBase[bytes]):
+    def __init__(self, id: int, data: bytes, isascii: bool = False) -> None:
+        super().__init__(id, data)
+        self._isascii = isascii
 
+    def __len__(self) -> int:
+        return 9 if self._raw is None else 9 + len(self._raw)
 
-#     @property
-#     def data(self, value):
-#         self._raw = value.encode("ascii") if isinstance(value, str) else value
+    def __bytes__(self) -> bytes:
+        id = UInt.pack(self.id)
+        length = ULong.pack(len(self._raw))  # 8 bytes for denoting size, wth IL?
+        return id + length + self._raw if self._raw else id + length
 
-#     def __bytes__(self):
-#         id = UInt.pack(self.id)
-#         length = ULong.pack(len(self._raw))  # 8 bytes for denoting size, IL?
-#         return id + length + self._raw if self._raw else id + length
+    @property
+    def value(self) -> Union[bytes, str, None]:
+        return self._raw.decode("ascii") if self._isascii else self._raw
+
+    @value.setter
+    def value(self, value: Union[bytes, str, None]) -> None:
+        if value is not None:
+            self._raw = value.encode("ascii") if isinstance(value, str) else value
 
 
 class StrEventBase(VariableSizedEventBase[str], ABC):
@@ -739,20 +748,67 @@ class SoundgoodizerEvent(PluginEvent):
 
 
 @unique
-class VSTPluginEventID(IntEnum):
+class VSTPluginEventEnum(IntEnum):
+    def __new__(cls, id, key=None):
+        obj = int.__new__(cls, id)
+        obj._value_ = id
+        obj.key = key
+        return obj
+
     MIDI = 1
     Flags = 2
     IO = 30
     Inputs = 31
     Outputs = 32
     PluginInfo = 50
-    FourCC = 51  # Not present for Waveshells
-    GUID = 52
-    State = 53
-    Name = 54
-    PluginPath = 55
-    Vendor = 56
+    FourCC = (51, "fourcc")  # Not present for Waveshells
+    GUID = (52, "guid")
+    State = (53, "state")
+    Name = (54, "name")
+    PluginPath = (55, "plugin_path")
+    Vendor = (56, "vendor")
     _57 = 57  # TODO, not present for Waveshells
+
+
+class VSTPluginEvent(PluginEvent):
+    VST_MARKERS = (8, 10)
+
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data, False)
+        self._events: List[U64VariableEvent] = []
+
+        kind = self.props["kind"] = self.stream.read_I()
+        if kind in VSTPluginEvent.VST_MARKERS:
+            while self.stream.tell() < self.stream_len:
+                id = self.stream.read_I()
+                length = self.stream.read_Q()
+                data = self.stream.read(length)
+
+                if id in (
+                    VSTPluginEventEnum.FourCC,
+                    VSTPluginEventEnum.Name,
+                    VSTPluginEventEnum.PluginPath,
+                    VSTPluginEventEnum.Vendor,
+                ):
+                    isascii = True
+                    data = data.decode("ascii")
+                else:
+                    isascii = False
+                event = U64VariableEvent(id, data, isascii)
+                self.props[VSTPluginEventEnum(id).key or id] = data
+                self._events.append(event)
+
+    def __bytes__(self) -> bytes:
+        self.stream.seek(0)
+        for event in self._events:
+            try:
+                key = VSTPluginEvent(event.id).key
+            except ValueError:
+                key = event.id
+            finally:
+                event.value = self.props[key]
+            self.stream.write(bytes(event))
+        return super().__bytes__()
 
 
 @unique
@@ -776,7 +832,7 @@ class EventID(IntEnum):
     the latest version of FL Studio, *to the best of my knowledge*.
     """
 
-    def __new__(cls, id, type=None):
+    def __new__(cls, id: int, type: Optional[Type[EventType]] = None):
         obj = int.__new__(cls, id)
         obj._value_ = id
         obj.type = type

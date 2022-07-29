@@ -496,7 +496,10 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                 _plugin = None
 
                 if parse_channel:
-                    for _plugin_t, _event_t in {BooBass: BooBassEvent}.items():
+                    for _plugin_t, _event_t in {
+                        BooBass: BooBassEvent,
+                        VSTPlugin: VSTPluginEvent,
+                    }.items():
                         if cur_channel.default_name == _plugin_t.DEFAULT_NAME:
                             event = _event_t(event._raw)
                             _plugin = cur_channel.plugin = _plugin_t()
@@ -508,6 +511,7 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                         FruitySend: FruitySendEvent,
                         FruitySoftClipper: FruitySoftClipperEvent,
                         FruityStereoEnhancer: FruityStereoEnhancerEvent,
+                        VSTPlugin: VSTPluginEvent,
                     }.items():
                         if cur_slot.default_name == _plugin_t.DEFAULT_NAME:
                             event = _event_t(event._raw)
@@ -515,7 +519,12 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
 
                 if _plugin is not None:
                     for _field in dataclasses.fields(_plugin):
-                        setattr(_plugin, _field.name, event.props[_field.name])
+                        try:
+                            _value = event.props[_field.name]
+                        except KeyError:
+                            pass
+                        else:
+                            setattr(_plugin, _field.name, _value)
 
             elif id == EventID.PlugDefaultName:
                 if parse_channel:
