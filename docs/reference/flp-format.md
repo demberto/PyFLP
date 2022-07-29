@@ -5,10 +5,9 @@ hide:
 
 # FLP Format
 
-FLP uses a [TLV](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value)
-encoding scheme to store its data. Unlike JSON and XML where data is already
-stored like an object, converting this bulk of data into a proper object model
-gets quite tricky.
+FLP uses a [TLV] encoding scheme to store its data. Unlike JSON and XML where
+data is already stored like an object, converting this bulk of data into a
+proper object model gets quite tricky.
 
 Structure of an FLP event
 
@@ -26,3 +25,6 @@ _where size of `data` is decided by_
 |   63-127   |    2     | `U16Event`, `I16Event`                                |
 |  128-191   |    4     | `U32Event`, `I32Event`, `U16TupleEvent`, `ColorEvent` |
 |  192-255   | `length` | `AsciiEvent`, `UnicodeEvent`, `DataArrayEvent`, etc.  |
+
+<!-- LINKS -->
+[TLV]: https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value "Type-Length-Value"

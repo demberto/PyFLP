@@ -42,8 +42,6 @@ To save the project:
 pyflp.save(project, "/path/to/save.flp")
 ```
 
-More [examples](https://pyflp.rtfd.io/en/latest/handbook/)
-
 ## 🙏 Acknowledgements
 
 Monad.FLParser: https://github.com/monadgroup/FLParser

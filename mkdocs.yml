@@ -3,27 +3,37 @@ site_url: https://pyflp.rtfd.io/
 site_description: FL Studio project file parser
 site_author: demberto
 repo_url: https://github.com/demberto/PyFLP/
-copyright: (c) demberto 2021
+copyright: Copyright &copy; demberto 2022
 nav:
   - Overview: index.md
   - Installation: installation.md
   - Reference:
     - API: reference/api.md
-    - FLP Format: reference/flp-format.md
     - Project: reference/project.md
     - Arrangement: reference/arrangement.md
     - Channel: reference/channel.md
     - Controllers: reference/controllers.md
     - Mixer: reference/mixer.md
     - Plugins: reference/plugins.md
+    - FLP Format: reference/flp-format.md
   - Contributing: contributing.md
   - Report a bug: https://github.com/demberto/PyFLP/issues
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/demberto
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/PyFLP
 markdown_extensions:
+  - admonition
+  - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
 plugins:
   - include-markdown
   - search

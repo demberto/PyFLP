@@ -2,15 +2,22 @@
 ![](../img/mixer.png)
 
 ## Insert
+
+??? example "Insert dock & routes"
+
+    === "`pyflp.models.InsertDock`"
+
+        ![](../img/insert-dock.png)
+
+    === "`pyflp.models.InsertRoute`"
+
+        ![](../img/insert-route.png)
+
 ::: pyflp.models.Insert
     options:
       filters:
         - "!__iter__()"
-
-![](../img/insert-dock.png)
 ::: pyflp.models.InsertDock
-
-![](../img/insert-route.png)
 ::: pyflp.models.InsertRoute
 
 ### EQ

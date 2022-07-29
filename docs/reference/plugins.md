@@ -1,4 +1,13 @@
 # Plugins
+
+PyFLP offers deserialisers for certain plugins listed below and general
+information about VST plugins.
+
+!!! info "AU plugins"
+
+    The [VST plugin](#vst) information obtained can refer to an AU plugin as
+    well. I don't have a Mac to test :(
+
 ## BooBass
 [![](../img/boobass.png)](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/BooBass.htm)
 ::: pyflp.models.BooBass
@@ -59,6 +68,21 @@
 ::: pyflp.models.SoundgoodizerMode
 
 ## VST
+
+!!! tip "Wrapper options"
+
+    === "Settings"
+
+        [![](../img/wrapper-settings.png)](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/wrapper.htm#wrapper_pluginsettings)
+
+    === "Processing"
+
+        [![](../img/wrapper-processing.png)](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/wrapper.htm#wrapper_processing)
+
+    === "Troubleshooting"
+
+        [![](../img/wrapper-troubleshooting.png)](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/wrapper.htm#wrapper_troubleshooting)
+
 ::: pyflp.models.VSTPlugin
     options:
       filters:
