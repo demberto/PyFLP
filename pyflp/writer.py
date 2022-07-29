@@ -57,21 +57,21 @@ def save(project: Project, file: os.PathLike) -> None:
             props.update(dataclasses.asdict(cur_channel.delay))
 
         elif id == EventID.ChEnvelopeLFO:
-            name = next(envlfo_iter)
+            _name = next(envlfo_iter)
 
-            envelope = cur_channel.envelopes[name]
-            for attr in props:
+            _envelope = cur_channel.envelopes[_name]
+            for attr in props.keys():
                 if attr.startswith("envelope"):
-                    props[attr] = getattr(envelope, attr.split(".")[1])
+                    props[attr] = getattr(_envelope, attr.split(".")[1])
 
-            lfo = cur_channel.lfos[name]
-            flags = ChannelEnvelopeFlags(props["flags"])
-            for param, flag in {
-                lfo.is_synced: ChannelEnvelopeFlags.LFOTempoSync,
-                lfo.is_retrig: ChannelEnvelopeFlags.LFORetrig,
+            _lfo = cur_channel.lfos[_name]
+            _flags = ChannelEnvelopeFlags(props["flags"])
+            for param, _flag in {
+                _lfo.is_synced: ChannelEnvelopeFlags.LFOTempoSync,
+                _lfo.is_retrig: ChannelEnvelopeFlags.LFORetrig,
             }.items():
-                flags = flags | flag if param else flags & ~flag
-            props["lfo.shape"] = int(lfo.shape)
+                _flags = _flags | _flag if param else _flags & ~_flag
+            props["lfo.shape"] = int(_lfo.shape)
 
         elif id == EventID.ChFadeIn:
             event.value = cur_channel.fx.fade_in
@@ -113,35 +113,27 @@ def save(project: Project, file: os.PathLike) -> None:
             event.value = cur_channel.pan
 
         elif id == EventID.ChParameters:
-            arp = cur_channel.arp
-            props["arp.direction"] = int(arp.direction)
-            props["arp.range"] = arp.range
-            props["arp.chord"] = arp.chord
-            props["arp.time"] = arp.time
-            props["arp.gate"] = arp.gate
-            props["arp.slide"] = arp.slide
-            props["arp.repeat"] = arp.repeat
-
-        elif id == EventID.ChPlugin and parse_channel:
-            plugin = cur_channel.plugin
-            if getattr(plugin, "DEFAULT_NAME", None) == cur_channel.default_name:
-                props.update(dataclasses.asdict(plugin))
-
-        elif id == EventID.ChPlugWrapper and parse_channel:
-            pass
+            _arp = cur_channel.arp
+            props["arp.direction"] = int(_arp.direction)
+            props["arp.range"] = _arp.range
+            props["arp.chord"] = _arp.chord
+            props["arp.time"] = _arp.time
+            props["arp.gate"] = _arp.gate
+            props["arp.slide"] = _arp.slide
+            props["arp.repeat"] = _arp.repeat
 
         elif id == EventID.ChPolyphony:
-            polyphony = cur_channel.polyphony
-            props["max"] = polyphony.max
-            props["slide"] = polyphony.slide
-            for flag, cond in {
-                ChannelPolyphonyFlags.Mono: polyphony.is_mono,
-                ChannelPolyphonyFlags.Porta: polyphony.is_porta,
+            _polyphony = cur_channel.polyphony
+            props["max"] = _polyphony.max
+            props["slide"] = _polyphony.slide
+            for _flag, _cond in {
+                ChannelPolyphonyFlags.Mono: _polyphony.is_mono,
+                ChannelPolyphonyFlags.Porta: _polyphony.is_porta,
             }.items():
-                if cond:
-                    props["flags"] |= flag
+                if _cond:
+                    props["flags"] |= _flag
                 else:
-                    props["flags"] &= ~flag
+                    props["flags"] &= ~_flag
 
         elif id == EventID.ChPreamp:
             event.value = cur_channel.fx.boost
@@ -150,11 +142,11 @@ def save(project: Project, file: os.PathLike) -> None:
             event.value = cur_channel.fx.resonance
 
         elif id == EventID.ChReverb:
-            reverb = cur_channel.fx.reverb
-            if reverb.type == ChannelReverbType.B:
-                event.value = ChannelReverbType.B + reverb.mix
+            _reverb = cur_channel.fx.reverb
+            if _reverb.type == ChannelReverbType.B:
+                event.value = ChannelReverbType.B + _reverb.mix
             else:
-                event.value = reverb.mix
+                event.value = _reverb.mix
 
         elif id == EventID.ChRootNote:
             event.value = cur_channel.keyboard.root_note
@@ -198,7 +190,7 @@ def save(project: Project, file: os.PathLike) -> None:
 
         elif id == EventID.InsFlags:
             parse_channel = False
-            for flag, cond in {
+            for _flag, _cond in {
                 InsertFlags.DockMiddle: cur_insert.docked_to == InsertDock.Middle,
                 InsertFlags.DockRight: cur_insert.docked_to == InsertDock.Right,
                 InsertFlags.Enabled: cur_insert.enabled,
@@ -209,10 +201,10 @@ def save(project: Project, file: os.PathLike) -> None:
                 InsertFlags.Solo: cur_insert.is_solo,
                 InsertFlags.SwapLeftRight: cur_insert.channels_swapped,
             }.items():
-                if cond:
-                    props["flags"] |= flag
+                if _cond:
+                    props["flags"] |= _flag
                 else:
-                    props["flags"] &= ~flag
+                    props["flags"] &= ~_flag
 
         elif id == EventID.InsIcon:
             event.value = cur_insert.icon
@@ -233,67 +225,55 @@ def save(project: Project, file: os.PathLike) -> None:
 
             while stream.tell() < event.stream_len:
                 stream.seek(4, 1)  # 4
-                id = stream.read_B()  # 5
+                _id = stream.read_B()  # 5
                 stream.seek(1, 1)  # 6
-                channel_data = stream.read_H()  # 8
+                _channel_data = stream.read_H()  # 8
 
-                insert = project.inserts[(channel_data >> 6) & 0x7F]
-                slot = insert.slots[channel_data & 0x3F]
+                _insert = project.inserts[(_channel_data >> 6) & 0x7F]
+                _slot = _insert.slots[_channel_data & 0x3F]
                 # TODO _insert_type = channel_data >> 13
 
-                if id == InsParamsEventID.SlotEnabled:
-                    msg = int(slot.enabled)
-                elif id == InsParamsEventID.SlotMix:
-                    msg = slot.mix
-                elif id == InsParamsEventID.Volume:
-                    msg = insert.volume
-                elif id == InsParamsEventID.Pan:
-                    msg = insert.pan
-                elif id == InsParamsEventID.StereoSeparation:
-                    msg = insert.stereo_separation
-                elif id == InsParamsEventID.LowGain:
-                    msg = insert.eq.low.gain
-                elif id == InsParamsEventID.BandGain:
-                    msg = insert.eq.band.gain
-                elif id == InsParamsEventID.HighGain:
-                    msg = insert.eq.high.gain
-                elif id == InsParamsEventID.LowFreq:
-                    msg = insert.eq.low.frequency
-                elif id == InsParamsEventID.BandFreq:
-                    msg = insert.eq.band.frequency
-                elif id == InsParamsEventID.HighFreq:
-                    msg = insert.eq.high.frequency
-                elif id == InsParamsEventID.LowQ:
-                    msg = insert.eq.low.resonance
-                elif id == InsParamsEventID.BandQ:
-                    msg = insert.eq.band.resonance
-                elif id == InsParamsEventID.HighQ:
-                    msg = insert.eq.high.resonance
-                elif id in range(
+                if _id == InsParamsEventID.SlotEnabled:
+                    _msg = int(_slot.enabled)
+                elif _id == InsParamsEventID.SlotMix:
+                    _msg = _slot.mix
+                elif _id == InsParamsEventID.Volume:
+                    _msg = _insert.volume
+                elif _id == InsParamsEventID.Pan:
+                    _msg = _insert.pan
+                elif _id == InsParamsEventID.StereoSeparation:
+                    _msg = _insert.stereo_separation
+                elif _id == InsParamsEventID.LowGain:
+                    _msg = _insert.eq.low.gain
+                elif _id == InsParamsEventID.BandGain:
+                    _msg = _insert.eq.band.gain
+                elif _id == InsParamsEventID.HighGain:
+                    _msg = _insert.eq.high.gain
+                elif _id == InsParamsEventID.LowFreq:
+                    _msg = _insert.eq.low.frequency
+                elif _id == InsParamsEventID.BandFreq:
+                    _msg = _insert.eq.band.frequency
+                elif _id == InsParamsEventID.HighFreq:
+                    _msg = _insert.eq.high.frequency
+                elif _id == InsParamsEventID.LowQ:
+                    _msg = _insert.eq.low.resonance
+                elif _id == InsParamsEventID.BandQ:
+                    _msg = _insert.eq.band.resonance
+                elif _id == InsParamsEventID.HighQ:
+                    _msg = _insert.eq.high.resonance
+                elif _id in range(
                     InsParamsEventID.RouteVolStart, len(project.inserts) + 1
                 ):
-                    route_id = id - InsParamsEventID.RouteVolStart
-                    msg = insert.routes[route_id].volume
+                    _route_id = _id - InsParamsEventID.RouteVolStart
+                    _msg = _insert.routes[_route_id].volume
 
-                stream.write_I(msg)
+                stream.write_I(_msg)
 
         elif id == EventID.InsRouting:
-            routing = bytearray()
+            _routing = bytearray()
             for route in cur_insert.routes:
-                routing.append(route.is_routed)
-            stream.write(routing)
-
-        elif id == EventID.SlotColor:
-            event.value = cur_slot.color
-
-        elif id == EventID.SlotDefaultName:
-            plugin = cur_slot.plugin
-            if dataclasses.is_dataclass(plugin):
-                cur_slot.default_name = plugin.DEFAULT_NAME
-            event.value = cur_slot.default_name
-
-        elif id == EventID.SlotIcon:
-            event.value = cur_slot.icon
+                _routing.append(route.is_routed)
+            stream.write(_routing)
 
         elif id == EventID.SlotIndex:
             event.value = cur_slot.index
@@ -389,15 +369,15 @@ def save(project: Project, file: os.PathLike) -> None:
         #     event.value = project.selection.pattern
 
         elif id == EventID.ProjDataPath:
-            path_str = str(project.data_path)
-            event.value = path_str if path_str != "." else ""
+            _path_str = str(project.data_path)
+            event.value = _path_str if _path_str != "." else ""
 
         elif id == EventID._ProjFitToSteps:
             event.value = project.fit_to_steps
 
         elif id == EventID.ProjFLVersion:
-            v = project.version
-            event.value = f"{v.major}.{v.minor}.{v.build}.{v.patch}"
+            _v = project.version
+            event.value = f"{_v.major}.{_v.minor}.{_v.build}.{_v.patch}"
 
         elif id == EventID.ProjGenre:
             event.value = project.genre

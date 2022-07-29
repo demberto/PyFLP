@@ -333,48 +333,48 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
 
                 while stream.tell() < event.stream_len:
                     stream.seek(4, 1)  # 4
-                    id = stream.read_B()  # 5
+                    _id = stream.read_B()  # 5
                     stream.seek(1, 1)  # 6
-                    channel_data = stream.read_H()  # 8
-                    msg = stream.read_I()  # 12
+                    _channel_data = stream.read_H()  # 8
+                    _msg = stream.read_I()  # 12
 
-                    insert = project.inserts[(channel_data >> 6) & 0x7F]
-                    slot = insert.slots[channel_data & 0x3F]
+                    _insert = project.inserts[(_channel_data >> 6) & 0x7F]
+                    _slot = _insert.slots[_channel_data & 0x3F]
                     # TODO _insert_type = channel_data >> 13
 
-                    if id == InsParamsEventID.SlotEnabled:
-                        slot.enabled = msg != 0
-                    elif id == InsParamsEventID.SlotMix:
-                        slot.mix = msg
-                    elif id == InsParamsEventID.Volume:
-                        insert.volume = msg
-                    elif id == InsParamsEventID.Pan:
-                        insert.pan = msg
-                    elif id == InsParamsEventID.StereoSeparation:
-                        insert.stereo_separation = msg
-                    elif id == InsParamsEventID.LowGain:
-                        insert.eq.low.gain = msg
-                    elif id == InsParamsEventID.BandGain:
-                        insert.eq.band.gain = msg
-                    elif id == InsParamsEventID.HighGain:
-                        insert.eq.high.gain = msg
-                    elif id == InsParamsEventID.LowFreq:
-                        insert.eq.low.frequency = msg
-                    elif id == InsParamsEventID.BandFreq:
-                        insert.eq.band.frequency = msg
-                    elif id == InsParamsEventID.HighFreq:
-                        insert.eq.high.frequency = msg
-                    elif id == InsParamsEventID.LowQ:
-                        insert.eq.low.resonance = msg
-                    elif id == InsParamsEventID.BandQ:
-                        insert.eq.band.resonance = msg
-                    elif id == InsParamsEventID.HighQ:
-                        insert.eq.high.resonance = msg
-                    elif id in range(
+                    if _id == InsParamsEventID.SlotEnabled:
+                        _slot.enabled = _msg != 0
+                    elif _id == InsParamsEventID.SlotMix:
+                        _slot.mix = _msg
+                    elif _id == InsParamsEventID.Volume:
+                        _insert.volume = _msg
+                    elif _id == InsParamsEventID.Pan:
+                        _insert.pan = _msg
+                    elif _id == InsParamsEventID.StereoSeparation:
+                        _insert.stereo_separation = _msg
+                    elif _id == InsParamsEventID.LowGain:
+                        _insert.eq.low.gain = _msg
+                    elif _id == InsParamsEventID.BandGain:
+                        _insert.eq.band.gain = _msg
+                    elif _id == InsParamsEventID.HighGain:
+                        _insert.eq.high.gain = _msg
+                    elif _id == InsParamsEventID.LowFreq:
+                        _insert.eq.low.frequency = _msg
+                    elif _id == InsParamsEventID.BandFreq:
+                        _insert.eq.band.frequency = _msg
+                    elif _id == InsParamsEventID.HighFreq:
+                        _insert.eq.high.frequency = _msg
+                    elif _id == InsParamsEventID.LowQ:
+                        _insert.eq.low.resonance = _msg
+                    elif _id == InsParamsEventID.BandQ:
+                        _insert.eq.band.resonance = _msg
+                    elif _id == InsParamsEventID.HighQ:
+                        _insert.eq.high.resonance = _msg
+                    elif _id in range(
                         InsParamsEventID.RouteVolStart, len(project.inserts) + 1
                     ):
-                        route_id = id - InsParamsEventID.RouteVolStart
-                        insert.routes[route_id].volume = msg
+                        _route_id = _id - InsParamsEventID.RouteVolStart
+                        _insert.routes[_route_id].volume = _msg
 
             elif id == EventID.InsRouting:
                 for is_routed in stream.getvalue():
@@ -400,13 +400,13 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                     continue
 
                 while stream.tell() < event.stream_len:
-                    ctrl = PatternController()
-                    ctrl.position = stream.read_I()  # 4
+                    _ctrl = PatternController()
+                    _ctrl.position = stream.read_I()  # 4
                     stream.seek(2, 1)  # 6
-                    ctrl.channel = stream.read_B()  # 7
+                    _ctrl.channel = stream.read_B()  # 7
                     stream.seek(1, 1)  # 8
-                    ctrl.value = stream.read_f()  # 12
-                    cur_pattern.controllers.append(ctrl)
+                    _ctrl.value = stream.read_f()  # 12
+                    cur_pattern.controllers.append(_ctrl)
 
             elif id == EventID.PatName:
                 cur_pattern.name = value
@@ -417,21 +417,21 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                     continue
 
                 while stream.tell() < event.stream_len:
-                    note = PatternNote()
-                    note.position = stream.read_I()  # 4
-                    note.flags = stream.read_H()  # 6
-                    note.rack_channel = stream.read_H()  # 8
-                    note.length = stream.read_I()  # 12
-                    note.key = stream.read_I()  # 16
-                    note.fine_pitch = stream.read_b()  # 17
+                    _note = PatternNote()
+                    _note.position = stream.read_I()  # 4
+                    _note.flags = stream.read_H()  # 6
+                    _note.rack_channel = stream.read_H()  # 8
+                    _note.length = stream.read_I()  # 12
+                    _note.key = stream.read_I()  # 16
+                    _note.fine_pitch = stream.read_b()  # 17
                     stream.seek(1, 1)  # 18
-                    note.release = stream.read_B()  # 19
-                    note.midi_channel = stream.read_B()  # 20
-                    note.pan = stream.read_b()  # 21
-                    note.velocity = stream.read_B()  # 22
-                    note.mod_x = stream.read_B()  # 23
-                    note.mod_y = stream.read_B()  # 24
-                    cur_pattern.notes.append(note)
+                    _note.release = stream.read_B()  # 19
+                    _note.midi_channel = stream.read_B()  # 20
+                    _note.pan = stream.read_b()  # 21
+                    _note.velocity = stream.read_B()  # 22
+                    _note.mod_x = stream.read_B()  # 23
+                    _note.mod_y = stream.read_B()  # 24
+                    cur_pattern.notes.append(_note)
 
             elif id == EventID.PlaylistData:
                 if event.stream_len % 32 != 0:
@@ -439,49 +439,49 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                     continue
 
                 while stream.tell() < event.stream_len:
-                    position = stream.read_I()  # 4
-                    pattern_base = stream.read_H()  # 6
-                    item_idx = stream.read_H()  # 8
-                    length = stream.read_I()  # 12
+                    _position = stream.read_I()  # 4
+                    _pattern_base = stream.read_H()  # 6
+                    _item_idx = stream.read_H()  # 8
+                    _length = stream.read_I()  # 12
                     _track_ridx = stream.read_i()  # 16
 
                     if project.version.major >= 20:
-                        track_idx = 499 - _track_ridx
+                        _track_idx = 499 - _track_ridx
                     else:
-                        track_idx = 198 - _track_ridx
+                        _track_idx = 198 - _track_ridx
 
                     stream.seek(2, 1)  # 18
-                    item_flags = stream.read_H()  # 20
+                    _item_flags = stream.read_H()  # 20
                     stream.seek(4, 1)  # 24
-                    muted = (item_flags & 0x2000) > 0
+                    _muted = (_item_flags & 0x2000) > 0
 
-                    if item_idx <= pattern_base:
-                        start_offset = int(stream.read_f() * project.ppq)  # 28
-                        end_offset = int(stream.read_f() * project.ppq)  # 32
+                    if _item_idx <= _pattern_base:
+                        _start_offset = int(stream.read_f() * project.ppq)  # 28
+                        _end_offset = int(stream.read_f() * project.ppq)  # 32
                         for iid, channel in project.channels.items():
-                            if iid == item_idx:
-                                track_items[track_idx].append(
+                            if iid == _item_idx:
+                                track_items[_track_idx].append(
                                     ChannelPlaylistItem(
-                                        position,
-                                        length,
-                                        start_offset,
-                                        end_offset,
-                                        muted,
+                                        _position,
+                                        _length,
+                                        _start_offset,
+                                        _end_offset,
+                                        _muted,
                                         channel,
                                     )
                                 )
                     else:
-                        start_offset = stream.read_I()
-                        end_offset = stream.read_I()
+                        _start_offset = stream.read_I()
+                        _end_offset = stream.read_I()
                         for idx, pattern in project.patterns.items():
-                            if idx == item_idx - pattern_base - 1:
-                                track_items[track_idx].append(
+                            if idx == _item_idx - _pattern_base - 1:
+                                track_items[_track_idx].append(
                                     PatternPlaylistItem(
-                                        position,
-                                        length,
-                                        start_offset,
-                                        end_offset,
-                                        muted,
+                                        _position,
+                                        _length,
+                                        _start_offset,
+                                        _end_offset,
+                                        _muted,
                                         pattern,
                                     )
                                 )
@@ -543,11 +543,11 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
 
             elif id == EventID.ProjCurGroupId:
                 try:
-                    group = project.groups[value]
+                    _group = project.groups[value]
                 except IndexError:
-                    group = DisplayGroup("All")
+                    _group = DisplayGroup("All")
                 finally:
-                    project.selection.group = group
+                    project.selection.group = _group
 
             elif id == EventID.ProjCurPatIdx:
                 cur_pattern_idx = value
@@ -614,15 +614,15 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                 project.main_volume = value
 
             elif id == EventID.RemoteController:
-                ctrl = RemoteController()
+                _ctrl = RemoteController()
                 if props["destination_data"] & 2000 == 0:
-                    ctrl.parameter = props["parameter_data"] & 0x7FFF
-                    ctrl.is_vst_param = props["parameter_data"] & 0x8000 > 0
-                    channel_ctrls.append(ctrl)
+                    _ctrl.parameter = props["parameter_data"] & 0x7FFF
+                    _ctrl.is_vst_param = props["parameter_data"] & 0x8000 > 0
+                    channel_ctrls.append(_ctrl)
                 else:
-                    insert = (props["destination_data"] & 0x0FF0) >> 6
-                    slot = props["destination_data"] & 0x003F
-                    slot_ctrls[insert][slot] = ctrl
+                    _insert = (props["destination_data"] & 0x0FF0) >> 6
+                    _slot = props["destination_data"] & 0x003F
+                    slot_ctrls[_insert][_slot] = _ctrl
 
             elif id == EventID.TMDenominator:
                 cur_timemarker.denominator = value
@@ -636,11 +636,11 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
             elif id == EventID.TMPosition:
                 if value > TimeMarkerType.Signature:
                     type = TimeMarkerType.Signature
-                    position = value - TimeMarkerType.Signature
+                    _position = value - TimeMarkerType.Signature
                 else:
                     type = TimeMarkerType.Marker
-                    position = value
-                cur_timemarker = TimeMarker(position=position, type=type)
+                    _position = value
+                cur_timemarker = TimeMarker(position=_position, type=type)
                 cur_arrangement.timemarkers.append(cur_timemarker)
 
             elif id == EventID.TrackData:
@@ -665,8 +665,8 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                 project.selection.pattern = pattern
 
         for ins_idx, slot_dict in slot_ctrls.items():
-            insert = project.inserts[ins_idx]
+            _insert = project.inserts[ins_idx]
             for slot_idx, controllers in slot_dict.items():
-                insert.slots[slot_idx].controllers = controllers
+                _insert.slots[slot_idx].controllers = controllers
 
     return project
