@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Contributing
 
 PyFLP adheres to the [Contributor Covenant Code of Conduct][covenant].
@@ -5,8 +10,7 @@ Please make sure you have read it and accept it before proceeding further.
 
 ## Code Style: Black
 
-PyFLP follows the [black](https://github.com/psf/black) code style. It has a
-formatter. Make sure to use it.
+PyFLP follows the [black](https://github.com/psf/black) code style. Use it.
 
 ## Code comments
 
@@ -26,40 +30,28 @@ appropriate formatting.
 The object model created by PyFLP is its core, ensure property docstrings are
 given wherever possible; however avoid redundant ones, along with other
 information like minimum, maximum limits and default. Also mention whether the
-default event linked to a property is stored or not. Currently PEP-257 attribute
-docstrings are used heavily and VS Code luckily supports them.
+default event linked to a property is stored or not.
 
 Don't add a full-stop/period after an exception docstring. It is used by
 `__repr__` to format the exception string.
 
 ### When to document?
 
-```Python
-prop: int = IntProperty()
-"""Doc doc doc. Min: min, Max: max, Default: default."""
-```
+Document attributes when you satisfy either of the conditions:
 
-Document properties when you satisfy either of the conditions:
-
-- When you have some basic information other than the property name itself.
+- When you have some basic information other than the attribute name itself.
 - When you have minimum, maximum and/or default values.
 
 ### When NOT to document?
 
 ```Python
-color: colour.Color = ColorProperty()
+color: colour.Color
 """Color."""
 ```
 
-Don't document properties like name, color, index etc. if the property name
+Don't document attributes like name, color, index etc. if the property name
 itself is the only useful information available. These properties occur
 throughout the object model that their meaning is pretty self-explanatory.
-
-## Imports
-
-Submodule `__init__.py` files have `import` statements in them. They are only
-to simplify the import process externally (make it look less messier) and not
-to be used internally.
 
 ## Issues
 
@@ -83,10 +75,7 @@ coverage run -m pytest
 
 ## Documentation
 
-PyFLP uses MkDocs, the process to update it is fairly simple. Documentation is
-not versioned yet and I don't see the need to do it in the near future either.
-I used Sphinx earlier, but its love for reStructuredText makes it difficult to
-use.
+PyFLP uses MkDocs with the popular Material theme.
 
 ## Changelog update
 

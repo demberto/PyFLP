@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # FLP Format
 
 FLP uses a [TLV](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value)

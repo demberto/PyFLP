@@ -12,6 +12,12 @@ __all__ = ["save"]
 
 
 def save(project: Project, file: os.PathLike) -> None:
+    """Save a project back into a file.
+
+    Args:
+        project (Project): The project to be saved.
+        file (os.PathLike): Path of the file to save the `project` into.
+    """
     insert_iter = iter(project.inserts)
     cur_insert = next(insert_iter)
     cur_slot = project.inserts[0].slots[0]

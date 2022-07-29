@@ -7,9 +7,15 @@ copyright: (c) demberto 2021
 nav:
   - Overview: index.md
   - Installation: installation.md
-  - Handbook: handbook.md
-  - Models: models.md
-  - FLP Format: flp-format.md
+  - Reference:
+    - API: reference/api.md
+    - FLP Format: reference/flp-format.md
+    - Project: reference/project.md
+    - Arrangement: reference/arrangement.md
+    - Channel: reference/channel.md
+    - Controllers: reference/controllers.md
+    - Mixer: reference/mixer.md
+    - Plugins: reference/plugins.md
   - Contributing: contributing.md
   - Report a bug: https://github.com/demberto/PyFLP/issues
 markdown_extensions:
@@ -26,11 +32,34 @@ plugins:
       handlers:
         python:
           options:
-            heading_level: 5
+            heading_level: 3
             show_bases: no
             show_if_no_docstring: yes
-            show_root_full_path: no
             show_root_heading: yes
             show_source: no
       watch:
         - pyflp
+theme:
+  name: material
+  features:
+    - navigation.expand
+    - navigation.instant
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
