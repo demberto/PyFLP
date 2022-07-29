@@ -1050,7 +1050,7 @@ class Project:
 
     time_signature: TimeSignature = field(default_factory=TimeSignature)
     swing: Optional[int] = None
-    """Global channel swing mix. Min: 0, Max: 128, Default: 64."""
+    """Global channel swing mix. Min: 0, Max: 128, Default: 0."""
 
     selection: Selection = field(default_factory=Selection)
     pan_law: Optional[PanLaw] = None
