@@ -47,20 +47,11 @@ def save(project: Project, file: os.PathLike) -> None:
         #     event.value = cur_channel.children[layer_child_idx].iid
         #     layer_child_idx += 1
 
-        elif id == EventID.ChColor and parse_channel:
-            event.value = cur_channel.color
-
         elif id == EventID.ChCutGroup:
             event.value = cur_channel.cut_group
 
         elif id == EventID.ChCutoff:
             event.value = cur_channel.fx.cutoff
-
-        elif id == EventID.ChDefaultName and parse_channel:
-            plugin = cur_channel.plugin
-            if dataclasses.is_dataclass(plugin):
-                cur_channel.default_name = plugin.DEFAULT_NAME
-            event.value = cur_channel.default_name
 
         elif id == EventID.ChDelay:
             props.update(dataclasses.asdict(cur_channel.delay))
@@ -94,9 +85,6 @@ def save(project: Project, file: os.PathLike) -> None:
         elif id == EventID.ChGroupNum:
             event.value = project.groups.index(cur_channel.group)
 
-        elif id == EventID.ChIcon and parse_channel:
-            event.value = cur_channel.icon
-
         elif id == EventID.ChIsEnabled:
             event.value = cur_channel.enabled
 
@@ -113,9 +101,6 @@ def save(project: Project, file: os.PathLike) -> None:
             props["pan"] = cur_channel.pan
             props["pitch_shift"] = cur_channel.pitch_shift
             props["volume"] = cur_channel.volume
-
-        elif id == EventID.ChName and parse_channel:
-            event.value = cur_channel.name
 
         elif id == EventID.ChNew:
             for iid, channel in project.channels.items():
@@ -315,14 +300,6 @@ def save(project: Project, file: os.PathLike) -> None:
             cur_insert.slots.append(cur_slot)
             cur_slot = InsertSlot()
 
-        elif id == EventID.SlotName:
-            event.value = cur_slot.name
-
-        elif id == EventID.SlotPlugin:
-            plugin = cur_slot.plugin
-            if getattr(plugin, "DEFAULT_NAME", None) == cur_slot.default_name:
-                props.update(dataclasses.asdict(plugin))
-
         elif id == EventID.PatColor:
             event.value = cur_pattern.color
 
@@ -359,8 +336,42 @@ def save(project: Project, file: os.PathLike) -> None:
             if event.stream_len % 32 != 0:
                 warnings.warn("Playlist data size not divisible by 32.")
                 continue
-
             ...
+
+        elif id == EventID.PlugColor:
+            if parse_channel:
+                event.value = cur_channel.color
+            else:
+                event.value = cur_slot.color
+
+        elif id == EventID.PlugData:
+            if parse_channel:
+                _plugin = cur_channel.plugin
+            else:
+                _plugin = cur_slot.plugin
+
+            if getattr(_plugin, "DEFAULT_NAME", None) == cur_channel.default_name:
+                props.update(dataclasses.asdict(_plugin))
+
+        elif id == EventID.PlugDefaultName:
+            _cur_obj = cur_channel if parse_channel else cur_slot
+
+            _plugin = _cur_obj.plugin
+            if dataclasses.is_dataclass(_plugin):
+                _cur_obj.default_name = _plugin.DEFAULT_NAME
+            event.value = _cur_obj.default_name
+
+        elif id == EventID.PlugIcon:
+            if parse_channel:
+                event.value = cur_channel.icon
+            else:
+                event.value = cur_slot.icon
+
+        elif id == EventID.PlugName:
+            if parse_channel:
+                event.value = cur_channel.name
+            else:
+                event.value = cur_slot.name
 
         elif id == EventID.ProjArtists:
             event.value = project.artists

@@ -151,18 +151,11 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
             elif id == EventID.ChChildren:
                 cur_channel.children.append(value)
 
-            elif id == EventID.ChColor and parse_channel:
-                cur_channel.color = value
-
             elif id == EventID.ChCutGroup:
                 cur_channel.cut_group = value
 
             elif id == EventID.ChCutoff:
                 cur_channel.fx.cutoff = value
-
-            elif id == EventID.ChDefaultName:
-                if parse_channel:
-                    cur_channel.default_name = value
 
             elif id == EventID.ChDelay:
                 cur_channel.delay = ChannelDelay(**props)
@@ -193,9 +186,6 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
             elif id == EventID.ChGroupNum:
                 cur_channel.group = project.groups[value]
 
-            elif id == EventID.ChIcon and parse_channel:
-                cur_channel.icon = value
-
             elif id == EventID.ChIsEnabled:
                 cur_channel.enabled = value
 
@@ -215,9 +205,6 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                 cur_channel.pitch_shift = props["pitch_shift"]
                 cur_channel.volume = props["volume"]
 
-            elif id == EventID.ChName and parse_channel:
-                cur_channel.name = value
-
             elif id == EventID.ChNew:
                 project.channels[value] = cur_channel = Channel()
                 envlfo_iter = iter(ENVELOPE_NAMES)  # noqa: F841
@@ -235,14 +222,6 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                 arp.gate = props["arp.gate"]
                 arp.slide = props["arp.slide"]
                 arp.repeat = props["arp.repeat"]
-
-            elif id == EventID.ChPlugin and parse_channel:
-                for plugin_t, event_t in {BooBass: BooBassEvent}.items():
-                    if cur_channel.default_name == plugin_t.DEFAULT_NAME:
-                        event = event_t(event._raw)
-                        cur_channel.plugin = plugin = plugin_t()
-                        for field in dataclasses.fields(plugin):
-                            setattr(plugin, field.name, event.props[field.name])
 
             elif id == EventID.ChPolyphony:
                 polyphony = cur_channel.polyphony
@@ -401,39 +380,10 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                 for is_routed in stream.getvalue():
                     cur_insert.routes.append(InsertRoute(is_routed == b"\x01"))
 
-            elif id == EventID.SlotColor:
-                cur_slot.color = value
-
-            elif id == EventID.SlotDefaultName:
-                cur_slot.default_name = value
-
-            elif id == EventID.SlotIcon:
-                cur_slot.icon = value
-
             elif id == EventID.SlotIndex:
                 cur_slot.index = value
                 cur_insert.slots.append(cur_slot)
                 cur_slot = InsertSlot()
-
-            elif id == EventID.SlotName:
-                cur_slot.name = value
-
-            elif id == EventID.SlotPlugin:
-                default_name = cur_slot.default_name
-
-                for plugin_t, event_t in {
-                    FruityBalance: FruityBalanceEvent,
-                    FruityFastDist: FruityFastDistEvent,
-                    FruityNotebook2: FruityNotebook2Event,
-                    FruitySend: FruitySendEvent,
-                    FruitySoftClipper: FruitySoftClipperEvent,
-                    FruityStereoEnhancer: FruityStereoEnhancerEvent,
-                }.items():
-                    if default_name == plugin_t.DEFAULT_NAME:
-                        event = event_t(event._raw)
-                        cur_slot.plugin = plugin = plugin_t()
-                        for field in dataclasses.fields(plugin):
-                            setattr(plugin, field.name, event.props[field.name])
 
             elif id == EventID.PatNew:
                 try:
@@ -535,6 +485,55 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                                         pattern,
                                     )
                                 )
+
+            elif id == EventID.PlugColor:
+                if parse_channel:
+                    cur_channel.color = value
+                else:
+                    cur_slot.color = value
+
+            elif id == EventID.PlugData:
+                _plugin = None
+
+                if parse_channel:
+                    for _plugin_t, _event_t in {BooBass: BooBassEvent}.items():
+                        if cur_channel.default_name == _plugin_t.DEFAULT_NAME:
+                            event = _event_t(event._raw)
+                            _plugin = cur_channel.plugin = _plugin_t()
+                else:
+                    for _plugin_t, _event_t in {
+                        FruityBalance: FruityBalanceEvent,
+                        FruityFastDist: FruityFastDistEvent,
+                        FruityNotebook2: FruityNotebook2Event,
+                        FruitySend: FruitySendEvent,
+                        FruitySoftClipper: FruitySoftClipperEvent,
+                        FruityStereoEnhancer: FruityStereoEnhancerEvent,
+                    }.items():
+                        if cur_slot.default_name == _plugin_t.DEFAULT_NAME:
+                            event = _event_t(event._raw)
+                            _plugin = cur_slot.plugin = _plugin_t()
+
+                if _plugin is not None:
+                    for _field in dataclasses.fields(_plugin):
+                        setattr(_plugin, _field.name, event.props[_field.name])
+
+            elif id == EventID.PlugDefaultName:
+                if parse_channel:
+                    cur_channel.default_name = value
+                else:
+                    cur_slot.default_name = value
+
+            elif id == EventID.PlugIcon:
+                if parse_channel:
+                    cur_channel.icon = value
+                else:
+                    cur_slot.icon = value
+
+            elif id == EventID.PlugName:
+                if parse_channel:
+                    cur_channel.name = value
+                else:
+                    cur_slot.name = value
 
             elif id == EventID.ProjArtists:
                 project.artists = value

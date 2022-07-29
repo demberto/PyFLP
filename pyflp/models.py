@@ -17,7 +17,7 @@ import pathlib
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum, IntEnum, IntFlag, auto
+from enum import Enum, IntEnum, IntFlag, auto, unique
 from platform import platform
 from typing import ClassVar, Dict, Iterator, List, Optional, Protocol, TypeVar
 
@@ -259,6 +259,7 @@ class RemoteControllerEvent(StructEventBase):
     }
 
 
+@unique
 class EventID(IntEnum):
     def __new__(cls, id, type=None):
         obj = int.__new__(cls, id)
@@ -325,7 +326,7 @@ class EventID(IntEnum):
     SlotIndex = (WORD + 34, U16Event)
     ArrNew = (WORD + 35, U16Event)
 
-    ChColor = SlotColor = (DWORD, ColorEvent)
+    PlugColor = (DWORD, ColorEvent)
     # _PlaylistItem = DWORD + 1
     # Echo = DWORD + 2
     # FxSine = DWORD + 3
@@ -376,7 +377,7 @@ class EventID(IntEnum):
     ChDelay = (DATA + 1, ChannelDelayEvent)
     # Plugin wrapper data, windows pos of plugin etc, currently
     # selected plugin wrapper page; minimized, closed or not
-    ChPlugWrapper = SlotPlugWrapper = (DATA + 4, UnknownDataEvent)  # TODO
+    PlugWrapper = (DATA + 4, UnknownDataEvent)  # TODO
     ChPlugin = SlotPlugin = (DATA + 5, PluginEvent)
     ChParameters = (DATA + 7, ChannelParametersEvent)
     ChEnvelopeLFO = (DATA + 10, ChannelEnvelopeLFOEvent)
@@ -430,6 +431,7 @@ class ChannelDelay:
     time: Optional[int] = None
 
 
+@unique
 class ChannelArpDirection(IntEnum):
     Off = 0
     Up = 1
@@ -470,6 +472,7 @@ class ChannelLevelAdjusts:
     mod_y: Optional[int] = None
 
 
+@unique
 class ChannelType(IntEnum):
     Sampler = 0
     Native = 2  # Used by audio clips and other native FL Studio synths
@@ -478,18 +481,21 @@ class ChannelType(IntEnum):
     Automation = 5
 
 
+@unique
 class ChannelLFOShape(IntEnum):
     Sine = 0
     Triangle = 1
     Pulse = 2
 
 
+@unique
 class ChannelEnvelopeFlags(IntFlag):
     LFOTempoSync = 1 << 1
     Unknown = 1 << 2  # Occurs for volume envlope only.
     LFORetrig = 1 << 5
 
 
+@unique
 class ChannelReverbType(IntEnum):
     A = 0
     B = 65536
@@ -589,6 +595,7 @@ class ChannelPolyphony:
     is_mono: Optional[bool] = None
 
 
+@unique
 class ChannelPolyphonyFlags(IntFlag):
     None_ = 0
     Mono = 1 << 0
@@ -814,6 +821,7 @@ class PatternPlaylistItem(_PlaylistItem):
     pattern: Optional[Pattern] = None
 
 
+@unique
 class TrackMotion(IntEnum):
     Stay = 0
     OneShot = 1
@@ -824,6 +832,7 @@ class TrackMotion(IntEnum):
     ExclusiveRandom = 6
 
 
+@unique
 class TrackPress(IntEnum):
     Retrigger = 0
     HoldStop = 1
@@ -831,6 +840,7 @@ class TrackPress(IntEnum):
     Latch = 3
 
 
+@unique
 class TrackSync(IntEnum):
     Off = 0
     QuarterBeat = 1
@@ -892,6 +902,7 @@ class Arrangement:
     tracks: List[Track] = field(default_factory=list)
 
 
+@unique
 class InsParamsEventID(IntEnum):
     SlotEnabled = 0
     # SlotVolume = 1
@@ -917,6 +928,7 @@ class InsertDock(Enum):
     Right = auto()
 
 
+@unique
 class InsertFlags(IntFlag):
     None_ = 0
     PolarityReversed = 1 << 0
@@ -1040,11 +1052,13 @@ class Insert:
         return iter(self.slots)
 
 
+@unique
 class PanLaw(IntEnum):
     Circular = 0
     Triangular = 2
 
 
+@unique
 class FileFormat(IntEnum):
     """File formats used by FL Studio."""
 
@@ -1096,6 +1110,7 @@ class Selection:
     """Duration of the song selected as a loop."""
 
 
+@unique
 class VSTPluginEventID(IntEnum):
     MIDI = 1
     Flags = 2
@@ -1193,6 +1208,7 @@ class FruityFastDistEvent(PluginEvent):
     PROPS = dict.fromkeys(("pre", "threshold", "kind", "mix", "post"), "I")
 
 
+@unique
 class FruityFastDistKind(IntEnum):
     A = 0
     B = 1
@@ -1284,6 +1300,7 @@ class SoundgoodizerEvent(PluginEvent):
     PROPS = dict.fromkeys(("_u1", "mode", "amount"), "I")
 
 
+@unique
 class SoundgoodizerMode(IntEnum):
     A = 0
     B = 1
@@ -1314,11 +1331,13 @@ class FruityStereoEnhancerEvent(PluginEvent):
     )
 
 
+@unique
 class StereoEnhancerEffectPosition(IntEnum):
     Pre = 0
     Post = 1
 
 
+@unique
 class StereoEnhancerPhaseInversion(IntEnum):
     None_ = 0
     Left = 1
