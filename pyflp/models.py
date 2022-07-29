@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum, IntFlag, auto
 from platform import platform
-from typing import ClassVar, Dict, Iterator, List, Optional, TypeVar
+from typing import ClassVar, Dict, Iterator, List, Optional, Protocol, TypeVar
 
 import colour
 
@@ -94,6 +94,10 @@ __all__ = [
 DELPHI_EPOCH = datetime(1899, 12, 30)
 ENVELOPE_NAMES = ("Panning", "Volume", "Pitch", "Mod X", "Mod Y")
 TRACKING_TYPES = ("Vol", "Key")
+
+
+class IPlugin(Protocol):
+    DEFAULT_NAME: ClassVar[str]
 
 
 class ChannelDelayEvent(StructEventBase):
@@ -698,7 +702,7 @@ class Channel:
     """-4800 to +4800 cents max."""
 
     playback: ChannelPlayback = field(default_factory=ChannelPlayback)
-    plugin: Optional[object] = None
+    plugin: Optional[IPlugin] = None
     """The plugin loaded into the channel.
 
     Valid only if channel is of instrument type.

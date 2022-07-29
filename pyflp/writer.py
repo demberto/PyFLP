@@ -14,6 +14,7 @@ __all__ = ["save"]
 def save(project: Project, file: os.PathLike) -> None:
     insert_iter = iter(project.inserts)
     cur_insert = next(insert_iter)
+    cur_slot = project.inserts[0].slots[0]
     groups_iter = iter(project.groups)
     parse_channel = True
 
@@ -50,10 +51,13 @@ def save(project: Project, file: os.PathLike) -> None:
             event.value = cur_channel.fx.cutoff
 
         elif id == EventID.ChDefaultName and parse_channel:
+            plugin = cur_channel.plugin
+            if dataclasses.is_dataclass(plugin):
+                cur_channel.default_name = plugin.DEFAULT_NAME
             event.value = cur_channel.default_name
 
         elif id == EventID.ChDelay:
-            props.update(dataclasses.asdict(cur_channel.delay, {}))
+            props.update(dataclasses.asdict(cur_channel.delay))
 
         elif id == EventID.ChEnvelopeLFO:
             name = next(envlfo_iter)
@@ -97,7 +101,7 @@ def save(project: Project, file: os.PathLike) -> None:
             event.value = cur_channel.layer_flags
 
         elif id == EventID.ChLevelAdjusts:
-            props.update(dataclasses.asdict(cur_channel.level_adjusts, {}))
+            props.update(dataclasses.asdict(cur_channel.level_adjusts))
 
         elif id == EventID.ChLevels:
             props["pan"] = cur_channel.pan
@@ -127,7 +131,6 @@ def save(project: Project, file: os.PathLike) -> None:
             props["arp.slide"] = arp.slide
             props["arp.repeat"] = arp.repeat
 
-        # TODO default_name event needs to be updated if plugin type changes
         elif id == EventID.ChPlugin and parse_channel:
             plugin = cur_channel.plugin
             if getattr(plugin, "DEFAULT_NAME", None) == cur_channel.default_name:
@@ -157,9 +160,10 @@ def save(project: Project, file: os.PathLike) -> None:
 
         elif id == EventID.ChReverb:
             reverb = cur_channel.fx.reverb
-            if reverb.kind == ChannelReverbType.B:
-                return (ChannelReverbType.B, reverb.mix - ChannelReverbType.B)
-            return (ChannelReverbType.A, reverb.mix)
+            if reverb.type == ChannelReverbType.B:
+                event.value = ChannelReverbType.B + reverb.mix
+            else:
+                event.value = reverb.mix
 
         elif id == EventID.ChRootNote:
             event.value = cur_channel.keyboard.root_note
@@ -184,7 +188,7 @@ def save(project: Project, file: os.PathLike) -> None:
 
         elif id == EventID.ChTracking:
             tracking = cur_channel.tracking[next(tracking_iter)]
-            props.update(dataclasses.asdict(tracking, {}))
+            props.update(dataclasses.asdict(tracking))
 
         elif id == EventID.ChUsesLoopPoints:
             event.value = cur_channel.playback.use_loop_points
@@ -196,7 +200,7 @@ def save(project: Project, file: os.PathLike) -> None:
             event.value = cur_channel.zipped
 
         elif id == EventID.GroupName:
-            event.value = next(groups_iter)
+            event.value = next(groups_iter).name
 
         elif id == EventID.InsColor:
             event.value = cur_insert.color
@@ -226,7 +230,10 @@ def save(project: Project, file: os.PathLike) -> None:
             event.value = cur_insert.input
 
         elif id == EventID.InsOutput:
-            cur_insert = next(insert_iter)
+            try:
+                cur_insert = next(insert_iter)
+            except StopIteration:
+                pass
 
         elif id == EventID.InsParameters:
             if event.stream_len % 12 != 0:
@@ -289,6 +296,9 @@ def save(project: Project, file: os.PathLike) -> None:
             event.value = cur_slot.color
 
         elif id == EventID.SlotDefaultName:
+            plugin = cur_slot.plugin
+            if dataclasses.is_dataclass(plugin):
+                cur_slot.default_name = plugin.DEFAULT_NAME
             event.value = cur_slot.default_name
 
         elif id == EventID.SlotIcon:
@@ -303,7 +313,9 @@ def save(project: Project, file: os.PathLike) -> None:
             event.value = cur_slot.name
 
         elif id == EventID.SlotPlugin:
-            ...
+            plugin = cur_slot.plugin
+            if getattr(plugin, "DEFAULT_NAME", None) == cur_slot.default_name:
+                props.update(dataclasses.asdict(plugin))
 
         elif id == EventID.PatColor:
             event.value = cur_pattern.color
@@ -312,7 +324,7 @@ def save(project: Project, file: os.PathLike) -> None:
             ...
 
         elif id == EventID.PatName:
-            event.value = cur_insert.name
+            event.value = cur_pattern.name
 
         elif id == EventID.PatNew:
             cur_pattern = project.patterns[event.value]
@@ -368,7 +380,7 @@ def save(project: Project, file: os.PathLike) -> None:
 
         elif id == EventID.ProjFLVersion:
             v = project.version
-            event.value = ".".join((v.major, v.minor, v.build, v.patch))
+            event.value = f"{v.major}.{v.minor}.{v.build}.{v.patch}"
 
         elif id == EventID.ProjGenre:
             event.value = project.genre
@@ -449,14 +461,14 @@ def save(project: Project, file: os.PathLike) -> None:
     for event in project._events:
         event_chunklen += len(event)
 
-    stream = BytesIOEx(b"FLhd")
+    stream = BytesIOEx()
+    stream.write(b"FLhd")
     stream.write_I(6)
     stream.write_h(project.format)
     stream.write_H(project.channel_count)
     stream.write_H(project.ppq)
     stream.write(b"FLdt")
     stream.write_I(event_chunklen)
-
     for event in project._events:
         stream.write(bytes(event))
 

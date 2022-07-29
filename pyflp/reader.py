@@ -78,7 +78,7 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
 
     str_type = None
     stream.seek(22)  # Back to start of events
-    while stream.tell() < event_chunklen:
+    while stream.tell() < file_size:
         id = stream.read_B()
         event_type = None
 
@@ -439,8 +439,7 @@ def parse(file: os.PathLike, dont_fail: bool = False) -> Project:
                 try:
                     cur_pattern = project.patterns[value]
                 except KeyError:
-                    cur_pattern = Pattern()
-                    project.patterns[value] = cur_pattern
+                    project.patterns[value] = cur_pattern = Pattern()
 
             elif id == EventID.PatColor:
                 cur_pattern.color = value

@@ -14,7 +14,7 @@
 import abc
 import enum
 import warnings
-from typing import Any, Dict, Generic, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, Optional, Tuple, TypeVar, Union
 
 import colour
 from bytesioex import (  # ULong,
@@ -167,8 +167,9 @@ class BoolEvent(ByteEventBase[bool]):
         return Bool.unpack(self._raw)[0]
 
     @value.setter
-    def value(self, value: bool) -> None:
-        self._raw = Bool.pack(value)
+    def value(self, value: Optional[bool]) -> None:
+        if value is not None:
+            self._raw = Bool.pack(value)
 
 
 class I8Event(ByteEventBase[int]):
@@ -177,8 +178,9 @@ class I8Event(ByteEventBase[int]):
         return SByte.unpack(self._raw)[0]
 
     @value.setter
-    def value(self, value: int) -> None:
-        self._raw = SByte.pack(value)
+    def value(self, value: Optional[int]) -> None:
+        if value is not None:
+            self._raw = SByte.pack(value)
 
 
 class U8Event(ByteEventBase[int]):
@@ -187,8 +189,9 @@ class U8Event(ByteEventBase[int]):
         return Byte.unpack(self._raw)[0]
 
     @value.setter
-    def value(self, value: int) -> None:
-        self._raw = Byte.pack(value)
+    def value(self, value: Optional[int]) -> None:
+        if value is not None:
+            self._raw = Byte.pack(value)
 
 
 class WordEventBase(FixedSizeEventBase[_T], abc.ABC):
@@ -222,8 +225,9 @@ class I16Event(WordEventBase[int]):
         return Short.unpack(self._raw)[0]
 
     @value.setter
-    def value(self, value: int) -> None:
-        self._raw = Short.pack(value)
+    def value(self, value: Optional[int]) -> None:
+        if value is not None:
+            self._raw = Short.pack(value)
 
 
 class U16Event(WordEventBase[int]):
@@ -232,8 +236,9 @@ class U16Event(WordEventBase[int]):
         return UShort.unpack(self._raw)[0]
 
     @value.setter
-    def value(self, value: int) -> None:
-        self._raw = UShort.pack(value)
+    def value(self, value: Optional[int]) -> None:
+        if value is not None:
+            self._raw = UShort.pack(value)
 
 
 class DWordEventBase(FixedSizeEventBase[_T], abc.ABC):
@@ -267,8 +272,9 @@ class F32Event(DWordEventBase[float]):
         return Float.unpack(self._raw)[0]
 
     @value.setter
-    def value(self, value: float) -> None:
-        self._raw = Float.pack(value)
+    def value(self, value: Optional[float]) -> None:
+        if value is not None:
+            self._raw = Float.pack(value)
 
 
 class I32Event(DWordEventBase[int]):
@@ -277,8 +283,9 @@ class I32Event(DWordEventBase[int]):
         return Int.unpack(self._raw)[0]
 
     @value.setter
-    def value(self, value: int) -> None:
-        self._raw = Int.pack(value)
+    def value(self, value: Optional[int]) -> None:
+        if value is not None:
+            self._raw = Int.pack(value)
 
 
 class U32Event(DWordEventBase[int]):
@@ -287,8 +294,9 @@ class U32Event(DWordEventBase[int]):
         return UInt.unpack(self._raw)[0]
 
     @value.setter
-    def value(self, value: int) -> None:
-        self._raw = UInt.pack(value)
+    def value(self, value: Optional[int]) -> None:
+        if value is not None:
+            self._raw = UInt.pack(value)
 
 
 class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
@@ -298,7 +306,7 @@ class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
 
     @value.setter
     def value(self, value: Tuple[int, int]) -> None:
-        self._raw = UInt.pack(value)
+        self._raw = UInt.pack(*value)
 
 
 class ColorEvent(DWordEventBase[colour.Color]):
@@ -390,8 +398,9 @@ class AsciiEvent(StrEventBase):
         return self._raw.decode("ascii").rstrip("\0")
 
     @value.setter
-    def value(self, value: str) -> None:
-        self._raw = value.encode("ascii") + b"\0"
+    def value(self, value: Optional[str]) -> None:
+        if value is not None:
+            self._raw = value.encode("ascii") + b"\0"
 
 
 class UnicodeEvent(StrEventBase):
@@ -400,8 +409,9 @@ class UnicodeEvent(StrEventBase):
         return self._raw.decode("utf-16-le").rstrip("\0")
 
     @value.setter
-    def value(self, value: str) -> None:
-        self._raw = value.encode("utf-16-le") + b"\0\0"
+    def value(self, value: Optional[str]) -> None:
+        if value is not None:
+            self._raw = value.encode("utf-16-le") + b"\0\0"
 
 
 class DataEventBase(VariableSizedEventBase[bytes], abc.ABC):
