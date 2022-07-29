@@ -11,6 +11,8 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
+from abc import ABC, abstractmethod
+from enum import IntEnum
 from typing import (
     Any,
     Dict,
@@ -22,9 +24,10 @@ from typing import (
     TypeVar,
     Union,
 )
+from warnings import warn
 
-import colour
-from bytesioex import (  # ULong,
+from colour import Color
+from bytesioex import (
     Bool,
     Byte,
     BytesIOEx,
@@ -33,8 +36,10 @@ from bytesioex import (  # ULong,
     SByte,
     Short,
     UInt,
+    ULong,
     UShort,
 )
+from colour import Color
 
 __all__ = [
     "AsciiEvent",
@@ -113,11 +118,11 @@ class EventBase(ABC, Generic[_T], Sized, SupportsBytes):
     def __ne__(self, o: "EventBase") -> bool:
         return self.id != o.id or self._raw != o._raw
 
-    @abc.abstractmethod
+    @abstractmethod
     def __bytes__(self) -> bytes:
         ...
 
-    @abc.abstractmethod
+    @abstractmethod
     def __len__(self) -> int:
         """Raw event size in bytes."""
 
@@ -132,18 +137,18 @@ class EventBase(ABC, Generic[_T], Sized, SupportsBytes):
         self._raw = value
 
 
-class FixedSizeEventBase(EventBase[_T], abc.ABC):
+class FixedSizeEventBase(EventBase[_T], ABC):
     def __bytes__(self) -> bytes:
-        return int.to_bytes(self.id, 1, "little") + self._raw
+        return Byte.pack(self.id)[0] + self._raw
 
     def __repr__(self) -> str:
         rid = iid = int(self.id)
-        if isinstance(self.id, enum.IntEnum):
+        if isinstance(self.id, IntEnum):
             rid = f"{self.id!r}, {iid!r}"
         return f"<{type(self).__name__!r} id={rid!r}, value={self.value}>"
 
 
-class ByteEventBase(FixedSizeEventBase[_T], abc.ABC):
+class ByteEventBase(FixedSizeEventBase[_T], ABC):
     """Represents a byte-sized event."""
 
     def __init__(self, id: int, data) -> None:
@@ -201,7 +206,7 @@ class U8Event(ByteEventBase[int]):
             self._raw = Byte.pack(value)
 
 
-class WordEventBase(FixedSizeEventBase[_T], abc.ABC):
+class WordEventBase(FixedSizeEventBase[_T], ABC):
     """Represents a 2 byte event."""
 
     def __init__(self, id: int, data: bytes) -> None:
@@ -248,7 +253,7 @@ class U16Event(WordEventBase[int]):
             self._raw = UShort.pack(value)
 
 
-class DWordEventBase(FixedSizeEventBase[_T], abc.ABC):
+class DWordEventBase(FixedSizeEventBase[_T], ABC):
     """Represents a 4 byte event."""
 
     def __init__(self, id: int, data: bytes) -> None:
@@ -316,27 +321,22 @@ class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
         self._raw = UInt.pack(*value)
 
 
-class ColorEvent(DWordEventBase[colour.Color]):
+class ColorEvent(DWordEventBase[Color]):
     """Represents a 4 byte event which stores a color."""
 
     @property
-    def value(self) -> colour.Color:
+    def value(self) -> Color:
         r, g, b = (c / 255 for c in self._raw[:3])
-        return colour.Color(rgb=(r, g, b))
+        return Color(rgb=(r, g, b))
 
     @value.setter
-    def value(self, value: colour.Color) -> None:
+    def value(self, value: Color) -> None:
         self._raw = bytes((int(c * 255) for c in value.rgb)) + b"\x00"
 
 
-class VariableSizedEventBase(EventBase[_T], abc.ABC):
-    def __len__(self) -> int:
-        if self._raw:
-            return 1 + len(self.encode_varint(self._raw)) + len(self._raw)
-        return 2
-
+class VariableSizedEventBase(EventBase[_T], ABC):
     @staticmethod
-    def encode_varint(buffer: bytes) -> bytearray:
+    def _to_varint(buffer: bytes) -> bytearray:
         ret = bytearray()
         buflen = len(buffer)
         while True:
@@ -349,11 +349,16 @@ class VariableSizedEventBase(EventBase[_T], abc.ABC):
                 break
         return ret
 
+    def __len__(self) -> int:
+        if self._raw is not None:
+            return 1 + len(self._to_varint(self._raw)) + len(self._raw)
+        return 2
+
     def __bytes__(self) -> bytes:
-        id = int.to_bytes(self.id, 1, "little")
+        id = Byte.pack(self.id)[0]
 
         if self._raw != b"":
-            return id + self.encode_varint(self._raw) + self._raw
+            return id + self._to_varint(self._raw) + self._raw
         return id + b"\x00"
 
 
@@ -378,7 +383,7 @@ class U64VariableEvent(VariableSizedEventBase):
 #         return id + length + self._raw if self._raw else id + length
 
 
-class StrEventBase(VariableSizedEventBase[str], abc.ABC):
+class StrEventBase(VariableSizedEventBase[str], ABC):
     """Represents a variable sized event used for storing strings."""
 
     def __init__(self, id: int, data: bytes) -> None:
@@ -421,7 +426,7 @@ class UnicodeEvent(StrEventBase):
             self._raw = value.encode("utf-16-le") + b"\0\0"
 
 
-class DataEventBase(VariableSizedEventBase[bytes], abc.ABC):
+class DataEventBase(VariableSizedEventBase[bytes], ABC):
     def __init__(self, id: int, data: bytes) -> None:
         """
         Args:
@@ -442,8 +447,19 @@ class DataEventBase(VariableSizedEventBase[bytes], abc.ABC):
         self._raw = self.stream.getvalue()
         return super().__bytes__()
 
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__} id={self.id!r}, size={self.stream_len}>"
 
-class StructEventBase(DataEventBase, abc.ABC):
+
+class DataArrayEvent(DataEventBase):
+    pass
+
+
+class UnknownDataEvent(DataEventBase):
+    pass
+
+
+class StructEventBase(DataEventBase, ABC):
     """Represents an event used for storing fixed size structured data.
 
     Consists of a collection of POD types like int, bool, float, but not strings.
@@ -459,7 +475,7 @@ class StructEventBase(DataEventBase, abc.ABC):
         self._truncate = truncate
 
         if self.SIZE != 0 and len(data) != self.SIZE:
-            warnings.warn(f"Expected chunk size {self.SIZE} for {id}; got {len(data)}")
+            warn(f"Expected chunk size {self.SIZE} for {id}; got {len(data)}")
 
         for name, type_or_size in self.PROPS.items():
             if isinstance(type_or_size, str):
@@ -489,11 +505,6 @@ class StructEventBase(DataEventBase, abc.ABC):
 class PluginEvent(StructEventBase):
     def __init__(self, data: bytes, truncate=True) -> None:
         super().__init__(DATA + 5, data, truncate)
-
-
-class DataArrayEvent(DataEventBase):
-    def __repr__(self) -> str:
-        return f"<{type(self).__name__} id={self.id!r}, size={self.stream_len}>"
 
 
 EventType = TypeVar("EventType", bound=EventBase)
