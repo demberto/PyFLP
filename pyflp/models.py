@@ -18,7 +18,6 @@ from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum, IntFlag, auto, unique
-from platform import platform
 from typing import ClassVar, Dict, Iterator, List, Optional, Protocol, TypeVar
 
 import colour
@@ -261,6 +260,25 @@ class RemoteControllerEvent(StructEventBase):
 
 @unique
 class EventID(IntEnum):
+    """IDs used by events stored in an FLP-esque format.
+
+    Event values are stored as a tuple of event ID and its designated type.
+    The types are used to serialise/deserialise events by the parser.
+
+    Event naming conventions:
+    - Arr: `Arrangement`
+    - Ch: `Channel`
+    - Ins: `Insert`
+    - Pat: `Pattern`
+    - Plug: Event IDs shared by `Channel` and `InsertSlot`
+    - Proj: `Project`
+    - Slot: `InsertSlot`
+    - TM: `TimeMarker`
+
+    All event names prefixed with an underscore (_) are deprecated w.r.t to
+    the latest version of FL Studio, *to the best of my knowledge*.
+    """
+
     def __new__(cls, id, type=None):
         obj = int.__new__(cls, id)
         obj._value_ = id
@@ -348,7 +366,7 @@ class EventID(IntEnum):
     ProjLoopPos = (DWORD + 24, U32Event)
     ChAUSampleRate = (DWORD + 25, U32Event)
     InsInput = (DWORD + 26, I32Event)
-    ChIcon = SlotIcon = (DWORD + 27, U32Event)
+    PlugIcon = (DWORD + 27, U32Event)
     ProjTempo = (DWORD + 28, U32Event)
     # _157 = DWORD + 29   # FL 12.5+
     # _158 = DWORD + 30   # default: -1
@@ -363,9 +381,9 @@ class EventID(IntEnum):
     _ProjRTFComments = TEXT + 6
     ProjFLVersion = (TEXT + 7, AsciiEvent)
     ProjRegisteredTo = TEXT + 8
-    ChDefaultName = SlotDefaultName = TEXT + 9
+    PlugDefaultName = TEXT + 9
     ProjDataPath = TEXT + 10
-    ChName = SlotName = TEXT + 11
+    PlugName = TEXT + 11
     InsName = TEXT + 12
     TMName = TEXT + 13
     ProjGenre = TEXT + 14
@@ -378,7 +396,7 @@ class EventID(IntEnum):
     # Plugin wrapper data, windows pos of plugin etc, currently
     # selected plugin wrapper page; minimized, closed or not
     PlugWrapper = (DATA + 4, UnknownDataEvent)  # TODO
-    ChPlugin = SlotPlugin = (DATA + 5, PluginEvent)
+    PlugData = (DATA + 5, PluginEvent)
     ChParameters = (DATA + 7, ChannelParametersEvent)
     ChEnvelopeLFO = (DATA + 10, ChannelEnvelopeLFOEvent)
     ChLevels = (DATA + 11, ChannelLevelsEvent)
@@ -1000,7 +1018,7 @@ class InsertSlot:
     """Dry/Wet mix. Min: 0 (0%), Max: 12800 (100%), Default: 12800 (100%)."""
 
     name: Optional[str] = None
-    plugin: Optional[object] = None
+    plugin: Optional[IPlugin] = None
     """The effect loaded into the slot."""
 
 
@@ -1233,17 +1251,25 @@ class FruityFastDist:
 
 @dataclass
 class FruityNotebook2:
-    CODEC: ClassVar[str] = "utf-16-le" if platform() == "Windows" else "utf-8"
-    DEFAULT_NAME: ClassVar[str] = "Fruity Notebook 2"
+    DEFAULT_NAME: ClassVar[str] = "Fruity NoteBook 2"
     active_page: Optional[int] = None
+    """Active page number of the notebook. Min: 0, Max: 100."""
+
     editable: Optional[bool] = None
-    pages: List[str] = field(default_factory=list)
+    """Whether the notebook is marked as editable or read-only.
+
+    This attribute is just a visual marker used by FL Studio.
+    """
+
+    pages: Dict[int, str] = field(default_factory=dict)
+    """A dict of page numbers to their contents."""
 
 
 class FruityNotebook2Event(PluginEvent):
     def __init__(self, data: bytes) -> None:
         super().__init__(data, False)
-        self.props = {"pages": []}
+        self.props = {}
+        pages = self.props["pages"] = {}
 
         self.stream.seek(4)
         self.props["active_page"] = self.stream.read_I()
@@ -1252,10 +1278,10 @@ class FruityNotebook2Event(PluginEvent):
             if page_num == -1:
                 break
 
-            size = self.stream.read_v()
-            raw = self.stream.read(size)
-            page = raw.decode(FruityNotebook2.CODEC)
-            self.props["pages"].append(page)
+            strlen = self.stream.read_v() * 2
+            raw = self.stream.read(strlen)
+            page = raw.decode("utf-16-le")
+            pages[page_num] = page
         self.props["editable"] = self.stream.read_bool()
 
 

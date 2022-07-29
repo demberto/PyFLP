@@ -35,7 +35,6 @@ information about VST plugins.
 ::: pyflp.models.FruityNotebook2
     options:
       filters:
-        - "!CODEC"
         - "!DEFAULT_NAME"
 
 ## Fruity Send
