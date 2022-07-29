@@ -11,10 +11,17 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-import abc
-import enum
-import warnings
-from typing import Any, Dict, Generic, Optional, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Optional,
+    Sized,
+    SupportsBytes,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import colour
 from bytesioex import (  # ULong,
@@ -93,7 +100,7 @@ class UnexpectedTypeError(Error, TypeError):
         super().__init__(f"Expected a {expected} object; got a {got} object instead")
 
 
-class EventBase(abc.ABC, Generic[_T]):
+class EventBase(ABC, Generic[_T], Sized, SupportsBytes):
     """Abstract base class representing an event."""
 
     def __init__(self, id: int, data: bytes) -> None:

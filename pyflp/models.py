@@ -18,7 +18,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum, IntFlag, auto, unique
-from typing import ClassVar, Dict, Iterator, List, Optional, Protocol, TypeVar
+from typing import ClassVar, Dict, Iterable, Iterator, List, Optional, Protocol, TypeVar
 
 import colour
 
@@ -1023,7 +1023,7 @@ class InsertSlot:
 
 
 @dataclass
-class Insert:
+class Insert(Iterable[InsertSlot]):
     """Represents a channel in the mixer."""
 
     bypassed: Optional[bool] = None
