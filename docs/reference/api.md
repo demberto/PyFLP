@@ -5,5 +5,5 @@ hide:
 
 # API
 
-::: pyflp.reader.parse
-::: pyflp.writer.save
+::: pyflp.parse
+::: pyflp.save

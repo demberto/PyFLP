@@ -5,34 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - Unreleased
+## 2.0.0 - Unreleased
 
-PyFLP has been rewritten from the base. It consists of these 4 files only:
+PyFLP has been rewritten ✨
 
-- events.py: Event types, rewritten to closely match underlying POD types.
-- models.py: Data structures, enums and custom event definitions.
-- reader.py: Deserialisation; all in a single `parse` function.
-- writer.py: Serialisation; all in a single `save` function.
-
-This rewrite is inspired by how `FLParser`'s logic worked, simple and unseparated.
-All the separation I did in the earlier versions, was only a complex way to a
-simpler problem. Sometimes separation isn't simply logical, due to how events
-are dependant on things like version or PPQ.
-
-Initially I thought about creating classes with properties handling their own events.
-This again meant using decorators and complicated hacks once dependencies simply
-couldn't be resolved. This also meant that my models and logic won't be separated.
-Naturally, I decided that using dataclasses would be the most ideal choice.
-
-Events are more rich now, so even if the model creation fails, the events will be
-helpful enough.
-
-Users of this library should be aware that I have also decided to strictly stay
-away from any validation by this library. Using it in the earlier versions proved
-to be a big mistake.
+Highlights:
+1. Richer events: Variable data events now parse their structure themselves.
+   Fixed size events are categorized closely to the data they represent.
+2. Lazy evaluation: Properties are evaluated as lazily as possible to prevent
+   the use of private variables and keep them synced with event data.
+3. Neatly organised models: Appropriate use of composition and subclassing.
+3. Zero pre-parse field validation: Makes sense for an undocumented format.
+4. Fullly type hinted: Ensures strict adherence with pyright.
+5. Simplified single-level module hierarchy to ease imports.
+6. Docs now contain images for corresponding model types.
 
 *The major version number bump indicates a breaking change, however I would highly
 encourage you to upgrade to this version. **I WILL NOT BE MAINTAINING OLDER VERSIONS.***
+
+## 1.1.2 - Unreleased
 
 ### Fixed
 
@@ -300,6 +291,7 @@ Same as in 0.1.1
 
 ---
 
+[1.1.1]: https://github.com/demberto/PyFLP/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/demberto/PyFLP/compare/1.0.1...1.1.0
 [1.0.1]: https://github.com/demberto/PyFLP/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/demberto/PyFLP/compare/0.2.0...1.0.0

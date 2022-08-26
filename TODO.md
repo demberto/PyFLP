@@ -1,4 +1,4 @@
-Here I keep my TODOs, goals and issues. I remove them once they are solved/no
+Here I keep my TODOs and goals. I remove them once they are solved/no
 longer a problem. This is not a complete list, you can find many `# TODO`
 comments all over the codebase.
 
@@ -15,6 +15,6 @@ comments all over the codebase.
 
 - Discover enums for `Channel.layer_flags` and `Channel.sampler_flags` and
   merge them both into `Channel.flags`.
-- Group pattern notes by `PatternNote.rack_channel` i.e. `Pattern.notes`
+- Group pattern notes by `MIDINote.rack_channel` i.e. `Pattern.notes`
   should be of type `Dict[Channel, Note]`.
 - Tests.

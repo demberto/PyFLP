@@ -10,8 +10,6 @@
 
         [![](../img/project-info.png)](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/songsettings_songinfo.htm)
 
-::: pyflp.models.Project
-::: pyflp.models.FileFormat
-::: pyflp.models.PanLaw
-::: pyflp.models.Selection
-::: pyflp.models.TimeSignature
+::: pyflp.project.Project
+::: pyflp.project.FileFormat
+::: pyflp.project.PanLaw

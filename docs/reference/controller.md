@@ -1,3 +1,3 @@
 # Controllers
 ![](../img/remote-controller.png)
-::: pyflp.models.RemoteController
+::: pyflp.controller.RemoteController

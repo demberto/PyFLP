@@ -10,11 +10,11 @@ nav:
   - Reference:
     - API: reference/api.md
     - Project: reference/project.md
-    - Arrangement: reference/arrangement.md
+    - Arrangement: reference/arrangements.md
     - Channel: reference/channel.md
-    - Controllers: reference/controllers.md
+    - Controllers: reference/controller.md
     - Mixer: reference/mixer.md
-    - Plugins: reference/plugins.md
+    - Plugins: reference/plugin.md
     - FLP Format: reference/flp-format.md
   - Contributing: contributing.md
   - Report a bug: https://github.com/demberto/PyFLP/issues
@@ -30,23 +30,32 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
+  - pymdownx.mark
   - pymdownx.snippets
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+  - tables
 plugins:
   - include-markdown
   - search
   - autorefs
+  - glightbox
   - mkdocstrings:
       handlers:
         python:
           options:
-            heading_level: 3
-            show_bases: no
             show_if_no_docstring: yes
             show_root_heading: yes
+            show_signature_annotations: yes
             show_source: no
+            filters:
+              - '!__repr__'
+              - '!__init__'
+              - '!__iter__'
+              - '!_collect_events'
+            paths:
+              - pyflp
       watch:
         - pyflp
 theme:

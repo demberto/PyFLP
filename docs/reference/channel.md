@@ -1,54 +1,54 @@
 # Channel
 ![](../img/channel-toolbar.png)
-::: pyflp.models.Channel
-::: pyflp.models.ChannelType
+::: pyflp.channel.Channel
+::: pyflp.channel.ChannelType
 
-## Sample settings
+## Sampler settings
 ### FX
 ![](../img/channel-fx1.png) ![](../img/channel-fx2.png)
-::: pyflp.models.ChannelFX
-::: pyflp.models.ChannelReverb
-::: pyflp.models.ChannelReverbType
+::: pyflp.channel.FX
+::: pyflp.channel.Reverb
+::: pyflp.channel.ReverbType
 
 ### Playback settings
-::: pyflp.models.ChannelPlayback
+::: pyflp.channel.Playback
 
 ### Time stretching
 ![](../img/channel-stretching.png)
-::: pyflp.models.ChannelTimeStretching
+::: pyflp.channel.TimeStretching
 
 ## Envelope / instrument settings
 ![](../img/channel-envlfo.png)
-::: pyflp.models.ChannelEnvelope
-::: pyflp.models.ChannelLFO
-::: pyflp.models.ChannelLFOShape
+::: pyflp.channel.Envelope
+::: pyflp.channel.LFO
+::: pyflp.channel.LFOShape
 
 ## Miscellaneous functions
 ### Arpeggiator
 ![](../img/channel-arp.png)
-::: pyflp.models.ChannelArp
-::: pyflp.models.ChannelArpDirection
+::: pyflp.channel.Arp
+::: pyflp.channel.ArpDirection
 
 ### Delay
 ![](../img/channel-delay.png)
-::: pyflp.models.ChannelDelay
+::: pyflp.channel.Delay
 
 ### Level adjustments
 ![](../img/channel-level-adjusts.png)
-::: pyflp.models.ChannelLevelAdjusts
+::: pyflp.channel.LevelAdjusts
 
 ### MIDI options
 ![](../img/channel-keyboard.png)
-::: pyflp.models.ChannelKeyboard
+::: pyflp.channel.Keyboard
 
 ### Note timing
 ![](../img/channel-time.png)
-::: pyflp.models.ChannelTime
+::: pyflp.channel.Time
 
 ### Polyphony
 ![](../img/channel-polyphony.png)
-::: pyflp.models.ChannelPolyphony
+::: pyflp.channel.Polyphony
 
 ### Tracking (Key / Volume)
 ![](../img/channel-tracking.png)
-::: pyflp.models.ChannelTracking
+::: pyflp.channel.Tracking

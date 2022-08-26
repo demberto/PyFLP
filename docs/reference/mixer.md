@@ -1,30 +1,30 @@
 # Mixer
 ![](../img/mixer.png)
+::: pyflp.mixer.Mixer
 
 ## Insert
 
 ??? example "Insert dock & routes"
 
-    === "`pyflp.models.InsertDock`"
+    === "`pyflp.mixer.InsertDock`"
 
         ![](../img/insert-dock.png)
 
-    === "`pyflp.models.InsertRoute`"
+    === "`pyflp.mixer.InsertRoute`"
 
         ![](../img/insert-route.png)
 
-::: pyflp.models.Insert
+::: pyflp.mixer.Insert
     options:
       filters:
         - "!__iter__()"
-::: pyflp.models.InsertDock
-::: pyflp.models.InsertRoute
+::: pyflp.mixer.InsertDock
 
 ### EQ
 ![](../img/insert-eq.png)
-::: pyflp.models.InsertEQ
-::: pyflp.models.InsertEQBand
+::: pyflp.mixer.InsertEQ
+::: pyflp.mixer.InsertEQBand
 
 ## Slot
 ![](../img/insert-slots.png)
-::: pyflp.models.InsertSlot
+::: pyflp.mixer.Slot
