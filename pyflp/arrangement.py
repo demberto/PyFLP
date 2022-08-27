@@ -399,7 +399,7 @@ class Arrangements(MultiEventModel, Iterable[Arrangement], Sized):
     def __len__(self):
         return len(list(self.arrangements))
 
-    # TODO Fix arrangement detection; verify ArrangementsID.Current is the end
+    # TODO Verify ArrangementsID.Current is the end
     # FL changed event ordering a lot, the latest being the most easiest to
     # parse; it contains ArrangementID.New event followed by TimeMarker events
     # followed by 500 TrackID events. TimeMarkers occured before new arrangement
@@ -408,14 +408,18 @@ class Arrangements(MultiEventModel, Iterable[Arrangement], Sized):
     def arrangements(self) -> Iterator[Arrangement]:
         first = True
         events: List[AnyEvent] = []
+
+        def make_arr():
+            return Arrangement(*events, version=self._kw["version"])
+
         for event in self._events_tuple:
             if event.id == ArrangementID.New:
                 if not first:
-                    yield Arrangement(*events, version=self._kw["version"])
-                    first = True
+                    yield make_arr()
                     events = []
-                first = False
+                first = not first
             elif event.id == ArrangementsID.Current:
+                yield make_arr()  # last arrangement
                 return
 
             for enum in (ArrangementID, TimeMarkerID, TrackID):
