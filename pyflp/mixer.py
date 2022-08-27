@@ -467,11 +467,13 @@ class Mixer(MultiEventModel, Iterable[Insert], Sized):
     def __iter__(self) -> Iterator[Insert]:
         return self.inserts
 
-    def __repr__(self):
-        return f"Mixer: {len(tuple(self.inserts))} inserts"
-
     def __len__(self):
-        return len(list(self.inserts))
+        if InsertID.Flags not in self._events:
+            return NotImplemented
+        return len(self._events[InsertID.Flags])
+
+    def __repr__(self):
+        return f"Mixer: {len(self)} inserts"
 
     @property
     def inserts(self) -> Iterator[Insert]:

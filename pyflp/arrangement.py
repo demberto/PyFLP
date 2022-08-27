@@ -317,15 +317,14 @@ class Arrangement(MultiEventModel, SupportsIndex):
     def __repr__(self):
         timemarkers = f"{len(tuple(self.timemarkers))} timemarkers"
         tracks = f"{len(tuple(self.tracks))} tracks"
-        suffix = f"#{self.index} {timemarkers} and {tracks}"
+        suffix = f"#{self.__index__()} {timemarkers} and {tracks}"
         if self.name:
             return f"Arrangement {self.name!r} {suffix}"
         return f"Unnamed arrangement {suffix}"
 
-    def __index__(self):
-        return self.index or NotImplemented
+    def __index__(self) -> int:
+        return self._events[ArrangementID.New][0].value
 
-    index = EventProp[int](ArrangementID.New)
     name = EventProp[str](ArrangementID.Name)
     """Name of the arrangement; which by default is **Arrangement**."""
 
@@ -390,14 +389,17 @@ class Arrangements(MultiEventModel, Iterable[Arrangement], Sized):
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
         super().__init__(*events, **kw)
 
-    def __repr__(self):
-        return f"{len(tuple(self.arrangements))} arrangements"
-
     def __iter__(self):
         return self.arrangements
 
     def __len__(self):
-        return len(list(self.arrangements))
+        if ArrangementID.New not in self._events:
+            return NotImplemented
+
+        return len(self._events[ArrangementID.New])
+
+    def __repr__(self):
+        return f"{len(self)} arrangements"
 
     # TODO Verify ArrangementsID.Current is the end
     # FL changed event ordering a lot, the latest being the most easiest to

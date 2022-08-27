@@ -182,7 +182,9 @@ class Patterns(MultiEventModel, Sized):
         return f"{len(indexes)} Patterns {indexes!r}"
 
     def __len__(self):
-        return len(list(self.patterns))
+        if PatternID.New not in self._events:
+            return NotImplemented
+        return len(set(event.value for event in self._events[PatternID.New]))
 
     @property
     def patterns(self) -> Iterator[Pattern]:

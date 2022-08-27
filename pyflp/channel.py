@@ -722,7 +722,9 @@ class Rack(MultiEventModel, Sized, Iterable[Channel]):
         return self.channels
 
     def __len__(self):
-        return self._kw["channel_count"]
+        if ChannelID.New not in self._events:
+            return NotImplemented
+        return len(self._events[ChannelID.New])
 
     @property
     def automations(self) -> Iterator[Automation]:
