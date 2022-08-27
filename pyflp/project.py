@@ -56,7 +56,7 @@ from .arrangement import (
     TrackID,
 )
 from .channel import ChannelID, Rack, RackID
-from .exceptions import ExpectedValue, InvalidValue, PropertyCannotBeSet
+from .exceptions import ExpectedValue, InvalidValue, PropertyCannotBeSet, UnexpectedType
 from .mixer import InsertID, Mixer, MixerID, SlotID
 from .pattern import PatternID, Patterns, PatternsID
 from .plugin import PluginID
@@ -83,7 +83,10 @@ class PanLaw(enum.IntEnum):
 
 @enum.unique
 class FileFormat(enum.IntEnum):
-    """File formats used by FL Studio."""
+    """File formats used by FL Studio.
+
+    FST (FL Studio State) files: New in FL Studio version 2.5.0.
+    """
 
     None_ = -1
     """Temporary"""
@@ -95,10 +98,10 @@ class FileFormat(enum.IntEnum):
     """FL Studio score (*.fsc). Stores pattern notes and controller events."""
 
     Automation = 24
-    """FL Studio state (*.fst). Stores controller events and automation channels."""
+    """Stores controller events and automation channels as FST."""
 
     ChannelState = 0x20
-    """Entire channel (including plugin events). Stores as FST."""
+    """Entire channel (including plugin events). Stored as FST."""
 
     PluginState = 0x30
     """Events of a native plugin on a channel or insert slot. Stored as FST."""
@@ -196,7 +199,7 @@ class Project(MultiEventModel):
             if event.id == InsertID.Flags:
                 break
 
-            for enum in (ChannelID, PluginID, RackID):
+            for enum in (ChannelID, DisplayGroupID, PluginID, RackID):
                 if event.id in enum:
                     events.append(event)
                     break
@@ -271,7 +274,7 @@ class Project(MultiEventModel):
         if events is not None:
             event = events[0]
             licensee = bytearray()
-            for idx, char in enumerate(cast(str, event.value)):
+            for idx, char in enumerate(event.value):
                 c1 = ord(char) - 26 + idx
                 c2 = ord(char) + 49 + idx
 
@@ -330,7 +333,7 @@ class Project(MultiEventModel):
             beyond the PyFLP's scope to properly recalculate the timings.
 
         Raises:
-            UnexpectedValue: When a value not in `VALID_PPQS` is tried to be set.
+            ExpectedValue: When a value not in `VALID_PPQS` is tried to be set.
         """
         return self._kw["ppq"]
 
@@ -410,7 +413,7 @@ class Project(MultiEventModel):
             PropertyCannotBeSet: When the underlying event couldn't be found.
                 This error should NEVER occur; if it does, it indicates possible
                 corruption.
-            UnexpectedValue: When a string with an invalid format is tried to be set.
+            ExpectedValue: When a string with an invalid format is tried to be set.
         """
         events = self._events[ProjectID.FLVersion]
         event = cast(AsciiEvent, events[0])

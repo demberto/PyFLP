@@ -71,7 +71,7 @@ from .controller import RemoteController
 from .exceptions import PropertyCannotBeSet
 from .plugin import IPlugin, PluginID
 
-__all__ = ["Rack", "Automation", "Channel", "Instrument", "Layer"]
+__all__ = ["Automation", "Channel", "Instrument", "Layer", "Rack"]
 
 
 class DelayStruct(StructBase):

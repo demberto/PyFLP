@@ -139,8 +139,10 @@ class Controller(SingleEventModel):
     value = StructProp[float]()
 
 
+# As of the latest version of FL, note and controller events are stored before
+# all channel events (if they exist). The rest is stored later on as it occurs.
 class Pattern(MultiEventModel, SupportsIndex):
-    def __repr__(self) -> str:
+    def __repr__(self):
         if self.name is None:
             repr = "Unnamed pattern"
         else:
@@ -151,12 +153,25 @@ class Pattern(MultiEventModel, SupportsIndex):
             return f"{repr} with {num_notes} notes"
         return f"Empty {repr}"
 
-    def __index__(self) -> int:
-        return self._events[PatternID.New][0].value
+    def __index__(self):
+        return self.index
 
     color = EventProp[colour.Color](PatternID.Color)
     controllers = IterProp(PatternID.Controllers, Controller)
+
+    @property
+    def index(self) -> int:
+        """Internal index of the pattern starting from 1."""
+        return self._events[PatternID.New][0].value
+
+    @index.setter
+    def index(self, value: int):
+        for event in self._events[PatternID.New]:
+            event.value = value
+
     name = EventProp[str](PatternID.Name)
+    """User given name of the pattern; None if not set."""
+
     notes = IterProp(PatternID.Notes, Note)
     """MIDI notes contained inside the pattern."""
 
@@ -172,14 +187,14 @@ class Patterns(MultiEventModel, Sized):
     @property
     def patterns(self) -> Iterator[Pattern]:
         cur_pat_id = 0
-        patterns: DefaultDict[int, List[AnyEvent]] = collections.defaultdict(list)
+        events_dict: DefaultDict[int, List[AnyEvent]] = collections.defaultdict(list)
 
         for event in self._events_tuple:
             if event.id == PatternID.New:
                 cur_pat_id = event.value
-            patterns[cur_pat_id].append(event)
+            events_dict[cur_pat_id].append(event)
 
-        for events in patterns.values():
+        for events in events_dict.values():
             yield Pattern(*events)
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)

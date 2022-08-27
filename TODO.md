@@ -15,6 +15,6 @@ comments all over the codebase.
 
 - Discover enums for `Channel.layer_flags` and `Channel.sampler_flags` and
   merge them both into `Channel.flags`.
-- Group pattern notes by `MIDINote.rack_channel` i.e. `Pattern.notes`
+- Group pattern notes by `Note.rack_channel` i.e. `Pattern.notes`
   should be of type `Dict[Channel, Note]`.
 - Tests.
