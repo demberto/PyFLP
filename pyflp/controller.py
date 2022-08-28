@@ -19,13 +19,7 @@ Contains the types used by MIDI and remote controllers.
 """
 
 import enum
-import sys
 from typing import Optional, cast
-
-if sys.version_info >= (3, 8):
-    from typing import final
-else:
-    from typing_extensions import final
 
 from ._base import (
     DATA,
@@ -49,7 +43,6 @@ class RemoteControllerStruct(StructBase):
     }
 
 
-@final
 class RemoteControllerEvent(StructEventBase):
     STRUCT = RemoteControllerStruct
 

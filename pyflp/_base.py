@@ -45,10 +45,9 @@ from typing import (
 )
 
 if sys.version_info >= (3, 8):
-    from typing import Final, Protocol, SupportsIndex, final, runtime_checkable
+    from typing import Final, Protocol, SupportsIndex, runtime_checkable
 else:
     from typing_extensions import (
-        final,
         Final,
         Protocol,
         runtime_checkable,
@@ -93,19 +92,16 @@ class EventBase(abc.ABC, Generic[T], Hashable, Sized, SupportsBytes):
         self.id: Final = id
         self._raw = data
 
-    @final
     def __eq__(self, o: object):
         if not isinstance(o, EventBase):
             raise TypeError(f"Cannot find equality of an {type(o)} and {type(self)!r}")
         return self.id == o.id and self._raw == o._raw
 
-    @final
     def __ne__(self, o: object):
         if not isinstance(o, EventBase):
             raise TypeError(f"Cannot find inequality of a {type(o)} and {type(self)!r}")
         return self.id != o.id or self._raw != o._raw
 
-    @final
     def __hash__(self):
         return hash((self.id, self._raw))
 
@@ -148,14 +144,12 @@ class PODEventBase(EventBase[T], abc.ABC):
     def __bytes__(self):
         return Byte.pack(self.id) + self._raw
 
-    @final
     def __repr__(self):
         rid = iid = int(self.id)
         if isinstance(self.id, enum.IntEnum):
             rid = f"{self.id!r}, {iid!r}"
         return f"<{type(self).__name__!r} id={rid!r}, value={self.value}>"
 
-    @final
     def __len__(self):
         return 1 + self.TYPE_SIZE
 
@@ -179,7 +173,6 @@ class ByteEventBase(PODEventBase[T], abc.ABC):
         super().__init__(id, data)
 
 
-@final
 class BoolEvent(ByteEventBase[bool]):
     """An event used for storing a boolean."""
 
@@ -193,7 +186,6 @@ class BoolEvent(ByteEventBase[bool]):
             self._raw = Bool.pack(value)
 
 
-@final
 class I8Event(ByteEventBase[int]):
     """An event used for storing a 1 byte signed integer."""
 
@@ -207,7 +199,6 @@ class I8Event(ByteEventBase[int]):
             self._raw = SByte.pack(value)
 
 
-@final
 class U8Event(ByteEventBase[int]):
     """An event used for storing a 1 byte unsigned integer."""
 
@@ -240,7 +231,6 @@ class WordEventBase(PODEventBase[T], abc.ABC):
         super().__init__(id, data)
 
 
-@final
 class I16Event(WordEventBase[int]):
     """An event used for storing a 2 byte signed integer."""
 
@@ -254,7 +244,6 @@ class I16Event(WordEventBase[int]):
             self._raw = Short.pack(value)
 
 
-@final
 class U16Event(WordEventBase[int]):
     """An event used for storing a 2 byte unsigned integer."""
 
@@ -274,7 +263,6 @@ class DWordEventBase(PODEventBase[T], abc.ABC):
     TYPE_SIZE = 4
     ID_RANGE = (DWORD, TEXT)
 
-    @final
     def __init__(self, id: int, data: bytes):
         """
         Args:
@@ -288,7 +276,6 @@ class DWordEventBase(PODEventBase[T], abc.ABC):
         super().__init__(id, data)
 
 
-@final
 class F32Event(DWordEventBase[float]):
     """An event used for storing 4 byte floats."""
 
@@ -302,7 +289,6 @@ class F32Event(DWordEventBase[float]):
             self._raw = Float.pack(value)
 
 
-@final
 class I32Event(DWordEventBase[int]):
     """An event used for storing a 4 byte signed integer."""
 
@@ -316,7 +302,6 @@ class I32Event(DWordEventBase[int]):
             self._raw = Int.pack(value)
 
 
-@final
 class U32Event(DWordEventBase[int]):
     """An event used for storing a 4 byte unsigned integer."""
 
@@ -330,7 +315,6 @@ class U32Event(DWordEventBase[int]):
             self._raw = UInt.pack(value)
 
 
-@final
 class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
     """An event used for storing a two-tuple of 2 byte unsigned integers."""
 
@@ -343,7 +327,6 @@ class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
         self._raw = UInt.pack(*value)
 
 
-@final
 class ColorEvent(DWordEventBase[colour.Color]):
     """A 4 byte event which stores a color."""
 
@@ -358,7 +341,6 @@ class ColorEvent(DWordEventBase[colour.Color]):
 
 
 class VarintEventBase(EventBase[T], abc.ABC):
-    @final
     @staticmethod
     def _to_varint(buffer: bytes):
         ret = bytearray()
@@ -386,7 +368,6 @@ class VarintEventBase(EventBase[T], abc.ABC):
         return id + b"\x00"
 
 
-@final
 class U64DataEvent(VarintEventBase[Union[bytes, str]]):
     def __init__(self, id: int, data: bytes, isascii: bool = False):
         super().__init__(id, data)
@@ -415,7 +396,6 @@ class U64DataEvent(VarintEventBase[Union[bytes, str]]):
 class StrEventBase(VarintEventBase[str], abc.ABC):
     """Base class of events used for storing strings."""
 
-    @final
     def __init__(self, id: int, data: bytes):
         """
         Args:
@@ -430,12 +410,10 @@ class StrEventBase(VarintEventBase[str], abc.ABC):
 
         super().__init__(id, data)
 
-    @final
     def __repr__(self):
         return f"<{type(self).__name__} id={self.id!r}, string={self.value!r}>"
 
 
-@final
 class AsciiEvent(StrEventBase):
     @property
     def value(self):
@@ -447,7 +425,6 @@ class AsciiEvent(StrEventBase):
             self._raw = value.encode("ascii") + b"\0"
 
 
-@final
 class UnicodeEvent(StrEventBase):
     @property
     def value(self):
@@ -553,23 +530,18 @@ class StructBase(metaclass=_StructMeta):
             else:
                 self._props[key] = getattr(self._stream, f"read_{type_or_size}")()
 
-    @final
     def __bytes__(self):
         return self._stream.getvalue()
 
-    @final
     def __len__(self):
         return self._stream_len
 
-    @final
     def __contains__(self, key: str):
         return key in self._props
 
-    @final
     def __getitem__(self, key: str):
         return self._props[key]
 
-    @final
     def __setitem__(self, key: str, value: Any):
         if key not in type(self).PROPS:
             raise KeyError(key)
@@ -606,24 +578,19 @@ class StructEventBase(DataEventBase):
                 stacklevel=2,  # shows event.append(...) code in traceback
             )
 
-    @final
     def __bytes__(self):
         self._raw = bytes(self._struct)
         return super().__bytes__()
 
-    @final
     def __contains__(self, prop: str):
         return prop in self._struct
 
-    @final
     def __getitem__(self, key: str):
         return self._struct[key]
 
-    @final
     def __setitem__(self, key: str, value: Any):
         self._struct[key] = value
 
-    @final
     def __repr__(self):
         cls = type(self).__name__
         size = self._stream_len
@@ -636,7 +603,6 @@ class ListEventBase(DataEventBase, abc.ABC, Iterable[StructBase]):
 
     STRUCT: ClassVar[Type[StructBase]]
 
-    @final
     def __init__(self, id: int, data: bytes):
         super().__init__(id, data)
         self.items: List[StructBase] = []
@@ -653,19 +619,15 @@ class ListEventBase(DataEventBase, abc.ABC, Iterable[StructBase]):
                 "size is not a multiple of struct size"
             )
 
-    @final
     def __getitem__(self, index: SupportsIndex):
         return self.items[index]
 
-    @final
     def __setitem__(self, index: SupportsIndex, item: StructBase):
         self.items[index] = item
 
-    @final
     def __iter__(self):
         return iter(self.items)
 
-    @final
     def __repr__(self):
         cls = type(self).__name__
         size = self._stream_len
@@ -673,7 +635,6 @@ class ListEventBase(DataEventBase, abc.ABC, Iterable[StructBase]):
         return f"{cls} (id={self.id!r}, size={size}, {num_items} items)"
 
 
-@final
 class UnknownDataEvent(DataEventBase):
     """Used for events whose structure is unknown as of yet."""
 
@@ -686,7 +647,6 @@ class UnknownDataEvent(DataEventBase):
         self._raw = value
 
 
-@final
 class EventEnumMeta(enum.EnumMeta):
     def __contains__(self, id: int):
         try:
@@ -707,7 +667,6 @@ class EventEnum(int, enum.Enum, metaclass=EventEnumMeta):
     the latest version of FL Studio, *to the best of my knowledge*.
     """
 
-    @final
     def __new__(cls, id: int, type: Optional[Type[AnyEvent]] = None):
         obj = int.__new__(cls, id)
         obj._value_ = id
@@ -776,13 +735,11 @@ class NamedPropMixin:
     def __init__(self, prop: Optional[str] = None) -> None:
         self._prop = prop or ""
 
-    @final
     def __set_name__(self, _: Any, name: str):
         if self._prop == "":
             self._prop = name
 
 
-@final
 class FlagProp(RWProperty[bool]):
     """Properties derived from enum flags."""
 
@@ -841,7 +798,6 @@ class FlagProp(RWProperty[bool]):
             struct[self._prop] &= ~self._flag
 
 
-@final
 class KWProp(NamedPropMixin, RWProperty[T]):
     """Properties derived from non-local event values.
 
@@ -859,7 +815,6 @@ class KWProp(NamedPropMixin, RWProperty[T]):
         instance._kw[self._prop] = value
 
 
-@final
 class EventProp(RWProperty[T]):
     def __init__(self, *ids: EventEnum):
         self._ids = ids
@@ -886,7 +841,6 @@ class EventProp(RWProperty[T]):
                 event.value = value
 
 
-@final
 class IterProp(ROProperty[Iterator[SEMT_co]]):
     def __init__(self, id: EventEnum, type: Type[SEMT_co]):
         self._id = id
@@ -906,7 +860,6 @@ class IterProp(ROProperty[Iterator[SEMT_co]]):
                     yield self._type(event)
 
 
-@final
 class NestedProp(ROProperty[MT_co]):
     def __init__(self, type: Type[MT_co], *ids: EventEnum):
         self._ids = ids
@@ -923,7 +876,6 @@ class NestedProp(ROProperty[MT_co]):
         return self._type(*events)
 
 
-@final
 class StructProp(NamedPropMixin, RWProperty[T]):
     def __init__(self, prop: Optional[str] = None, id: Optional[EventEnum] = None):
         super().__init__(prop)
@@ -951,7 +903,6 @@ class StructProp(NamedPropMixin, RWProperty[T]):
             event[self._prop] = value
 
 
-@final
 @dataclasses.dataclass(frozen=True, order=True)
 class FLVersion:
     major: int

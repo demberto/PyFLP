@@ -20,7 +20,6 @@ Contains the types used by the channels and channel rack.
 
 import collections
 import enum
-import sys
 from typing import (
     DefaultDict,
     Dict,
@@ -32,11 +31,6 @@ from typing import (
     Tuple,
     cast,
 )
-
-if sys.version_info >= (3, 8):
-    from typing import final
-else:
-    from typing_extensions import final
 
 import colour
 
@@ -126,37 +120,30 @@ class TrackingStruct(StructBase):
     PROPS = {"middle_value": "i", "pan": "i", "mod_x": "i", "mod_y": "i"}
 
 
-@final
 class DelayEvent(StructEventBase):
     STRUCT = DelayStruct
 
 
-@final
 class EnvelopeLFOEvent(StructEventBase):
     STRUCT = EnvelopeLFOStruct
 
 
-@final
 class LevelAdjustsEvent(StructEventBase):
     STRUCT = LevelAdjustsStruct
 
 
-@final
 class LevelsEvent(StructEventBase):
     STRUCT = LevelsStruct
 
 
-@final
 class ParametersEvent(StructEventBase):
     STRUCT = ParametersStruct
 
 
-@final
 class PolyphonyEvent(StructEventBase):
     STRUCT = PolyphonyStruct
 
 
-@final
 class TrackingEvent(StructEventBase):
     STRUCT = TrackingStruct
 

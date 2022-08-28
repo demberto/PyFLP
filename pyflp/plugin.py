@@ -23,9 +23,9 @@ import sys
 from typing import Any, ClassVar, Dict, List, Optional, Union, cast
 
 if sys.version_info >= (3, 8):
-    from typing import Protocol, final, runtime_checkable
+    from typing import Protocol, runtime_checkable
 else:
-    from typing_extensions import final, Protocol, runtime_checkable
+    from typing_extensions import Protocol, runtime_checkable
 
 from ._base import (
     DATA,
@@ -46,32 +46,26 @@ from ._base import (
 )
 
 
-@final
 class BooBassStruct(StructBase):
     PROPS = dict.fromkeys(("_u1", "bass", "mid", "high"), "I")  # _u1 = [1, 0, 0, 0]
 
 
-@final
 class FruityBalanceStruct(StructBase):
     PROPS = {"pan": "I", "volume": "I"}
 
 
-@final
 class FruityFastDistStruct(StructBase):
     PROPS = dict.fromkeys(("pre", "threshold", "kind", "mix", "post"), "I")
 
 
-@final
 class FruitySendStruct(StructBase):
     PROPS = dict.fromkeys(("pan", "dry", "volume", "send_to"), "I")
 
 
-@final
 class FruitySoftClipperStruct(StructBase):
     PROPS = {"threshold": "I", "post": "I"}
 
 
-@final
 class FruityStereoEnhancerStruct(StructBase):
     PROPS = dict.fromkeys(
         (
@@ -86,27 +80,22 @@ class FruityStereoEnhancerStruct(StructBase):
     )
 
 
-@final
 class SoundgoodizerStruct(StructBase):
     PROPS = dict.fromkeys(("_u1", "mode", "amount"), "I")
 
 
-@final
 class BooBassEvent(StructEventBase):
     STRUCT = BooBassStruct
 
 
-@final
 class FruityBalanceEvent(StructEventBase):
     STRUCT = FruityBalanceStruct
 
 
-@final
 class FruityFastDistEvent(StructEventBase):
     STRUCT = FruityFastDistStruct
 
 
-@final
 class FruityNotebook2Event(DataEventBase):
     def __init__(self, id: int, data: bytes) -> None:
         super().__init__(id, data)
@@ -131,22 +120,18 @@ class FruityNotebook2Event(DataEventBase):
         self._props["editable"] = self._stream.read_bool()
 
 
-@final
 class FruitySendEvent(StructEventBase):
     STRUCT = FruitySendStruct
 
 
-@final
 class FruitySoftClipperEvent(StructEventBase):
     STRUCT = FruitySoftClipperStruct
 
 
-@final
 class FruityStereoEnhancerEvent(StructEventBase):
     STRUCT = FruityStereoEnhancerStruct
 
 
-@final
 class SoundgoodizerEvent(StructEventBase):
     STRUCT = SoundgoodizerStruct
 
@@ -175,7 +160,8 @@ class VSTPluginEventID(enum.IntEnum):
 
 
 # TODO Try implementing __getitem__ and __setitem__
-@final
+
+
 class VSTPluginEvent(DataEventBase):
     VST_MARKERS = (8, 10)
 
@@ -236,13 +222,11 @@ class IPlugin(Protocol):
     """The name used internally by FL to decide the type of plugin data."""
 
 
-@final
 class PluginIOInfo(MultiEventModel):
     mixer_offset = StructProp[int]()
     flags = StructProp[int]()
 
 
-@final
 class VSTPlugin(SingleEventModel, IPlugin):
     """Represents a VST2 or a VST3 generator or effect.
 
@@ -287,7 +271,6 @@ class VSTPlugin(SingleEventModel, IPlugin):
     vst_number = StructProp[int]()  # TODO
 
 
-@final
 class BooBass(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "BooBass"
     bass = StructProp[int]()
@@ -321,7 +304,6 @@ class BooBass(MultiEventModel, IPlugin, ModelReprMixin):
     """
 
 
-@final
 class FruityBalance(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Balance"
     pan = StructProp[int]()
@@ -351,7 +333,6 @@ class FruityFastDistKind(enum.IntEnum):
     B = 1
 
 
-@final
 class FruityFastDist(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Fast Dist"
     kind = StructProp[FruityFastDistKind]()
@@ -393,7 +374,6 @@ class FruityFastDist(MultiEventModel, IPlugin, ModelReprMixin):
     """
 
 
-@final
 class FruityNotebook2(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity NoteBook 2"
     active_page = StructProp[int]()
@@ -409,7 +389,6 @@ class FruityNotebook2(MultiEventModel, IPlugin, ModelReprMixin):
     """A dict of page numbers to their contents."""
 
 
-@final
 class FruitySend(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Send"
     dry = StructProp[int]()
@@ -445,7 +424,6 @@ class FruitySend(MultiEventModel, IPlugin, ModelReprMixin):
     """
 
 
-@final
 class FruitySoftClipper(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Soft Clipper"
     post = StructProp[int]()
@@ -477,7 +455,6 @@ class SoundgoodizerMode(enum.IntEnum):
     D = 3
 
 
-@final
 class Soundgoodizer(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Soundgoodizer"
     amount = StructProp[int]()
@@ -507,7 +484,6 @@ class StereoEnhancerPhaseInversion(enum.IntEnum):
     Right = 2
 
 
-@final
 class FruityStereoEnhancer(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Stereo Enhancer"
     effect_position = StructProp[StereoEnhancerEffectPosition]()

@@ -19,9 +19,9 @@ import sys
 from typing import List, Optional, Tuple, Type, Union, cast
 
 if sys.version_info >= (3, 8):
-    from typing import Final, TypedDict, final
+    from typing import Final, TypedDict
 else:
-    from typing_extensions import Final, TypedDict, final
+    from typing_extensions import Final, TypedDict
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -55,7 +55,7 @@ from .arrangement import (
     TimeMarkerID,
     TrackID,
 )
-from .channel import ChannelID, Rack, RackID
+from .channel import ChannelID, DisplayGroupID, Rack, RackID
 from .exceptions import ExpectedValue, InvalidValue, PropertyCannotBeSet, UnexpectedType
 from .mixer import InsertID, Mixer, MixerID, SlotID
 from .pattern import PatternID, Patterns, PatternsID
@@ -66,12 +66,10 @@ MIN_TEMPO: Final = 10.000
 VALID_PPQS: Final = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
 
 
-@final
 class TimestampStruct(StructBase):
     PROPS = {"created_on": "d", "time_spent": "d"}
 
 
-@final
 class TimestampEvent(StructEventBase):
     STRUCT = TimestampStruct
 
@@ -149,7 +147,6 @@ class _ProjectKW(TypedDict):
     format: FileFormat
 
 
-@final
 class Project(MultiEventModel):
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ProjectKW]):
         super().__init__(*events, **kw)

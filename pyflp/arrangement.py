@@ -24,9 +24,9 @@ import sys
 from typing import DefaultDict, Iterable, Iterator, List, Optional, Sized, Type, cast
 
 if sys.version_info >= (3, 8):
-    from typing import SupportsIndex, TypedDict, final
+    from typing import SupportsIndex, TypedDict
 else:
-    from typing_extensions import SupportsIndex, TypedDict, final
+    from typing_extensions import SupportsIndex, TypedDict
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -71,7 +71,6 @@ __all__ = [
 ]
 
 
-@final
 class ArrangementNotFound(ValueOutOfBounds):
     pass
 
@@ -111,12 +110,10 @@ class TrackStruct(StructBase):
     }
 
 
-@final
 class PlaylistEvent(ListEventBase):
     STRUCT = PlaylistItemStruct
 
 
-@final
 class TrackEvent(StructEventBase):
     STRUCT = TrackStruct
 
