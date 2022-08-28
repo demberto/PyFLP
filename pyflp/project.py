@@ -55,7 +55,7 @@ from .arrangement import (
     TimeMarkerID,
     TrackID,
 )
-from .channel import ChannelID, DisplayGroupID, Rack, RackID
+from .channel import ChannelID, ChannelRack, DisplayGroupID, RackID
 from .exceptions import ExpectedValue, InvalidValue, PropertyCannotBeSet, UnexpectedType
 from .mixer import InsertID, Mixer, MixerID, SlotID
 from .pattern import PatternID, Patterns, PatternsID
@@ -195,7 +195,7 @@ class Project(MultiEventModel):
         self._kw["channel_count"] = value
 
     @property
-    def channels(self) -> Rack:
+    def channels(self) -> ChannelRack:
         """Provides an iterator over channels and channel rack properties."""
         events: List[AnyEvent] = []
         for event in self._events_tuple:
@@ -207,7 +207,7 @@ class Project(MultiEventModel):
                     events.append(event)
                     break
 
-        return Rack(*events, channel_count=self.channel_count)
+        return ChannelRack(*events, channel_count=self.channel_count)
 
     comments = EventProp[str](ProjectID.Comments, ProjectID._RTFComments)
     """Comments / Project description.
@@ -289,9 +289,9 @@ class Project(MultiEventModel):
                 c1 = ord(char) - 26 + idx
                 c2 = ord(char) + 49 + idx
 
-                if str(c1).isalnum():
+                if chr(c1).isalnum():
                     licensee.append(c1)
-                elif str(c2).isalnum():
+                elif chr(c2).isalnum():
                     licensee.append(c2)
 
             return licensee.decode("ascii")

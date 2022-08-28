@@ -21,22 +21,22 @@ Contains the types used by the mixer, inserts and effect slots.
 import collections
 import enum
 import sys
-from typing import (
-    Any,
-    DefaultDict,
-    Iterable,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Sized,
-    cast,
-)
+from typing import Any, DefaultDict, Iterator, List, NamedTuple, Optional, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex, TypedDict
 else:
     from typing_extensions import SupportsIndex, TypedDict
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Sequence
+else:
+    from typing import Sequence
+
+if sys.version_info >= (3, 11):
+    from typing import NotRequired, Unpack
+else:
+    from typing_extensions import NotRequired, Unpack
 
 import colour
 
@@ -65,7 +65,16 @@ from ._base import (
     U16Event,
 )
 from .controller import RemoteController
+from .exceptions import DataCorrupted, Error
 from .plugin import IPlugin, PluginID
+
+
+class InsertNotFound(IndexError, Error):
+    pass
+
+
+class NoInsertsFound(DataCorrupted):
+    pass
 
 
 class InsertFlagsStruct(StructBase):
@@ -340,7 +349,12 @@ class Slot(MultiEventModel, SupportsIndex):
     """The effect loaded into the slot."""
 
 
-class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
+class _InsertKW(TypedDict):
+    index: SupportsIndex
+    params: NotRequired[List[MixerParamsItem]]
+
+
+class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     """Represents a mixer track to which channel from the rack are routed to.
 
     ??? info "Maximum number of inserts (w.r.t. FL Studio version)"
@@ -352,25 +366,51 @@ class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
         * 12.9.0: 125.
     """
 
-    def __init__(
-        self,
-        index: SupportsIndex,
-        *events: AnyEvent,
-        params: List[MixerParamsItem] = [],
-    ):
-        super().__init__(*events, kw={"index": index, "params": params})
+    def __init__(self, *events: AnyEvent, **kw: Unpack[_InsertKW]):
+        super().__init__(*events, **kw)
 
     # TODO add num of used slots
     def __repr__(self):
         if self.name is None:
-            return "Unnamed insert"
-        return f"Insert {self.name!r}"
+            return f"Unnamed insert #{self.__index__()}"
+        return f"Insert {self.name!r} #{self.__index__()}"
 
-    def __index__(self):
+    def __getitem__(self, index: SupportsIndex):
+        for idx, slot in enumerate(self):
+            if idx == index:
+                return slot
+        raise InsertNotFound(index)
+
+    def __index__(self) -> int:
         return self._kw["index"]
 
     def __iter__(self):
-        return self.slots
+        index = 0
+        while True:
+            events: List[AnyEvent] = []
+            params: List[MixerParamsItem] = []
+
+            for param in self._kw["params"]:
+                if param["channel_data"] % 0x3F == index:
+                    params.append(param)
+
+            for id, events in self._events.items():
+                if id in SlotID or id in PluginID:
+                    try:
+                        events.append(events[index])
+                    except IndexError:
+                        pass
+
+            if len(events) == 0:
+                break
+
+            index += 1
+            yield Slot(params, *events)
+
+    def __len__(self):
+        if SlotID.Index in self._events:
+            return len(self._events[SlotID.Index])
+        return len(list(self))
 
     bypassed = FlagProp(InsertFlags.EnableEffects, InsertID.Flags, inverted=True)
     """Whether all slots are bypassed."""
@@ -437,31 +477,6 @@ class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
     separator_shown = FlagProp(InsertFlags.SeparatorShown, InsertID.Flags)
     """Whether separator is shown before the insert."""
 
-    @property
-    def slots(self) -> Iterator[Slot]:
-        """Effect slots (upto 10 as of the latest version)."""
-        index = 0
-        while True:
-            events: List[AnyEvent] = []
-            params: List[MixerParamsItem] = []
-
-            for param in self._kw["params"]:
-                if param["channel_data"] % 0x3F == index:
-                    params.append(param)
-
-            for id, events in self._events.items():
-                if id in SlotID or id in PluginID:
-                    try:
-                        events.append(events[index])
-                    except IndexError:
-                        pass
-
-            if len(events) == 0:
-                break
-
-            index += 1
-            yield Slot(params, *events)
-
     stereo_separation = _MixerParamProp[int](MixerParamsID.StereoSeparation)
     """Linear.
 
@@ -483,13 +498,19 @@ class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
     """
 
 
-class Mixer(MultiEventModel, Iterable[Insert], Sized):
+class Mixer(MultiEventModel, Sequence[Insert]):
+    def __getitem__(self, index: SupportsIndex):
+        for idx, insert in enumerate(self.inserts):
+            if idx == index:
+                return insert
+        raise InsertNotFound(index)
+
     def __iter__(self) -> Iterator[Insert]:
         return self.inserts
 
     def __len__(self):
         if InsertID.Flags not in self._events:
-            return NotImplemented
+            raise NoInsertsFound
         return len(self._events[InsertID.Flags])
 
     def __repr__(self):
@@ -520,8 +541,8 @@ class Mixer(MultiEventModel, Iterable[Insert], Sized):
                 try:
                     params_list = params_dict[index]
                 except IndexError:
-                    yield Insert(index, *events)
+                    yield Insert(*events, index=index)
                 else:
-                    yield Insert(index, *events, params=params_list)
+                    yield Insert(*events, index=index, params=params_list)
                 events = []
                 index += 1

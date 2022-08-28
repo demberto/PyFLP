@@ -21,12 +21,17 @@ Contains the types used by timemarkers, tracks and arrangements.
 import collections
 import enum
 import sys
-from typing import DefaultDict, Iterable, Iterator, List, Optional, Sized, Type, cast
+from typing import DefaultDict, Iterable, Iterator, List, Optional, Type, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex, TypedDict
 else:
     from typing_extensions import SupportsIndex, TypedDict
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Sequence
+else:
+    from typing import Sequence
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -56,7 +61,7 @@ from ._base import (
     U32Event,
 )
 from .channel import Channel
-from .exceptions import ValueOutOfBounds
+from .exceptions import DataCorrupted, Error
 from .pattern import Pattern
 
 __all__ = [
@@ -71,7 +76,11 @@ __all__ = [
 ]
 
 
-class ArrangementNotFound(ValueOutOfBounds):
+class ArrangementNotFound(IndexError, Error):
+    pass
+
+
+class NoArrangementsFound(DataCorrupted):
     pass
 
 
@@ -405,31 +414,24 @@ class TimeSignature(MultiEventModel):
     beat = EventProp[int](ArrangementsID.TimeSigBeat)
 
 
-class Arrangements(MultiEventModel, Iterable[Arrangement], Sized):
+class Arrangements(MultiEventModel, Sequence[Arrangement]):
     """Iterator over arrangements in the project and some related properties."""
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
         super().__init__(*events, **kw)
 
-    def __iter__(self):
-        return self.arrangements
-
-    def __len__(self):
-        if ArrangementID.New not in self._events:
-            return NotImplemented
-
-        return len(self._events[ArrangementID.New])
-
-    def __repr__(self):
-        return f"{len(self)} arrangements"
+    def __getitem__(self, index: SupportsIndex):
+        for arrangement in self:
+            if arrangement.__index__() == index:
+                return arrangement
+        raise ArrangementNotFound(index)
 
     # TODO Verify ArrangementsID.Current is the end
     # FL changed event ordering a lot, the latest being the most easiest to
     # parse; it contains ArrangementID.New event followed by TimeMarker events
     # followed by 500 TrackID events. TimeMarkers occured before new arrangement
     # event in initial versions of FL20, making them harder to group.
-    @property
-    def arrangements(self) -> Iterator[Arrangement]:
+    def __iter__(self):
         first = True
         events: List[AnyEvent] = []
 
@@ -451,6 +453,14 @@ class Arrangements(MultiEventModel, Iterable[Arrangement], Sized):
                     events.append(event)
                     break
 
+    def __len__(self):
+        if ArrangementID.New not in self._events:
+            raise NoArrangementsFound
+        return len(self._events[ArrangementID.New])
+
+    def __repr__(self):
+        return f"{len(self)} arrangements"
+
     @property
     def current(self) -> Optional[Arrangement]:
         """Currently selected arrangement (via FL's interface)."""
@@ -458,7 +468,7 @@ class Arrangements(MultiEventModel, Iterable[Arrangement], Sized):
             event = self._events[ArrangementsID.Current][0]
             index = event.value
             try:
-                return list(self.arrangements)[index]
+                return list(self)[index]
             except IndexError:
                 raise ArrangementNotFound(index)
 
@@ -466,3 +476,4 @@ class Arrangements(MultiEventModel, Iterable[Arrangement], Sized):
     time_signature = NestedProp(
         TimeSignature, ArrangementsID.TimeSigNum, ArrangementsID.TimeSigBeat
     )
+    """Global time signature (also used by playlist)."""

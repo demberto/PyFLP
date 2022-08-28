@@ -1,9 +1,21 @@
-# Channel
+# Channel rack
 ![](../img/channel-toolbar.png)
+::: pyflp.channel.ChannelRack
 ::: pyflp.channel.Channel
 ::: pyflp.channel.ChannelType
 
-## Sampler settings
+## Automation
+::: pyflp.channel.Automation
+
+## Instrument
+::: pyflp.channel.Instrument
+
+## Layer
+::: pyflp.channel.Layer
+
+## Sampler
+::: pyflp.channel.Sampler
+
 ### FX
 ![](../img/channel-fx1.png) ![](../img/channel-fx2.png)
 ::: pyflp.channel.FX
@@ -17,13 +29,13 @@
 ![](../img/channel-stretching.png)
 ::: pyflp.channel.TimeStretching
 
-## Envelope / instrument settings
+### Envelope / instrument settings
 ![](../img/channel-envlfo.png)
 ::: pyflp.channel.Envelope
 ::: pyflp.channel.LFO
 ::: pyflp.channel.LFOShape
 
-## Miscellaneous functions
+### Miscellaneous functions
 ### Arpeggiator
 ![](../img/channel-arp.png)
 ::: pyflp.channel.Arp

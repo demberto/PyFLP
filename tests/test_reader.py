@@ -5,7 +5,7 @@ from pyflp.project import FileFormat, FLVersion, PanLaw, Project
 
 
 def test_project(project: Project):
-    assert len(list(project.arrangements.arrangements)) == 2
+    assert len(project.arrangements) == 2
     assert project.artists == "demberto"
     assert project.channel_count == 6
     assert project.comments == "A test FLP created for PyFLP."
@@ -27,12 +27,12 @@ def test_project(project: Project):
     assert project.main_pitch == 0
     assert project.main_volume is None
     assert project.pan_law == PanLaw.Circular
-    assert len(list(project.patterns.patterns)) == 4
+    assert len(project.patterns) == 4
     assert project.patterns.play_cut_notes
     assert project.ppq == 96
     assert project.licensed
-    assert project.licensee == "I6<A;z7zxvyBDD?=@><"
-    assert project.patterns.current == list(project.patterns.patterns)[4]
+    assert project.licensee == "zhoupengfei36732654"
+    assert project.patterns.current == list(project.patterns)[3]
     assert project.arrangements.loop_pos is None
     assert not project.show_info
     assert project.channels.swing == 64

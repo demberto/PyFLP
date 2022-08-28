@@ -20,12 +20,17 @@ Contains the types used by MIDI patterns, notes and their automation data.
 
 import collections
 import sys
-from typing import DefaultDict, Iterator, List, Optional, Sized
+from typing import DefaultDict, Iterator, List, Optional
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex
 else:
     from typing_extensions import SupportsIndex
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Sequence
+else:
+    from typing import Sequence
 
 import colour
 
@@ -47,6 +52,15 @@ from ._base import (
     StructProp,
     U16Event,
 )
+from .exceptions import DataCorrupted, Error
+
+
+class PatternNotFound(IndexError, Error):
+    pass
+
+
+class NoPatternsFound(DataCorrupted):
+    pass
 
 
 class ContollerStruct(StructBase):
@@ -128,13 +142,17 @@ class Note(SingleEventModel):
     """
 
     mod_x = StructProp[int]()
+    """Filter cutoff."""
+
     mod_y = StructProp[int]()
+    """Filter resonance."""
+
     pan = StructProp[int]()
     """Min: -128, Max: 127."""
 
     position = StructProp[int]()
     rack_channel = StructProp[int]()
-    """Corresponds to `Channel.iid` this note is for."""
+    """Corresponds to the containing channel's `Channel.IID`."""
 
     release = StructProp[int]()
     """Min: 0, Max: 128."""
@@ -145,6 +163,8 @@ class Note(SingleEventModel):
 
 class Controller(SingleEventModel):
     channel = StructProp[int]()
+    """Corresponds to the containing channel's `Channel.IID`."""
+
     position = StructProp[int]()
     value = StructProp[float]()
 
@@ -168,6 +188,7 @@ class Pattern(MultiEventModel, SupportsIndex):
 
     color = EventProp[colour.Color](PatternID.Color)
     controllers = IterProp(PatternID.Controllers, Controller)
+    """Parameter automations associated with this pattern (if any)."""
 
     @property
     def index(self) -> int:
@@ -186,18 +207,18 @@ class Pattern(MultiEventModel, SupportsIndex):
     """MIDI notes contained inside the pattern."""
 
 
-class Patterns(MultiEventModel, Sized):
+class Patterns(MultiEventModel, Sequence[Pattern]):
     def __repr__(self):
-        indexes = [pattern.__index__() for pattern in self.patterns]
+        indexes = [pattern.__index__() for pattern in self]
         return f"{len(indexes)} Patterns {indexes!r}"
 
-    def __len__(self):
-        if PatternID.New not in self._events:
-            return NotImplemented
-        return len(set(event.value for event in self._events[PatternID.New]))
+    def __getitem__(self, index: SupportsIndex):
+        for idx, pattern in enumerate(self):
+            if idx == index:
+                return pattern
+        raise PatternNotFound(index)
 
-    @property
-    def patterns(self) -> Iterator[Pattern]:
+    def __iter__(self) -> Iterator[Pattern]:
         cur_pat_id = 0
         events_dict: DefaultDict[int, List[AnyEvent]] = collections.defaultdict(list)
 
@@ -208,6 +229,11 @@ class Patterns(MultiEventModel, Sized):
 
         for events in events_dict.values():
             yield Pattern(*events)
+
+    def __len__(self):
+        if PatternID.New not in self._events:
+            raise NoPatternsFound
+        return len(set(event.value for event in self._events[PatternID.New]))
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)
     """Whether truncated notes of patterns placed in the playlist should be played.
@@ -220,6 +246,6 @@ class Patterns(MultiEventModel, Sized):
         if PatternsID.CurrentlySelected in self._events:
             index = self._events[PatternsID.CurrentlySelected][0].value
             if index is not None:
-                for pattern in self.patterns:
+                for pattern in self:
                     if pattern.__index__() == index:
                         return pattern

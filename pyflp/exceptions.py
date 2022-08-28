@@ -28,6 +28,7 @@ else:
 
 __all__ = [
     "Error",
+    "DataCorrupted",
     "EventIDOutOfRange",
     "InvalidEventChunkSize",
     "UnexpectedType",
@@ -44,6 +45,10 @@ class Error(Exception):
 
     Some exceptions derive from standard Python exceptions to ease handling.
     """
+
+
+class DataCorrupted(Error):
+    pass
 
 
 class EventIDOutOfRange(Error, ValueError):

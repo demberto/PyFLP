@@ -20,17 +20,18 @@ Contains the types used by the channels and channel rack.
 
 import collections
 import enum
-from typing import (
-    DefaultDict,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sized,
-    Tuple,
-    cast,
-)
+import sys
+from typing import DefaultDict, Dict, Iterator, List, Optional, Tuple, Union, cast
+
+if sys.version_info >= (3, 8):
+    from typing import SupportsIndex
+else:
+    from typing_extensions import SupportsIndex
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Sequence
+else:
+    from typing import Sequence
 
 import colour
 
@@ -62,10 +63,18 @@ from ._base import (
     U32Event,
 )
 from .controller import RemoteController
-from .exceptions import PropertyCannotBeSet
+from .exceptions import DataCorrupted, Error, PropertyCannotBeSet
 from .plugin import IPlugin, PluginID
 
-__all__ = ["Automation", "Channel", "Instrument", "Layer", "Rack"]
+__all__ = ["Automation", "Channel", "Instrument", "Layer", "ChannelRack"]
+
+
+class ChannelNotFound(IndexError, Error):
+    pass
+
+
+class NoChannelsFound(DataCorrupted):
+    pass
 
 
 class DelayStruct(StructBase):
@@ -519,13 +528,16 @@ class TimeStretching(MultiEventModel, ModelReprMixin):
     time = EventProp[float](ChannelID.StretchTime)
 
 
-class Channel(MultiEventModel):
+class Channel(MultiEventModel, SupportsIndex):
     """Represents a channel in the channel rack."""
 
     def __repr__(self):
         if self.display_name is None:
             return f"Unnamed {type(self).__name__.lower()} #{self.iid}"
         return f"{type(self).__name__} {self.display_name!r} #{self.iid}"
+
+    def __index__(self):
+        return cast(int, self.iid)
 
     color = EventProp[colour.Color](PluginID.Color)
     controllers = KWProp[List[RemoteController]]()
@@ -632,23 +644,28 @@ class Automation(Channel):
     ...
 
 
-class Layer(Channel):
-    @property
-    def children(self) -> Iterator[Channel]:
+class Layer(Channel, Sequence[Channel]):
+    def __getitem__(self, index: SupportsIndex):
+        for child in self:
+            if child.iid == index:
+                return child
+        raise ChannelNotFound(index)
+
+    def __iter__(self) -> Iterator[Channel]:
         if ChannelID.Children in self._events:
             for event in self._events[ChannelID.Children]:
                 yield self._kw["channels"][event.value]
 
-    # TODO Discover
-    flags = EventProp[int](ChannelID.LayerFlags)
+    def __len__(self):
+        return len(self._events.get(ChannelID.Children, []))
+
+    flags = EventProp[int](ChannelID.LayerFlags)  # TODO
 
 
 class _SamplerInstrument(Channel):
     arp = NestedProp(Arp, ChannelID.Parameters)
     delay = NestedProp(Delay, ChannelID.Delay)
-
-    # TODO Discover
-    flags = EventProp[int](ChannelID.SamplerFlags)
+    flags = EventProp[int](ChannelID.SamplerFlags)  # TODO
     insert = EventProp[int](ChannelID.RoutedTo)
     """The index of the `Insert` the channel is routed to. Min = -1."""
 
@@ -668,6 +685,9 @@ class Instrument(_SamplerInstrument):
 
 
 class Sampler(_SamplerInstrument):
+    def __repr__(self):
+        return f"{repr(self.sample_path) or 'Empty'} {super().__repr__()}"
+
     au_sample_rate = EventProp[int](ChannelID.AUSampleRate)
     """AU-format sample specific."""
 
@@ -717,31 +737,31 @@ class Sampler(_SamplerInstrument):
     sample_path = EventProp[str](ChannelID.SamplePath)
     """Absolute path of a sample file on the disk.
 
-    Valid only if channel is a Sampler instance or an audio clip / track.
     Contains the string '%FLStudioFactoryData%' for stock samples.
     """
 
 
-class Rack(MultiEventModel, Sized, Iterable[Channel]):
+class ChannelRack(MultiEventModel, Sequence[Channel]):
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
 
+    def __getitem__(self, index: Union[str, SupportsIndex]):
+        """Gets a channel from the rack based on its IID or index.
+
+        Args:
+            index (str | SupportsIndex): Compared with `Channel.iid` if an `str`
+                or compared with the index in the order which channels are found.
+
+        Raises:
+            ChannelNotFound: When a channel with an IID or index of `index` is
+                not found.
+        """
+        for idx, channel in enumerate(self):
+            if (isinstance(index, str) and int(index) == channel.iid) or (index == idx):
+                return channel
+        raise ChannelNotFound(index)
+
     def __iter__(self):
-        return self.channels
-
-    def __len__(self):
-        if ChannelID.New not in self._events:
-            return NotImplemented
-        return len(self._events[ChannelID.New])
-
-    @property
-    def automations(self) -> Iterator[Automation]:
-        for channel in self.channels:
-            if isinstance(channel, Automation):
-                yield channel
-
-    @property
-    def channels(self) -> Iterator[Channel]:
         ch_dict: Dict[int, Channel] = {}
         events: DefaultDict[int, List[AnyEvent]] = collections.defaultdict(list)
         cur_ch_events = []
@@ -771,6 +791,17 @@ class Rack(MultiEventModel, Sized, Iterable[Channel]):
                 cur_ch = ch_dict[iid] = ct(*ch_events, channels=ch_dict)
                 yield cur_ch
 
+    def __len__(self):
+        if ChannelID.New not in self._events:
+            raise NoChannelsFound
+        return len(self._events[ChannelID.New])
+
+    @property
+    def automations(self) -> Iterator[Automation]:
+        for channel in self:
+            if isinstance(channel, Automation):
+                yield channel
+
     fit_to_steps = EventProp[int](RackID._FitToSteps)
 
     @property
@@ -781,19 +812,19 @@ class Rack(MultiEventModel, Sized, Iterable[Channel]):
 
     @property
     def instruments(self) -> Iterator[Instrument]:
-        for channel in self.channels:
+        for channel in self:
             if isinstance(channel, Instrument):
                 yield channel
 
     @property
     def layers(self) -> Iterator[Layer]:
-        for channel in self.channels:
+        for channel in self:
             if isinstance(channel, Layer):
                 yield channel
 
     @property
     def samplers(self) -> Iterator[Sampler]:
-        for channel in self.channels:
+        for channel in self:
             if isinstance(channel, Sampler):
                 yield channel
 
