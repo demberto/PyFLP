@@ -91,7 +91,7 @@ class EventBase(abc.ABC, Generic[T], Hashable, Sized, SupportsBytes):
 
     def __init__(self, id: int, data: bytes):
         self.id: Final = id
-        self._raw: bytes = data
+        self._raw = data
 
     @final
     def __eq__(self, o: object):
@@ -828,6 +828,8 @@ class FlagProp(RWProperty[bool]):
     def __set__(self, instance: ModelBase, value: bool):
         struct = self._get_struct(instance)
         if struct is None:
+            if self._id is None:
+                raise PropertyCannotBeSet
             raise PropertyCannotBeSet(self._id)
 
         if self._inverted:
@@ -950,11 +952,11 @@ class StructProp(NamedPropMixin, RWProperty[T]):
 
 
 @final
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, order=True)
 class FLVersion:
     major: int
-    minor: int
-    patch: int
+    minor: int = 0
+    patch: int = 0
     build: Optional[int] = None
 
     def __str__(self):

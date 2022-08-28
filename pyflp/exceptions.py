@@ -19,7 +19,7 @@ Contains the exceptions shared across PyFLP.
 """
 
 import sys
-from typing import Any, Optional, Type
+from typing import Any, Type
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex
@@ -69,9 +69,9 @@ class ValueOutOfBounds(Error, IndexError, ValueError):
 
 
 class PropertyCannotBeSet(Error, AttributeError):
-    def __init__(self, id: Optional[int] = None):
-        if id is not None:
-            msg = f"Property cannot be set as event {id!r} was not found"
+    def __init__(self, *ids: int):
+        if len(ids) > 0:
+            msg = f"Property cannot be set as event(s) {ids!r} was / were not found"
         else:
             msg = "Property cannot be set"
         super().__init__(msg)

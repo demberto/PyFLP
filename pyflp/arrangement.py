@@ -196,11 +196,15 @@ class PlaylistItemBase(MultiEventModel):
     end_offset = StructProp[int]()
     length = StructProp[int]()
     muted = StructProp[bool]()
+    """Whether muted / disabled in the playlist. *New in FL Studio v9.0.0*."""
+
     position = StructProp[int]()
     start_offset = StructProp[int]()
 
 
 class ChannelPlaylistItem(PlaylistItemBase):
+    """An audio clip or automation on the playlist of an arrangement."""
+
     def __repr__(self):
         if self.channel is None:
             return super().__repr__()
@@ -210,6 +214,8 @@ class ChannelPlaylistItem(PlaylistItemBase):
 
 
 class PatternPlaylistItem(PlaylistItemBase):
+    """A pattern block or clip on the playlist of an arrangement."""
+
     def __repr__(self):
         if self.pattern is None:
             return super().__repr__()
@@ -260,6 +266,13 @@ class _TrackKW(TypedDict):
 
 
 class Track(MultiEventModel, Iterable[PlaylistItemBase]):
+    """Represents a track in an arrangement on which playlist items are arranged.
+
+    ??? info "Maximum number of tracks (w.r.t FL Studio version)"
+        * pre-12.9.1: 199
+        * 12.9.1: 500
+    """
+
     def __init__(self, *events: AnyEvent, **kw: Unpack[_TrackKW]):
         super().__init__(*events, **kw)
 
@@ -286,7 +299,14 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase]):
     """Whether grouped with the track above (index - 1) or not."""
 
     height = StructProp[float](id=TrackID.Data)
-    """Min: 0.0 (0%), Max: 18.4 (1840%), Default: 1.0 (100%)."""
+    """Track height in FL's interface. Linear.
+
+    | Type    | Value | Percentage |
+    | ------- | :---: | ---------- |
+    | Min     | 0.0   | 0%         |
+    | Max     | 18.4  | 1840%      |
+    | Default | 1.0   | 100%       |
+    """
 
     icon = StructProp[int](id=TrackID.Data)
     index = StructProp[int](id=TrackID.Data)
@@ -294,6 +314,8 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase]):
     """Playlist items present on the track."""
 
     locked = StructProp[bool](id=TrackID.Data)
+    """Whether the tracked is in a locked state."""
+
     locked_height = StructProp[float](id=TrackID.Data)
     motion = StructProp[TrackMotion](id=TrackID.Data)
     name = StructProp[str](id=TrackID.Data)
@@ -309,7 +331,10 @@ class _ArrangementKW(TypedDict):
 
 
 class Arrangement(MultiEventModel, SupportsIndex):
-    """Contains them timemarkers and tracks in an arrangement."""
+    """Contains them timemarkers and tracks in an arrangement.
+
+    *New in v12.9.1*: Support for multiple arrangements.
+    """
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
         super().__init__(*events, **kw)
@@ -326,7 +351,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
         return self._events[ArrangementID.New][0].value
 
     name = EventProp[str](ArrangementID.Name)
-    """Name of the arrangement; which by default is **Arrangement**."""
+    """Name of the arrangement; defaults to **Arrangement**."""
 
     def _collect_events(self, enum: Type[EventEnum]):
         counter: List[int] = []
@@ -356,7 +381,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
     def tracks(self) -> Iterator[Track]:
         count = 0
 
-        if cast(_ArrangementKW, self._kw)["version"].major >= 20:
+        if cast(_ArrangementKW, self._kw)["version"] >= FLVersion(12, 9, 1):
             max_tracks = 499
         else:
             max_tracks = 198
@@ -405,7 +430,7 @@ class Arrangements(MultiEventModel, Iterable[Arrangement], Sized):
     # FL changed event ordering a lot, the latest being the most easiest to
     # parse; it contains ArrangementID.New event followed by TimeMarker events
     # followed by 500 TrackID events. TimeMarkers occured before new arrangement
-    # event in initial versions of FL20, making them harder to parse and group.
+    # event in initial versions of FL20, making them harder to group.
     @property
     def arrangements(self) -> Iterator[Arrangement]:
         first = True

@@ -105,16 +105,26 @@ class PatternID(EventEnum):
 
 class Note(SingleEventModel):
     fine_pitch = StructProp[int]()
-    """Min: -128 (-100 cents), Max: 127 (+100 cents)."""
+    """Linear.
 
-    key = StructProp[int]()
+    | Type    | Value | Representation |
+    | ------- | :---: | -------------- |
+    | Min     | -128  | -100 cents     |
+    | Max     | 127   | +100 cents     |
+    | Default | 0     | No fine tuning |
+    """
+
+    key = StructProp[int]()  # TODO Separate property and chord/scale detection
     """0-131 for C0-B10. Can hold stamped chords and scales also."""
 
     length = StructProp[int]()
     midi_channel = StructProp[int]()
-    """For note colors, min: 0, max: 15.
+    """Use for a variety of purposes.
 
-    128 for MIDI dragged into the piano roll.
+    For note colors, min: 0, max: 15.
+    +128 for MIDI dragged into the piano roll.
+
+    *Changed in FL Studio v6.0.1*: Used for both, MIDI channels and colors.
     """
 
     mod_x = StructProp[int]()
@@ -200,7 +210,10 @@ class Patterns(MultiEventModel, Sized):
             yield Pattern(*events)
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)
-    """Whether truncated notes of patterns placed in the playlist should be played."""
+    """Whether truncated notes of patterns placed in the playlist should be played.
+
+    *Changed in FL Studio v12.3 beta 3*: Enabled by default.
+    """
 
     @property
     def current(self) -> Optional[Pattern]:

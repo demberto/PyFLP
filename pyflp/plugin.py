@@ -174,6 +174,7 @@ class VSTPluginEventID(enum.IntEnum):
     _57 = 57  # TODO, not present for Waveshells
 
 
+# TODO Try implementing __getitem__ and __setitem__
 @final
 class VSTPluginEvent(DataEventBase):
     VST_MARKERS = (8, 10)
@@ -232,6 +233,7 @@ class PluginID(EventEnum):
 @runtime_checkable
 class IPlugin(Protocol):
     DEFAULT_NAME: ClassVar[str]
+    """The name used internally by FL to decide the type of plugin data."""
 
 
 @final
@@ -242,6 +244,11 @@ class PluginIOInfo(MultiEventModel):
 
 @final
 class VSTPlugin(SingleEventModel, IPlugin):
+    """Represents a VST2 or a VST3 generator or effect.
+
+    *New in FL Studio FL Studio v9.0.3*: VST3 support.
+    """
+
     DEFAULT_NAME = "Fruity Wrapper"
     fourcc = StructProp[str]()
     """A unique four character code identifying the plugin.
@@ -257,7 +264,7 @@ class VSTPlugin(SingleEventModel, IPlugin):
     """MIDI Output Port. Min: 0, Max: 255."""
 
     name = StructProp[str]()
-    """Name of the plugin."""
+    """Factory name of the plugin."""
 
     num_inputs = StructProp[int]()
     """Number of inputs the plugin supports."""
@@ -284,23 +291,58 @@ class VSTPlugin(SingleEventModel, IPlugin):
 class BooBass(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "BooBass"
     bass = StructProp[int]()
-    """Min: 0, Max: 65535, Default: 32767."""
+    """Volume of the bass region.
+
+    | Type    | Value |
+    | ------- | :---: |
+    | Min     | 0     |
+    | Max     | 65535 |
+    | Default | 32767 |
+    """
 
     high = StructProp[int]()
-    """Min: 0, Max: 65535, Default: 32767."""
+    """Volume of the high region.
+
+    | Type    | Value |
+    | ------- | :---: |
+    | Min     | 0     |
+    | Max     | 65535 |
+    | Default | 32767 |
+    """
 
     mid = StructProp[int]()
-    """Min: 0, Max: 65535, Default: 32767."""
+    """Volume of the bass region.
+
+    | Type    | Value |
+    | ------- | :---: |
+    | Min     | 0     |
+    | Max     | 65535 |
+    | Default | 32767 |
+    """
 
 
 @final
 class FruityBalance(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Balance"
     pan = StructProp[int]()
-    """Min: -128, Max: 127, Default: 0 (0.50, Centred). Linear."""
+    """Linear.
+
+    | Type    | Value | Representation |
+    | ------- | :---: | -------------- |
+    | Min     | -128  | 100% left      |
+    | Max     | 127   | 100% right     |
+    | Default | 0     | Centred        |
+    """
 
     volume = StructProp[int]()
-    """Min: 0, Max: 320, Default: 256 (0.80, 0dB). Logarithmic."""
+    """Logarithmic.
+
+    | Type    | Value | Representation |
+    | ------- | :---: | -------------- |
+    | Min     | 0     | 0.00 / -INFdB  |
+    | Max     | 320   | 1.25 / 5.6dB   |
+    | Default | 256   | 1.00 / 0.0dB   |
+    """
 
 
 @enum.unique
@@ -314,16 +356,41 @@ class FruityFastDist(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Fast Dist"
     kind = StructProp[FruityFastDistKind]()
     mix = StructProp[int]()
-    """Min: 0 (0%), Max: 128 (100%), Default: 128 (100%). Linear."""
+    """Linear. Defaults to maximum value.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 0     | 0%        |
+    | Max     | 128   | 100%      |
+    """
 
     post = StructProp[int]()
-    """Min: 0 (0%), Max: 128 (100%), Default: 128 (100%). Linear."""
+    """Linear. Defaults to maximum value.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 0     | 0%        |
+    | Max     | 128   | 100%      |
+    """
 
     pre = StructProp[int]()
-    """Min: 64 (33%), Max: 192 (100%), Default: 128 (67%). Linear."""
+    """Linear.
+
+    | Type    | Value | Percentage |
+    | ------- | :---: | ---------- |
+    | Min     | 64    | 33%        |
+    | Max     | 192   | 100%       |
+    | Default | 128   | 67%        |
+    """
 
     threshold = StructProp[int]()
-    """Min: 1 (10%), Max: 10 (100%), Default: 10 (100%). Linear. Stepped."""
+    """Linear, Stepped. Defaults to maximum value.
+
+    | Type    | Value | Percentage |
+    | ------- | :---: | ---------- |
+    | Min     | 1     | 10%        |
+    | Max     | 10    | 100%       |
+    """
 
 
 @final
@@ -346,10 +413,23 @@ class FruityNotebook2(MultiEventModel, IPlugin, ModelReprMixin):
 class FruitySend(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Send"
     dry = StructProp[int]()
-    """Min: 0 (0%), Max: 256 (100%), Default: 256 (100%). Linear."""
+    """Linear. Defaults to maximum value.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 0     | 0%        |
+    | Max     | 256   | 100%      |
+    """
 
     pan = StructProp[int]()
-    """Min: -128 (100% left), Max: 127 (100% right), Default: 0 (Centred). Linear."""
+    """Linear.
+
+    | Type    | Value | Representation |
+    | ------- | :---: | -------------- |
+    | Min     | -128  | 100% left      |
+    | Max     | 127   | 100% right     |
+    | Default | 0     | Centred        |
+    """
 
     send_to = StructProp[int]()
     """Target insert index; depends on insert routing. Default: -1 (Master)."""
@@ -369,10 +449,24 @@ class FruitySend(MultiEventModel, IPlugin, ModelReprMixin):
 class FruitySoftClipper(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Soft Clipper"
     post = StructProp[int]()
-    """Min: 0, Max: 160, Default: 128 (80%). Linear."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 0     | 0%        |
+    | Max     | 160   | 100%      |
+    | Default | 128   | 80%       |
+    """
 
     threshold = StructProp[int]()
-    """Min: 1, Max: 127, Default: 100 (0.60, -4.4dB). Logarithmic."""
+    """Logarithmic.
+
+    | Type     | Value | Representation |
+    | -------- | :---: | :------------: |
+    | Min      | 1     | -INFdB / 0.00  |
+    | Max      | 127   | 0.0dB / 1.00   |
+    | Default  | 100   | -4.4dB / 0.60  |
+    """
 
 
 @enum.unique
@@ -387,9 +481,17 @@ class SoundgoodizerMode(enum.IntEnum):
 class Soundgoodizer(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Soundgoodizer"
     amount = StructProp[int]()
-    """Min: 0, Max: 1000, Default: 600. Logarithmic."""
+    """Logarithmic.
+
+    | Type    | Value |
+    | ------- | :---: |
+    | Min     | 0     |
+    | Max     | 1000  |
+    | Default | 600   |
+    """
 
     mode = StructProp[SoundgoodizerMode]()
+    """4 preset modes (A, B, C and D)."""
 
 
 @enum.unique
@@ -408,21 +510,48 @@ class StereoEnhancerPhaseInversion(enum.IntEnum):
 @final
 class FruityStereoEnhancer(MultiEventModel, IPlugin, ModelReprMixin):
     DEFAULT_NAME = "Fruity Stereo Enhancer"
-
     effect_position = StructProp[StereoEnhancerEffectPosition]()
     """Default: StereoEnhancerEffectPosition.Post."""
 
     pan = StructProp[int]()
-    """Min: -128, Max: 127, Default: 0 (0.50, Centred). Linear."""
+    """Linear.
+
+    | Type    | Value | Representation |
+    | ------- | :---: | -------------- |
+    | Min     | -128  | 100% left      |
+    | Max     | 127   | 100% right     |
+    | Default | 0     | Centred        |
+    """
 
     phase_inversion = StructProp[StereoEnhancerPhaseInversion]()
     """Default: StereoEnhancerPhaseInversion.None_."""
 
     phase_offset = StructProp[int]()
-    """Min: -512 (500ms L), Max: 512 (500ms R), Default: 0 (no offset). Linear."""
+    """Linear.
+
+    | Type    | Value | Representation |
+    | ------- | :---: | -------------- |
+    | Min     | -512  | 500ms L        |
+    | Max     | 512   | 500ms R        |
+    | Default | 0     | No offset      |
+    """
 
     stereo_separation = StructProp[int]()
-    """Min: -96 (100% separation), Max: 96 (100% merged), Default: 0. Linear."""
+    """Linear.
+
+    | Type    | Value | Representation |
+    | ------- | :---: | -------------- |
+    | Min     | -96   | 100% separated |
+    | Max     | 96    | 100% merged    |
+    | Default | 0     | No effect      |
+    """
 
     volume = StructProp[int]()
-    """Min: 0, Max: 320, Default: 256 (0.80, 0dB). Logarithmic."""
+    """Logarithmic.
+
+    | Type     | Value | Representation |
+    | -------- | :---: | :------------: |
+    | Min      | 0     | -INFdB / 0.00  |
+    | Max      | 320   | 5.6dB / 1.90   |
+    | Default  | 256   | 0.0dB / 1.00   |
+    """

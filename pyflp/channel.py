@@ -78,7 +78,7 @@ class DelayStruct(StructBase):
     PROPS = dict.fromkeys(("feedback", "pan", "pitch_shift", "echoes", "time"), "I")
 
 
-class EnvelopeLFOStruct(StructBase):
+class EnvelopeLFOStruct(StructBase):  # 2.5.0+
     PROPS = {
         "flags": "i",  # 4
         "envelope.enabled": "i",  # 8
@@ -114,7 +114,7 @@ class ParametersStruct(StructBase):
         "arp.gate": "f",  # 60
         "arp.slide": "bool",  # 61
         "_u31": 31,  # 92
-        "arp.repeat": "I",  # 96
+        "arp.repeat": "I",  # 96 4.5.2+
     }
 
 
@@ -194,7 +194,7 @@ class ChannelID(EventEnum):
     # Dot = WORD + 27
     # DotRel = WORD + 32
     # DotShift = WORD + 28
-    Children = (WORD + 30, U16Event)
+    Children = (WORD + 30, U16Event)  # 3.4.0+
     Swing = (WORD + 33, U16Event)
     # Echo = DWORD + 2
     # FxSine = DWORD + 3
@@ -203,7 +203,7 @@ class ChannelID(EventEnum):
     # _MainResoCutOff = DWORD + 9
     # DelayModXY = DWORD + 10
     Reverb = (DWORD + 11, U32Event)
-    StretchTime = (DWORD + 12, F32Event)
+    StretchTime = (DWORD + 12, F32Event)  # 5.0+
     FineTune = (DWORD + 14, I32Event)
     SamplerFlags = (DWORD + 15, U32Event)
     LayerFlags = (DWORD + 16, U32Event)
@@ -222,7 +222,7 @@ class ChannelID(EventEnum):
 
 @enum.unique
 class DisplayGroupID(EventEnum):
-    Name = TEXT + 39
+    Name = TEXT + 39  # 3.4.0+
 
 
 @enum.unique
@@ -288,10 +288,14 @@ class ChannelType(enum.IntEnum):  # cuz Type would be a super generic name
     """
 
     Sampler = 0
-    Native = 2  # Used by audio clips and other native FL Studio synths
-    Layer = 3
+    """Used exclusively for the inbuilt Sampler."""
+
+    Native = 2
+    """Used by audio clips and other native FL Studio synths."""
+
+    Layer = 3  # 3.4.0+
     Instrument = 4
-    Automation = 5
+    Automation = 5  # 5.0+
 
 
 class DisplayGroup(MultiEventModel, ModelReprMixin):
@@ -315,7 +319,7 @@ class Arp(SingleEventModel, ModelReprMixin):
     """Range (in octaves)."""
 
     repeat = StructProp[int]()
-    """Number of times a note is repeated."""
+    """Number of times a note is repeated. *New in FL Studio v4.5.2*."""
 
     slide = StructProp[bool]()
     """Whether arpeggio will slide between notes."""
@@ -356,6 +360,11 @@ class Time(MultiEventModel, ModelReprMixin):
 
 
 class Reverb(SingleEventModel, ModelReprMixin):
+    """Precalculated sample reverb, sounds shitty af.
+
+    *New in FL Studio v1.4.0*.
+    """
+
     @property
     def type(self) -> Optional[ReverbType]:
         ...
@@ -421,11 +430,19 @@ class FX(MultiEventModel, ModelReprMixin):
 
 
 class Envelope(SingleEventModel, ModelReprMixin):
+    """*New in FL Studio v2.5.0*."""
+
     enabled = StructProp[bool](prop="envelope.enabled")
     """Whether envelope section is enabled."""
 
     predelay = StructProp[int](prop="envelope.predelay")
-    """Min: 100 (0%), Max: 65536 (100%), Default: 100 (0%)."""
+    """Linear. Defaults to minimum value.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    """
 
     attack = StructProp[int](prop="envelope.attack")
     """Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
@@ -453,6 +470,8 @@ class Envelope(SingleEventModel, ModelReprMixin):
 
 
 class LFO(SingleEventModel, ModelReprMixin):
+    """*New in FL Studio v2.5.0*."""
+
     # amount: Optional[int] = None
     # attack: Optional[int] = None
     # predelay: Optional[int] = None
@@ -505,6 +524,8 @@ class Playback(MultiEventModel, ModelReprMixin):
 
 
 class TimeStretching(MultiEventModel, ModelReprMixin):
+    """*New in FL Studio v5.0*."""
+
     # mode: enum
     # multiplier: Optional[int] = None
     # pitch: Optional[int] = None
@@ -674,7 +695,7 @@ class Sampler(_SamplerInstrument):
         the default values in the underlying event data.
     """
 
-    fx = NestedProp[FX](
+    fx = NestedProp(
         FX,
         ChannelID.Cutoff,
         ChannelID.FadeIn,
@@ -790,4 +811,10 @@ class Rack(MultiEventModel, Sized, Iterable[Channel]):
                 yield channel
 
     swing = EventProp[int](RackID.Swing)
-    """Global channel swing mix. Min: 0, Max: 128, Default: 64."""
+    """Global channel swing mix. Linear. Defaults to minimum value.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 0     | 0%        |
+    | Max     | 128   | 100%      |
+    """

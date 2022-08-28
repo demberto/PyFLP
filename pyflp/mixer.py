@@ -102,7 +102,7 @@ class MixerParamsEvent(ListEventBase):
 class InsertID(EventEnum):
     Icon = (WORD + 31, I16Event)
     Output = (DWORD + 19, I32Event)
-    Color = (DWORD + 21, ColorEvent)
+    Color = (DWORD + 21, ColorEvent)  # 4.0+
     Input = (DWORD + 26, I32Event)
     Name = TEXT + 12
     Routing = (DATA + 27, InsertRoutingEvent)
@@ -291,7 +291,12 @@ class _MixerParamProp(RWProperty[T]):
 
 
 class Slot(MultiEventModel, SupportsIndex):
-    """Represents an effect slot in an `Insert` / mixer channel."""
+    """Represents an effect slot in an `Insert` / mixer channel.
+
+    ??? info "Maximum number of slots (w.r.t FL Studio version)"
+        * 1.6.5: 4
+        * 2.0.1: 8
+    """
 
     def __init__(
         self,
@@ -336,7 +341,16 @@ class Slot(MultiEventModel, SupportsIndex):
 
 
 class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
-    """Represents a channel in the mixer."""
+    """Represents a mixer track to which channel from the rack are routed to.
+
+    ??? info "Maximum number of inserts (w.r.t. FL Studio version)"
+        * 1.6.5: 4 inserts + master, 5 in total
+        * 3.0.0: 16 inserts, 2 sends.
+        * 3.3.0: +2 sends.
+        * 4.0.0: 64
+        * 9.0.0: 99 inserts, 105 in total.
+        * 12.9.0: 125.
+    """
 
     def __init__(
         self,
@@ -365,6 +379,7 @@ class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
     """Whether the left and right channels are swapped."""
 
     color = EventProp[colour.Color](InsertID.Color)
+    """*New in v4.0*."""
 
     @property
     def dock(self) -> Optional[InsertDock]:
@@ -396,7 +411,8 @@ class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
     name = EventProp[str](InsertID.Name)
     output = EventProp[int](InsertID.Output)
     pan = _MixerParamProp[int](MixerParamsID.Pan)
-    """
+    """Linear.
+
     | Type     | Value | Representation |
     | -------- | :---: | -------------- |
     | Min      | -6400 | 100% left      |
@@ -409,7 +425,10 @@ class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
 
     @property
     def routes(self) -> Iterator[int]:
-        """Send volumes to routed inserts."""
+        """Send volumes to routed inserts.
+
+        *New in v4.0*.
+        """
         items = cast(InsertRoutingEvent, self._events[InsertID.Routing][0]).items
         for idx, param in enumerate(self._kw["params"]):
             if param["id"] >= MixerParamsID.RouteVolStart and items[idx]["is_routed"]:
@@ -444,7 +463,8 @@ class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
             yield Slot(params, *events)
 
     stereo_separation = _MixerParamProp[int](MixerParamsID.StereoSeparation)
-    """
+    """Linear.
+
     | Type    | Value | Representation |
     | ------- | :---: | -------------- |
     | Min     | -64   | 100% merged    |
@@ -453,7 +473,7 @@ class Insert(MultiEventModel, Iterable[Slot], SupportsIndex):
     """
 
     volume = _MixerParamProp[int](MixerParamsID.Volume)
-    """Post volume fader.
+    """Post volume fader. Logarithmic.
 
     | Type     | Value | Representation         |
     | -------- | :---: | ---------------------- |

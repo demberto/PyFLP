@@ -62,6 +62,7 @@ from .pattern import PatternID, Patterns, PatternsID
 from .plugin import PluginID
 
 DELPHI_EPOCH: Final = datetime.datetime(1899, 12, 30)
+MIN_TEMPO: Final = 10.000
 VALID_PPQS: Final = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
 
 
@@ -126,7 +127,7 @@ class ProjectID(EventEnum):
     Licensed = (28, BoolEvent)
     _TempoCoarse = WORD + 2
     Pitch = (WORD + 16, I16Event)
-    _TempoFine = WORD + 29
+    _TempoFine = WORD + 29  # 3.4.0+
     CurGroupId = (DWORD + 18, I32Event)
     Tempo = (DWORD + 28, U32Event)
     FLBuild = (DWORD + 31, U32Event)
@@ -136,9 +137,9 @@ class ProjectID(EventEnum):
     _RTFComments = TEXT + 6
     FLVersion = (TEXT + 7, AsciiEvent)
     Licensee = TEXT + 8
-    DataPath = TEXT + 10
-    Genre = TEXT + 14
-    Artists = TEXT + 15
+    DataPath = TEXT + 10  # 9.0+
+    Genre = TEXT + 14  # 5.0+
+    Artists = TEXT + 15  # 5.0+
     Timestamp = (DATA + 29, TimestampEvent)
 
 
@@ -167,12 +168,17 @@ class Project(MultiEventModel):
 
     @property
     def arrangements(self) -> Arrangements:
+        """Provides an iterator over arrangements and other related properties."""
         return Arrangements(
             *self._collect_events(ArrangementID, ArrangementsID, TrackID, TimeMarkerID),
             version=self.version,
         )
 
     artists = EventProp[str](ProjectID.Artists)
+    """Authors / artists info. to be embedded in exported WAV & MP3.
+
+    *New in FL Studio v5.0.*
+    """
 
     @property
     def channel_count(self) -> int:
@@ -193,7 +199,7 @@ class Project(MultiEventModel):
 
     @property
     def channels(self) -> Rack:
-        """Iterator over channels and some channel rack properties."""
+        """Provides an iterator over channels and channel rack properties."""
         events: List[AnyEvent] = []
         for event in self._events_tuple:
             if event.id == InsertID.Flags:
@@ -231,7 +237,10 @@ class Project(MultiEventModel):
 
     @property
     def data_path(self) -> Optional[pathlib.Path]:
-        """The absolute path used by FL to store all your renders."""
+        """The absolute path used by FL to store all your renders.
+
+        *New in FL Studio v9.0.0.*
+        """
         if ProjectID.DataPath in self._events:
             event = self._events[ProjectID.DataPath][0]
             return pathlib.Path(event.value)
@@ -248,6 +257,11 @@ class Project(MultiEventModel):
         self._events[ProjectID.DataPath][0].value = path
 
     genre = EventProp[str](ProjectID.Genre)
+    """Genre of the song to be embedded in exported WAV & MP3.
+
+    *New in FL Studio v5.0.*
+    """
+
     licensed = EventProp[bool](ProjectID.Licensed)
     """Whether the project was last saved with a licensed copy of FL Studio.
 
@@ -303,22 +317,29 @@ class Project(MultiEventModel):
         event.value = licensee.decode("ascii")
 
     looped = EventProp[bool](ProjectID.LoopActive)
+    """Whether a portion of the playlist is selected."""
+
     main_pitch = EventProp[int](ProjectID.Pitch)
     main_volume = EventProp[int](ProjectID._Volume)
 
     @property
     def mixer(self) -> Mixer:
+        """Provides an iterator over inserts and other mixer related properties."""
         return Mixer(*self._collect_events(MixerID, InsertID, SlotID))
 
     @property
     def patterns(self) -> Patterns:
+        """Provides an iterator over patterns and other related properties."""
         return Patterns(*self._collect_events(PatternsID, PatternID))
 
     pan_law = EventProp[PanLaw](ProjectID.PanLaw)
+    """Whether a circular or a triangular pan law is used for the project."""
 
     @property
     def ppq(self) -> int:
         """Pulses per quarter.
+
+        Defaults to **96** since FL Studio v2.1.1.
 
         !!! info
             All types of lengths, positions and offsets internally use the PPQ
@@ -355,8 +376,18 @@ class Project(MultiEventModel):
     def tempo(self) -> Union[int, float, None]:
         """Tempo at the current position of the playhead (in BPM).
 
+        *New in FL Studio v1.4.2*: Max tempo increased to 999 (int).
+        *New in FL Studio v3.4.0*: Fine tuned tempo (a float).
+        *Changed in v11*: Max tempo limited to 522.000.
+
         ???+ info "Internal Representation"
-            Stored as the actual BPM * 1000 as an integer.
+            Stored as the actual BPM * 1000 as an integer as of the latest
+            version of FL Studio.
+
+        Raises:
+            UnexpectedType: When a fine-tuned tempo (float) isn't supported.
+                Use an `int` (coarse tempo) value.
+            InvalidValue: When a tempo outside the allowed range is set.
         """
         if ProjectID.Tempo in self._events:
             return self._events[ProjectID.Tempo][0].value / 1000
@@ -370,6 +401,24 @@ class Project(MultiEventModel):
 
     @tempo.setter
     def tempo(self, value: Union[int, float]):
+        if self.tempo is None:
+            raise PropertyCannotBeSet(
+                ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine
+            )
+
+        if self.version >= FLVersion(1, 4, 2) and self.version < FLVersion(11):
+            max_tempo = 999.000
+        else:
+            max_tempo = 522.000
+
+        if isinstance(value, float) and self.version < FLVersion(3, 4, 0):
+            raise UnexpectedType(int, float)
+
+        if float(value) > max_tempo or float(value) < MIN_TEMPO:
+            raise InvalidValue(
+                f"Invalid tempo {value}; expected {MIN_TEMPO}-{max_tempo}"
+            )
+
         if ProjectID.Tempo in self._events:
             self._events[ProjectID.Tempo][0].value = int(value * 1000)
 
@@ -410,9 +459,8 @@ class Project(MultiEventModel):
             with ASCII data, even if the rest of the strings use Unicode.
 
         Raises:
-            PropertyCannotBeSet: When the underlying event couldn't be found.
-                This error should NEVER occur; if it does, it indicates possible
-                corruption.
+            PropertyCannotBeSet: This error should NEVER occur; if it does,
+                it indicates possible corruption.
             ExpectedValue: When a string with an invalid format is tried to be set.
         """
         events = self._events[ProjectID.FLVersion]
