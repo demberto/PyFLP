@@ -63,17 +63,17 @@ from ._base import (
     U32Event,
 )
 from .controller import RemoteController
-from .exceptions import DataCorrupted, Error, PropertyCannotBeSet
+from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import IPlugin, PluginID
 
 __all__ = ["Automation", "Channel", "Instrument", "Layer", "ChannelRack"]
 
 
-class ChannelNotFound(IndexError, Error):
+class ChannelNotFound(ModelNotFound, KeyError):
     pass
 
 
-class NoChannelsFound(DataCorrupted):
+class NoChannelsFound(NoModelsFound):
     pass
 
 

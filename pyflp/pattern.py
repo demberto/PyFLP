@@ -52,14 +52,14 @@ from ._base import (
     StructProp,
     U16Event,
 )
-from .exceptions import DataCorrupted, Error
+from .exceptions import ModelNotFound, NoModelsFound
 
 
-class PatternNotFound(IndexError, Error):
+class PatternNotFound(ModelNotFound):
     pass
 
 
-class NoPatternsFound(DataCorrupted):
+class NoPatternsFound(NoModelsFound):
     pass
 
 

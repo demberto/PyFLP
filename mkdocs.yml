@@ -15,6 +15,7 @@ nav:
     - Controllers: reference/controller.md
     - Mixer: reference/mixer.md
     - Plugins: reference/plugin.md
+    - Exceptions: reference/exceptions.md
     - FLP Format: reference/flp-format.md
   - Contributing: contributing.md
   - Report a bug: https://github.com/demberto/PyFLP/issues
@@ -32,7 +33,11 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.mark
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: "!!python/name:pymdownx.superfences.fence_code_format"
   - pymdownx.tabbed:
       alternate_style: true
   - tables
@@ -40,7 +45,6 @@ plugins:
   - include-markdown
   - search
   - autorefs
-  - glightbox
   - mkdocstrings:
       handlers:
         python:

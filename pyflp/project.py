@@ -373,9 +373,9 @@ class Project(MultiEventModel):
     def tempo(self) -> Union[int, float, None]:
         """Tempo at the current position of the playhead (in BPM).
 
-        *New in FL Studio v1.4.2*: Max tempo increased to 999 (int).
-        *New in FL Studio v3.4.0*: Fine tuned tempo (a float).
-        *Changed in v11*: Max tempo limited to 522.000.
+        * *New in FL Studio v1.4.2*: Max tempo increased to 999 (int).
+        * *New in FL Studio v3.4.0*: Fine tuned tempo (a float).
+        * *Changed in FL Studio v11*: Max tempo limited to 522.000.
 
         ???+ info "Internal Representation"
             Stored as the actual BPM * 1000 as an integer as of the latest

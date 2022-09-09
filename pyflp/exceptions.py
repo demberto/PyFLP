@@ -18,21 +18,14 @@ pyflp.exceptions
 Contains the exceptions shared across PyFLP.
 """
 
-import sys
 from typing import Any, Type
-
-if sys.version_info >= (3, 8):
-    from typing import SupportsIndex
-else:
-    from typing_extensions import SupportsIndex
 
 __all__ = [
     "Error",
-    "DataCorrupted",
+    "NoModelsFound",
     "EventIDOutOfRange",
     "InvalidEventChunkSize",
     "UnexpectedType",
-    "ValueOutOfBounds",
     "PropertyCannotBeSet",
     "HeaderCorrupted",
     "VersionNotDetected",
@@ -45,10 +38,6 @@ class Error(Exception):
 
     Some exceptions derive from standard Python exceptions to ease handling.
     """
-
-
-class DataCorrupted(Error):
-    pass
 
 
 class EventIDOutOfRange(Error, ValueError):
@@ -68,11 +57,6 @@ class UnexpectedType(Error, TypeError):
         super().__init__(f"Expected a {expected} object; got a {got} object instead")
 
 
-class ValueOutOfBounds(Error, IndexError, ValueError):
-    def __init__(self, index: SupportsIndex):
-        super().__init__(f"{index!r} is out of bounds for the list / underyling event")
-
-
 class PropertyCannotBeSet(Error, AttributeError):
     def __init__(self, *ids: int):
         if len(ids) > 0:
@@ -80,17 +64,6 @@ class PropertyCannotBeSet(Error, AttributeError):
         else:
             msg = "Property cannot be set"
         super().__init__(msg)
-
-
-class HeaderCorrupted(Error, ValueError):
-    """Raised when the header chunk contains an unexpected / invalid value."""
-
-    def __init__(self, desc: str):
-        """
-        Args:
-            desc (str): A string containing details about what is corrupted.
-        """
-        super().__init__(f"Error parsing header: {desc}")
 
 
 class ExpectedValue(Error, ValueError):
@@ -102,9 +75,41 @@ class InvalidValue(Error, ValueError):
     """An alias for ValueError."""
 
 
-class VersionNotDetected(Error):
+class DataCorrupted(Error):
+    """Base class for parsing exceptions.
+
+    ``` mermaid
+    classDiagram
+    DataCorrupted <|-- HeaderCorrupted
+    DataCorrupted <|-- NoModelsFound
+    DataCorrupted <|-- ModelNotFound
+    DataCorrupted <|-- VersionNotDetected
+    ```
+    """
+
+
+class HeaderCorrupted(DataCorrupted, ValueError):
+    """Raised when the header chunk contains an unexpected / invalid value."""
+
+    def __init__(self, desc: str):
+        """
+        Args:
+            desc (str): A string containing details about what is corrupted.
+        """
+        super().__init__(f"Error parsing header: {desc}")
+
+
+class NoModelsFound(DataCorrupted):
+    """Raised when the container's iterator fails to generate any model."""
+
+
+class ModelNotFound(DataCorrupted, IndexError):
+    """Raised when an invalid index is passed to container's iterator."""
+
+
+class VersionNotDetected(DataCorrupted):
     """Raised when the correct string decoder couldn't be decided.
 
     This happens due to absence of `ProjectID.Version` event or any string
-    events occuring before it. Both cases indicated corruption.
+    events occuring before it. Both cases indicate corruption.
     """

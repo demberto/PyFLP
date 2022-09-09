@@ -65,15 +65,15 @@ from ._base import (
     U16Event,
 )
 from .controller import RemoteController
-from .exceptions import DataCorrupted, Error
+from .exceptions import ModelNotFound, NoModelsFound
 from .plugin import IPlugin, PluginID
 
 
-class InsertNotFound(IndexError, Error):
+class InsertNotFound(ModelNotFound):
     pass
 
 
-class NoInsertsFound(DataCorrupted):
+class NoInsertsFound(NoModelsFound):
     pass
 
 
@@ -419,7 +419,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     """Whether the left and right channels are swapped."""
 
     color = EventProp[colour.Color](InsertID.Color)
-    """*New in v4.0*."""
+    """*New in FL Studio v4.0*."""
 
     @property
     def dock(self) -> Optional[InsertDock]:
@@ -467,7 +467,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     def routes(self) -> Iterator[int]:
         """Send volumes to routed inserts.
 
-        *New in v4.0*.
+        *New in FL Studio v4.0*.
         """
         items = cast(InsertRoutingEvent, self._events[InsertID.Routing][0]).items
         for idx, param in enumerate(self._kw["params"]):
@@ -500,24 +500,12 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
 class Mixer(MultiEventModel, Sequence[Insert]):
     def __getitem__(self, index: SupportsIndex):
-        for idx, insert in enumerate(self.inserts):
+        for idx, insert in enumerate(self):
             if idx == index:
                 return insert
         raise InsertNotFound(index)
 
     def __iter__(self) -> Iterator[Insert]:
-        return self.inserts
-
-    def __len__(self):
-        if InsertID.Flags not in self._events:
-            raise NoInsertsFound
-        return len(self._events[InsertID.Flags])
-
-    def __repr__(self):
-        return f"Mixer: {len(self)} inserts"
-
-    @property
-    def inserts(self) -> Iterator[Insert]:
         index = 0
         events: List[AnyEvent] = []
         params_dict: DefaultDict[int, List[MixerParamsItem]] = collections.defaultdict(
@@ -546,3 +534,11 @@ class Mixer(MultiEventModel, Sequence[Insert]):
                     yield Insert(*events, index=index, params=params_list)
                 events = []
                 index += 1
+
+    def __len__(self):
+        if InsertID.Flags not in self._events:
+            raise NoInsertsFound
+        return len(self._events[InsertID.Flags])
+
+    def __repr__(self):
+        return f"Mixer: {len(self)} inserts"

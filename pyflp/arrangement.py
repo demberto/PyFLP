@@ -61,7 +61,7 @@ from ._base import (
     U32Event,
 )
 from .channel import Channel
-from .exceptions import DataCorrupted, Error
+from .exceptions import ModelNotFound, NoModelsFound
 from .pattern import Pattern
 
 __all__ = [
@@ -74,14 +74,6 @@ __all__ = [
     "TrackPress",
     "TrackSync",
 ]
-
-
-class ArrangementNotFound(IndexError, Error):
-    pass
-
-
-class NoArrangementsFound(DataCorrupted):
-    pass
 
 
 class PlaylistItemStruct(StructBase):
@@ -262,7 +254,7 @@ class TimeMarker(MultiEventModel):
         events = self._events.get(TimeMarkerID.Position)
         if events is not None:
             event = events[0]
-            if event.value > TimeMarkerType.Signature:
+            if event.value >= TimeMarkerType.Signature:
                 return TimeMarkerType.Signature
             return TimeMarkerType.Marker
 
@@ -421,17 +413,22 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
         super().__init__(*events, **kw)
 
     def __getitem__(self, index: SupportsIndex):
+        """Returns the arrangement at `index`.
+
+        Raises:
+            ModelNotFound: An arrangement with `index` could not be found.
+        """
         for arrangement in self:
             if arrangement.__index__() == index:
                 return arrangement
-        raise ArrangementNotFound(index)
+        raise ModelNotFound(index)
 
     # TODO Verify ArrangementsID.Current is the end
     # FL changed event ordering a lot, the latest being the most easiest to
     # parse; it contains ArrangementID.New event followed by TimeMarker events
     # followed by 500 TrackID events. TimeMarkers occured before new arrangement
     # event in initial versions of FL20, making them harder to group.
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Arrangement]:
         first = True
         events: List[AnyEvent] = []
 
@@ -445,8 +442,7 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
                     events = []
                 first = not first
             elif event.id == ArrangementsID.Current:
-                yield make_arr()  # last arrangement
-                return
+                return make_arr()  # last arrangement
 
             for enum in (ArrangementID, TimeMarkerID, TrackID):
                 if event.id in enum:
@@ -454,8 +450,13 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
                     break
 
     def __len__(self):
+        """The number of arrangements present in the project.
+
+        Raises:
+            NoModelsFound: When no arrangements are found.
+        """
         if ArrangementID.New not in self._events:
-            raise NoArrangementsFound
+            raise NoModelsFound
         return len(self._events[ArrangementID.New])
 
     def __repr__(self):
@@ -463,14 +464,19 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
 
     @property
     def current(self) -> Optional[Arrangement]:
-        """Currently selected arrangement (via FL's interface)."""
+        """Currently selected arrangement (via FL's interface).
+
+        Raises:
+            ModelNotFound: When the underlying event value points to an
+                invalid arrangement index.
+        """
         if ArrangementsID.Current in self._events:
             event = self._events[ArrangementsID.Current][0]
             index = event.value
             try:
                 return list(self)[index]
             except IndexError:
-                raise ArrangementNotFound(index)
+                raise ModelNotFound(index)
 
     loop_pos = EventProp[int](ArrangementsID.LoopPos)
     time_signature = NestedProp(
