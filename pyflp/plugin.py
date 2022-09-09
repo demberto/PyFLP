@@ -20,7 +20,7 @@ Contains the types used by native and VST plugins.
 
 import enum
 import sys
-from typing import Any, ClassVar, Dict, List, Optional, Union, cast
+from typing import Any, ClassVar, Dict, Generic, List, Optional, TypeVar, Union, cast
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
@@ -31,11 +31,11 @@ from ._base import (
     DATA,
     DWORD,
     TEXT,
+    AnyEvent,
     ColorEvent,
     DataEventBase,
     EventEnum,
     ModelReprMixin,
-    MultiEventModel,
     SingleEventModel,
     StructBase,
     StructEventBase,
@@ -208,32 +208,44 @@ class PluginID(EventEnum):
 
     Color = (DWORD, ColorEvent)
     Icon = (DWORD + 27, U32Event)
-    DefaultName = TEXT + 9
+    InternalName = TEXT + 9
     Name = TEXT + 11
     # Plugin wrapper data, windows pos of plugin etc, currently
     # selected plugin wrapper page; minimized, closed or not
     Wrapper = (DATA + 4, UnknownDataEvent)  # TODO
-    Data = (DATA + 5, UnknownDataEvent)
+    Data = (DATA + 5, UnknownDataEvent)  # ? 1.6.5+
 
 
 @runtime_checkable
 class IPlugin(Protocol):
-    DEFAULT_NAME: ClassVar[str]
+    INTERNAL_NAME: ClassVar[str]
     """The name used internally by FL to decide the type of plugin data."""
 
 
-class PluginIOInfo(MultiEventModel):
+_PE_co = TypeVar("_PE_co", bound=AnyEvent, covariant=True)
+
+
+class PluginBase(SingleEventModel, Generic[_PE_co]):
+    def __init__(self, event: _PE_co, **kw: Any):
+        super().__init__(event, **kw)
+
+
+AnyPlugin = PluginBase[AnyEvent]  # TODO bind to IPlugin + PluginBase (both)
+
+
+class PluginIOInfo(SingleEventModel):
     mixer_offset = StructProp[int]()
     flags = StructProp[int]()
 
 
-class VSTPlugin(SingleEventModel, IPlugin):
+class VSTPlugin(PluginBase[VSTPluginEvent], IPlugin):
     """Represents a VST2 or a VST3 generator or effect.
 
-    *New in FL Studio FL Studio v9.0.3*: VST3 support.
+    *New in FL Studio v1.5.23*: VST2 support (beta).
+    *New in FL Studio v9.0.3*: VST3 support.
     """
 
-    DEFAULT_NAME = "Fruity Wrapper"
+    INTERNAL_NAME = "Fruity Wrapper"
     fourcc = StructProp[str]()
     """A unique four character code identifying the plugin.
 
@@ -271,8 +283,8 @@ class VSTPlugin(SingleEventModel, IPlugin):
     vst_number = StructProp[int]()  # TODO
 
 
-class BooBass(MultiEventModel, IPlugin, ModelReprMixin):
-    DEFAULT_NAME = "BooBass"
+class BooBass(PluginBase[BooBassEvent], IPlugin, ModelReprMixin):
+    INTERNAL_NAME = "BooBass"
     bass = StructProp[int]()
     """Volume of the bass region.
 
@@ -294,7 +306,7 @@ class BooBass(MultiEventModel, IPlugin, ModelReprMixin):
     """
 
     mid = StructProp[int]()
-    """Volume of the bass region.
+    """Volume of the mid region.
 
     | Type    | Value |
     | ------- | :---: |
@@ -304,8 +316,8 @@ class BooBass(MultiEventModel, IPlugin, ModelReprMixin):
     """
 
 
-class FruityBalance(MultiEventModel, IPlugin, ModelReprMixin):
-    DEFAULT_NAME = "Fruity Balance"
+class FruityBalance(PluginBase[FruityBalanceEvent], IPlugin, ModelReprMixin):
+    INTERNAL_NAME = "Fruity Balance"
     pan = StructProp[int]()
     """Linear.
 
@@ -333,8 +345,8 @@ class FruityFastDistKind(enum.IntEnum):
     B = 1
 
 
-class FruityFastDist(MultiEventModel, IPlugin, ModelReprMixin):
-    DEFAULT_NAME = "Fruity Fast Dist"
+class FruityFastDist(PluginBase[FruityFastDistEvent], IPlugin, ModelReprMixin):
+    INTERNAL_NAME = "Fruity Fast Dist"
     kind = StructProp[FruityFastDistKind]()
     mix = StructProp[int]()
     """Linear. Defaults to maximum value.
@@ -374,8 +386,8 @@ class FruityFastDist(MultiEventModel, IPlugin, ModelReprMixin):
     """
 
 
-class FruityNotebook2(MultiEventModel, IPlugin, ModelReprMixin):
-    DEFAULT_NAME = "Fruity NoteBook 2"
+class FruityNotebook2(PluginBase[FruityNotebook2Event], IPlugin, ModelReprMixin):
+    INTERNAL_NAME = "Fruity NoteBook 2"
     active_page = StructProp[int]()
     """Active page number of the notebook. Min: 0, Max: 100."""
 
@@ -389,8 +401,8 @@ class FruityNotebook2(MultiEventModel, IPlugin, ModelReprMixin):
     """A dict of page numbers to their contents."""
 
 
-class FruitySend(MultiEventModel, IPlugin, ModelReprMixin):
-    DEFAULT_NAME = "Fruity Send"
+class FruitySend(PluginBase[FruitySendEvent], IPlugin, ModelReprMixin):
+    INTERNAL_NAME = "Fruity Send"
     dry = StructProp[int]()
     """Linear. Defaults to maximum value.
 
@@ -424,8 +436,8 @@ class FruitySend(MultiEventModel, IPlugin, ModelReprMixin):
     """
 
 
-class FruitySoftClipper(MultiEventModel, IPlugin, ModelReprMixin):
-    DEFAULT_NAME = "Fruity Soft Clipper"
+class FruitySoftClipper(PluginBase[FruitySoftClipperEvent], IPlugin, ModelReprMixin):
+    INTERNAL_NAME = "Fruity Soft Clipper"
     post = StructProp[int]()
     """Linear.
 
@@ -455,8 +467,8 @@ class SoundgoodizerMode(enum.IntEnum):
     D = 3
 
 
-class Soundgoodizer(MultiEventModel, IPlugin, ModelReprMixin):
-    DEFAULT_NAME = "Soundgoodizer"
+class Soundgoodizer(PluginBase[SoundgoodizerEvent], IPlugin, ModelReprMixin):
+    INTERNAL_NAME = "Soundgoodizer"
     amount = StructProp[int]()
     """Logarithmic.
 
@@ -484,8 +496,10 @@ class StereoEnhancerPhaseInversion(enum.IntEnum):
     Right = 2
 
 
-class FruityStereoEnhancer(MultiEventModel, IPlugin, ModelReprMixin):
-    DEFAULT_NAME = "Fruity Stereo Enhancer"
+class FruityStereoEnhancer(
+    PluginBase[FruityStereoEnhancerEvent], IPlugin, ModelReprMixin
+):
+    INTERNAL_NAME = "Fruity Stereo Enhancer"
     effect_position = StructProp[StereoEnhancerEffectPosition]()
     """Default: StereoEnhancerEffectPosition.Post."""
 

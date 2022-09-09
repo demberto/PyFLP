@@ -29,7 +29,7 @@ else:
     from typing_extensions import SupportsIndex
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Sequence, Iterator
+    from collections.abc import Iterator, Sequence
 else:
     from typing import Sequence, Iterator
 
@@ -744,11 +744,20 @@ class _SamplerInstrument(Channel):
 
 
 class Instrument(_SamplerInstrument):
-    plugin: Optional[IPlugin] = None
-    """The plugin loaded into the channel.
+    @property
+    def plugin(self) -> Optional[Union[IPlugin, bytes]]:
+        """The plugin loaded into the channel."""
+        try:
+            event = self._events[PluginID.Data][0]
+        except (KeyError, IndexError):
+            return
 
-    Valid only if channel is of instrument type.
-    """
+        if isinstance(event, VSTPluginEvent):
+            return VSTPlugin(event)
+        elif isinstance(event, BooBassEvent):
+            return BooBass(event)
+
+        return event._raw
 
 
 # New in FL Studio v1.4.0 & v1.5.23: Sampler spectrum views

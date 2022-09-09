@@ -35,7 +35,7 @@ else:
     from typing import Sequence
 
 if sys.version_info >= (3, 11):
-    from typing import NotRequired, Unpack, Never
+    from typing import Never, NotRequired, Unpack
 else:
     from typing_extensions import NotRequired, Unpack, Never
 
@@ -51,6 +51,7 @@ from ._base import (
     EventEnum,
     EventProp,
     FlagProp,
+    FLVersion,
     I16Event,
     I32Event,
     KWProp,
@@ -64,11 +65,11 @@ from ._base import (
     StructEventBase,
     T,
     U16Event,
-    FLVersion,
 )
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound
 from .plugin import (
+    AnyPlugin,
     FruityBalance,
     FruityBalanceEvent,
     FruityFastDist,
@@ -83,9 +84,8 @@ from .plugin import (
     FruityStereoEnhancerEvent,
     IPlugin,
     PluginID,
-    VSTPluginEvent,
     VSTPlugin,
-    AnyPlugin,
+    VSTPluginEvent,
 )
 
 
@@ -329,7 +329,7 @@ class Slot(MultiEventModel, SupportsIndex):
         repr = "Unnamed slot" if self.name is None else f"Slot {self.name!r}"
         if self.plugin is None:
             return f"Empty {repr.lower()}"
-        return f"{repr} ({self.plugin.INTERNAL_NAME})"   # type: ignore
+        return f"{repr} ({self.plugin.INTERNAL_NAME})"  # type: ignore
 
     def __index__(self) -> int:
         if SlotID.Index not in self._events:
@@ -356,8 +356,36 @@ class Slot(MultiEventModel, SupportsIndex):
 
     name = EventProp[str](PluginID.Name)
 
-    plugin = KWProp[IPlugin]()
-    """The effect loaded into the slot."""
+    @property
+    def plugin(self) -> Optional[AnyPlugin | bytes]:
+        """The effect loaded into the slot."""
+        try:
+            event = self._events[PluginID.Data][0]
+        except (KeyError, IndexError):
+            return
+
+        if isinstance(event, VSTPluginEvent):
+            return VSTPlugin(event)
+        elif isinstance(event, FruityBalanceEvent):
+            return FruityBalance(event)
+        elif isinstance(event, FruityFastDistEvent):
+            return FruityFastDist(event)
+        elif isinstance(event, FruityNotebook2Event):
+            return FruityNotebook2(event)
+        elif isinstance(event, FruitySendEvent):
+            return FruitySend(event)
+        elif isinstance(event, FruitySoftClipperEvent):
+            return FruitySoftClipper(event)
+        elif isinstance(event, FruityStereoEnhancerEvent):
+            return FruityStereoEnhancer(event)
+
+        return event._raw
+
+    @plugin.setter
+    def plugin(self, plugin: AnyPlugin):
+        if isinstance(plugin, IPlugin):
+            self.internal_name = plugin.INTERNAL_NAME
+        self._events[PluginID.Data] = [plugin.event()]
 
 
 class _InsertKW(TypedDict):
