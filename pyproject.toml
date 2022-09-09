@@ -1,6 +1,21 @@
 [build-system]
-requires = ["setuptools>=51", "wheel"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.coverage.run]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",          # Have to re-enable the standard pragma
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "@(abc\\.)?abstractmethod",
+]
+ignore_errors = true
+
 
 [tool.isort]
 profile = "black"
@@ -11,46 +26,22 @@ jobs = 0 # Parallel execution
 [tool.pylint.'MESSAGE CONTROL']
 disable = ["duplicate-code", "invalid-name"]
 
+[tool.pyright]
+reportPrivateUsage = false
+reportMissingTypeStubs = false
+venvPath = "."
+venv = ".venv"
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = "tests"
 
-[tool.coverage.run]
-branch = true
-parallel = true
-
-[tool.coverage.report]
-exclude_lines = [
-  # Have to re-enable the standard pragma
-  "pragma: no cover",
-
-  # Don't complain about missing __repr__:
-  "def __repr__",
-
-  # Don't complain if tests don't hit defensive assertion code:
-  "raise AssertionError",
-  "raise NotImplementedError",
-
-  # Don't complain about abstract methods, they aren't run:
-  "@(abc\\.)?abstractmethod",
-]
-ignore_errors = true
-
-[tool.pyright]
-reportPrivateUsage = false
-reportMissingTypeStubs = false
-
 [tool.tbump]
-# Uncomment this if your project is hosted on GitHub:
 github_url = "https://github.com/demberto/PyFLP/"
 
 [tool.tbump.version]
 current = "1.1.1"
-
-# Example of a semver regexp.
-# Make sure this matches current_version before
-# using tbump
 regex = '''
   (?P<major>\d+)
   \.
@@ -69,16 +60,6 @@ tag_template = "v{new_version}"
 [[tool.tbump.file]]
 src = "VERSION"
 
-# You can specify a list of commands to
-# run after the files have been patched
-# and before the git commit is made
-
 [[tool.tbump.before_commit]]
 name = "check changelog"
 cmd = "git grep -q {new_version} CHANGELOG.md"
-
-# Or run some commands after the git tag and the branch
-# have been pushed:
-#  [[tool.tbump.after_push]]
-#  name = "publish"
-#  cmd = "./publish.sh"
