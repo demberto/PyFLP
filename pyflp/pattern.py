@@ -18,9 +18,11 @@ pyflp.pattern
 Contains the types used by MIDI patterns, notes and their automation data.
 """
 
+from __future__ import annotations
+
 import collections
 import sys
-from typing import DefaultDict, Iterator, List, Optional
+from typing import DefaultDict
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex
@@ -28,9 +30,9 @@ else:
     from typing_extensions import SupportsIndex
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 else:
-    from typing import Sequence
+    from typing import Sequence, Iterator
 
 import colour
 
@@ -220,7 +222,7 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
 
     def __iter__(self) -> Iterator[Pattern]:
         cur_pat_id = 0
-        events_dict: DefaultDict[int, List[AnyEvent]] = collections.defaultdict(list)
+        events_dict: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
 
         for event in self._events_tuple:
             if event.id == PatternID.New:
@@ -238,7 +240,7 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         """
         if PatternID.New not in self._events:
             raise NoModelsFound
-        return len(set(event.value for event in self._events[PatternID.New]))
+        return len({event.value for event in self._events[PatternID.New]})
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)
     """Whether truncated notes of patterns placed in the playlist should be played.
@@ -247,7 +249,7 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
     """
 
     @property
-    def current(self) -> Optional[Pattern]:
+    def current(self) -> Pattern | None:
         if PatternsID.CurrentlySelected in self._events:
             index = self._events[PatternsID.CurrentlySelected][0].value
             if index is not None:

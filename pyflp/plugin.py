@@ -18,9 +18,11 @@ pyflp.plugin
 Contains the types used by native and VST plugins.
 """
 
+from __future__ import annotations
+
 import enum
 import sys
-from typing import Any, ClassVar, Dict, Generic, List, Optional, TypeVar, Union, cast
+from typing import Any, ClassVar, Dict, Generic, TypeVar, cast
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
@@ -99,7 +101,7 @@ class FruityFastDistEvent(StructEventBase):
 class FruityNotebook2Event(DataEventBase):
     def __init__(self, id: int, data: bytes) -> None:
         super().__init__(id, data)
-        self._props: Dict[str, Any] = {}
+        self._props: dict[str, Any] = {}
         pages = self._props["pages"] = {}
 
         self._stream.seek(4)
@@ -138,7 +140,7 @@ class SoundgoodizerEvent(StructEventBase):
 
 @enum.unique
 class VSTPluginEventID(enum.IntEnum):
-    def __new__(cls, id: int, key: Optional[str] = None):
+    def __new__(cls, id: int, key: str | None = None):
         obj = int.__new__(cls, id)
         obj._value_ = id
         setattr(obj, "key", key)
@@ -167,8 +169,8 @@ class VSTPluginEvent(DataEventBase):
 
     def __init__(self, id: int, data: bytes) -> None:
         super().__init__(id, data)
-        self._events: List[U64DataEvent] = []
-        self._props: Dict[Union[str, int], Any] = {}
+        self._events: list[U64DataEvent] = []
+        self._props: dict[str | int, Any] = {}
 
         kind = self._props["kind"] = self._stream.read_I()
         if kind in VSTPluginEvent.VST_MARKERS:

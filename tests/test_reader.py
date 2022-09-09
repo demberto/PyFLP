@@ -22,7 +22,7 @@ def test_project(project: Project):
         "Sampler",
         "Unsorted",
     ]
-    assert len(list(project.mixer.inserts)) == 127
+    assert len(list(project.mixer)) == 127
     assert project.looped
     assert project.main_pitch == 0
     assert project.main_volume is None

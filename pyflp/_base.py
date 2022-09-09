@@ -24,6 +24,8 @@ This module can briefly be divided into:
 - Public and internal types and dataclasses.
 """
 
+from __future__ import annotations
+
 import abc
 import collections
 import dataclasses
@@ -39,12 +41,9 @@ from typing import (
     Hashable,
     Iterable,
     Iterator,
-    List,
-    Optional,
     Sized,
     SupportsBytes,
     Tuple,
-    Type,
     TypeVar,
     Union,
     cast,
@@ -109,7 +108,7 @@ class EventBase(abc.ABC, Generic[T], Hashable, Sized, SupportsBytes):
         return self.id != o.id or self._raw != o._raw
 
     def __hash__(self):
-        return hash((bytes(self)))
+        return hash(bytes(self))
 
     @abc.abstractmethod
     def __bytes__(self) -> bytes:
@@ -136,7 +135,7 @@ class PODEventBase(EventBase[T], abc.ABC):
     """Base class for events whose size is predetermined (POD types)."""
 
     TYPE_SIZE: ClassVar[int]
-    ID_RANGE: ClassVar[Tuple[int, int]]
+    ID_RANGE: ClassVar[tuple[int, int]]
 
     def __init__(self, id: int, data: bytes):
         if id not in range(*self.ID_RANGE):
@@ -325,11 +324,11 @@ class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
     """An event used for storing a two-tuple of 2 byte unsigned integers."""
 
     @property
-    def value(self) -> Tuple[int, int]:
+    def value(self) -> tuple[int, int]:
         return UInt.unpack(self._raw)
 
     @value.setter
-    def value(self, value: Tuple[int, int]):
+    def value(self, value: tuple[int, int]):
         self._raw = UInt.pack(*value)
 
 
@@ -343,7 +342,7 @@ class ColorEvent(DWordEventBase[colour.Color]):
 
     @value.setter
     def value(self, value: colour.Color):
-        self._raw = bytes((int(c * 255) for c in value.get_rgb())) + b"\x00"
+        self._raw = bytes(int(c * 255) for c in value.get_rgb()) + b"\x00"
 
 
 class VarintEventBase(EventBase[T], abc.ABC):
@@ -392,7 +391,7 @@ class U64DataEvent(VarintEventBase[Union[bytes, str]]):
         return self._raw.decode("ascii") if self._isascii else self._raw
 
     @value.setter
-    def value(self, value: Union[bytes, str]):
+    def value(self, value: bytes | str):
         if isinstance(value, str):
             self._raw = value.encode("ascii")
         else:
@@ -482,7 +481,7 @@ class _StructMeta(type):
         "d": 8,
     }
 
-    def __new__(cls, name: str, bases: Any, attrs: Dict[str, Any]):
+    def __new__(cls, name: str, bases: Any, attrs: dict[str, Any]):
         """Populates `Struct.OFFSETS` and `Struct.SIZE`."""
 
         if "PROPS" not in attrs:
@@ -501,10 +500,10 @@ class _StructMeta(type):
 
 
 class StructBase(metaclass=_StructMeta):
-    OFFSETS: ClassVar[Dict[str, int]] = {}
+    OFFSETS: ClassVar[dict[str, int]] = {}
     """A mapping of property names to their offsets in the underlying stream."""
 
-    PROPS: ClassVar[Dict[str, Union[str, int]]] = {}
+    PROPS: ClassVar[dict[str, str | int]] = {}
     """A mapping of property names to their underlying C types.
 
     Usually match `struct` format specifiers and used to get the correct read
@@ -526,7 +525,7 @@ class StructBase(metaclass=_StructMeta):
     """
 
     def __init__(self, stream: BytesIOEx):
-        self._props: Dict[str, Any] = dict.fromkeys(type(self).PROPS)
+        self._props: dict[str, Any] = dict.fromkeys(type(self).PROPS)
         self._stream = stream
         self._stream_len = len(stream.getvalue())
 
@@ -571,7 +570,7 @@ class StructEventBase(DataEventBase):
     Its size is determined by the event as well as FL version.
     """
 
-    STRUCT: ClassVar[Type[StructBase]]
+    STRUCT: ClassVar[type[StructBase]]
 
     def __init__(self, id: int, data: bytes):
         super().__init__(id, data)
@@ -607,11 +606,11 @@ class StructEventBase(DataEventBase):
 class ListEventBase(DataEventBase, abc.ABC, Iterable[StructBase]):
     """Base class for events storing an array of structured data."""
 
-    STRUCT: ClassVar[Type[StructBase]]
+    STRUCT: ClassVar[type[StructBase]]
 
     def __init__(self, id: int, data: bytes):
         super().__init__(id, data)
-        self.items: List[StructBase] = []
+        self.items: list[StructBase] = []
         self.unparsed = False
 
         size = type(self).STRUCT.SIZE
@@ -673,7 +672,7 @@ class EventEnum(int, enum.Enum, metaclass=EventEnumMeta):
     the latest version of FL Studio, *to the best of my knowledge*.
     """
 
-    def __new__(cls, id: int, type: Optional[Type[AnyEvent]] = None):
+    def __new__(cls, id: int, type: type[AnyEvent] | None = None):
         obj = int.__new__(cls, id)
         obj._value_ = id
         setattr(obj, "type", type)
@@ -715,9 +714,9 @@ class SingleEventModel(ModelBase):
 class MultiEventModel(ModelBase):
     def __init__(self, *events: AnyEvent, **kw: Any):
         super().__init__(**kw)
-        self._events: Dict[int, List[AnyEvent]] = {}
+        self._events: dict[int, list[AnyEvent]] = {}
         self._events_tuple = events
-        tmp: DefaultDict[int, List[AnyEvent]] = collections.defaultdict(list)
+        tmp: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
 
         for event in events:
             if event is not None:
@@ -740,7 +739,7 @@ class ModelReprMixin:
     """I am too lazy to make one `__repr__()` for every model."""
 
     def __repr__(self):
-        values_dict: Dict[str, Any] = {}
+        values_dict: dict[str, Any] = {}
         for var in vars(self):
             if isinstance(getattr(type(self), var), ROProperty):
                 values_dict[var] = getattr(self, var, None)
@@ -757,7 +756,7 @@ SEMT_co = TypeVar("SEMT_co", bound=SingleEventModel, covariant=True)
 class ROProperty(Protocol[T_co]):
     """Protocol for a read-only descriptor."""
 
-    def __get__(self, instance: Any, owner: Any = None) -> Optional[T_co]:
+    def __get__(self, instance: Any, owner: Any = None) -> T_co | None:
         ...
 
 
@@ -770,7 +769,7 @@ class RWProperty(ROProperty[T], Protocol):
 
 
 class NamedPropMixin:
-    def __init__(self, prop: Optional[str] = None) -> None:
+    def __init__(self, prop: str | None = None) -> None:
         self._prop = prop or ""
 
     def __set_name__(self, _: Any, name: str):
@@ -784,7 +783,7 @@ class FlagProp(RWProperty[bool]):
     def __init__(
         self,
         flag: enum.IntFlag,
-        id: Optional[EventEnum] = None,
+        id: EventEnum | None = None,
         prop: str = "flags",
         inverted: bool = False,
     ):
@@ -801,7 +800,7 @@ class FlagProp(RWProperty[bool]):
         self._prop = prop
         self._inverted = inverted
 
-    def _get_struct(self, instance: ModelBase) -> Optional[StructEventBase]:
+    def _get_struct(self, instance: ModelBase) -> StructEventBase | None:
         if isinstance(instance, SingleEventModel):
             return cast(StructEventBase, instance._event)
         elif isinstance(instance, MultiEventModel) and self._id is not None:
@@ -812,10 +811,10 @@ class FlagProp(RWProperty[bool]):
             else:
                 return cast(StructEventBase, event)
 
-    def __get__(self, instance: ModelBase, _: Any = None) -> Optional[bool]:
+    def __get__(self, instance: ModelBase, _: Any = None) -> bool | None:
         struct = self._get_struct(instance)
         if struct is not None:
-            flags: Optional[int] = struct[self._prop]
+            flags: int | None = struct[self._prop]
             if flags is not None:
                 retbool = self._flag in type(self._flag)(flags)
                 return not retbool if self._inverted else retbool
@@ -857,7 +856,7 @@ class EventProp(RWProperty[T]):
     def __init__(self, *ids: EventEnum):
         self._ids = ids
 
-    def __get__(self, instance: MultiEventModel, owner: Any = None) -> Optional[T]:
+    def __get__(self, instance: MultiEventModel, owner: Any = None) -> T | None:
         if owner is None:
             return NotImplemented
 
@@ -880,7 +879,7 @@ class EventProp(RWProperty[T]):
 
 
 class IterProp(ROProperty[Iterator[SEMT_co]]):
-    def __init__(self, id: EventEnum, type: Type[SEMT_co]):
+    def __init__(self, id: EventEnum, type: type[SEMT_co]):
         self._id = id
         self._type = type
 
@@ -899,7 +898,7 @@ class IterProp(ROProperty[Iterator[SEMT_co]]):
 
 
 class NestedProp(ROProperty[MT_co]):
-    def __init__(self, type: Type[MT_co], *ids: EventEnum):
+    def __init__(self, type: type[MT_co], *ids: EventEnum):
         self._ids = ids
         self._type = type
 
@@ -907,7 +906,7 @@ class NestedProp(ROProperty[MT_co]):
         if owner is None:
             return NotImplemented
 
-        events: List[AnyEvent] = []
+        events: list[AnyEvent] = []
         for id in self._ids:
             if id in instance._events:
                 events.extend(instance._events[id])
@@ -915,11 +914,11 @@ class NestedProp(ROProperty[MT_co]):
 
 
 class StructProp(NamedPropMixin, RWProperty[T]):
-    def __init__(self, prop: Optional[str] = None, id: Optional[EventEnum] = None):
+    def __init__(self, prop: str | None = None, id: EventEnum | None = None):
         super().__init__(prop)
         self._id = id
 
-    def _get_event(self, instance: Any) -> Optional[AnyEvent]:
+    def _get_event(self, instance: Any) -> AnyEvent | None:
         if isinstance(instance, SingleEventModel):
             return instance._event
         elif isinstance(instance, MultiEventModel) and self._id is not None:
@@ -927,7 +926,7 @@ class StructProp(NamedPropMixin, RWProperty[T]):
             if events is not None:
                 return events[0]
 
-    def __get__(self, instance: ModelBase, owner: Any = None) -> Optional[T]:
+    def __get__(self, instance: ModelBase, owner: Any = None) -> T | None:
         if owner is None:
             return NotImplemented
 
@@ -946,7 +945,7 @@ class FLVersion:
     major: int
     minor: int = 0
     patch: int = 0
-    build: Optional[int] = None
+    build: int | None = None
 
     def __str__(self):
         version = f"{self.major}.{self.minor}.{self.patch}"

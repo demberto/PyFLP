@@ -18,11 +18,13 @@ pyflp.mixer
 Contains the types used by the mixer, inserts and effect slots.
 """
 
+from __future__ import annotations
+
 import collections
 import dataclasses
 import enum
 import sys
-from typing import Any, DefaultDict, Iterator, List, NamedTuple, Optional, cast
+from typing import DefaultDict, List, NamedTuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex, TypedDict
@@ -30,9 +32,9 @@ else:
     from typing_extensions import SupportsIndex, TypedDict
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 else:
-    from typing import Sequence
+    from typing import Iterator, Sequence
 
 if sys.version_info >= (3, 11):
     from typing import Never, NotRequired, Unpack
@@ -199,7 +201,7 @@ class _InsertEQBandKW(TypedDict, total=False):
 
 
 class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
-    def __get__(self, instance: ModelBase, owner: Any = None) -> Optional[int]:
+    def __get__(self, instance: ModelBase, owner: object = None) -> int | None:
         if not isinstance(instance, InsertEQBand) or owner is None:
             return NotImplemented
         return instance._kw[self._prop]["msg"]
@@ -245,7 +247,7 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
         super().__init__()
         self._ids = ids
 
-    def __get__(self, instance: Any, owner: Any = None) -> InsertEQBand:
+    def __get__(self, instance: object, owner: object = None) -> InsertEQBand:
         if not isinstance(instance, InsertEQ) or owner is None:
             return NotImplemented
 
@@ -262,7 +264,7 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
 
 
 class InsertEQ(ModelBase):
-    def __init__(self, params: List[MixerParamsItem]):
+    def __init__(self, params: list[MixerParamsItem]):
         super().__init__(params=params)
 
     def __repr__(self):
@@ -300,7 +302,7 @@ class _MixerParamProp(RWProperty[T]):
     def __init__(self, id: MixerParamsID) -> None:
         self._id = id
 
-    def __get__(self, instance: "Insert", owner: Any = None) -> Optional[T]:
+    def __get__(self, instance: Insert, owner: object = None) -> T | None:
         if owner is None:
             return NotImplemented
 
@@ -308,7 +310,7 @@ class _MixerParamProp(RWProperty[T]):
             if param["id"] == self._id:
                 return param["msg"]
 
-    def __set__(self, instance: "Insert", value: T):
+    def __set__(self, instance: Insert, value: T):
         for param in instance._kw["params"]:
             if param["id"] == self._id:
                 param["msg"] = value
@@ -319,9 +321,9 @@ class Slot(MultiEventModel, SupportsIndex):
 
     def __init__(
         self,
-        params: List[MixerParamsItem],
+        params: list[MixerParamsItem],
         *events: AnyEvent,
-        plugin: Optional[IPlugin] = None,
+        plugin: IPlugin | None = None,
     ):
         super().__init__(*events, kw={"params": params, "plugin": plugin})
 
@@ -357,7 +359,7 @@ class Slot(MultiEventModel, SupportsIndex):
     name = EventProp[str](PluginID.Name)
 
     @property
-    def plugin(self) -> Optional[AnyPlugin | bytes]:
+    def plugin(self) -> AnyPlugin | bytes | None:
         """The effect loaded into the slot."""
         try:
             event = self._events[PluginID.Data][0]
@@ -390,7 +392,7 @@ class Slot(MultiEventModel, SupportsIndex):
 
 class _InsertKW(TypedDict):
     index: SupportsIndex
-    params: NotRequired[List[MixerParamsItem]]
+    params: NotRequired[list[MixerParamsItem]]
 
 
 class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
@@ -426,8 +428,8 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
         """Provides an iterator over the effect slots (empty & used) of an insert."""
         index = 0
         while True:
-            events: List[AnyEvent] = []
-            params: List[MixerParamsItem] = []
+            events: list[AnyEvent] = []
+            params: list[MixerParamsItem] = []
 
             for param in self._kw["params"]:
                 if param["channel_data"] % 0x3F == index:
@@ -461,7 +463,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     """*New in FL Studio v4.0*."""
 
     @property
-    def dock(self) -> Optional[InsertDock]:
+    def dock(self) -> InsertDock | None:
         events = self._events.get(InsertID.Flags)
         if events is not None:
             event = cast(InsertFlagsEvent, events[0])
@@ -564,8 +566,8 @@ class Mixer(MultiEventModel, Sequence[Insert]):
 
     def __iter__(self) -> Iterator[Insert]:
         index = 0
-        events: List[AnyEvent] = []
-        params_dict: DefaultDict[int, List[MixerParamsItem]] = collections.defaultdict(
+        events: list[AnyEvent] = []
+        params_dict: DefaultDict[int, list[MixerParamsItem]] = collections.defaultdict(
             list
         )
 

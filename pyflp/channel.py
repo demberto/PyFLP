@@ -18,10 +18,12 @@ pyflp.channel
 Contains the types used by the channels and channel rack.
 """
 
+from __future__ import annotations
+
 import collections
 import enum
 import sys
-from typing import DefaultDict, Dict, List, Optional, Tuple, Union, cast
+from typing import DefaultDict, List, Tuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex
@@ -355,11 +357,11 @@ class Reverb(SingleEventModel, ModelReprMixin):
     """
 
     @property
-    def type(self) -> Optional[ReverbType]:
+    def type(self) -> ReverbType | None:
         ...
 
     @property
-    def mix(self) -> Optional[int]:
+    def mix(self) -> int | None:
         """Reverb mix (dry/wet). Min: 0, Max: 256, Default: 0."""
 
 
@@ -629,7 +631,7 @@ class Channel(MultiEventModel, SupportsIndex):
     """
 
     @property
-    def pan(self) -> Optional[int]:
+    def pan(self) -> int | None:
         """Min: 0, Max: 12800, Default: 6400."""
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pan"]
@@ -655,7 +657,7 @@ class Channel(MultiEventModel, SupportsIndex):
                 events[0].value = value
 
     @property
-    def volume(self) -> Optional[int]:
+    def volume(self) -> int | None:
         """Min: 0, Max: 12800, Default: 10000."""
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["volume"]
@@ -691,7 +693,7 @@ class Channel(MultiEventModel, SupportsIndex):
         return False
 
     @property
-    def display_name(self) -> Optional[str]:
+    def display_name(self) -> str | None:
         """The name of the channel that will be displayed in FL Studio."""
         return self.name or self.internal_name
 
@@ -701,7 +703,7 @@ class Automation(Channel):
 
 
 class Layer(Channel, Sequence[Channel]):
-    def __getitem__(self, index: Union[str, SupportsIndex]):
+    def __getitem__(self, index: str | SupportsIndex):
         """Returns a child channel with an IID / index of `index`.
 
         Args:
@@ -745,7 +747,7 @@ class _SamplerInstrument(Channel):
 
 class Instrument(_SamplerInstrument):
     @property
-    def plugin(self) -> Optional[Union[IPlugin, bytes]]:
+    def plugin(self) -> IPlugin | bytes | None:
         """The plugin loaded into the channel."""
         try:
             event = self._events[PluginID.Data][0]
@@ -789,7 +791,7 @@ class Sampler(_SamplerInstrument):
     """Upto 5 elements for Volume, Panning, Mod X, Mod Y and Pitch LFOs."""
 
     @property
-    def pitch_shift(self) -> Optional[int]:
+    def pitch_shift(self) -> int | None:
         """-4800 to +4800 cents max.
 
         Raises:
@@ -819,7 +821,7 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
 
-    def __getitem__(self, index: Union[str, SupportsIndex]):
+    def __getitem__(self, index: str | SupportsIndex):
         """Gets a channel from the rack based on its IID or index.
 
         Args:
@@ -836,8 +838,8 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
         raise ChannelNotFound(index)
 
     def __iter__(self):
-        ch_dict: Dict[int, Channel] = {}
-        events: DefaultDict[int, List[AnyEvent]] = collections.defaultdict(list)
+        ch_dict: dict[int, Channel] = {}
+        events: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
         cur_ch_events = []
         for event in self._events_tuple:
             if event.id == ChannelID.New:

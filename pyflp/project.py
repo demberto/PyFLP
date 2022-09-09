@@ -11,12 +11,14 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import datetime
 import enum
 import math
 import pathlib
 import sys
-from typing import List, Optional, Tuple, Type, Union, cast
+from typing import cast
 
 if sys.version_info >= (3, 8):
     from typing import Final, TypedDict
@@ -154,8 +156,8 @@ class Project(MultiEventModel):
     def __repr__(self) -> str:
         return f"FL Studio {str(self.version)} {self.format.name}"
 
-    def _collect_events(self, *enums: Type[EventEnum]) -> List[AnyEvent]:
-        events: List[AnyEvent] = []
+    def _collect_events(self, *enums: type[EventEnum]) -> list[AnyEvent]:
+        events: list[AnyEvent] = []
         for event in self._events_tuple:
             for enum in enums:
                 if event.id in enum:
@@ -197,7 +199,7 @@ class Project(MultiEventModel):
     @property
     def channels(self) -> ChannelRack:
         """Provides an iterator over channels and channel rack properties."""
-        events: List[AnyEvent] = []
+        events: list[AnyEvent] = []
         for event in self._events_tuple:
             if event.id == InsertID.Flags:
                 break
@@ -218,13 +220,10 @@ class Project(MultiEventModel):
         as it is. It is upto you to extract the text out of it.
     """
 
+    # Stored as a duration in days since the Delphi epoch (30 Dec, 1899).
     @property
-    def created_on(self) -> Optional[datetime.datetime]:
-        """The local date and time on which this project was created.
-
-        ???+ info "Internal representation":
-            Stored as a duration in days since the Delphi epoch (30 Dec, 1899).
-        """
+    def created_on(self) -> datetime.datetime | None:
+        """The local date and time on which this project was created."""
         if ProjectID.Timestamp in self._events:
             event = cast(TimestampEvent, self._events[ProjectID.Timestamp][0])
             return DELPHI_EPOCH + datetime.timedelta(days=event["created_on"])
@@ -233,7 +232,7 @@ class Project(MultiEventModel):
     """Internal format used by FL Studio to store different types of data."""
 
     @property
-    def data_path(self) -> Optional[pathlib.Path]:
+    def data_path(self) -> pathlib.Path | None:
         """The absolute path used by FL to store all your renders.
 
         *New in FL Studio v9.0.0.*
@@ -243,7 +242,7 @@ class Project(MultiEventModel):
             return pathlib.Path(event.value)
 
     @data_path.setter
-    def data_path(self, value: Union[str, pathlib.Path]):
+    def data_path(self, value: str | pathlib.Path):
         if ProjectID.DataPath not in self._events:
             raise PropertyCannotBeSet(ProjectID.DataPath)
 
@@ -269,7 +268,7 @@ class Project(MultiEventModel):
 
     # Internally, this is jumbled up. Thanks to @codecat/libflp for decode algo.
     @property
-    def licensee(self) -> Optional[str]:
+    def licensee(self) -> str | None:
         """The license holder's username who last saved the project file.
 
         If saved with a trial version this is empty.
@@ -371,7 +370,7 @@ class Project(MultiEventModel):
 
     # Stored internally as the actual BPM * 1000 as an integer.
     @property
-    def tempo(self) -> Union[int, float, None]:
+    def tempo(self) -> int | float | None:
         """Tempo at the current position of the playhead (in BPM).
 
         * *New in FL Studio v1.4.2*: Max tempo increased to 999 (int).
@@ -394,7 +393,7 @@ class Project(MultiEventModel):
         return tempo
 
     @tempo.setter
-    def tempo(self, value: Union[int, float]):
+    def tempo(self, value: int | float):
         if self.tempo is None:
             raise PropertyCannotBeSet(
                 ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine
@@ -424,7 +423,7 @@ class Project(MultiEventModel):
             self._events[ProjectID._TempoCoarse][0].value = math.floor(value)
 
     @property
-    def time_spent(self) -> Optional[datetime.timedelta]:
+    def time_spent(self) -> datetime.timedelta | None:
         """Time spent on the project since its creation.
 
         Technically, since the last reset via FL's interface.
@@ -460,7 +459,7 @@ class Project(MultiEventModel):
         return FLVersion(*tuple(map(int, event.value.split("."))))
 
     @version.setter
-    def version(self, value: Union[FLVersion, str, Tuple[int, ...]]):
+    def version(self, value: FLVersion | str | tuple[int, ...]):
         if ProjectID.FLVersion not in self._events:
             raise PropertyCannotBeSet(ProjectID.FLVersion)
 

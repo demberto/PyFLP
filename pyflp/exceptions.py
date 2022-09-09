@@ -18,7 +18,7 @@ pyflp.exceptions
 Contains the exceptions used by and shared across PyFLP.
 """
 
-from typing import Any, Type
+from __future__ import annotations
 
 __all__ = [
     "Error",
@@ -53,7 +53,7 @@ class InvalidEventChunkSize(Error, TypeError):
 
 
 class UnexpectedType(Error, TypeError):
-    def __init__(self, expected: Type[Any], got: Type[Any]):
+    def __init__(self, expected: type[object], got: type[object]):
         super().__init__(f"Expected a {expected} object; got a {got} object instead")
 
 
@@ -67,7 +67,7 @@ class PropertyCannotBeSet(Error, AttributeError):
 
 
 class ExpectedValue(Error, ValueError):
-    def __init__(self, invalid: Any, *valid: Any):
+    def __init__(self, invalid: object, *valid: object):
         super().__init__(f"Invalid value {invalid!r}; expected one of {valid!r}")
 
 

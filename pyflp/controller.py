@@ -18,8 +18,10 @@ pyflp.controller
 Contains the types used by MIDI and remote controllers.
 """
 
+from __future__ import annotations
+
 import enum
-from typing import Optional, cast
+from typing import cast
 
 from ._base import (
     DATA,
@@ -54,14 +56,14 @@ class ControllerID(EventEnum):
 
 class RemoteController(SingleEventModel, ModelReprMixin):
     @property
-    def parameter(self) -> Optional[int]:
+    def parameter(self) -> int | None:
         """The ID of the plugin parameter to which controller is linked to."""
         value = cast(RemoteControllerStruct, self._event)["parameter_data"]
         if value is not None:
             return value & 0x7FFF
 
     @property
-    def is_vst_controller(self) -> Optional[bool]:
+    def is_vst_controller(self) -> bool | None:
         """Whether `parameter` is linked to a VST plugin.
 
         None when linked to a plugin parameter on an insert slot.

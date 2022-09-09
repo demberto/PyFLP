@@ -27,9 +27,10 @@ To save a project back:
 Full docs are available at https://pyflp.rtfd.io.
 """
 
+from __future__ import annotations
+
 import os
 import pathlib
-from typing import List, Optional, Type, Union
 
 from bytesioex import BytesIOEx
 
@@ -54,7 +55,7 @@ from .project import VALID_PPQS, FileFormat, Project, ProjectID
 __all__ = ["parse", "save"]
 
 
-def parse(file: Union[str, pathlib.Path]) -> Project:
+def parse(file: str | pathlib.Path) -> Project:
     """Parse an FL Studio project file.
 
     Args:
@@ -69,7 +70,7 @@ def parse(file: Union[str, pathlib.Path]) -> Project:
     with open(file, "rb") as flp:
         stream = BytesIOEx(flp.read())
 
-    events: List[AnyEvent] = []
+    events: list[AnyEvent] = []
 
     if stream.read(4) != b"FLhd":  # 4
         raise HeaderCorrupted("Unexpected header chunk magic; expected 'FLhd'")
@@ -108,7 +109,7 @@ def parse(file: Union[str, pathlib.Path]) -> Project:
     str_type = None
     stream.seek(22)  # Back to start of events
     while True:
-        event_type: Optional[Type[AnyEvent]] = None
+        event_type: type[AnyEvent] | None = None
         id = stream.read_B()
         if id is None:
             break

@@ -18,10 +18,12 @@ pyflp.arrangement
 Contains the types used by timemarkers, tracks and arrangements.
 """
 
+from __future__ import annotations
+
 import collections
 import enum
 import sys
-from typing import DefaultDict, Iterable, Iterator, List, Optional, Type, cast
+from typing import DefaultDict, List, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex, TypedDict
@@ -29,9 +31,9 @@ else:
     from typing_extensions import SupportsIndex, TypedDict
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Iterator, Sequence
 else:
-    from typing import Sequence
+    from typing import Iterable, Iterator, Sequence
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -244,7 +246,7 @@ class TimeMarker(MultiEventModel):
     numerator = EventProp[int](TimeMarkerID.Numerator)
 
     @property
-    def position(self) -> Optional[int]:
+    def position(self) -> int | None:
         events = self._events.get(TimeMarkerID.Position)
         if events is not None:
             event = events[0]
@@ -253,7 +255,7 @@ class TimeMarker(MultiEventModel):
             return event.value - TimeMarkerType.Signature
 
     @property
-    def type(self) -> Optional[TimeMarkerType]:
+    def type(self) -> TimeMarkerType | None:
         events = self._events.get(TimeMarkerID.Position)
         if events is not None:
             event = events[0]
@@ -263,7 +265,7 @@ class TimeMarker(MultiEventModel):
 
 
 class _TrackKW(TypedDict):
-    items: List[PlaylistItemStruct]
+    items: list[PlaylistItemStruct]
 
 
 class Track(MultiEventModel, Iterable[PlaylistItemBase]):
@@ -281,7 +283,7 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase]):
         return iter(self.items)
 
     def __repr__(self):
-        flags: List[str] = []
+        flags: list[str] = []
         for attr in ("enabled", "grouped", "locked"):
             if getattr(self, attr, False):
                 flags.append(attr)
@@ -354,15 +356,15 @@ class Arrangement(MultiEventModel, SupportsIndex):
     name = EventProp[str](ArrangementID.Name)
     """Name of the arrangement; defaults to **Arrangement**."""
 
-    def _collect_events(self, enum: Type[EventEnum]):
-        counter: List[int] = []
-        ins_events: List[List[AnyEvent]] = []
+    def _collect_events(self, enum: type[EventEnum]):
+        counter: list[int] = []
+        ins_events: list[list[AnyEvent]] = []
         for id, events in self._events.items():
             if id in enum:
                 counter.append(len(events))
                 ins_events.append(events)
 
-        ins_dict: DefaultDict[int, List[AnyEvent]] = collections.defaultdict(list)
+        ins_dict: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
         for i in range(max(counter)):
             for sublist in ins_events:
                 try:
@@ -392,7 +394,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
             event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
 
         for events in self._collect_events(TrackID):
-            items: List[PlaylistItemStruct] = []
+            items: list[PlaylistItemStruct] = []
             if event is not None:
                 for item in event.items:
                     idx = item["track_index"]
@@ -433,7 +435,7 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
     # event in initial versions of FL20, making them harder to group.
     def __iter__(self) -> Iterator[Arrangement]:
         first = True
-        events: List[AnyEvent] = []
+        events: list[AnyEvent] = []
 
         def make_arr():
             return Arrangement(*events, version=self._kw["version"])
@@ -466,7 +468,7 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
         return f"{len(self)} arrangements"
 
     @property
-    def current(self) -> Optional[Arrangement]:
+    def current(self) -> Arrangement | None:
         """Currently selected arrangement (via FL's interface).
 
         Raises:
