@@ -124,7 +124,7 @@ class ArrangementsID(EventEnum):
     TimeSigNum = (17, U8Event)
     TimeSigBeat = (18, U8Event)
     Current = (WORD + 36, U16Event)
-    LoopPos = (DWORD + 24, U32Event)
+    LoopPos = (DWORD + 24, U32Event)  # 1.3.8+
 
 
 @enum.unique
@@ -201,7 +201,10 @@ class PlaylistItemBase(MultiEventModel):
 
 
 class ChannelPlaylistItem(PlaylistItemBase):
-    """An audio clip or automation on the playlist of an arrangement."""
+    """An audio clip or automation on the playlist of an arrangement.
+
+    *New in FL Studio v2.0.1*.
+    """
 
     def __repr__(self):
         if self.channel is None:
@@ -316,7 +319,7 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase]):
 
     locked_height = StructProp[float](id=TrackID.Data)
     motion = StructProp[TrackMotion](id=TrackID.Data)
-    name = StructProp[str](id=TrackID.Data)
+    name = EventProp[str](TrackID.Name)
     position_sync = StructProp[TrackSync](id=TrackID.Data)
     press = StructProp[TrackPress](id=TrackID.Data)
     tolerant = StructProp[bool](id=TrackID.Data)
@@ -479,6 +482,8 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
                 raise ModelNotFound(index)
 
     loop_pos = EventProp[int](ArrangementsID.LoopPos)
+    """*New in FL Studio v1.3.8.*"""
+
     time_signature = NestedProp(
         TimeSignature, ArrangementsID.TimeSigNum, ArrangementsID.TimeSigBeat
     )

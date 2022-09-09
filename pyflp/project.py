@@ -84,7 +84,7 @@ class PanLaw(enum.IntEnum):
 class FileFormat(enum.IntEnum):
     """File formats used by FL Studio.
 
-    FST (FL Studio State) files: New in FL Studio version 2.5.0.
+    *New in FL Studio version 2.5.0*: FST (FL Studio State) files.
     """
 
     None_ = -1
@@ -132,7 +132,7 @@ class ProjectID(EventEnum):
     Title = TEXT + 2
     Comments = TEXT + 3
     Url = TEXT + 5
-    _RTFComments = TEXT + 6
+    _RTFComments = TEXT + 6  # 1.2.10+
     FLVersion = (TEXT + 7, AsciiEvent)
     Licensee = TEXT + 8
     DataPath = TEXT + 10  # 9.0+
@@ -267,6 +267,7 @@ class Project(MultiEventModel):
         next time in a trial version of FL if it wouldn't open before.
     """
 
+    # Internally, this is jumbled up. Thanks to @codecat/libflp for decode algo.
     @property
     def licensee(self) -> Optional[str]:
         """The license holder's username who last saved the project file.
@@ -276,10 +277,6 @@ class Project(MultiEventModel):
         !!! tip
             As of the latest version, FL doesn't check for the contents of
             this for deciding whether to open it or not when in trial version.
-
-        ???+ info "Internal representation"
-            Internally the value of this field is stored jumbled up. Thanks to
-            @codecat/libflp for finding out the algorithm used.
         """
         events = self._events.get(ProjectID.Licensee)
         if events is not None:
@@ -318,11 +315,14 @@ class Project(MultiEventModel):
 
     main_pitch = EventProp[int](ProjectID.Pitch)
     main_volume = EventProp[int](ProjectID._Volume)
+    """*Changed in FL Studio v1.7.6*: Can be upto 125% (+5.6dB) now."""
 
     @property
     def mixer(self) -> Mixer:
         """Provides an iterator over inserts and other mixer related properties."""
-        return Mixer(*self._collect_events(MixerID, InsertID, SlotID))
+        return Mixer(
+            *self._collect_events(MixerID, InsertID, SlotID), version=self.version
+        )
 
     @property
     def patterns(self) -> Patterns:
@@ -336,7 +336,7 @@ class Project(MultiEventModel):
     def ppq(self) -> int:
         """Pulses per quarter.
 
-        Defaults to **96** since FL Studio v2.1.1.
+        *Changed in FL Studio v2.1.1*: Defaults to 96.
 
         !!! info
             All types of lengths, positions and offsets internally use the PPQ
@@ -369,6 +369,7 @@ class Project(MultiEventModel):
 
     title = EventProp[str](ProjectID.Title)
 
+    # Stored internally as the actual BPM * 1000 as an integer.
     @property
     def tempo(self) -> Union[int, float, None]:
         """Tempo at the current position of the playhead (in BPM).
@@ -376,10 +377,6 @@ class Project(MultiEventModel):
         * *New in FL Studio v1.4.2*: Max tempo increased to 999 (int).
         * *New in FL Studio v3.4.0*: Fine tuned tempo (a float).
         * *Changed in FL Studio v11*: Max tempo limited to 522.000.
-
-        ???+ info "Internal Representation"
-            Stored as the actual BPM * 1000 as an integer as of the latest
-            version of FL Studio.
 
         Raises:
             UnexpectedType: When a fine-tuned tempo (float) isn't supported.
@@ -438,6 +435,13 @@ class Project(MultiEventModel):
 
     url = EventProp[str](ProjectID.Url)
 
+    # Internally represented as a string with a format of
+    # `major.minor.patch.build?` *where `build` is optional, since older
+    # versions of FL didn't follow the same versioning scheme*.
+    #
+    # To maintain backward compatibility with FL Studio prior to v11.5 which
+    # stored strings in ASCII, this event is always stored with ASCII data,
+    # even if the rest of the strings use Windows Unicode (UTF16).
     @property
     def version(self) -> FLVersion:
         """The version of FL Studio which was used to save the file.
@@ -445,15 +449,6 @@ class Project(MultiEventModel):
         !!! caution
             Changing this to a lower version will not make a file load magically
             inside FL Studio, as newer events and/or plugins might have been used.
-
-        ???+ abstract "Internal representation"
-            Internally represented as a string with a format of
-            `major.minor.patch.build?` *where `build` is optional, since
-            older versions of FL didn't follow the same versioning scheme*.
-
-            To maintain backward compatibility with FL Studio versions prior
-            to 11.5 whichn stored strings in ASCII, this event is always stored
-            with ASCII data, even if the rest of the strings use Unicode.
 
         Raises:
             PropertyCannotBeSet: This error should NEVER occur; if it does,

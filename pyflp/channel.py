@@ -21,7 +21,7 @@ Contains the types used by the channels and channel rack.
 import collections
 import enum
 import sys
-from typing import DefaultDict, Dict, Iterator, List, Optional, Tuple, Union, cast
+from typing import DefaultDict, Dict, List, Optional, Tuple, Union, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex
@@ -29,9 +29,9 @@ else:
     from typing_extensions import SupportsIndex
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Sequence
+    from collections.abc import Sequence, Iterator
 else:
-    from typing import Sequence
+    from typing import Sequence, Iterator
 
 import colour
 
@@ -64,16 +64,12 @@ from ._base import (
 )
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .plugin import IPlugin, PluginID
+from .plugin import BooBass, BooBassEvent, IPlugin, PluginID, VSTPlugin, VSTPluginEvent
 
 __all__ = ["Automation", "Channel", "Instrument", "Layer", "ChannelRack"]
 
 
 class ChannelNotFound(ModelNotFound, KeyError):
-    pass
-
-
-class NoChannelsFound(NoModelsFound):
     pass
 
 
@@ -167,22 +163,22 @@ class ChannelID(EventEnum):
     Type = (21, U8Event)
     RoutedTo = (22, I8Event)
     # FXProperties = 27
-    IsLocked = (32, BoolEvent)  # FL12.3+
+    IsLocked = (32, BoolEvent)  # 12.3+
     New = (WORD, U16Event)
     # Fx = WORD + 5
     # FadeStereo = WORD + 6
     Cutoff = (WORD + 7, U16Event)
     _VolWord = (WORD + 8, U16Event)
     _PanWord = (WORD + 9, U16Event)
-    Preamp = (WORD + 10, U16Event)
-    FadeOut = (WORD + 11, U16Event)
+    Preamp = (WORD + 10, U16Event)  # 1.2.12+
+    FadeOut = (WORD + 11, U16Event)  # ? 1.7.6+
     FadeIn = (WORD + 12, U16Event)
     # DotNote = WORD + 13
     # DotPitch = WORD + 14
     # DotMix = WORD + 15
     Resonance = (WORD + 19, U16Event)
     # _LoopBar = WORD + 20
-    StereoDelay = (WORD + 21, U16Event)
+    StereoDelay = (WORD + 21, U16Event)  # 1.3.56+
     # Fx3 = WORD + 22
     # DotReso = WORD + 23
     # DotCutOff = WORD + 24
@@ -198,7 +194,7 @@ class ChannelID(EventEnum):
     RootNote = (DWORD + 7, U32Event)
     # _MainResoCutOff = DWORD + 9
     # DelayModXY = DWORD + 10
-    Reverb = (DWORD + 11, U32Event)
+    Reverb = (DWORD + 11, U32Event)  # 1.4.0+
     StretchTime = (DWORD + 12, F32Event)  # 5.0+
     FineTune = (DWORD + 14, I32Event)
     SamplerFlags = (DWORD + 15, U32Event)
@@ -272,16 +268,13 @@ class ReverbType(enum.IntEnum):
     B = 65536
 
 
+# The type of a channel may decide how a certain event is interpreted. An
+# example of this is `ChannelID.Levels` event, which is used for storing
+# volume, pan and pich bend range of any channel other than automations. In
+# automations it is used for **Min** and **Max** knobs.
 @enum.unique
 class ChannelType(enum.IntEnum):  # cuz Type would be a super generic name
-    """An internal marker used to indicate the type of a channel.
-
-    !!! info "Internal details"
-        The type of a channel may decide how a certain event is interpreted.
-        An example of this is `ChannelID.Levels` event, which is used for
-        storing volume, pan and pich bend range of any channel other than
-        automations. In automations it is used for **Min** and **Max** knobs.
-    """
+    """An internal marker used to indicate the type of a channel."""
 
     Sampler = 0
     """Used exclusively for the inbuilt Sampler."""
@@ -326,7 +319,7 @@ class Arp(SingleEventModel, ModelReprMixin):
 
 class Delay(SingleEventModel, ModelReprMixin):
     # is_fat_mode: Optional[bool] = None
-    # is_ping_pong: Optional[bool] = None
+    # is_ping_pong: Optional[bool] = None   # 1.7.6+
     # mod_x: Optional[int] = None
     # mod_y: Optional[int] = None
 
@@ -379,6 +372,8 @@ class FX(MultiEventModel, ModelReprMixin):
     | Min      | 0     |
     | Max      | 256   |
     | Default  | 0     |
+
+    *New in FL Studio v1.2.12.*
     """
 
     cutoff = EventProp[int](ChannelID.Cutoff)
@@ -409,6 +404,8 @@ class FX(MultiEventModel, ModelReprMixin):
     | Min      | 0     |
     | Max      | 1024  |
     | Default  | 0     |
+
+    *New in FL Studio v1.7.6*.
     """
 
     resonance = EventProp[int](ChannelID.Resonance)
@@ -423,6 +420,7 @@ class FX(MultiEventModel, ModelReprMixin):
 
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
+    """*New in FL Studio v1.3.56.*"""
 
 
 class Envelope(SingleEventModel, ModelReprMixin):
@@ -441,28 +439,84 @@ class Envelope(SingleEventModel, ModelReprMixin):
     """
 
     attack = StructProp[int](prop="envelope.attack")
-    """Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    | Default | 20000 | 31%       |
+    """
 
     hold = StructProp[int](prop="envelope.hold")
-    """Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    | Default | 20000 | 31%       |
+    """
 
     decay = StructProp[int](prop="envelope.decay")
-    """Min: 100 (0%), Max: 65536 (100%), Default: 30000 (46%)."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    | Default | 30000 | 46%       |
+    """
 
     sustain = StructProp[int](prop="envelope.sustain")
-    """Min: 0 (0%), Max: 128 (100%), Default: 50 (39%)."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 0     | 0%        |
+    | Max     | 128   | 100%      |
+    | Default | 50    | 39%       |
+    """
 
     release = StructProp[int](prop="envelope.release")
-    """Min: 100 (0%), Max: 65536 (100%), Default: 20000 (31%)."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    | Default | 20000 | 31%       |
+    """
 
     attack_tension = StructProp[int](prop="envelope.attack_tension")
-    """Min: -128 (-100%), Max: 128 (100%), Default: 0 (0%)."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | -128  | -100%     |
+    | Max     | 128   | 100%      |
+    | Default | 0     | 0%        |
+    """
 
     sustain_tension = StructProp[int](prop="envelope.sustain_tension")
-    """Min: -128 (-100%), Max: 128 (100%), Default: 0 (0%)."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | -128  | -100%     |
+    | Max     | 128   | 100%      |
+    | Default | 0     | 0%        |
+    """
 
     release_tenstion = StructProp[int](prop="envelope.release_tension")
-    """Min: -128 (-100%), Max: 128 (100%), Default: -101 / 0 (-79% / 0%)."""
+    """Linear.
+
+    | Type    | Value | Mix (wet) |
+    | ------- | :---: | --------- |
+    | Min     | -128  | -100%     |
+    | Max     | 128   | 100%      |
+    | Default | -101  | -79%      |
+    """
 
 
 class LFO(SingleEventModel, ModelReprMixin):
@@ -498,6 +552,8 @@ class Tracking(SingleEventModel, ModelReprMixin):
 
 
 class Keyboard(MultiEventModel, ModelReprMixin):
+    """*New in FL Studio v1.3.56.*"""
+
     fine_tune = EventProp[int](ChannelID.FineTune)
     """-100 to +100 cents."""
 
@@ -541,7 +597,7 @@ class Channel(MultiEventModel, SupportsIndex):
 
     color = EventProp[colour.Color](PluginID.Color)
     controllers = KWProp[List[RemoteController]]()
-    default_name = EventProp[str](PluginID.DefaultName)
+    internal_name = EventProp[str](PluginID.InternalName)
     """Default name of the channel.
 
     The value of this depends on the type of `plugin`:
@@ -637,7 +693,7 @@ class Channel(MultiEventModel, SupportsIndex):
     @property
     def display_name(self) -> Optional[str]:
         """The name of the channel that will be displayed in FL Studio."""
-        return self.name or self.default_name
+        return self.name or self.internal_name
 
 
 class Automation(Channel):
@@ -645,9 +701,19 @@ class Automation(Channel):
 
 
 class Layer(Channel, Sequence[Channel]):
-    def __getitem__(self, index: SupportsIndex):
-        for child in self:
-            if child.iid == index:
+    def __getitem__(self, index: Union[str, SupportsIndex]):
+        """Returns a child channel with an IID / index of `index`.
+
+        Args:
+            index (str | SupportsIndex): An IID or a zero based index of the child
+                channel.
+
+        Raises:
+            ChannelNotFound: A child channel with the specific index or IID
+                couldn't be found. This exception derives from `KeyError` as well.
+        """
+        for idx, child in enumerate(self):
+            if index in (idx, child.iid):
                 return child
         raise ChannelNotFound(index)
 
@@ -657,6 +723,7 @@ class Layer(Channel, Sequence[Channel]):
                 yield self._kw["channels"][event.value]
 
     def __len__(self):
+        """Returns the number of channels whose parent this layer is."""
         return len(self._events.get(ChannelID.Children, []))
 
     flags = EventProp[int](ChannelID.LayerFlags)  # TODO
@@ -684,6 +751,7 @@ class Instrument(_SamplerInstrument):
     """
 
 
+# New in FL Studio v1.4.0 & v1.5.23: Sampler spectrum views
 class Sampler(_SamplerInstrument):
     def __repr__(self):
         return f"{repr(self.sample_path) or 'Empty'} {super().__repr__()}"
@@ -694,13 +762,10 @@ class Sampler(_SamplerInstrument):
     cut_group = EventProp[Tuple[int, int]](ChannelID.CutGroup)
     """Cut group in the form of (Cut self, cut by)."""
 
+    # FL's interface doesn't have an envelope for panning, but still stores
+    # the default values in event data.
     envelopes = IterProp(ChannelID.EnvelopeLFO, Envelope)
-    """Upto 5 elements for Volume, Panning, Mod X, Mod Y and Pitch envelopes.
-
-    Note:
-        FL's interface doesn't have an envelope for panning, but still stores
-        the default values in the underlying event data.
-    """
+    """Upto 5 elements for Volume, Panning, Mod X, Mod Y and Pitch envelopes."""
 
     fx = NestedProp(
         FX,
@@ -719,7 +784,7 @@ class Sampler(_SamplerInstrument):
         """-4800 to +4800 cents max.
 
         Raises:
-            PropertyCannotBeSet: When a ChannelID.Levels event is not found.
+            PropertyCannotBeSet: When a `ChannelID.Levels` event is not found.
         """
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pitch_shift"]
@@ -792,8 +857,13 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
                 yield cur_ch
 
     def __len__(self):
+        """Returns the number of channels found in the project.
+
+        Raises:
+            NoModelsFound: No channels could be found in the project.
+        """
         if ChannelID.New not in self._events:
-            raise NoChannelsFound
+            raise NoModelsFound
         return len(self._events[ChannelID.New])
 
     @property

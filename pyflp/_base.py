@@ -15,7 +15,13 @@
 pyflp._base
 ===========
 
-Contains internal implementation details and shared classes.
+Contains internal implementation details and shared types.
+
+This module can briefly be divided into:
+- Event classes & handling logic.
+- Model base classes.
+- Custom descriptors.
+- Public and internal types and dataclasses.
 """
 
 import abc
@@ -103,7 +109,7 @@ class EventBase(abc.ABC, Generic[T], Hashable, Sized, SupportsBytes):
         return self.id != o.id or self._raw != o._raw
 
     def __hash__(self):
-        return hash((self.id, self._raw))
+        return hash((bytes(self)))
 
     @abc.abstractmethod
     def __bytes__(self) -> bytes:
@@ -678,14 +684,35 @@ class ModelBase(abc.ABC):
     def __init__(self, **kw: Any):
         self._kw = kw
 
+    @abc.abstractmethod
+    def sizeof(self) -> int:
+        """Total size of the events used by the model (in bytes).
 
-class SingleEventModel(ModelBase, abc.ABC):
+        !!! caution
+            Do not confuse this with the internal `__sizeof__` method, it is
+            not the same.
+        """
+
+
+class SingleEventModel(ModelBase):
     def __init__(self, event: AnyEvent, **kw: Any):
         super().__init__(**kw)
         self._event = event
 
+    def event(self) -> AnyEvent:
+        """Returns the underlying event used by the model.
 
-class MultiEventModel(ModelBase, abc.ABC):
+        !!! tip
+            You almost never need to use this method and it is only provided
+            to calm type checkers from complaining about protected access.
+        """
+        return self._event
+
+    def sizeof(self) -> int:
+        return len(self._event)
+
+
+class MultiEventModel(ModelBase):
     def __init__(self, *events: AnyEvent, **kw: Any):
         super().__init__(**kw)
         self._events: Dict[int, List[AnyEvent]] = {}
@@ -696,6 +723,17 @@ class MultiEventModel(ModelBase, abc.ABC):
             if event is not None:
                 tmp[event.id].append(event)
         self._events.update(tmp)
+
+    def events_astuple(self):
+        """Returns a tuple of events used by the model in their original order."""
+        return self._events_tuple
+
+    def events_asdict(self):
+        """Returns a dictionary of event ID to a list of events."""
+        return self._events
+
+    def sizeof(self) -> int:
+        return sum(len(event) for event in self._events_tuple)
 
 
 class ModelReprMixin:

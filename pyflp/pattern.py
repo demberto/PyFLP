@@ -55,14 +55,6 @@ from ._base import (
 from .exceptions import ModelNotFound, NoModelsFound
 
 
-class PatternNotFound(ModelNotFound):
-    pass
-
-
-class NoPatternsFound(NoModelsFound):
-    pass
-
-
 class ContollerStruct(StructBase):
     PROPS = {
         "position": "I",  # 4
@@ -133,7 +125,7 @@ class Note(SingleEventModel):
 
     length = StructProp[int]()
     midi_channel = StructProp[int]()
-    """Use for a variety of purposes.
+    """Used for a variety of purposes.
 
     For note colors, min: 0, max: 15.
     +128 for MIDI dragged into the piano roll.
@@ -213,10 +205,18 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         return f"{len(indexes)} Patterns {indexes!r}"
 
     def __getitem__(self, index: SupportsIndex):
+        """Returns the pattern with the specified `index`.
+
+        Args:
+            index (SupportsIndex): An integer based index value from 1.
+
+        Raises:
+            ModelNotFound: When a pattern of `index` could not be found.
+        """
         for idx, pattern in enumerate(self):
             if idx == index:
                 return pattern
-        raise PatternNotFound(index)
+        raise ModelNotFound(index)
 
     def __iter__(self) -> Iterator[Pattern]:
         cur_pat_id = 0
@@ -231,8 +231,13 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
             yield Pattern(*events)
 
     def __len__(self):
+        """Returns the number of patterns found in the project.
+
+        Raises:
+            NoModelsFound: No patterns were found.
+        """
         if PatternID.New not in self._events:
-            raise NoPatternsFound
+            raise NoModelsFound
         return len(set(event.value for event in self._events[PatternID.New]))
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)

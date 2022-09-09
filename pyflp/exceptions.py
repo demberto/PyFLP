@@ -15,7 +15,7 @@
 pyflp.exceptions
 ================
 
-Contains the exceptions shared across PyFLP.
+Contains the exceptions used by and shared across PyFLP.
 """
 
 from typing import Any, Type

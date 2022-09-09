@@ -19,6 +19,7 @@ Contains the types used by the mixer, inserts and effect slots.
 """
 
 import collections
+import dataclasses
 import enum
 import sys
 from typing import Any, DefaultDict, Iterator, List, NamedTuple, Optional, cast
@@ -34,9 +35,9 @@ else:
     from typing import Sequence
 
 if sys.version_info >= (3, 11):
-    from typing import NotRequired, Unpack
+    from typing import NotRequired, Unpack, Never
 else:
-    from typing_extensions import NotRequired, Unpack
+    from typing_extensions import NotRequired, Unpack, Never
 
 import colour
 
@@ -63,18 +64,29 @@ from ._base import (
     StructEventBase,
     T,
     U16Event,
+    FLVersion,
 )
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound
-from .plugin import IPlugin, PluginID
-
-
-class InsertNotFound(ModelNotFound):
-    pass
-
-
-class NoInsertsFound(NoModelsFound):
-    pass
+from .plugin import (
+    FruityBalance,
+    FruityBalanceEvent,
+    FruityFastDist,
+    FruityFastDistEvent,
+    FruityNotebook2,
+    FruityNotebook2Event,
+    FruitySend,
+    FruitySendEvent,
+    FruitySoftClipper,
+    FruitySoftClipperEvent,
+    FruityStereoEnhancer,
+    FruityStereoEnhancerEvent,
+    IPlugin,
+    PluginID,
+    VSTPluginEvent,
+    VSTPlugin,
+    AnyPlugin,
+)
 
 
 class InsertFlagsStruct(StructBase):
@@ -203,6 +215,9 @@ class InsertEQBand(ModelBase):
     def __repr__(self):
         return f"InsertEQ band (gain={self.gain}, freq={self.freq}, q={self.reso})"
 
+    def sizeof(self) -> int:
+        return MixerParamsItem.SIZE * len(self._kw)
+
     gain = _InsertEQBandProp()
     """
     | Type     | Value |
@@ -248,13 +263,16 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
 
 class InsertEQ(ModelBase):
     def __init__(self, params: List[MixerParamsItem]):
-        super().__init__(kw={"params": params})
+        super().__init__(params=params)
 
     def __repr__(self):
         low = f"{self.low.freq},{self.low.gain},{self.low.reso}"
         mid = f"{self.mid.freq},{self.mid.gain},{self.mid.reso}"
         high = f"{self.high.freq},{self.high.gain},{self.high.reso}"
         return f"InsertEQ (low={low}, mid={mid}, high={high})"
+
+    def sizeof(self) -> int:
+        return MixerParamsItem.SIZE * self._kw["param"]
 
     low = _InsertEQProp(
         _InsertEQPropArgs(
@@ -282,30 +300,22 @@ class _MixerParamProp(RWProperty[T]):
     def __init__(self, id: MixerParamsID) -> None:
         self._id = id
 
-    def __get__(self, instance: Any, owner: Any = None) -> Optional[T]:
-        if not isinstance(instance, Insert) or owner is None:
+    def __get__(self, instance: "Insert", owner: Any = None) -> Optional[T]:
+        if owner is None:
             return NotImplemented
 
         for param in instance._kw["params"]:
             if param["id"] == self._id:
                 return param["msg"]
 
-    def __set__(self, instance: Any, value: T):
-        if not isinstance(instance, Insert):
-            return NotImplemented
-
+    def __set__(self, instance: "Insert", value: T):
         for param in instance._kw["params"]:
             if param["id"] == self._id:
                 param["msg"] = value
 
 
 class Slot(MultiEventModel, SupportsIndex):
-    """Represents an effect slot in an `Insert` / mixer channel.
-
-    ??? info "Maximum number of slots (w.r.t FL Studio version)"
-        * 1.6.5: 4
-        * 2.0.1: 8
-    """
+    """Represents an effect slot in an `Insert` / mixer channel."""
 
     def __init__(
         self,
@@ -319,7 +329,7 @@ class Slot(MultiEventModel, SupportsIndex):
         repr = "Unnamed slot" if self.name is None else f"Slot {self.name!r}"
         if self.plugin is None:
             return f"Empty {repr.lower()}"
-        return f"{repr} ({self.plugin.DEFAULT_NAME})"
+        return f"{repr} ({self.plugin.INTERNAL_NAME})"   # type: ignore
 
     def __index__(self) -> int:
         if SlotID.Index not in self._events:
@@ -328,7 +338,7 @@ class Slot(MultiEventModel, SupportsIndex):
 
     color = EventProp[colour.Color](PluginID.Color)
     controllers = KWProp[List[RemoteController]]()  # TODO
-    default_name = EventProp[str](PluginID.DefaultName)
+    internal_name = EventProp[str](PluginID.InternalName)
     """'Fruity Wrapper' for VST/AU plugins or factory name for native plugins."""
 
     enabled = _MixerParamProp[bool](MixerParamsID.SlotEnabled)
@@ -345,6 +355,7 @@ class Slot(MultiEventModel, SupportsIndex):
     """
 
     name = EventProp[str](PluginID.Name)
+
     plugin = KWProp[IPlugin]()
     """The effect loaded into the slot."""
 
@@ -355,36 +366,36 @@ class _InsertKW(TypedDict):
 
 
 class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
-    """Represents a mixer track to which channel from the rack are routed to.
-
-    ??? info "Maximum number of inserts (w.r.t. FL Studio version)"
-        * 1.6.5: 4 inserts + master, 5 in total
-        * 3.0.0: 16 inserts, 2 sends.
-        * 3.3.0: +2 sends.
-        * 4.0.0: 64
-        * 9.0.0: 99 inserts, 105 in total.
-        * 12.9.0: 125.
-    """
+    """Represents a mixer track to which channel from the rack are routed to."""
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_InsertKW]):
         super().__init__(*events, **kw)
 
-    # TODO add num of used slots
+    # TODO Add number of used slots
     def __repr__(self):
         if self.name is None:
             return f"Unnamed insert #{self.__index__()}"
         return f"Insert {self.name!r} #{self.__index__()}"
 
     def __getitem__(self, index: SupportsIndex):
+        """Returns an effect slot of the specified `index`.
+
+        Args:
+            index (SupportsIndex): A zero based integer value.
+
+        Raises:
+            ModelNotFound: An effect slot with the specified `index` couldn't be found.
+        """
         for idx, slot in enumerate(self):
             if idx == index:
                 return slot
-        raise InsertNotFound(index)
+        raise ModelNotFound(index)
 
     def __index__(self) -> int:
         return self._kw["index"]
 
     def __iter__(self):
+        """Provides an iterator over the effect slots (empty & used) of an insert."""
         index = 0
         while True:
             events: List[AnyEvent] = []
@@ -498,12 +509,30 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     """
 
 
+class _MixerKW(TypedDict):
+    version: FLVersion
+
+
+# TODO FL Studio version in which slots were increased to 10
+# TODO A move() method to change the placement of Inserts; it's difficult!
 class Mixer(MultiEventModel, Sequence[Insert]):
+    def __init__(self, *events: AnyEvent, **kw: Unpack[_MixerKW]):
+        super().__init__(*events, **kw)
+
+    # Inserts don't store their index internally.
     def __getitem__(self, index: SupportsIndex):
+        """Returns an insert with the specified `index`.
+
+        Args:
+            index (SupportsIndex): A zero based integer value.
+
+        Raises:
+            ModelNotFound: An insert with the specified `index` could not be found.
+        """
         for idx, insert in enumerate(self):
             if idx == index:
                 return insert
-        raise InsertNotFound(index)
+        raise ModelNotFound(index)
 
     def __iter__(self) -> Iterator[Insert]:
         index = 0
@@ -536,9 +565,60 @@ class Mixer(MultiEventModel, Sequence[Insert]):
                 index += 1
 
     def __len__(self):
+        """Returns the number of inserts present in the project.
+
+        Raises:
+            NoModelsFound: When no inserts could be found.
+        """
         if InsertID.Flags not in self._events:
-            raise NoInsertsFound
+            raise NoModelsFound
         return len(self._events[InsertID.Flags])
 
     def __repr__(self):
         return f"Mixer: {len(self)} inserts"
+
+    @property
+    def max_inserts(self):
+        """Estimated max number of inserts including sends, master and current.
+
+        * 1.6.5: 4 inserts + master, 5 in total
+        * 2.0.1: 8
+        * 3.0.0: 16 inserts, 2 sends.
+        * 3.3.0: +2 sends.
+        * 4.0.0: 64
+        * 9.0.0: 99 inserts, 105 in total.
+        * 12.9.0: 125 + master + current.
+        """
+        version = dataclasses.astuple(self._kw["version"])
+
+        if version >= (1, 6, 5):
+            return 5
+        elif version >= (2, 0, 1):
+            return 8
+        elif version >= (3, 0, 0):
+            return 18
+        elif version >= (3, 3, 0):
+            return 20
+        elif version >= (4, 0, 0):
+            return 64
+        elif version >= (9, 0, 0):
+            return 105
+        elif version >= (12, 9, 0):
+            return 127
+
+        return Never
+
+    @property
+    def max_slots(self):
+        """Estimated max number of effect slots per insert.
+
+        * 1.6.5: 4
+        * 3.3.0: 8
+        """
+        version = dataclasses.astuple(self._kw["version"])
+
+        if version >= (1, 6, 5):
+            return 4
+        elif version >= (3, 3, 0):
+            return 8
+        return 10

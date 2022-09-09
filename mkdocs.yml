@@ -58,6 +58,7 @@ plugins:
               - '!__init__'
               - '!__iter__'
               - '!_collect_events'
+              - '!INTERNAL_NAME'
             paths:
               - pyflp
       watch:
