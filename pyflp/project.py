@@ -136,7 +136,7 @@ class ProjectID(EventEnum):
     Url = TEXT + 5
     _RTFComments = TEXT + 6  # 1.2.10+
     FLVersion = (TEXT + 7, AsciiEvent)
-    Licensee = TEXT + 8
+    Licensee = TEXT + 8  # 1.3.9+
     DataPath = TEXT + 10  # 9.0+
     Genre = TEXT + 14  # 5.0+
     Artists = TEXT + 15  # 5.0+
@@ -276,6 +276,8 @@ class Project(MultiEventModel):
         !!! tip
             As of the latest version, FL doesn't check for the contents of
             this for deciding whether to open it or not when in trial version.
+
+        *New in FL Studio v1.3.9*.
         """
         events = self._events.get(ProjectID.Licensee)
         if events is not None:

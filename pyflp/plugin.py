@@ -37,7 +37,10 @@ from ._base import (
     ColorEvent,
     DataEventBase,
     EventEnum,
+    FlagProp,
     ModelReprMixin,
+    MultiEventModel,
+    RWProperty,
     SingleEventModel,
     StructBase,
     StructEventBase,
@@ -84,6 +87,13 @@ class FruityStereoEnhancerStruct(StructBase):
 
 class SoundgoodizerStruct(StructBase):
     PROPS = dict.fromkeys(("_u1", "mode", "amount"), "I")
+
+
+class WrapperStruct(StructBase):
+    PROPS = {
+        "_u16": 16,
+        "flags": "H",
+    }
 
 
 class BooBassEvent(StructEventBase):
@@ -138,6 +148,10 @@ class SoundgoodizerEvent(StructEventBase):
     STRUCT = SoundgoodizerStruct
 
 
+class WrapperEvent(StructEventBase):
+    STRUCT = WrapperStruct
+
+
 @enum.unique
 class VSTPluginEventID(enum.IntEnum):
     def __new__(cls, id: int, key: str | None = None):
@@ -161,9 +175,22 @@ class VSTPluginEventID(enum.IntEnum):
     _57 = 57  # TODO, not present for Waveshells
 
 
+class WrapperFlags(enum.IntFlag):
+    Visible = 1 << 0
+    _Disabled = 1 << 1
+    Detached = 1 << 2
+    Maximized = 1 << 3
+    Generator = 1 << 4
+    SmartDisable = 1 << 5
+    ThreadedProcessing = 1 << 6
+    DemoMode = 1 << 7  # saved with a demo version
+    HideSettings = 1 << 8
+    Captionized = 1 << 9  # TODO find meaning
+    _DirectX = 1 << 16  # indicates the plugin is a DirectX plugin
+    _EditorSize = 2 << 16
+
+
 # TODO Try implementing __getitem__ and __setitem__
-
-
 class VSTPluginEvent(DataEventBase):
     VST_MARKERS = (8, 10)
 
@@ -214,12 +241,12 @@ class PluginID(EventEnum):
     Name = TEXT + 11
     # Plugin wrapper data, windows pos of plugin etc, currently
     # selected plugin wrapper page; minimized, closed or not
-    Wrapper = (DATA + 4, UnknownDataEvent)  # TODO
+    Wrapper = (DATA + 4, WrapperEvent)
     Data = (DATA + 5, UnknownDataEvent)  # ? 1.6.5+
 
 
 @runtime_checkable
-class IPlugin(Protocol):
+class _IPlugin(Protocol):
     INTERNAL_NAME: ClassVar[str]
     """The name used internally by FL to decide the type of plugin data."""
 
@@ -227,12 +254,69 @@ class IPlugin(Protocol):
 _PE_co = TypeVar("_PE_co", bound=AnyEvent, covariant=True)
 
 
-class PluginBase(SingleEventModel, Generic[_PE_co]):
-    def __init__(self, event: _PE_co, **kw: Any):
-        super().__init__(event, **kw)
+class _WrapperProp(FlagProp):
+    def __init__(self, flag: WrapperFlags):
+        super().__init__(flag, PluginID.Wrapper)
 
 
-AnyPlugin = PluginBase[AnyEvent]  # TODO bind to IPlugin + PluginBase (both)
+class _PluginBase(MultiEventModel, Generic[_PE_co]):
+    def __init__(self, *events: WrapperEvent | _PE_co, **kw: Any):
+        super().__init__(*events, **kw)
+
+    compact = _WrapperProp(WrapperFlags.HideSettings)
+    """Whether plugin page toolbar is hidden or not."""
+
+    demo_mode = _WrapperProp(WrapperFlags.DemoMode)
+    """Whether the plugin state was saved in a demo / trial version of the plugin."""
+
+    detached = _WrapperProp(WrapperFlags.Detached)
+    disabled = _WrapperProp(WrapperFlags._Disabled)
+    directx = _WrapperProp(WrapperFlags._DirectX)
+    """Whether the plugin is a DirectX plugin or not."""
+
+    generator = _WrapperProp(WrapperFlags.Generator)
+    """Whether the plugin is a generator or an effect."""
+
+    maximized = _WrapperProp(WrapperFlags.Maximized)
+    """Whether the plugin editor is maximized or minimized."""
+
+    multithreaded = _WrapperProp(WrapperFlags.ThreadedProcessing)
+    """Whether threaded processing is enabled or not."""
+
+    smart_disable = _WrapperProp(WrapperFlags.SmartDisable)
+    """Whether smart disable is enabled or not."""
+
+    visible = _WrapperProp(WrapperFlags.Visible)
+    """Whether the editor of the plugin is visible or closed."""
+
+
+AnyPlugin = _PluginBase[AnyEvent]  # TODO bind to _IPlugin + _PluginBase (both)
+
+
+class PluginProp(RWProperty[AnyPlugin]):
+    def __init__(self, types: dict[type[AnyEvent], type[AnyPlugin]]) -> None:
+        self._types = types
+
+    def __get__(self, instance: MultiEventModel, owner: Any = None) -> AnyPlugin | None:
+        if owner is None:
+            return NotImplemented
+
+        try:
+            wrapper = cast(WrapperEvent, instance._events[PluginID.Wrapper][0])
+            params = instance._events[PluginID.Data][0]
+        except (KeyError, IndexError):
+            return
+
+        for etype, ptype in self._types.items():
+            if isinstance(params, etype):
+                return ptype(params, wrapper)
+
+    def __set__(self, instance: MultiEventModel, value: AnyPlugin):
+        if isinstance(value, _IPlugin):
+            self.internal_name = value.INTERNAL_NAME
+        events = value.events_asdict()
+        instance._events[PluginID.Data] = events[PluginID.Data]
+        instance._events[PluginID.Wrapper] = events[PluginID.Wrapper]
 
 
 class PluginIOInfo(SingleEventModel):
@@ -240,7 +324,7 @@ class PluginIOInfo(SingleEventModel):
     flags = StructProp[int]()
 
 
-class VSTPlugin(PluginBase[VSTPluginEvent], IPlugin):
+class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     """Represents a VST2 or a VST3 generator or effect.
 
     *New in FL Studio v1.5.23*: VST2 support (beta).
@@ -285,7 +369,7 @@ class VSTPlugin(PluginBase[VSTPluginEvent], IPlugin):
     vst_number = StructProp[int]()  # TODO
 
 
-class BooBass(PluginBase[BooBassEvent], IPlugin, ModelReprMixin):
+class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     INTERNAL_NAME = "BooBass"
     bass = StructProp[int]()
     """Volume of the bass region.
@@ -318,7 +402,7 @@ class BooBass(PluginBase[BooBassEvent], IPlugin, ModelReprMixin):
     """
 
 
-class FruityBalance(PluginBase[FruityBalanceEvent], IPlugin, ModelReprMixin):
+class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     INTERNAL_NAME = "Fruity Balance"
     pan = StructProp[int]()
     """Linear.
@@ -347,7 +431,7 @@ class FruityFastDistKind(enum.IntEnum):
     B = 1
 
 
-class FruityFastDist(PluginBase[FruityFastDistEvent], IPlugin, ModelReprMixin):
+class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin):
     INTERNAL_NAME = "Fruity Fast Dist"
     kind = StructProp[FruityFastDistKind]()
     mix = StructProp[int]()
@@ -388,7 +472,7 @@ class FruityFastDist(PluginBase[FruityFastDistEvent], IPlugin, ModelReprMixin):
     """
 
 
-class FruityNotebook2(PluginBase[FruityNotebook2Event], IPlugin, ModelReprMixin):
+class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixin):
     INTERNAL_NAME = "Fruity NoteBook 2"
     active_page = StructProp[int]()
     """Active page number of the notebook. Min: 0, Max: 100."""
@@ -403,7 +487,7 @@ class FruityNotebook2(PluginBase[FruityNotebook2Event], IPlugin, ModelReprMixin)
     """A dict of page numbers to their contents."""
 
 
-class FruitySend(PluginBase[FruitySendEvent], IPlugin, ModelReprMixin):
+class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     INTERNAL_NAME = "Fruity Send"
     dry = StructProp[int]()
     """Linear. Defaults to maximum value.
@@ -438,7 +522,7 @@ class FruitySend(PluginBase[FruitySendEvent], IPlugin, ModelReprMixin):
     """
 
 
-class FruitySoftClipper(PluginBase[FruitySoftClipperEvent], IPlugin, ModelReprMixin):
+class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelReprMixin):
     INTERNAL_NAME = "Fruity Soft Clipper"
     post = StructProp[int]()
     """Linear.
@@ -469,7 +553,7 @@ class SoundgoodizerMode(enum.IntEnum):
     D = 3
 
 
-class Soundgoodizer(PluginBase[SoundgoodizerEvent], IPlugin, ModelReprMixin):
+class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     INTERNAL_NAME = "Soundgoodizer"
     amount = StructProp[int]()
     """Logarithmic.
@@ -499,7 +583,7 @@ class StereoEnhancerPhaseInversion(enum.IntEnum):
 
 
 class FruityStereoEnhancer(
-    PluginBase[FruityStereoEnhancerEvent], IPlugin, ModelReprMixin
+    _PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin
 ):
     INTERNAL_NAME = "Fruity Stereo Enhancer"
     effect_position = StructProp[StereoEnhancerEffectPosition]()

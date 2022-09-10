@@ -22,7 +22,7 @@ def test_project(project: Project):
         "Sampler",
         "Unsorted",
     ]
-    assert len(list(project.mixer)) == 127
+    assert len(project.mixer) == 127
     assert project.looped
     assert project.main_pitch == 0
     assert project.main_volume is None
@@ -32,7 +32,7 @@ def test_project(project: Project):
     assert project.ppq == 96
     assert project.licensed
     assert project.licensee == "zhoupengfei36732654"
-    assert project.patterns.current == list(project.patterns)[3]
+    assert project.patterns.current == project.patterns[3]
     assert project.arrangements.loop_pos is None
     assert not project.show_info
     assert project.channels.swing == 64

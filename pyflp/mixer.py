@@ -71,7 +71,6 @@ from ._base import (
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound
 from .plugin import (
-    AnyPlugin,
     FruityBalance,
     FruityBalanceEvent,
     FruityFastDist,
@@ -84,8 +83,10 @@ from .plugin import (
     FruitySoftClipperEvent,
     FruityStereoEnhancer,
     FruityStereoEnhancerEvent,
-    IPlugin,
     PluginID,
+    PluginProp,
+    Soundgoodizer,
+    SoundgoodizerEvent,
     VSTPlugin,
     VSTPluginEvent,
 )
@@ -134,6 +135,7 @@ class InsertID(EventEnum):
 
 @enum.unique
 class MixerID(EventEnum):
+    APDC = 29
     Params = (DATA + 17, MixerParamsEvent)
 
 
@@ -319,13 +321,8 @@ class _MixerParamProp(RWProperty[T]):
 class Slot(MultiEventModel, SupportsIndex):
     """Represents an effect slot in an `Insert` / mixer channel."""
 
-    def __init__(
-        self,
-        params: list[MixerParamsItem],
-        *events: AnyEvent,
-        plugin: IPlugin | None = None,
-    ):
-        super().__init__(*events, kw={"params": params, "plugin": plugin})
+    def __init__(self, *events: AnyEvent, params: list[MixerParamsItem] = []):
+        super().__init__(*events, params=params)
 
     def __repr__(self) -> str:
         repr = "Unnamed slot" if self.name is None else f"Slot {self.name!r}"
@@ -357,37 +354,19 @@ class Slot(MultiEventModel, SupportsIndex):
     """
 
     name = EventProp[str](PluginID.Name)
-
-    @property
-    def plugin(self) -> AnyPlugin | bytes | None:
-        """The effect loaded into the slot."""
-        try:
-            event = self._events[PluginID.Data][0]
-        except (KeyError, IndexError):
-            return
-
-        if isinstance(event, VSTPluginEvent):
-            return VSTPlugin(event)
-        elif isinstance(event, FruityBalanceEvent):
-            return FruityBalance(event)
-        elif isinstance(event, FruityFastDistEvent):
-            return FruityFastDist(event)
-        elif isinstance(event, FruityNotebook2Event):
-            return FruityNotebook2(event)
-        elif isinstance(event, FruitySendEvent):
-            return FruitySend(event)
-        elif isinstance(event, FruitySoftClipperEvent):
-            return FruitySoftClipper(event)
-        elif isinstance(event, FruityStereoEnhancerEvent):
-            return FruityStereoEnhancer(event)
-
-        return event._raw
-
-    @plugin.setter
-    def plugin(self, plugin: AnyPlugin):
-        if isinstance(plugin, IPlugin):
-            self.internal_name = plugin.INTERNAL_NAME
-        self._events[PluginID.Data] = [plugin.event()]
+    plugin = PluginProp(
+        {
+            VSTPluginEvent: VSTPlugin,
+            FruityBalanceEvent: FruityBalance,
+            FruityFastDistEvent: FruityFastDist,
+            FruityNotebook2Event: FruityNotebook2,
+            FruitySendEvent: FruitySend,
+            FruitySoftClipperEvent: FruitySoftClipper,
+            FruityStereoEnhancerEvent: FruityStereoEnhancer,
+            SoundgoodizerEvent: Soundgoodizer,
+        }
+    )
+    """The effect loaded into the slot."""
 
 
 class _InsertKW(TypedDict):
@@ -446,7 +425,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
                 break
 
             index += 1
-            yield Slot(params, *events)
+            yield Slot(*events, params=params)
 
     def __len__(self):
         if SlotID.Index in self._events:
@@ -606,6 +585,9 @@ class Mixer(MultiEventModel, Sequence[Insert]):
 
     def __repr__(self):
         return f"Mixer: {len(self)} inserts"
+
+    apdc = EventProp[bool](MixerID.APDC)
+    """Whether automatic plugin delay compensation is enabled for the inserts."""
 
     @property
     def max_inserts(self):

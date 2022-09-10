@@ -210,7 +210,7 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         """Returns the pattern with the specified `index`.
 
         Args:
-            index (SupportsIndex): An integer based index value from 1.
+            index (SupportsIndex): An integer based index value from 0.
 
         Raises:
             ModelNotFound: When a pattern of `index` could not be found.
@@ -221,13 +221,15 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         raise ModelNotFound(index)
 
     def __iter__(self) -> Iterator[Pattern]:
+        """An iterator over the patterns found in the project."""
         cur_pat_id = 0
         events_dict: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
 
         for event in self._events_tuple:
-            if event.id == PatternID.New:
-                cur_pat_id = event.value
-            events_dict[cur_pat_id].append(event)
+            if event.id in PatternID:
+                if event.id == PatternID.New:
+                    cur_pat_id = event.value
+                events_dict[cur_pat_id].append(event)
 
         for events in events_dict.values():
             yield Pattern(*events)
@@ -252,7 +254,6 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
     def current(self) -> Pattern | None:
         if PatternsID.CurrentlySelected in self._events:
             index = self._events[PatternsID.CurrentlySelected][0].value
-            if index is not None:
-                for pattern in self:
-                    if pattern.__index__() == index:
-                        return pattern
+            for pattern in self:
+                if pattern.__index__() == index:
+                    return pattern

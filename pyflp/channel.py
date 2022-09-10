@@ -66,7 +66,14 @@ from ._base import (
 )
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .plugin import BooBass, BooBassEvent, IPlugin, PluginID, VSTPlugin, VSTPluginEvent
+from .plugin import (
+    BooBass,
+    BooBassEvent,
+    PluginID,
+    PluginProp,
+    VSTPlugin,
+    VSTPluginEvent,
+)
 
 __all__ = ["Automation", "Channel", "Instrument", "Layer", "ChannelRack"]
 
@@ -116,6 +123,7 @@ class ParametersStruct(StructBase):
         "arp.slide": "bool",  # 61
         "_u31": 31,  # 92
         "arp.repeat": "I",  # 96 4.5.2+
+        "_u62": 62,  # 158
     }
 
 
@@ -203,6 +211,7 @@ class ChannelID(EventEnum):
     LayerFlags = (DWORD + 16, U32Event)
     GroupNum = (DWORD + 17, I32Event)
     AUSampleRate = (DWORD + 25, U32Event)
+    _Name = TEXT
     SamplePath = TEXT + 4
     Delay = (DATA + 1, DelayEvent)
     Parameters = (DATA + 7, ParametersEvent)
@@ -600,7 +609,7 @@ class Channel(MultiEventModel, SupportsIndex):
     color = EventProp[colour.Color](PluginID.Color)
     controllers = KWProp[List[RemoteController]]()
     internal_name = EventProp[str](PluginID.InternalName)
-    """Default name of the channel.
+    """Internal name of the channel.
 
     The value of this depends on the type of `plugin`:
 
@@ -618,7 +627,7 @@ class Channel(MultiEventModel, SupportsIndex):
     iid = EventProp[int](ChannelID.New)
     keyboard = NestedProp(Keyboard, ChannelID.FineTune, ChannelID.RootNote)
     locked = EventProp[bool](ChannelID.IsLocked)
-    name = EventProp[str](PluginID.Name)
+    name = EventProp[str](PluginID.Name, ChannelID._Name)
     """The name associated with a channel.
 
     It's value depends on the type of plugin:
@@ -627,7 +636,7 @@ class Channel(MultiEventModel, SupportsIndex):
     * VST instrument: The name obtained from the VST or the user-given name.
 
     !!! tip "See also"
-        `default_name` and `display_name`.
+        `internal_name` and `display_name`.
     """
 
     @property
@@ -703,6 +712,8 @@ class Automation(Channel):
 
 
 class Layer(Channel, Sequence[Channel]):
+    """*New in FL Studio v3.4.0.*"""
+
     def __getitem__(self, index: str | SupportsIndex):
         """Returns a child channel with an IID / index of `index`.
 
@@ -746,20 +757,8 @@ class _SamplerInstrument(Channel):
 
 
 class Instrument(_SamplerInstrument):
-    @property
-    def plugin(self) -> IPlugin | bytes | None:
-        """The plugin loaded into the channel."""
-        try:
-            event = self._events[PluginID.Data][0]
-        except (KeyError, IndexError):
-            return
-
-        if isinstance(event, VSTPluginEvent):
-            return VSTPlugin(event)
-        elif isinstance(event, BooBassEvent):
-            return BooBass(event)
-
-        return event._raw
+    plugin = PluginProp({VSTPluginEvent: VSTPlugin, BooBassEvent: BooBass})
+    """The plugin loaded into the channel."""
 
 
 # New in FL Studio v1.4.0 & v1.5.23: Sampler spectrum views

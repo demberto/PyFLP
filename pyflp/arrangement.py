@@ -110,6 +110,7 @@ class TrackStruct(StructBase):
         "position_sync": "I",  # 46
         "grouped": "bool",  # 47
         "locked": "bool",  # 48
+        "_u18": 18,  # 66
     }
 
 
@@ -126,6 +127,7 @@ class ArrangementsID(EventEnum):
     TimeSigNum = (17, U8Event)
     TimeSigBeat = (18, U8Event)
     Current = (WORD + 36, U16Event)
+    WindowHeight = (DWORD + 5, U32Event)
     LoopPos = (DWORD + 24, U32Event)  # 1.3.8+
 
 
@@ -483,10 +485,13 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
             except IndexError:
                 raise ModelNotFound(index)
 
+    height = EventProp[int](ArrangementsID.WindowHeight)
+    """Window height / track width used by the interface."""
+
     loop_pos = EventProp[int](ArrangementsID.LoopPos)
     """*New in FL Studio v1.3.8.*"""
 
     time_signature = NestedProp(
         TimeSignature, ArrangementsID.TimeSigNum, ArrangementsID.TimeSigBeat
     )
-    """Global time signature (also used by playlist)."""
+    """Project time signature (also used by playlist)."""
