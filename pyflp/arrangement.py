@@ -75,10 +75,12 @@ __all__ = [
     "TrackMotion",
     "TrackPress",
     "TrackSync",
+    "ChannelPlaylistItem",
+    "PatternPlaylistItem",
 ]
 
 
-class PlaylistItemStruct(StructBase):
+class _PlaylistItemStruct(StructBase):
     PROPS = {
         "position": "I",  # 4
         "pattern_base": "H",  # 6
@@ -93,7 +95,7 @@ class PlaylistItemStruct(StructBase):
     }
 
 
-class TrackStruct(StructBase):
+class _TrackStruct(StructBase):
     PROPS = {
         "index": "I",  # 4
         "color": "i",  # 8
@@ -115,11 +117,11 @@ class TrackStruct(StructBase):
 
 
 class PlaylistEvent(ListEventBase):
-    STRUCT = PlaylistItemStruct
+    STRUCT = _PlaylistItemStruct
 
 
 class TrackEvent(StructEventBase):
-    STRUCT = TrackStruct
+    STRUCT = _TrackStruct
 
 
 @enum.unique
@@ -267,7 +269,7 @@ class TimeMarker(MultiEventModel):
 
 
 class _TrackKW(TypedDict):
-    items: list[PlaylistItemStruct]
+    items: list[_PlaylistItemStruct]
 
 
 class Track(MultiEventModel, Iterable[PlaylistItemBase]):
@@ -396,12 +398,12 @@ class Arrangement(MultiEventModel, SupportsIndex):
             event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
 
         for events in self._collect_events(TrackID):
-            items: list[PlaylistItemStruct] = []
+            items: list[_PlaylistItemStruct] = []
             if event is not None:
                 for item in event.items:
                     idx = item["track_index"]
                     if max_tracks - idx == count:
-                        items.append(cast(PlaylistItemStruct, item))
+                        items.append(cast(_PlaylistItemStruct, item))
             yield Track(*events, items=items)
 
 

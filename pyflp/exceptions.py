@@ -76,16 +76,7 @@ class InvalidValue(Error, ValueError):
 
 
 class DataCorrupted(Error):
-    """Base class for parsing exceptions.
-
-    ``` mermaid
-    classDiagram
-    DataCorrupted <|-- HeaderCorrupted
-    DataCorrupted <|-- NoModelsFound
-    DataCorrupted <|-- ModelNotFound
-    DataCorrupted <|-- VersionNotDetected
-    ```
-    """
+    """Base class for parsing exceptions."""
 
 
 class HeaderCorrupted(DataCorrupted, ValueError):

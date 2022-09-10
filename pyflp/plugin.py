@@ -50,28 +50,45 @@ from ._base import (
     UnknownDataEvent,
 )
 
+__all__ = [
+    "BooBass",
+    "FruityBalance",
+    "FruityFastDist",
+    "FruityFastDistKind",
+    "FruityNotebook2",
+    "FruitySend",
+    "FruitySoftClipper",
+    "FruityStereoEnhancer",
+    "PluginIOInfo",
+    "Soundgoodizer",
+    "VSTPlugin",
+    "StereoEnhancerEffectPosition",
+    "StereoEnhancerPhaseInversion",
+    "SoundgoodizerMode",
+]
 
-class BooBassStruct(StructBase):
+
+class _BooBassStruct(StructBase):
     PROPS = dict.fromkeys(("_u1", "bass", "mid", "high"), "I")  # _u1 = [1, 0, 0, 0]
 
 
-class FruityBalanceStruct(StructBase):
+class _FruityBalanceStruct(StructBase):
     PROPS = {"pan": "I", "volume": "I"}
 
 
-class FruityFastDistStruct(StructBase):
+class _FruityFastDistStruct(StructBase):
     PROPS = dict.fromkeys(("pre", "threshold", "kind", "mix", "post"), "I")
 
 
-class FruitySendStruct(StructBase):
+class _FruitySendStruct(StructBase):
     PROPS = dict.fromkeys(("pan", "dry", "volume", "send_to"), "I")
 
 
-class FruitySoftClipperStruct(StructBase):
+class _FruitySoftClipperStruct(StructBase):
     PROPS = {"threshold": "I", "post": "I"}
 
 
-class FruityStereoEnhancerStruct(StructBase):
+class _FruityStereoEnhancerStruct(StructBase):
     PROPS = dict.fromkeys(
         (
             "pan",
@@ -85,11 +102,11 @@ class FruityStereoEnhancerStruct(StructBase):
     )
 
 
-class SoundgoodizerStruct(StructBase):
+class _SoundgoodizerStruct(StructBase):
     PROPS = dict.fromkeys(("_u1", "mode", "amount"), "I")
 
 
-class WrapperStruct(StructBase):
+class _WrapperStruct(StructBase):
     PROPS = {
         "_u16": 16,
         "flags": "H",
@@ -97,15 +114,15 @@ class WrapperStruct(StructBase):
 
 
 class BooBassEvent(StructEventBase):
-    STRUCT = BooBassStruct
+    STRUCT = _BooBassStruct
 
 
 class FruityBalanceEvent(StructEventBase):
-    STRUCT = FruityBalanceStruct
+    STRUCT = _FruityBalanceStruct
 
 
 class FruityFastDistEvent(StructEventBase):
-    STRUCT = FruityFastDistStruct
+    STRUCT = _FruityFastDistStruct
 
 
 class FruityNotebook2Event(DataEventBase):
@@ -133,27 +150,27 @@ class FruityNotebook2Event(DataEventBase):
 
 
 class FruitySendEvent(StructEventBase):
-    STRUCT = FruitySendStruct
+    STRUCT = _FruitySendStruct
 
 
 class FruitySoftClipperEvent(StructEventBase):
-    STRUCT = FruitySoftClipperStruct
+    STRUCT = _FruitySoftClipperStruct
 
 
 class FruityStereoEnhancerEvent(StructEventBase):
-    STRUCT = FruityStereoEnhancerStruct
+    STRUCT = _FruityStereoEnhancerStruct
 
 
 class SoundgoodizerEvent(StructEventBase):
-    STRUCT = SoundgoodizerStruct
+    STRUCT = _SoundgoodizerStruct
 
 
 class WrapperEvent(StructEventBase):
-    STRUCT = WrapperStruct
+    STRUCT = _WrapperStruct
 
 
 @enum.unique
-class VSTPluginEventID(enum.IntEnum):
+class _VSTPluginEventID(enum.IntEnum):
     def __new__(cls, id: int, key: str | None = None):
         obj = int.__new__(cls, id)
         obj._value_ = id
@@ -175,7 +192,7 @@ class VSTPluginEventID(enum.IntEnum):
     _57 = 57  # TODO, not present for Waveshells
 
 
-class WrapperFlags(enum.IntFlag):
+class _WrapperFlags(enum.IntFlag):
     Visible = 1 << 0
     _Disabled = 1 << 1
     Detached = 1 << 2
@@ -208,14 +225,14 @@ class VSTPluginEvent(DataEventBase):
 
                 isascii = False
                 if subid in (
-                    VSTPluginEventID.FourCC,
-                    VSTPluginEventID.Name,
-                    VSTPluginEventID.PluginPath,
-                    VSTPluginEventID.Vendor,
+                    _VSTPluginEventID.FourCC,
+                    _VSTPluginEventID.Name,
+                    _VSTPluginEventID.PluginPath,
+                    _VSTPluginEventID.Vendor,
                 ):
                     isascii = True
                 subevent = U64DataEvent(subid, subdata, isascii)
-                subkey = getattr(VSTPluginEventID(subid), "key") or subid
+                subkey = getattr(_VSTPluginEventID(subid), "key") or subid
                 self._props[subkey] = subdata
                 self._events.append(subevent)
 
@@ -223,7 +240,7 @@ class VSTPluginEvent(DataEventBase):
         self._stream.seek(0)
         for event in self._events:
             try:
-                key = getattr(VSTPluginEventID(event.id), "key")
+                key = getattr(_VSTPluginEventID(event.id), "key")
             except ValueError:
                 key = event.id
             event.value = self._props[key]
@@ -255,7 +272,7 @@ _PE_co = TypeVar("_PE_co", bound=AnyEvent, covariant=True)
 
 
 class _WrapperProp(FlagProp):
-    def __init__(self, flag: WrapperFlags):
+    def __init__(self, flag: _WrapperFlags):
         super().__init__(flag, PluginID.Wrapper)
 
 
@@ -263,30 +280,30 @@ class _PluginBase(MultiEventModel, Generic[_PE_co]):
     def __init__(self, *events: WrapperEvent | _PE_co, **kw: Any):
         super().__init__(*events, **kw)
 
-    compact = _WrapperProp(WrapperFlags.HideSettings)
+    compact = _WrapperProp(_WrapperFlags.HideSettings)
     """Whether plugin page toolbar is hidden or not."""
 
-    demo_mode = _WrapperProp(WrapperFlags.DemoMode)
+    demo_mode = _WrapperProp(_WrapperFlags.DemoMode)
     """Whether the plugin state was saved in a demo / trial version of the plugin."""
 
-    detached = _WrapperProp(WrapperFlags.Detached)
-    disabled = _WrapperProp(WrapperFlags._Disabled)
-    directx = _WrapperProp(WrapperFlags._DirectX)
+    detached = _WrapperProp(_WrapperFlags.Detached)
+    disabled = _WrapperProp(_WrapperFlags._Disabled)
+    directx = _WrapperProp(_WrapperFlags._DirectX)
     """Whether the plugin is a DirectX plugin or not."""
 
-    generator = _WrapperProp(WrapperFlags.Generator)
+    generator = _WrapperProp(_WrapperFlags.Generator)
     """Whether the plugin is a generator or an effect."""
 
-    maximized = _WrapperProp(WrapperFlags.Maximized)
+    maximized = _WrapperProp(_WrapperFlags.Maximized)
     """Whether the plugin editor is maximized or minimized."""
 
-    multithreaded = _WrapperProp(WrapperFlags.ThreadedProcessing)
+    multithreaded = _WrapperProp(_WrapperFlags.ThreadedProcessing)
     """Whether threaded processing is enabled or not."""
 
-    smart_disable = _WrapperProp(WrapperFlags.SmartDisable)
+    smart_disable = _WrapperProp(_WrapperFlags.SmartDisable)
     """Whether smart disable is enabled or not."""
 
-    visible = _WrapperProp(WrapperFlags.Visible)
+    visible = _WrapperProp(_WrapperFlags.Visible)
     """Whether the editor of the plugin is visible or closed."""
 
 

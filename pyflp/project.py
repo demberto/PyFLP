@@ -63,17 +63,19 @@ from .mixer import InsertID, Mixer, MixerID, SlotID
 from .pattern import PatternID, Patterns, PatternsID
 from .plugin import PluginID
 
-DELPHI_EPOCH: Final = datetime.datetime(1899, 12, 30)
+_DELPHI_EPOCH: Final = datetime.datetime(1899, 12, 30)
 MIN_TEMPO: Final = 10.000
 VALID_PPQS: Final = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
 
+__all__ = ["PanLaw", "Project", "FileFormat", "VALID_PPQS"]
 
-class TimestampStruct(StructBase):
+
+class _TimestampStruct(StructBase):
     PROPS = {"created_on": "d", "time_spent": "d"}
 
 
 class TimestampEvent(StructEventBase):
-    STRUCT = TimestampStruct
+    STRUCT = _TimestampStruct
 
 
 @enum.unique
@@ -226,7 +228,7 @@ class Project(MultiEventModel):
         """The local date and time on which this project was created."""
         if ProjectID.Timestamp in self._events:
             event = cast(TimestampEvent, self._events[ProjectID.Timestamp][0])
-            return DELPHI_EPOCH + datetime.timedelta(days=event["created_on"])
+            return _DELPHI_EPOCH + datetime.timedelta(days=event["created_on"])
 
     format = KWProp[FileFormat]()
     """Internal format used by FL Studio to store different types of data."""

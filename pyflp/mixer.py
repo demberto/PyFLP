@@ -91,16 +91,25 @@ from .plugin import (
     VSTPluginEvent,
 )
 
+__all__ = [
+    "Insert",
+    "InsertDock",
+    "InsertEQ",
+    "InsertEQBand",
+    "Mixer",
+    "Slot",
+]
 
-class InsertFlagsStruct(StructBase):
+
+class _InsertFlagsStruct(StructBase):
     PROPS = {"_u1": "I", "flags": "I", "_u2": "I"}
 
 
-class InsertRoutingStruct(StructBase):
+class _InsertRoutingStruct(StructBase):
     PROPS = {"is_routed": "bool"}
 
 
-class MixerParamsItem(StructBase):
+class _MixerParamsItem(StructBase):
     PROPS = {
         "_u4": 4,  # 4
         "id": "b",  # 5
@@ -111,15 +120,15 @@ class MixerParamsItem(StructBase):
 
 
 class InsertFlagsEvent(StructEventBase):
-    STRUCT = InsertFlagsStruct
+    STRUCT = _InsertFlagsStruct
 
 
 class InsertRoutingEvent(ListEventBase):
-    STRUCT = InsertRoutingStruct
+    STRUCT = _InsertRoutingStruct
 
 
 class MixerParamsEvent(ListEventBase):
-    STRUCT = MixerParamsItem
+    STRUCT = _MixerParamsItem
 
 
 @enum.unique
@@ -145,7 +154,7 @@ class SlotID(EventEnum):
 
 
 @enum.unique
-class MixerParamsID(enum.IntEnum):
+class _MixerParamsID(enum.IntEnum):
     SlotEnabled = 0
     # SlotVolume = 1
     SlotMix = 1
@@ -171,7 +180,7 @@ class InsertDock(enum.Enum):
 
 
 @enum.unique
-class InsertFlags(enum.IntFlag):
+class _InsertFlags(enum.IntFlag):
     None_ = 0
     PolarityReversed = 1 << 0
     SwapLeftRight = 1 << 1
@@ -197,9 +206,9 @@ class InsertFlags(enum.IntFlag):
 
 
 class _InsertEQBandKW(TypedDict, total=False):
-    gain: MixerParamsItem
-    freq: MixerParamsItem
-    reso: MixerParamsItem
+    gain: _MixerParamsItem
+    freq: _MixerParamsItem
+    reso: _MixerParamsItem
 
 
 class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
@@ -220,7 +229,7 @@ class InsertEQBand(ModelBase):
         return f"InsertEQ band (gain={self.gain}, freq={self.freq}, q={self.reso})"
 
     def sizeof(self) -> int:
-        return MixerParamsItem.SIZE * len(self._kw)
+        return _MixerParamsItem.SIZE * len(self._kw)
 
     gain = _InsertEQBandProp()
     """
@@ -239,9 +248,9 @@ class InsertEQBand(ModelBase):
 
 
 class _InsertEQPropArgs(NamedTuple):
-    freq: MixerParamsID
-    gain: MixerParamsID
-    reso: MixerParamsID
+    freq: _MixerParamsID
+    gain: _MixerParamsID
+    reso: _MixerParamsID
 
 
 class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
@@ -266,7 +275,7 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
 
 
 class InsertEQ(ModelBase):
-    def __init__(self, params: list[MixerParamsItem]):
+    def __init__(self, params: list[_MixerParamsItem]):
         super().__init__(params=params)
 
     def __repr__(self):
@@ -276,32 +285,32 @@ class InsertEQ(ModelBase):
         return f"InsertEQ (low={low}, mid={mid}, high={high})"
 
     def sizeof(self) -> int:
-        return MixerParamsItem.SIZE * self._kw["param"]
+        return _MixerParamsItem.SIZE * self._kw["param"]
 
     low = _InsertEQProp(
         _InsertEQPropArgs(
-            MixerParamsID.LowFreq, MixerParamsID.LowGain, MixerParamsID.LowQ
+            _MixerParamsID.LowFreq, _MixerParamsID.LowGain, _MixerParamsID.LowQ
         )
     )
     """Low shelf band. Default frequency: 5777 (90 Hz)."""
 
     mid = _InsertEQProp(
         _InsertEQPropArgs(
-            MixerParamsID.MidFreq, MixerParamsID.MidGain, MixerParamsID.MidQ
+            _MixerParamsID.MidFreq, _MixerParamsID.MidGain, _MixerParamsID.MidQ
         )
     )
     """Middle band. Default frequency: 33145 (1500 Hz)."""
 
     high = _InsertEQProp(
         _InsertEQPropArgs(
-            MixerParamsID.HighFreq, MixerParamsID.HighGain, MixerParamsID.HighQ
+            _MixerParamsID.HighFreq, _MixerParamsID.HighGain, _MixerParamsID.HighQ
         )
     )
     """High shelf band. Default frequency: 55825 (8000 Hz)."""
 
 
 class _MixerParamProp(RWProperty[T]):
-    def __init__(self, id: MixerParamsID) -> None:
+    def __init__(self, id: _MixerParamsID) -> None:
         self._id = id
 
     def __get__(self, instance: Insert, owner: object = None) -> T | None:
@@ -321,7 +330,7 @@ class _MixerParamProp(RWProperty[T]):
 class Slot(MultiEventModel, SupportsIndex):
     """Represents an effect slot in an `Insert` / mixer channel."""
 
-    def __init__(self, *events: AnyEvent, params: list[MixerParamsItem] = []):
+    def __init__(self, *events: AnyEvent, params: list[_MixerParamsItem] = []):
         super().__init__(*events, params=params)
 
     def __repr__(self) -> str:
@@ -340,10 +349,10 @@ class Slot(MultiEventModel, SupportsIndex):
     internal_name = EventProp[str](PluginID.InternalName)
     """'Fruity Wrapper' for VST/AU plugins or factory name for native plugins."""
 
-    enabled = _MixerParamProp[bool](MixerParamsID.SlotEnabled)
+    enabled = _MixerParamProp[bool](_MixerParamsID.SlotEnabled)
     icon = EventProp[int](PluginID.Icon)
     index = EventProp[int](SlotID.Index)
-    mix = _MixerParamProp[int](MixerParamsID.SlotMix)
+    mix = _MixerParamProp[int](_MixerParamsID.SlotMix)
     """Dry/Wet mix.
 
     | Type     | Value | Representation |
@@ -371,7 +380,7 @@ class Slot(MultiEventModel, SupportsIndex):
 
 class _InsertKW(TypedDict):
     index: SupportsIndex
-    params: NotRequired[list[MixerParamsItem]]
+    params: NotRequired[list[_MixerParamsItem]]
 
 
 class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
@@ -408,7 +417,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
         index = 0
         while True:
             events: list[AnyEvent] = []
-            params: list[MixerParamsItem] = []
+            params: list[_MixerParamsItem] = []
 
             for param in self._kw["params"]:
                 if param["channel_data"] % 0x3F == index:
@@ -432,10 +441,10 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
             return len(self._events[SlotID.Index])
         return len(list(self))
 
-    bypassed = FlagProp(InsertFlags.EnableEffects, InsertID.Flags, inverted=True)
+    bypassed = FlagProp(_InsertFlags.EnableEffects, InsertID.Flags, inverted=True)
     """Whether all slots are bypassed."""
 
-    channels_swapped = FlagProp(InsertFlags.SwapLeftRight, InsertID.Flags)
+    channels_swapped = FlagProp(_InsertFlags.SwapLeftRight, InsertID.Flags)
     """Whether the left and right channels are swapped."""
 
     color = EventProp[colour.Color](InsertID.Color)
@@ -446,13 +455,13 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
         events = self._events.get(InsertID.Flags)
         if events is not None:
             event = cast(InsertFlagsEvent, events[0])
-            if InsertFlags.DockMiddle in event["flags"]:
+            if _InsertFlags.DockMiddle in event["flags"]:
                 return InsertDock.Middle
-            elif InsertFlags.DockRight in event["flags"]:
+            elif _InsertFlags.DockRight in event["flags"]:
                 return InsertDock.Right
             return InsertDock.Left
 
-    enabled = FlagProp(InsertFlags.Enabled, InsertID.Flags)
+    enabled = FlagProp(_InsertFlags.Enabled, InsertID.Flags)
     """Whether an insert in the mixer is enabled or disabled."""
 
     @property
@@ -462,15 +471,15 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
     icon = EventProp[int](InsertID.Icon)
     input = EventProp[int](InsertID.Input)
-    is_solo = FlagProp(InsertFlags.Solo, InsertID.Flags)
+    is_solo = FlagProp(_InsertFlags.Solo, InsertID.Flags)
     """Whether the insert is solo'd."""
 
-    locked = FlagProp(InsertFlags.Locked, InsertID.Flags)
+    locked = FlagProp(_InsertFlags.Locked, InsertID.Flags)
     """Whether an insert in the mixer is in locked state."""
 
     name = EventProp[str](InsertID.Name)
     output = EventProp[int](InsertID.Output)
-    pan = _MixerParamProp[int](MixerParamsID.Pan)
+    pan = _MixerParamProp[int](_MixerParamsID.Pan)
     """Linear.
 
     | Type     | Value | Representation |
@@ -480,7 +489,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     | Default  | 0     | Centred        |
     """
 
-    polarity_reversed = FlagProp(InsertFlags.PolarityReversed, InsertID.Flags)
+    polarity_reversed = FlagProp(_InsertFlags.PolarityReversed, InsertID.Flags)
     """Whether phase / polarity is reversed / inverted."""
 
     @property
@@ -491,13 +500,13 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
         """
         items = cast(InsertRoutingEvent, self._events[InsertID.Routing][0]).items
         for idx, param in enumerate(self._kw["params"]):
-            if param["id"] >= MixerParamsID.RouteVolStart and items[idx]["is_routed"]:
+            if param["id"] >= _MixerParamsID.RouteVolStart and items[idx]["is_routed"]:
                 yield param["msg"]
 
-    separator_shown = FlagProp(InsertFlags.SeparatorShown, InsertID.Flags)
+    separator_shown = FlagProp(_InsertFlags.SeparatorShown, InsertID.Flags)
     """Whether separator is shown before the insert."""
 
-    stereo_separation = _MixerParamProp[int](MixerParamsID.StereoSeparation)
+    stereo_separation = _MixerParamProp[int](_MixerParamsID.StereoSeparation)
     """Linear.
 
     | Type    | Value | Representation |
@@ -507,7 +516,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     | Default | 0     | No effect      |
     """
 
-    volume = _MixerParamProp[int](MixerParamsID.Volume)
+    volume = _MixerParamProp[int](_MixerParamsID.Volume)
     """Post volume fader. Logarithmic.
 
     | Type     | Value | Representation         |
@@ -546,14 +555,14 @@ class Mixer(MultiEventModel, Sequence[Insert]):
     def __iter__(self) -> Iterator[Insert]:
         index = 0
         events: list[AnyEvent] = []
-        params_dict: DefaultDict[int, list[MixerParamsItem]] = collections.defaultdict(
+        params_dict: DefaultDict[int, list[_MixerParamsItem]] = collections.defaultdict(
             list
         )
 
         for event in reversed(self._events_tuple):
             if event.id == MixerID.Params:
                 event = cast(MixerParamsEvent, event)
-                items = cast(List[MixerParamsItem], event.items)
+                items = cast(List[_MixerParamsItem], event.items)
 
                 for item in items:
                     params_dict[(item["channel_data"] >> 6) & 0x7F].append(item)

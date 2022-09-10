@@ -56,8 +56,10 @@ from ._base import (
 )
 from .exceptions import ModelNotFound, NoModelsFound
 
+__all__ = ["Note", "Controller", "Pattern", "Patterns"]
 
-class ContollerStruct(StructBase):
+
+class _ContollerStruct(StructBase):
     PROPS = {
         "position": "I",  # 4
         "_u1": 1,  # 5
@@ -68,7 +70,7 @@ class ContollerStruct(StructBase):
     }
 
 
-class NoteStruct(StructBase):
+class _NoteStruct(StructBase):
     PROPS = {
         "position": "I",  # 4
         "flags": "H",  # 6
@@ -87,11 +89,11 @@ class NoteStruct(StructBase):
 
 
 class ControllerEvent(ListEventBase):
-    STRUCT = ContollerStruct
+    STRUCT = _ContollerStruct
 
 
 class NotesEvent(ListEventBase):
-    STRUCT = NoteStruct
+    STRUCT = _NoteStruct
 
 
 class PatternsID(EventEnum):

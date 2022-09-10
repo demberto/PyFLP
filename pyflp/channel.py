@@ -75,18 +75,41 @@ from .plugin import (
     VSTPluginEvent,
 )
 
-__all__ = ["Automation", "Channel", "Instrument", "Layer", "ChannelRack"]
+__all__ = [
+    "ArpDirection",
+    "Automation",
+    "Channel",
+    "Instrument",
+    "Layer",
+    "ChannelRack",
+    "ChannelNotFound",
+    "LFOShape",
+    "ReverbType",
+    "FX",
+    "Reverb",
+    "Delay",
+    "Envelope",
+    "LFO",
+    "Tracking",
+    "Keyboard",
+    "LevelAdjusts",
+    "Time",
+    "TimeStretching",
+    "Polyphony",
+    "Playback",
+    "ChannelType",
+]
 
 
 class ChannelNotFound(ModelNotFound, KeyError):
     pass
 
 
-class DelayStruct(StructBase):
+class _DelayStruct(StructBase):
     PROPS = dict.fromkeys(("feedback", "pan", "pitch_shift", "echoes", "time"), "I")
 
 
-class EnvelopeLFOStruct(StructBase):  # 2.5.0+
+class _EnvelopeLFOStruct(StructBase):  # 2.5.0+
     PROPS = {
         "flags": "i",  # 4
         "envelope.enabled": "i",  # 8
@@ -104,15 +127,15 @@ class EnvelopeLFOStruct(StructBase):  # 2.5.0+
     }
 
 
-class LevelAdjustsStruct(StructBase):
+class _LevelAdjustsStruct(StructBase):
     PROPS = {"pan": "I", "volume": "I", "_u4": 4, "mod_x": "I", "mod_y": "I"}
 
 
-class LevelsStruct(StructBase):
+class _LevelsStruct(StructBase):
     PROPS = {"pan": "I", "volume": "I", "pitch_shift": "I", "_u12": 12}
 
 
-class ParametersStruct(StructBase):
+class _ParametersStruct(StructBase):
     PROPS = {
         "_u40": 40,  # 40
         "arp.direction": "I",  # 44
@@ -127,40 +150,40 @@ class ParametersStruct(StructBase):
     }
 
 
-class PolyphonyStruct(StructBase):
+class _PolyphonyStruct(StructBase):
     PROPS = {"max": "I", "slide": "I", "flags": "B"}
 
 
-class TrackingStruct(StructBase):
+class _TrackingStruct(StructBase):
     PROPS = {"middle_value": "i", "pan": "i", "mod_x": "i", "mod_y": "i"}
 
 
 class DelayEvent(StructEventBase):
-    STRUCT = DelayStruct
+    STRUCT = _DelayStruct
 
 
 class EnvelopeLFOEvent(StructEventBase):
-    STRUCT = EnvelopeLFOStruct
+    STRUCT = _EnvelopeLFOStruct
 
 
 class LevelAdjustsEvent(StructEventBase):
-    STRUCT = LevelAdjustsStruct
+    STRUCT = _LevelAdjustsStruct
 
 
 class LevelsEvent(StructEventBase):
-    STRUCT = LevelsStruct
+    STRUCT = _LevelsStruct
 
 
 class ParametersEvent(StructEventBase):
-    STRUCT = ParametersStruct
+    STRUCT = _ParametersStruct
 
 
 class PolyphonyEvent(StructEventBase):
-    STRUCT = PolyphonyStruct
+    STRUCT = _PolyphonyStruct
 
 
 class TrackingEvent(StructEventBase):
-    STRUCT = TrackingStruct
+    STRUCT = _TrackingStruct
 
 
 @enum.unique
@@ -245,7 +268,7 @@ class ArpDirection(enum.IntEnum):
 
 
 @enum.unique
-class LFOFlags(enum.IntFlag):
+class _LFOFlags(enum.IntFlag):
     TempoSync = 1 << 1
     Unknown = 1 << 2  # Occurs for volume envlope only.
     Retrig = 1 << 5
@@ -259,7 +282,7 @@ class LFOShape(enum.IntEnum):
 
 
 @enum.unique
-class PolyphonyFlags(enum.IntFlag):
+class _PolyphonyFlags(enum.IntFlag):
     None_ = 0
     Mono = 1 << 0
     Porta = 1 << 1
@@ -376,57 +399,52 @@ class Reverb(SingleEventModel, ModelReprMixin):
 
 class FX(MultiEventModel, ModelReprMixin):
     boost = EventProp[int](ChannelID.Preamp)
-    """Pre-amp gain (named ==BOOST==).
+    """Pre-amp gain (named ==BOOST==). Defaults to minimum value.
 
     | Property | Value |
     | :------- | :---: |
     | Min      | 0     |
     | Max      | 256   |
-    | Default  | 0     |
 
     *New in FL Studio v1.2.12.*
     """
 
     cutoff = EventProp[int](ChannelID.Cutoff)
-    """Filter Mod X (named ==CUT==).
+    """Filter Mod X (named ==CUT==). Defaults to maximum value.
 
     | Property | Value |
     | :------- | :---: |
     | Min      | 0     |
     | Max      | 1024  |
-    | Default  | 1024  |
     """
 
     fade_in = EventProp[int](ChannelID.FadeIn)
-    """Quick fade-in (named ==IN==).
+    """Quick fade-in (named ==IN==). Defaults to minimum value.
 
     | Property | Value |
     | :------- | :---: |
     | Min      | 0     |
     | Max      | 1024  |
-    | Default  | 0     |
     """
 
     fade_out = EventProp[int](ChannelID.FadeOut)
-    """Quick fade-out (named ==OUT==).
+    """Quick fade-out (named ==OUT==). Defaults to minimum value.
 
     | Property | Value |
     | :------- | :---: |
     | Min      | 0     |
     | Max      | 1024  |
-    | Default  | 0     |
 
     *New in FL Studio v1.7.6*.
     """
 
     resonance = EventProp[int](ChannelID.Resonance)
-    """Filter Mod Y (named ==RES==).
+    """Filter Mod Y (named ==RES==). Defaults to minimum value.
 
     | Property | Value |
     | :------- | :---: |
     | Min      | 0     |
     | Max      | 1024  |
-    | Default  | 0     |
     """
 
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
@@ -538,10 +556,10 @@ class LFO(SingleEventModel, ModelReprMixin):
     # predelay: Optional[int] = None
     # speed: Optional[int] = None
 
-    is_synced = FlagProp(LFOFlags.TempoSync)
+    is_synced = FlagProp(_LFOFlags.TempoSync)
     """Whether LFO is synced with tempo."""
 
-    is_retrig = FlagProp(LFOFlags.Retrig)
+    is_retrig = FlagProp(_LFOFlags.Retrig)
     """Whether LFO phase is in global / retriggered mode."""
 
     shape = StructProp[LFOShape](prop="lfo.shape")
@@ -549,8 +567,8 @@ class LFO(SingleEventModel, ModelReprMixin):
 
 
 class Polyphony(SingleEventModel, ModelReprMixin):
-    is_mono = FlagProp(PolyphonyFlags.Mono)
-    is_porta = FlagProp(PolyphonyFlags.Porta)
+    is_mono = FlagProp(_PolyphonyFlags.Mono)
+    is_porta = FlagProp(_PolyphonyFlags.Porta)
     max = StructProp[int]()
     slide = StructProp[int]()
 

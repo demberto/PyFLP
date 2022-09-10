@@ -32,8 +32,10 @@ from ._base import (
     StructEventBase,
 )
 
+__all__ = ["RemoteController"]
 
-class RemoteControllerStruct(StructBase):
+
+class _RemoteControllerStruct(StructBase):
     PROPS = {
         "_u1": 2,  # 2
         "_u2": 1,  # 3
@@ -46,7 +48,7 @@ class RemoteControllerStruct(StructBase):
 
 
 class RemoteControllerEvent(StructEventBase):
-    STRUCT = RemoteControllerStruct
+    STRUCT = _RemoteControllerStruct
 
 
 @enum.unique
@@ -58,16 +60,16 @@ class RemoteController(SingleEventModel, ModelReprMixin):
     @property
     def parameter(self) -> int | None:
         """The ID of the plugin parameter to which controller is linked to."""
-        value = cast(RemoteControllerStruct, self._event)["parameter_data"]
+        value = cast(_RemoteControllerStruct, self._event)["parameter_data"]
         if value is not None:
             return value & 0x7FFF
 
     @property
-    def is_vst_controller(self) -> bool | None:
+    def controls_vst(self) -> bool | None:
         """Whether `parameter` is linked to a VST plugin.
 
         None when linked to a plugin parameter on an insert slot.
         """
-        value = cast(RemoteControllerStruct, self._event)["parameter_data"]
+        value = cast(_RemoteControllerStruct, self._event)["parameter_data"]
         if value is not None:
             return (value & 0x8000) > 0
