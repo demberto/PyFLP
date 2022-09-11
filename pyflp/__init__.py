@@ -154,7 +154,7 @@ def parse(file: str | pathlib.Path) -> Project:
 
 
 def save(project: Project, file: str):
-    """Save a parsed `Project` back into a file.
+    """Save a parsed project back into a file.
 
     Args:
         project (Project): The object returned by `parse`.

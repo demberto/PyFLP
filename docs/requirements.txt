@@ -1,6 +1,11 @@
+# Package deps
 bytesioex
 colour
-mkdocs-autorefs
-mkdocs-include-markdown-plugin
-mkdocs-material>=8.2.0
-mkdocstrings[python]>=0.18.0
+
+# Documentation deps
+furo
+myst-parser
+sphinx
+sphinx-copybutton
+sphinx-hoverxref
+sphinx-inline-tabs

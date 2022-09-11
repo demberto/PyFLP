@@ -11,12 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""
-pyflp.pattern
-=============
-
-Contains the types used by MIDI patterns, notes and their automation data.
-"""
+"""Contains the types used by MIDI patterns, notes and their automation data."""
 
 from __future__ import annotations
 
@@ -46,6 +41,7 @@ from ._base import (
     ColorEvent,
     EventEnum,
     EventProp,
+    I32Event,
     IterProp,
     ListEventBase,
     MultiEventModel,
@@ -53,6 +49,8 @@ from ._base import (
     StructBase,
     StructProp,
     U16Event,
+    U32Event,
+    I32Event,
 )
 from .exceptions import ModelNotFound, NoModelsFound
 
@@ -117,11 +115,15 @@ class Note(SingleEventModel):
     fine_pitch = StructProp[int]()
     """Linear.
 
-    | Type    | Value | Representation |
-    | ------- | :---: | -------------- |
-    | Min     | -128  | -100 cents     |
-    | Max     | 127   | +100 cents     |
-    | Default | 0     | No fine tuning |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -128  -100 cents
+    Max     127   +100 cents
+    Default 0     No fine tuning
+    ======= ===== ==============
+
+    *New in FL Studio v3.3.0*.
     """
 
     key = StructProp[int]()  # TODO Separate property and chord/scale detection
@@ -144,17 +146,17 @@ class Note(SingleEventModel):
     """Filter resonance."""
 
     pan = StructProp[int]()
-    """Min: -128, Max: 127."""
+    """Min - -128, Max - 127."""
 
     position = StructProp[int]()
     rack_channel = StructProp[int]()
     """Corresponds to the containing channel's `Channel.IID`."""
 
     release = StructProp[int]()
-    """Min: 0, Max: 128."""
+    """Min - 0, Max - 128."""
 
     velocity = StructProp[int]()
-    """Min: 0, Max: 128."""
+    """Min - 0, Max - 128."""
 
 
 class Controller(SingleEventModel):

@@ -58,7 +58,7 @@ from .arrangement import (
     TrackID,
 )
 from .channel import ChannelID, ChannelRack, DisplayGroupID, RackID
-from .exceptions import ExpectedValue, InvalidValue, PropertyCannotBeSet, UnexpectedType
+from .exceptions import ExpectedValue, PropertyCannotBeSet, UnexpectedType
 from .mixer import InsertID, Mixer, MixerID, SlotID
 from .pattern import PatternID, Patterns, PatternsID
 from .plugin import PluginID
@@ -80,6 +80,8 @@ class TimestampEvent(StructEventBase):
 
 @enum.unique
 class PanLaw(enum.IntEnum):
+    """Used by :attr:`Project.pan_law`."""
+
     Circular = 0
     Triangular = 2
 
@@ -88,17 +90,17 @@ class PanLaw(enum.IntEnum):
 class FileFormat(enum.IntEnum):
     """File formats used by FL Studio.
 
-    *New in FL Studio version 2.5.0*: FST (FL Studio State) files.
+    *New in FL Studio version 2.5.0*: FST (FL Studio State) file format.
     """
 
     None_ = -1
-    """Temporary"""
+    """Temporary file."""
 
     Project = 0
-    """FL Studio project (*.flp)."""
+    """FL Studio project (\\*.flp)."""
 
     Score = 0x10
-    """FL Studio score (*.fsc). Stores pattern notes and controller events."""
+    """FL Studio score (\\*.fsc). Stores pattern notes and controller events."""
 
     Automation = 24
     """Stores controller events and automation channels as FST."""
@@ -129,19 +131,19 @@ class ProjectID(EventEnum):
     Licensed = (28, BoolEvent)
     _TempoCoarse = WORD + 2
     Pitch = (WORD + 16, I16Event)
-    _TempoFine = WORD + 29  # 3.4.0+
+    _TempoFine = WORD + 29  #: 3.4.0+
     CurGroupId = (DWORD + 18, I32Event)
     Tempo = (DWORD + 28, U32Event)
     FLBuild = (DWORD + 31, U32Event)
     Title = TEXT + 2
     Comments = TEXT + 3
     Url = TEXT + 5
-    _RTFComments = TEXT + 6  # 1.2.10+
+    _RTFComments = TEXT + 6  #: 1.2.10+
     FLVersion = (TEXT + 7, AsciiEvent)
-    Licensee = TEXT + 8  # 1.3.9+
-    DataPath = TEXT + 10  # 9.0+
-    Genre = TEXT + 14  # 5.0+
-    Artists = TEXT + 15  # 5.0+
+    Licensee = TEXT + 8  #: 1.3.9+
+    DataPath = TEXT + 10  #: 9.0+
+    Genre = TEXT + 14  #: 5.0+
+    Artists = TEXT + 15  #: 5.0+
     Timestamp = (DATA + 29, TimestampEvent)
 
 
@@ -152,6 +154,17 @@ class _ProjectKW(TypedDict):
 
 
 class Project(MultiEventModel):
+    """Represents an FL Studio project.
+
+    .. tab:: Information
+
+        .. image:: img/project/info.png
+
+    .. tab:: Settings
+
+        .. image:: img/project/settings.png
+    """
+
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ProjectKW]):
         super().__init__(*events, **kw)
 
@@ -188,14 +201,14 @@ class Project(MultiEventModel):
         For Patcher presets, the total number of plugins used inside it.
 
         Raises:
-            InvalidValue: When a value less than zero is tried to be set.
+            ValueError: When a value less than zero is tried to be set.
         """
         return self._kw["channel_count"]
 
     @channel_count.setter
     def channel_count(self, value: int):
         if value < 0:
-            raise InvalidValue("Channel count cannot be less than zero")
+            raise ValueError("Channel count cannot be less than zero")
         self._kw["channel_count"] = value
 
     @property
@@ -214,9 +227,9 @@ class Project(MultiEventModel):
         return ChannelRack(*events, channel_count=self.channel_count)
 
     comments = EventProp[str](ProjectID.Comments, ProjectID._RTFComments)
-    """Comments / Project description.
+    """Comments / project description / summary.
 
-    !!! caution
+    Caution:
         Very old versions of FL used to store comments in RTF (Rich Text Format).
         PyFLP makes no efforts to parse that and stores it like a normal string
         as it is. It is upto you to extract the text out of it.
@@ -231,7 +244,7 @@ class Project(MultiEventModel):
             return _DELPHI_EPOCH + datetime.timedelta(days=event["created_on"])
 
     format = KWProp[FileFormat]()
-    """Internal format used by FL Studio to store different types of data."""
+    """Internal format marker used by FL Studio to distinguish between types."""
 
     @property
     def data_path(self) -> pathlib.Path | None:
@@ -263,7 +276,7 @@ class Project(MultiEventModel):
     licensed = EventProp[bool](ProjectID.Licensed)
     """Whether the project was last saved with a licensed copy of FL Studio.
 
-    !!! tip "Activate your FLP"
+    Tip:
         Setting this to `True` and saving back the FLP will make it load the
         next time in a trial version of FL if it wouldn't open before.
     """
@@ -275,9 +288,9 @@ class Project(MultiEventModel):
 
         If saved with a trial version this is empty.
 
-        !!! tip
+        Tip:
             As of the latest version, FL doesn't check for the contents of
-            this for deciding whether to open it or not when in trial version.
+            this for deciding whether to open or not when in trial version.
 
         *New in FL Studio v1.3.9*.
         """
@@ -339,22 +352,22 @@ class Project(MultiEventModel):
     def ppq(self) -> int:
         """Pulses per quarter.
 
-        *Changed in FL Studio v2.1.1*: Defaults to 96.
-
-        !!! info
+        Note:
             All types of lengths, positions and offsets internally use the PPQ
             as a multiplying factor.
 
-        !!! danger
+        Danger:
             Don't try to set this property, it affects all the length, position
             and offset calculations used for deciding the placement of playlist,
             automations, timemarkers and patterns.
 
             When you change this in FL, it recalculates all the above. It is
-            beyond the PyFLP's scope to properly recalculate the timings.
+            beyond PyFLP's scope to properly recalculate the timings.
 
         Raises:
             ExpectedValue: When a value not in `VALID_PPQS` is tried to be set.
+
+        *Changed in FL Studio v2.1.1*: Defaults to 96.
         """
         return self._kw["ppq"]
 
@@ -367,24 +380,26 @@ class Project(MultiEventModel):
     show_info = EventProp[bool](ProjectID.ShowInfo)
     """Whether to show a banner while the project is loading inside FL Studio.
 
-    The banner shows the `title`, `artists`, `genre`, `comments` and `url`.
+    The banner shows the :attr:`title`, :attr:`artists`, :attr:`genre`,
+    :attr:`comments` and :attr:`url`.
     """
 
     title = EventProp[str](ProjectID.Title)
+    """Name of the song / project."""
 
     # Stored internally as the actual BPM * 1000 as an integer.
     @property
     def tempo(self) -> int | float | None:
         """Tempo at the current position of the playhead (in BPM).
 
-        * *New in FL Studio v1.4.2*: Max tempo increased to 999 (int).
-        * *New in FL Studio v3.4.0*: Fine tuned tempo (a float).
-        * *Changed in FL Studio v11*: Max tempo limited to 522.000.
-
         Raises:
             UnexpectedType: When a fine-tuned tempo (float) isn't supported.
                 Use an `int` (coarse tempo) value.
-            InvalidValue: When a tempo outside the allowed range is set.
+            ValueError: When a tempo outside the allowed range is set.
+
+        * *Changed in FL Studio v1.4.2*: Max tempo increased to 999 (int).
+        * *New in FL Studio v3.4.0*: Fine tuned tempo (a float).
+        * *Changed in FL Studio v11*: Max tempo limited to 522.000.
         """
         if ProjectID.Tempo in self._events:
             return self._events[ProjectID.Tempo][0].value / 1000
@@ -412,9 +427,7 @@ class Project(MultiEventModel):
             raise UnexpectedType(int, float)
 
         if float(value) > max_tempo or float(value) < MIN_TEMPO:
-            raise InvalidValue(
-                f"Invalid tempo {value}; expected {MIN_TEMPO}-{max_tempo}"
-            )
+            raise ValueError(f"Invalid tempo {value}; expected {MIN_TEMPO}-{max_tempo}")
 
         if ProjectID.Tempo in self._events:
             self._events[ProjectID.Tempo][0].value = int(value * 1000)
@@ -449,7 +462,7 @@ class Project(MultiEventModel):
     def version(self) -> FLVersion:
         """The version of FL Studio which was used to save the file.
 
-        !!! caution
+        Caution:
             Changing this to a lower version will not make a file load magically
             inside FL Studio, as newer events and/or plugins might have been used.
 

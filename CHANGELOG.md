@@ -15,10 +15,10 @@ Highlights:
 2. Lazy evaluation: Properties are evaluated as lazily as possible to prevent
    the use of private variables and keep them synced with event data.
 3. Neatly organised models: Appropriate use of composition and subclassing.
-3. Zero pre-parse field validation: Makes sense for an undocumented format.
-4. Fullly type hinted: Ensures strict adherence with pyright.
-5. Simplified single-level module hierarchy to ease imports.
-6. Docs now contain images for corresponding model types.
+4. Zero pre-parse field validation: Makes sense for an undocumented format.
+5. Fully type hinted: Ensures strict adherence with pyright.
+6. Simplified single-level module hierarchy to ease imports.
+7. Docs now contain images for corresponding model types.
 
 *The major version number bump indicates a breaking change, however I would highly
 encourage you to upgrade to this version. **I WILL NOT BE MAINTAINING OLDER VERSIONS.***
@@ -255,15 +255,13 @@ Same as in 0.1.1
 
 **❗ These versions below don't work because I didn't know how to configure `setup.cfg` properly 😅**
 
-# 0.1.0
-
-## **Highlights**
+## 0.1.0
 
 - `flpinspect` - An FLP Event Viewer made using Tkinter.
 - `flpinfo` - A CLI utility to get basic information about an FLP.
 - Switched to MIT License
 
-## Added
+### Added
 
 - Lots of changes, refactoring and code cleanup of `pyflp`
 - New docs
@@ -275,7 +273,7 @@ Same as in 0.1.1
   Read [docs](https://pyflp.rtfd.io) for more info about this
 - `Event` classes now have an `__eq__` and `__repr__` method
 
-## Fixed
+### Fixed
 
 - Tests don't give module import errors
 - `Pattern` event parsing
@@ -284,12 +282,10 @@ Same as in 0.1.1
 - Overhauled logging
 - A lot of potential bugs in `FLObject` subclasses
 
-## Known issues
+### Known issues
 
 - `flpinfo` doesn't output correctly sometimes due to long strings
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known
-
----
 
 [1.1.1]: https://github.com/demberto/PyFLP/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/demberto/PyFLP/compare/1.0.1...1.1.0

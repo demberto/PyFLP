@@ -11,16 +11,12 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""
-pyflp.arrangement
-=================
-
-Contains the types used by timemarkers, tracks and arrangements.
-"""
+"""Contains the types used by timemarkers, tracks and arrangements."""
 
 from __future__ import annotations
 
 import collections
+import dataclasses
 import enum
 import sys
 from typing import DefaultDict, List, cast
@@ -221,7 +217,10 @@ class ChannelPlaylistItem(PlaylistItemBase):
 
 
 class PatternPlaylistItem(PlaylistItemBase):
-    """A pattern block or clip on the playlist of an arrangement."""
+    """A pattern block or clip on the playlist of an arrangement.
+
+    *New in FL Studio v7.0.0*.
+    """
 
     def __repr__(self):
         if self.pattern is None:
@@ -232,7 +231,7 @@ class PatternPlaylistItem(PlaylistItemBase):
 
 
 class TimeMarker(MultiEventModel):
-    """A marker in the timeline of an `Arrangement`."""
+    """A marker in the timeline of an :class:`Arrangement`."""
 
     def __repr__(self):
         if self.type == TimeMarkerType.Marker:
@@ -260,6 +259,7 @@ class TimeMarker(MultiEventModel):
 
     @property
     def type(self) -> TimeMarkerType | None:
+        """.. image:: img/arrangement/timemarker/action.png"""
         events = self._events.get(TimeMarkerID.Position)
         if events is not None:
             event = events[0]
@@ -272,18 +272,26 @@ class _TrackKW(TypedDict):
     items: list[_PlaylistItemStruct]
 
 
-class Track(MultiEventModel, Iterable[PlaylistItemBase]):
+class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     """Represents a track in an arrangement on which playlist items are arranged.
 
-    ??? info "Maximum number of tracks (w.r.t FL Studio version)"
-        * pre-12.9.1: 199
-        * 12.9.1: 500
+    .. image:: img/arrangement/track/preview.png
+
+    Performance options - :attr:`motion`, :attr:`position_sync`, :attr:`press`,
+    :attr:`tolerant`, :attr:`trigger_sync`, :attr:`queued`.
+
+    .. image:: img/arrangement/track/performance-settings.png
     """
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_TrackKW]):
         super().__init__(*events, **kw)
 
+    def __index__(self) -> int:
+        """An integer in the range of 1 to :attr:`~Arrangements.max_tracks`."""
+        return self.index or NotImplemented
+
     def __iter__(self):
+        """An iterator over :attr:`items`."""
         return iter(self.items)
 
     def __repr__(self):
@@ -308,11 +316,13 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase]):
     height = StructProp[float](id=TrackID.Data)
     """Track height in FL's interface. Linear.
 
-    | Type    | Value | Percentage |
-    | ------- | :---: | ---------- |
-    | Min     | 0.0   | 0%         |
-    | Max     | 18.4  | 1840%      |
-    | Default | 1.0   | 100%       |
+    ======= ======= ==========
+    Type    Value   Percentage
+    ======= ======= ==========
+    Min     0.0     0%
+    Max     18.4    1840%
+    Default 1.0     100%
+    ======= ======= ==========
     """
 
     icon = StructProp[int](id=TrackID.Data)
@@ -340,6 +350,8 @@ class _ArrangementKW(TypedDict):
 class Arrangement(MultiEventModel, SupportsIndex):
     """Contains them timemarkers and tracks in an arrangement.
 
+    .. image:: img/arrangement/preview.jpg
+
     *New in v12.9.1*: Support for multiple arrangements.
     """
 
@@ -355,6 +367,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
         return f"Unnamed arrangement {suffix}"
 
     def __index__(self) -> int:
+        """A 1-based index."""
         return self._events[ArrangementID.New][0].value
 
     name = EventProp[str](ArrangementID.Name)
@@ -387,13 +400,13 @@ class Arrangement(MultiEventModel, SupportsIndex):
     @property
     def tracks(self) -> Iterator[Track]:
         count = 0
-
-        if cast(_ArrangementKW, self._kw)["version"] >= FLVersion(12, 9, 1):
-            max_tracks = 499
-        else:
-            max_tracks = 198
-
         event = None
+
+        if dataclasses.astuple(self._kw["version"]) >= (12, 9, 1):
+            max_idx = 499
+        else:
+            max_idx = 198
+
         if ArrangementID.Playlist in self._events:
             event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
 
@@ -402,7 +415,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
             if event is not None:
                 for item in event.items:
                     idx = item["track_index"]
-                    if max_tracks - idx == count:
+                    if max_idx - idx == count:
                         items.append(cast(_PlaylistItemStruct, item))
             yield Track(*events, items=items)
 
@@ -422,7 +435,7 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
         super().__init__(*events, **kw)
 
     def __getitem__(self, index: SupportsIndex):
-        """Returns the arrangement at `index`.
+        """Returns the arrangement at :attr:`Arrangement.index`.
 
         Raises:
             ModelNotFound: An arrangement with `index` could not be found.
@@ -492,6 +505,11 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
 
     loop_pos = EventProp[int](ArrangementsID.LoopPos)
     """*New in FL Studio v1.3.8.*"""
+
+    @property
+    def max_tracks(self):
+        version = dataclasses.astuple(self._kw["version"])
+        return 500 if version >= (12, 9, 1) else 199
 
     time_signature = NestedProp(
         TimeSignature, ArrangementsID.TimeSigNum, ArrangementsID.TimeSigBeat

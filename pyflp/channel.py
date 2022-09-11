@@ -11,12 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""
-pyflp.channel
-=============
-
-Contains the types used by the channels and channel rack.
-"""
+"""Contains the types used by the channels and channel rack."""
 
 from __future__ import annotations
 
@@ -259,6 +254,8 @@ class RackID(EventEnum):
 
 @enum.unique
 class ArpDirection(enum.IntEnum):
+    """Used by :attr:`Arp.direction`."""
+
     Off = 0
     Up = 1
     Down = 2
@@ -276,6 +273,8 @@ class _LFOFlags(enum.IntFlag):
 
 @enum.unique
 class LFOShape(enum.IntEnum):
+    """Used by :attr:`LFO.shape`."""
+
     Sine = 0
     Triangle = 1
     Pulse = 2
@@ -298,6 +297,8 @@ class _PolyphonyFlags(enum.IntFlag):
 
 @enum.unique
 class ReverbType(enum.IntEnum):
+    """Used by :attr:`Reverb.type`."""
+
     A = 0
     B = 65536
 
@@ -331,6 +332,8 @@ class DisplayGroup(MultiEventModel, ModelReprMixin):
 
 
 class Arp(SingleEventModel, ModelReprMixin):
+    """.. image:: img/channel/arp.png"""
+
     chord = StructProp[int]()
     """Index of the selected arpeggio chord."""
 
@@ -342,7 +345,10 @@ class Arp(SingleEventModel, ModelReprMixin):
     """Range (in octaves)."""
 
     repeat = StructProp[int]()
-    """Number of times a note is repeated. *New in FL Studio v4.5.2*."""
+    """Number of times a note is repeated.
+
+    *New in FL Studio v4.5.2*.
+    """
 
     slide = StructProp[bool]()
     """Whether arpeggio will slide between notes."""
@@ -352,8 +358,10 @@ class Arp(SingleEventModel, ModelReprMixin):
 
 
 class Delay(SingleEventModel, ModelReprMixin):
-    # is_fat_mode: Optional[bool] = None
-    # is_ping_pong: Optional[bool] = None   # 1.7.6+
+    """.. image:: img/channel/delay.png"""
+
+    # is_fat_mode: Optional[bool] = None    #: 3.4.0+
+    # is_ping_pong: Optional[bool] = None   #: 1.7.6+
     # mod_x: Optional[int] = None
     # mod_y: Optional[int] = None
 
@@ -369,6 +377,11 @@ class Delay(SingleEventModel, ModelReprMixin):
 
 
 class LevelAdjusts(SingleEventModel, ModelReprMixin):
+    """.. image:: img/channel/level-adjusts.png
+
+    *New in FL Studio v3.3.0*.
+    """
+
     mod_x = StructProp[int]()
     mod_y = StructProp[int]()
     pan = StructProp[int]()
@@ -376,6 +389,8 @@ class LevelAdjusts(SingleEventModel, ModelReprMixin):
 
 
 class Time(MultiEventModel, ModelReprMixin):
+    """.. image:: img/channel/time.png"""
+
     swing = EventProp[int](ChannelID.Swing)
     # gate: int
     # shift: int
@@ -385,75 +400,135 @@ class Time(MultiEventModel, ModelReprMixin):
 class Reverb(SingleEventModel, ModelReprMixin):
     """Precalculated sample reverb, sounds shitty af.
 
+    .. image:: img/channel/fx/reverb.png
+
     *New in FL Studio v1.4.0*.
     """
 
     @property
     def type(self) -> ReverbType | None:
-        ...
+        if self._event:
+            return ReverbType.B if self._event.value >= ReverbType.B else ReverbType.A
+
+    @type.setter
+    def type(self, value: ReverbType):
+        if self.mix is None:
+            raise PropertyCannotBeSet(ChannelID.Reverb)
+
+        self._event.value = value.value + self.mix
 
     @property
     def mix(self) -> int | None:
-        """Reverb mix (dry/wet). Min: 0, Max: 256, Default: 0."""
+        """Mix % (wet). Defaults to minimum value.
+
+        === ===
+        Min 0
+        Max 256
+        === ===
+        """
+        if self._event:
+            return self._event.value - self.type
+
+    @mix.setter
+    def mix(self, value: int):
+        if self._event is None:
+            raise PropertyCannotBeSet(ChannelID.Reverb)
+
+        self._event.value += value
 
 
 class FX(MultiEventModel, ModelReprMixin):
-    boost = EventProp[int](ChannelID.Preamp)
-    """Pre-amp gain (named ==BOOST==). Defaults to minimum value.
+    """Pre-calculated effects used by :class:`Sampler`.
 
-    | Property | Value |
-    | :------- | :---: |
-    | Min      | 0     |
-    | Max      | 256   |
+    .. tab:: Page 1
+
+        .. image:: img/channel/fx1.png
+
+    .. tab:: Page 2
+
+        .. image:: img/channel/fx2.png
+
+    See Also:
+        :attr:`Sampler.fx`
+    """
+
+    boost = EventProp[int](ChannelID.Preamp)
+    """Pre-amp gain. Defaults to minimum value.
+
+    .. image:: img/channel/fx/boost.png
+
+    === ===
+    Min 0
+    Max 256
+    === ===
 
     *New in FL Studio v1.2.12.*
     """
 
     cutoff = EventProp[int](ChannelID.Cutoff)
-    """Filter Mod X (named ==CUT==). Defaults to maximum value.
+    """Filter Mod X. Defaults to maximum value.
 
-    | Property | Value |
-    | :------- | :---: |
-    | Min      | 0     |
-    | Max      | 1024  |
+    .. image:: img/channel/fx/cutoff.png
+
+    === ====
+    Min 0
+    Max 1024
+    === ====
     """
 
     fade_in = EventProp[int](ChannelID.FadeIn)
-    """Quick fade-in (named ==IN==). Defaults to minimum value.
+    """Quick fade-in. Defaults to minimum value.
 
-    | Property | Value |
-    | :------- | :---: |
-    | Min      | 0     |
-    | Max      | 1024  |
+    .. image:: img/channel/fx/fade-in.png
+
+    === ====
+    Min 0
+    Max 1024
+    === ====
     """
 
     fade_out = EventProp[int](ChannelID.FadeOut)
-    """Quick fade-out (named ==OUT==). Defaults to minimum value.
+    """Quick fade-out. Defaults to minimum value.
 
-    | Property | Value |
-    | :------- | :---: |
-    | Min      | 0     |
-    | Max      | 1024  |
+    .. image:: img/channel/fx/fade-out.png
+
+    === ====
+    Min 0
+    Max 1024
+    === ====
 
     *New in FL Studio v1.7.6*.
     """
 
     resonance = EventProp[int](ChannelID.Resonance)
-    """Filter Mod Y (named ==RES==). Defaults to minimum value.
+    """Filter Mod Y. Defaults to minimum value.
 
-    | Property | Value |
-    | :------- | :---: |
-    | Min      | 0     |
-    | Max      | 1024  |
+    .. image:: img/channel/fx/resonance.png
+
+    === ====
+    Min 0
+    Max 1024
+    === ====
     """
 
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
-    """*New in FL Studio v1.3.56.*"""
+    """.. image:: img/channel/fx/stereo-delay.png
+
+    *New in FL Studio v1.3.56.*
+    """
 
 
 class Envelope(SingleEventModel, ModelReprMixin):
-    """*New in FL Studio v2.5.0*."""
+    """A PAHDSR envelope for various :class:`Sampler` paramters.
+
+    .. image:: img/channel/envelope.png
+
+    See Also:
+        :attr:`Sampler.envelopes`
+
+    *New in FL Studio v2.5.0*.
+    """
 
     enabled = StructProp[bool](prop="envelope.enabled")
     """Whether envelope section is enabled."""
@@ -461,95 +536,127 @@ class Envelope(SingleEventModel, ModelReprMixin):
     predelay = StructProp[int](prop="envelope.predelay")
     """Linear. Defaults to minimum value.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
+    ======= ======== ============
+    Type    Value    Mix (wet)
+    ======= ======== ============
+    Min     100      0%
+    Max     65536    100%
+    ======= ======== ============
     """
 
     attack = StructProp[int](prop="envelope.attack")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
-    | Default | 20000 | 31%       |
+    ========== ======== ============
+    Type       Value    Mix (wet)
+    ========== ======== ============
+    Min        100      0%
+    Max        65536    100%
+    Default    20000    31%
+    ========== ======== ============
     """
 
     hold = StructProp[int](prop="envelope.hold")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
-    | Default | 20000 | 31%       |
+    ========== ======== ============
+    Type       Value    Mix (wet)
+    ========== ======== ============
+    Min        100      0%
+    Max        65536    100%
+    Default    20000    31%
+    ========== ======== ============
     """
 
     decay = StructProp[int](prop="envelope.decay")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
-    | Default | 30000 | 46%       |
+    ========== ======== ============
+    Type       Value    Mix (wet)
+    ========== ======== ============
+    Min        100      0%
+    Max        65536    100%
+    Default    30000    46%
+    ========== ======== ============
     """
 
     sustain = StructProp[int](prop="envelope.sustain")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 0     | 0%        |
-    | Max     | 128   | 100%      |
-    | Default | 50    | 39%       |
+    ========== ======== ============
+    Type       Value    Mix (wet)
+    ========== ======== ============
+    Min        0        0%
+    Max        128      100%
+    Default    50       39%
+    ========== ======== ============
     """
 
     release = StructProp[int](prop="envelope.release")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
-    | Default | 20000 | 31%       |
+    ========== ======== ============
+    Type       Value    Mix (wet)
+    ========== ======== ============
+    Min        100      0%
+    Max        65536    100%
+    Default    20000    31%
+    ========== ======== ============
     """
 
     attack_tension = StructProp[int](prop="envelope.attack_tension")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | -128  | -100%     |
-    | Max     | 128   | 100%      |
-    | Default | 0     | 0%        |
+    ========== ======== ============
+    Type       Value    Mix (wet)
+    ========== ======== ============
+    Min        -128     -100%
+    Max        128      100%
+    Default    0        0%
+    ========== ======== ============
+
+    *New in FL Studio v3.5.4*.
     """
 
     sustain_tension = StructProp[int](prop="envelope.sustain_tension")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | -128  | -100%     |
-    | Max     | 128   | 100%      |
-    | Default | 0     | 0%        |
+    ========== ======== ============
+    Type       Value    Mix (wet)
+    ========== ======== ============
+    Min        -128     -100%
+    Max        128      100%
+    Default    0        0%
+    ========== ======== ============
+
+    *New in FL Studio v3.5.4*.
     """
 
-    release_tenstion = StructProp[int](prop="envelope.release_tension")
+    release_tension = StructProp[int](prop="envelope.release_tension")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | -128  | -100%     |
-    | Max     | 128   | 100%      |
-    | Default | -101  | -79%      |
+    ========== ======== ============
+    Type       Value    Mix (wet)
+    ========== ======== ============
+    Min        -128     -100%
+    Max        128      100%
+    Default    -101     -79%
+    ========== ======== ============
+
+    *New in FL Studio v3.5.4*.
     """
 
 
 class LFO(SingleEventModel, ModelReprMixin):
-    """*New in FL Studio v2.5.0*."""
+    """A basic LFO for certain :class:`Sampler` parameters.
+
+    .. image:: img/channel/lfo.png
+
+    See Also:
+        :attr:`Sampler.lfos`
+
+    *New in FL Studio v2.5.0*.
+    """
 
     # amount: Optional[int] = None
     # attack: Optional[int] = None
@@ -567,13 +674,23 @@ class LFO(SingleEventModel, ModelReprMixin):
 
 
 class Polyphony(SingleEventModel, ModelReprMixin):
+    """.. image:: img/channel/polyphony.png"""
+
     is_mono = FlagProp(_PolyphonyFlags.Mono)
     is_porta = FlagProp(_PolyphonyFlags.Porta)
+    """*New in FL Studio v3.3.0*."""
+
     max = StructProp[int]()
     slide = StructProp[int]()
+    """*New in FL Studio v3.3.0*."""
 
 
 class Tracking(SingleEventModel, ModelReprMixin):
+    """.. image:: img/channel/tracking.png
+
+    *New in FL Studio v3.3.0*.
+    """
+
     middle_value = StructProp[int]()
     mod_x = StructProp[int]()
     mod_y = StructProp[int]()
@@ -581,33 +698,44 @@ class Tracking(SingleEventModel, ModelReprMixin):
 
 
 class Keyboard(MultiEventModel, ModelReprMixin):
-    """*New in FL Studio v1.3.56.*"""
+    """.. image:: img/channel/keyboard.png
+
+    *New in FL Studio v1.3.56.*
+    """
 
     fine_tune = EventProp[int](ChannelID.FineTune)
     """-100 to +100 cents."""
 
     root_note = EventProp[int](ChannelID.RootNote)
-    """Min: 0 (C0), Max: 131 (B10)."""
+    """Min - 0 (C0), Max - 131 (B10)."""
 
-    # is_main_pitch_enabled: Optional[bool] = None
+    # main_pitch_enabled = StructProp[bool](ChannelID.Parameters)
     # """Whether triggered note is affected by changes to `project.main_pitch`."""
 
-    # is_added_to_key: Optional[bool] = None
-    # """Whether root note should be added to triggered note instead of pitch."""
+    # added_to_key = StructProp[bool](ChannelID.Parameters)
+    # """Whether root note should be added to triggered note instead of pitch.
+    #
+    # *New in FL Studio v3.4.0*.
+    # """
 
     # note_range: tuple[int] - Should be a 2-short or 2-byte tuple
 
 
 class Playback(MultiEventModel, ModelReprMixin):
+    """.. image:: img/channel/playback.png"""
+
     # ping_pong_loop: bool
     # start_offset: int
     use_loop_points = EventProp[bool](ChannelID.UsesLoopPoints)
 
 
 class TimeStretching(MultiEventModel, ModelReprMixin):
-    """*New in FL Studio v5.0*."""
+    """.. image:: img/channel/stretching.png
 
-    # mode: enum
+    *New in FL Studio v5.0*.
+    """
+
+    # mode: enum (new modes added in FL Studio v7.0.0)
     # multiplier: Optional[int] = None
     # pitch: Optional[int] = None
     time = EventProp[float](ChannelID.StretchTime)
@@ -634,7 +762,8 @@ class Channel(MultiEventModel, SupportsIndex):
     * Native (stock) plugin: The factory name of the plugin.
     * VST instruments: "Fruity Wrapper".
 
-    See `name` also.
+    See Also:
+        :attr:`name`
     """
 
     enabled = EventProp[bool](ChannelID.IsEnabled)
@@ -653,13 +782,18 @@ class Channel(MultiEventModel, SupportsIndex):
     * Native (stock): User-given name, None if not given one.
     * VST instrument: The name obtained from the VST or the user-given name.
 
-    !!! tip "See also"
-        `internal_name` and `display_name`.
+    See Also:
+        :attr:`internal_name` and :attr:`display_name`.
     """
 
     @property
     def pan(self) -> int | None:
-        """Min: 0, Max: 12800, Default: 6400."""
+        """
+        === ===== =======
+        Min Max   Default
+        0   12800 10000
+        === ===== =======
+        """
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pan"]
 
@@ -685,7 +819,12 @@ class Channel(MultiEventModel, SupportsIndex):
 
     @property
     def volume(self) -> int | None:
-        """Min: 0, Max: 12800, Default: 10000."""
+        """
+        === ===== =======
+        Min Max   Default
+        0   12800 10000
+        === ===== =======
+        """
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["volume"]
 
@@ -708,13 +847,10 @@ class Channel(MultiEventModel, SupportsIndex):
             if events is not None:
                 events[0].value = value
 
+    # If the channel is not zipped, underlying event is not stored.
     @property
     def zipped(self) -> bool:
-        """Whether the channel is in zipped state.
-
-        ???+ info "Internal representation"
-            If the channel is not zipped, underlying event is not stored.
-        """
+        """Whether the channel is in zipped state."""
         if ChannelID.Zipped in self._events:
             return self._events[ChannelID.Zipped][0].value
         return False
@@ -726,14 +862,17 @@ class Channel(MultiEventModel, SupportsIndex):
 
 
 class Automation(Channel):
-    ...
+    """.. image:: img/channel/automation.png"""
 
 
 class Layer(Channel, Sequence[Channel]):
-    """*New in FL Studio v3.4.0.*"""
+    """.. image:: img/channel/layer.png
+
+    *New in FL Studio v3.4.0.*
+    """
 
     def __getitem__(self, index: str | SupportsIndex):
-        """Returns a child channel with an IID / index of `index`.
+        """Returns a child channel with an IID / index of :attr:`~Channel.iid`.
 
         Args:
             index (str | SupportsIndex): An IID or a zero based index of the child
@@ -765,7 +904,7 @@ class _SamplerInstrument(Channel):
     delay = NestedProp(Delay, ChannelID.Delay)
     flags = EventProp[int](ChannelID.SamplerFlags)  # TODO
     insert = EventProp[int](ChannelID.RoutedTo)
-    """The index of the `Insert` the channel is routed to. Min = -1."""
+    """The index of the :class:`Insert` the channel is routed to. Min = -1."""
 
     level_adjusts = NestedProp(LevelAdjusts, ChannelID.LevelAdjusts)
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
@@ -779,8 +918,10 @@ class Instrument(_SamplerInstrument):
     """The plugin loaded into the channel."""
 
 
-# New in FL Studio v1.4.0 & v1.5.23: Sampler spectrum views
+# TODO New in FL Studio v1.4.0 & v1.5.23: Sampler spectrum views
 class Sampler(_SamplerInstrument):
+    """.. image:: img/channel/sampler.png"""
+
     def __repr__(self):
         return f"{repr(self.sample_path) or 'Empty'} {super().__repr__()}"
 
@@ -793,7 +934,7 @@ class Sampler(_SamplerInstrument):
     # FL's interface doesn't have an envelope for panning, but still stores
     # the default values in event data.
     envelopes = IterProp(ChannelID.EnvelopeLFO, Envelope)
-    """Upto 5 elements for Volume, Panning, Mod X, Mod Y and Pitch envelopes."""
+    """One each for Volume, Panning, Mod X, Mod Y and Pitch :class:`Envelope`."""
 
     fx = NestedProp(
         FX,
@@ -804,12 +945,13 @@ class Sampler(_SamplerInstrument):
         ChannelID.Resonance,
         ChannelID.StereoDelay,
     )
+
     lfos = IterProp(ChannelID.EnvelopeLFO, LFO)
-    """Upto 5 elements for Volume, Panning, Mod X, Mod Y and Pitch LFOs."""
+    """One each for Volume, Panning, Mod X, Mod Y and Pitch :class:`LFO`."""
 
     @property
     def pitch_shift(self) -> int | None:
-        """-4800 to +4800 cents max.
+        """-4800 to +4800 cents.
 
         Raises:
             PropertyCannotBeSet: When a `ChannelID.Levels` event is not found.
@@ -830,11 +972,13 @@ class Sampler(_SamplerInstrument):
     sample_path = EventProp[str](ChannelID.SamplePath)
     """Absolute path of a sample file on the disk.
 
-    Contains the string '%FLStudioFactoryData%' for stock samples.
+    Contains the string `%FLStudioFactoryData%` for stock samples.
     """
 
 
 class ChannelRack(MultiEventModel, Sequence[Channel]):
+    """.. image:: img/channel/rack.png"""
+
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
 
@@ -929,8 +1073,10 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
     swing = EventProp[int](RackID.Swing)
     """Global channel swing mix. Linear. Defaults to minimum value.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 0     | 0%        |
-    | Max     | 128   | 100%      |
+    ======= ======== ============
+    Type    Value    Mix (wet)
+    ======= ======== ============
+    Min     0        0%
+    Max     128      100%
+    ======= ======== ============
     """

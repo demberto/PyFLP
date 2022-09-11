@@ -11,12 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""
-pyflp.exceptions
-================
-
-Contains the exceptions used by and shared across PyFLP.
-"""
+"""Contains the exceptions used by and shared across PyFLP."""
 
 from __future__ import annotations
 
@@ -29,7 +24,8 @@ __all__ = [
     "PropertyCannotBeSet",
     "HeaderCorrupted",
     "VersionNotDetected",
-    "InvalidValue",
+    "ExpectedValue",
+    "ModelNotFound",
 ]
 
 
@@ -46,14 +42,14 @@ class EventIDOutOfRange(Error, ValueError):
 
 
 class InvalidEventChunkSize(Error, TypeError):
-    """Raised when a fixed size event is created with a wrong amount of bytes."""
+    """A fixed size event is created with a wrong amount of bytes."""
 
     def __init__(self, expected: int, got: int):
         super().__init__(f"Expected a bytes object of length {expected}; got {got}")
 
 
 class UnexpectedType(Error, TypeError):
-    def __init__(self, expected: type[object], got: type[object]):
+    def __init__(self, expected: type, got: type):
         super().__init__(f"Expected a {expected} object; got a {got} object instead")
 
 
@@ -71,16 +67,12 @@ class ExpectedValue(Error, ValueError):
         super().__init__(f"Invalid value {invalid!r}; expected one of {valid!r}")
 
 
-class InvalidValue(Error, ValueError):
-    """An alias for ValueError."""
-
-
 class DataCorrupted(Error):
     """Base class for parsing exceptions."""
 
 
 class HeaderCorrupted(DataCorrupted, ValueError):
-    """Raised when the header chunk contains an unexpected / invalid value."""
+    """Header chunk contains an unexpected / invalid value."""
 
     def __init__(self, desc: str):
         """
@@ -91,16 +83,12 @@ class HeaderCorrupted(DataCorrupted, ValueError):
 
 
 class NoModelsFound(DataCorrupted):
-    """Raised when the container's iterator fails to generate any model."""
+    """Model's `__iter__` method fails to generate any model."""
 
 
 class ModelNotFound(DataCorrupted, IndexError):
-    """Raised when an invalid index is passed to container's iterator."""
+    """An invalid index is passed to model's `__getitem__` method."""
 
 
 class VersionNotDetected(DataCorrupted):
-    """Raised when the correct string decoder couldn't be decided.
-
-    This happens due to absence of `ProjectID.Version` event or any string
-    events occuring before it. Both cases indicate corruption.
-    """
+    """String decoder couldn't be decided due to absence of project version."""

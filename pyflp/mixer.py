@@ -11,12 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""
-pyflp.mixer
-===========
-
-Contains the types used by the mixer, inserts and effect slots.
-"""
+"""Contains the types used by the mixer, inserts and effect slots."""
 
 from __future__ import annotations
 
@@ -135,9 +130,9 @@ class MixerParamsEvent(ListEventBase):
 class InsertID(EventEnum):
     Icon = (WORD + 31, I16Event)
     Output = (DWORD + 19, I32Event)
-    Color = (DWORD + 21, ColorEvent)  # 4.0+
+    Color = (DWORD + 21, ColorEvent)  #: 4.0+
     Input = (DWORD + 26, I32Event)
-    Name = TEXT + 12
+    Name = TEXT + 12  #: 3.5.4+
     Routing = (DATA + 27, InsertRoutingEvent)
     Flags = (DATA + 28, InsertFlagsEvent)
 
@@ -173,7 +168,12 @@ class _MixerParamsID(enum.IntEnum):
     HighQ = 226
 
 
+# ? Maybe added in FL Studio v6.0.1
 class InsertDock(enum.Enum):
+    """See Also:
+    :attr:`Insert.dock`
+    """
+
     Left = enum.auto()
     Middle = enum.auto()
     Right = enum.auto()
@@ -184,11 +184,7 @@ class _InsertFlags(enum.IntFlag):
     None_ = 0
     PolarityReversed = 1 << 0
     SwapLeftRight = 1 << 1
-    """Left and right channels are swapped."""
-
     EnableEffects = 1 << 2
-    """All slots are enabled. If this flag is absent, slots are bypassed."""
-
     Enabled = 1 << 3
     DisableThreadedProcessing = 1 << 4
     U5 = 1 << 5
@@ -201,8 +197,7 @@ class _InsertFlags(enum.IntFlag):
     Solo = 1 << 12
     U13 = 1 << 13
     U14 = 1 << 14
-    AudioTrack = 1 << 15
-    """Whether insert is linked to an audio track."""
+    AudioTrack = 1 << 15  # Whether insert is linked to an audio track
 
 
 class _InsertEQBandKW(TypedDict, total=False):
@@ -233,18 +228,22 @@ class InsertEQBand(ModelBase):
 
     gain = _InsertEQBandProp()
     """
-    | Type     | Value |
-    | -------- | :---: |
-    | Min      | -1800 |
-    | Max      | 1800  |
-    | Default  | 0     |
+    ===== ==== =======
+    Min   Max  Default
+    -1800 1800 0
+    ===== ==== =======
     """
 
     freq = _InsertEQBandProp()
-    """Min: 0, Max: 65536, default depends on band."""
+    """Min - 0, Max - 65536, default depends on band."""
 
     reso = _InsertEQBandProp()
-    """Min: 0, Max: 65536, Default: 17500."""
+    """
+    === ===== =======
+    Min Max   Default
+    0   65536 17500
+    === ===== =======
+    """
 
 
 class _InsertEQPropArgs(NamedTuple):
@@ -274,7 +273,16 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
         return InsertEQBand(kw=items)
 
 
+# Stored in MixerID.Parameters event.
 class InsertEQ(ModelBase):
+    """Post-effect :class:`Insert` EQ with 3 adjustable bands.
+
+    .. image:: img/mixer/insert/eq.png
+
+    See Also:
+        :attr:`Insert.eq`
+    """
+
     def __init__(self, params: list[_MixerParamsItem]):
         super().__init__(params=params)
 
@@ -292,21 +300,21 @@ class InsertEQ(ModelBase):
             _MixerParamsID.LowFreq, _MixerParamsID.LowGain, _MixerParamsID.LowQ
         )
     )
-    """Low shelf band. Default frequency: 5777 (90 Hz)."""
+    """Low shelf band. Default frequency - 5777 (90 Hz)."""
 
     mid = _InsertEQProp(
         _InsertEQPropArgs(
             _MixerParamsID.MidFreq, _MixerParamsID.MidGain, _MixerParamsID.MidQ
         )
     )
-    """Middle band. Default frequency: 33145 (1500 Hz)."""
+    """Middle band. Default frequency - 33145 (1500 Hz)."""
 
     high = _InsertEQProp(
         _InsertEQPropArgs(
             _MixerParamsID.HighFreq, _MixerParamsID.HighGain, _MixerParamsID.HighQ
         )
     )
-    """High shelf band. Default frequency: 55825 (8000 Hz)."""
+    """High shelf band. Default frequency - 55825 (8000 Hz)."""
 
 
 class _MixerParamProp(RWProperty[T]):
@@ -328,7 +336,10 @@ class _MixerParamProp(RWProperty[T]):
 
 
 class Slot(MultiEventModel, SupportsIndex):
-    """Represents an effect slot in an `Insert` / mixer channel."""
+    """Represents an effect slot in an `Insert` / mixer channel.
+
+    .. image:: img/mixer/slots.png
+    """
 
     def __init__(self, *events: AnyEvent, params: list[_MixerParamsItem] = []):
         super().__init__(*events, params=params)
@@ -353,13 +364,15 @@ class Slot(MultiEventModel, SupportsIndex):
     icon = EventProp[int](PluginID.Icon)
     index = EventProp[int](SlotID.Index)
     mix = _MixerParamProp[int](_MixerParamsID.SlotMix)
-    """Dry/Wet mix.
+    """Dry/Wet mix. Defaults to maximum value.
 
-    | Type     | Value | Representation |
-    | -------- | :---: | :------------: |
-    | Min      | 0     | 0%             |
-    | Max      | 12800 | 100%           |
-    | Default  | 12800 | 100%           |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -6400 100% left
+    Max     6400  100% right
+    Default 0     Centred
+    ======= ===== ==============
     """
 
     name = EventProp[str](PluginID.Name)
@@ -478,15 +491,19 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     """Whether an insert in the mixer is in locked state."""
 
     name = EventProp[str](InsertID.Name)
+    """*New in FL Studio v3.5.4*."""
+
     output = EventProp[int](InsertID.Output)
     pan = _MixerParamProp[int](_MixerParamsID.Pan)
     """Linear.
 
-    | Type     | Value | Representation |
-    | -------- | :---: | -------------- |
-    | Min      | -6400 | 100% left      |
-    | Max      | 6400  | 100% right     |
-    | Default  | 0     | Centred        |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -6400 100% left
+    Max     6400  100% right
+    Default 0     Centred
+    ======= ===== ==============
     """
 
     polarity_reversed = FlagProp(_InsertFlags.PolarityReversed, InsertID.Flags)
@@ -495,6 +512,8 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     @property
     def routes(self) -> Iterator[int]:
         """Send volumes to routed inserts.
+
+        .. image:: img/mixer/insert/route.png
 
         *New in FL Studio v4.0*.
         """
@@ -509,21 +528,25 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     stereo_separation = _MixerParamProp[int](_MixerParamsID.StereoSeparation)
     """Linear.
 
-    | Type    | Value | Representation |
-    | ------- | :---: | -------------- |
-    | Min     | -64   | 100% merged    |
-    | Max     | 64    | 100% separated |
-    | Default | 0     | No effect      |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -64   100% merged
+    Max     64    100% separated
+    Default 0     No effect
+    ======= ===== ==============
     """
 
     volume = _MixerParamProp[int](_MixerParamsID.Volume)
     """Post volume fader. Logarithmic.
 
-    | Type     | Value | Representation         |
-    | -------- | :---: | ---------------------- |
-    | Min      | 0     | 0% / -INFdB / 0.00     |
-    | Max      | 16000 | 125% / 5.6dB / 1.90    |
-    | Default  | 12800 | 100% / 0.0dB / 1.00    |
+    ======= ===== ===================
+    Type    Value Representation
+    ======= ===== ===================
+    Min     0     0% / -INFdB / 0.00
+    Max     16000 125% / 5.6dB / 1.90
+    Default 12800 100% / 0.0dB / 1.00
+    ======= ===== ===================
     """
 
 
@@ -534,6 +557,8 @@ class _MixerKW(TypedDict):
 # TODO FL Studio version in which slots were increased to 10
 # TODO A move() method to change the placement of Inserts; it's difficult!
 class Mixer(MultiEventModel, Sequence[Insert]):
+    """.. image:: img/mixer/preview.png"""
+
     def __init__(self, *events: AnyEvent, **kw: Unpack[_MixerKW]):
         super().__init__(*events, **kw)
 
@@ -602,6 +627,7 @@ class Mixer(MultiEventModel, Sequence[Insert]):
     def max_inserts(self):
         """Estimated max number of inserts including sends, master and current.
 
+        Maximum number of slots w.r.t. FL Studio:
         * 1.6.5: 4 inserts + master, 5 in total
         * 2.0.1: 8
         * 3.0.0: 16 inserts, 2 sends.
@@ -633,8 +659,9 @@ class Mixer(MultiEventModel, Sequence[Insert]):
     def max_slots(self):
         """Estimated max number of effect slots per insert.
 
-        * 1.6.5: 4
-        * 3.3.0: 8
+        Maximum number of slots w.r.t. FL Studio:
+        - 1.6.5: 4
+        - 3.3.0: 8
         """
         version = dataclasses.astuple(self._kw["version"])
 

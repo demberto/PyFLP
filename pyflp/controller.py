@@ -11,12 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""
-pyflp.controller
-================
-
-Contains the types used by MIDI and remote controllers.
-"""
+"""Contains the types used by MIDI and remote controllers."""
 
 from __future__ import annotations
 
@@ -57,6 +52,11 @@ class ControllerID(EventEnum):
 
 
 class RemoteController(SingleEventModel, ModelReprMixin):
+    """.. image:: img/controller/remote.png
+
+    *New in FL Studio v3.3.0*.
+    """
+
     @property
     def parameter(self) -> int | None:
         """The ID of the plugin parameter to which controller is linked to."""

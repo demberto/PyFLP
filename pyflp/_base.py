@@ -701,7 +701,7 @@ class SingleEventModel(ModelBase):
     def event(self) -> AnyEvent:
         """Returns the underlying event used by the model.
 
-        !!! tip
+        Tip:
             You almost never need to use this method and it is only provided
             to calm type checkers from complaining about protected access.
         """

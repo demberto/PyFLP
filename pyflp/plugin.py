@@ -11,12 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""
-pyflp.plugin
-============
-
-Contains the types used by native and VST plugins.
-"""
+"""Contains the types used by native and VST plugins."""
 
 from __future__ import annotations
 
@@ -255,11 +250,11 @@ class PluginID(EventEnum):
     Color = (DWORD, ColorEvent)
     Icon = (DWORD + 27, U32Event)
     InternalName = TEXT + 9
-    Name = TEXT + 11
+    Name = TEXT + 11  #: 3.3.0+ for :class:`pyflp.mixer.Slot`.
     # Plugin wrapper data, windows pos of plugin etc, currently
     # selected plugin wrapper page; minimized, closed or not
     Wrapper = (DATA + 4, WrapperEvent)
-    Data = (DATA + 5, UnknownDataEvent)  # ? 1.6.5+
+    Data = (DATA + 5, UnknownDataEvent)  #: 1.6.5+
 
 
 @runtime_checkable
@@ -281,7 +276,10 @@ class _PluginBase(MultiEventModel, Generic[_PE_co]):
         super().__init__(*events, **kw)
 
     compact = _WrapperProp(_WrapperFlags.HideSettings)
-    """Whether plugin page toolbar is hidden or not."""
+    """Whether plugin page toolbar is hidden or not.
+
+    .. image:: img/plugin/toolbar_collapse.gif
+    """
 
     demo_mode = _WrapperProp(_WrapperFlags.DemoMode)
     """Whether the plugin state was saved in a demo / trial version of the plugin."""
@@ -295,7 +293,10 @@ class _PluginBase(MultiEventModel, Generic[_PE_co]):
     """Whether the plugin is a generator or an effect."""
 
     maximized = _WrapperProp(_WrapperFlags.Maximized)
-    """Whether the plugin editor is maximized or minimized."""
+    """Whether the plugin editor is maximized or minimized.
+
+    .. image:: img/plugin/maximize.gif
+    """
 
     multithreaded = _WrapperProp(_WrapperFlags.ThreadedProcessing)
     """Whether threaded processing is enabled or not."""
@@ -307,7 +308,7 @@ class _PluginBase(MultiEventModel, Generic[_PE_co]):
     """Whether the editor of the plugin is visible or closed."""
 
 
-AnyPlugin = _PluginBase[AnyEvent]  # TODO bind to _IPlugin + _PluginBase (both)
+AnyPlugin = _PluginBase[AnyEvent]  # TODO alias to _IPlugin + _PluginBase (both)
 
 
 class PluginProp(RWProperty[AnyPlugin]):
@@ -344,6 +345,18 @@ class PluginIOInfo(SingleEventModel):
 class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     """Represents a VST2 or a VST3 generator or effect.
 
+    .. tab:: Processing
+
+        .. image:: img/plugin/wrapper/processing.png
+
+    .. tab:: Settings
+
+        .. image:: img/plugin/wrapper/settings.png
+
+    .. tab:: Troubleshooting
+
+        .. image:: img/plugin/wrapper/troubleshooting.png
+
     *New in FL Studio v1.5.23*: VST2 support (beta).
     *New in FL Studio v9.0.3*: VST3 support.
     """
@@ -372,7 +385,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     """Number of outputs the plugin supports."""
 
     pitch_bend = StructProp[int]()
-    """Pitch bend range (in semitones)."""
+    """Pitch bend range sent to the plugin (in semitones)."""
 
     plugin_path = StructProp[str]()
     """The absolute path to the plugin binary."""
@@ -387,109 +400,128 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
 
 
 class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
+    """.. image:: img/plugin/generators/boobass.png"""
+
     INTERNAL_NAME = "BooBass"
     bass = StructProp[int]()
     """Volume of the bass region.
 
-    | Type    | Value |
-    | ------- | :---: |
-    | Min     | 0     |
-    | Max     | 65535 |
-    | Default | 32767 |
+    === ===== =======
+    Min Max   Default
+    0   65535 32767
+    === ===== =======
     """
 
     high = StructProp[int]()
     """Volume of the high region.
 
-    | Type    | Value |
-    | ------- | :---: |
-    | Min     | 0     |
-    | Max     | 65535 |
-    | Default | 32767 |
+    === ===== =======
+    Min Max   Default
+    0   65535 32767
+    === ===== =======
     """
 
     mid = StructProp[int]()
     """Volume of the mid region.
 
-    | Type    | Value |
-    | ------- | :---: |
-    | Min     | 0     |
-    | Max     | 65535 |
-    | Default | 32767 |
+    === ===== =======
+    Min Max   Default
+    0   65535 32767
+    === ===== =======
     """
 
 
 class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
+    """.. image:: img/plugin/effects/fruity-balance.png"""
+
     INTERNAL_NAME = "Fruity Balance"
     pan = StructProp[int]()
     """Linear.
 
-    | Type    | Value | Representation |
-    | ------- | :---: | -------------- |
-    | Min     | -128  | 100% left      |
-    | Max     | 127   | 100% right     |
-    | Default | 0     | Centred        |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -128  100% left
+    Max     127   100% right
+    Default 0     Centred
+    ======= ===== ==============
     """
 
     volume = StructProp[int]()
     """Logarithmic.
 
-    | Type    | Value | Representation |
-    | ------- | :---: | -------------- |
-    | Min     | 0     | 0.00 / -INFdB  |
-    | Max     | 320   | 1.25 / 5.6dB   |
-    | Default | 256   | 1.00 / 0.0dB   |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     0     -INFdB / 0.00
+    Max     320   5.6dB / 1.90
+    Default 256   0.0dB / 1.00
+    ======= ===== ==============
     """
 
 
 @enum.unique
 class FruityFastDistKind(enum.IntEnum):
+    """Used by :attr:`FruityFastDist.kind`."""
+
     A = 0
     B = 1
 
 
 class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin):
+    """.. image:: img/plugin/effects/fruity-fast-dist.png"""
+
     INTERNAL_NAME = "Fruity Fast Dist"
     kind = StructProp[FruityFastDistKind]()
     mix = StructProp[int]()
     """Linear. Defaults to maximum value.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 0     | 0%        |
-    | Max     | 128   | 100%      |
+    ==== ===== =========
+    Type Value Mix (wet)
+    ==== ===== =========
+    Min  0     0%
+    Max  128   100%
+    ==== ===== =========
     """
 
     post = StructProp[int]()
     """Linear. Defaults to maximum value.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 0     | 0%        |
-    | Max     | 128   | 100%      |
+    ==== ===== =========
+    Type Value Mix (wet)
+    ==== ===== =========
+    Min  0     0%
+    Max  128   100%
+    ==== ===== =========
     """
 
     pre = StructProp[int]()
     """Linear.
 
-    | Type    | Value | Percentage |
-    | ------- | :---: | ---------- |
-    | Min     | 64    | 33%        |
-    | Max     | 192   | 100%       |
-    | Default | 128   | 67%        |
+    ======= ===== ==========
+    Type    Value Percentage
+    ======= ===== ==========
+    Min     64    33%
+    Max     192   100%
+    Default 128   67%
+    ======= ===== ==========
     """
 
     threshold = StructProp[int]()
     """Linear, Stepped. Defaults to maximum value.
 
-    | Type    | Value | Percentage |
-    | ------- | :---: | ---------- |
-    | Min     | 1     | 10%        |
-    | Max     | 10    | 100%       |
+    ==== ===== ==========
+    Type Value Percentage
+    ==== ===== ==========
+    Min  1     10%
+    Max  10    100%
+    ==== ===== ==========
     """
 
 
 class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixin):
+    """.. image:: img/plugin/effects/fruity-notebook2.png"""
+
     INTERNAL_NAME = "Fruity NoteBook 2"
     active_page = StructProp[int]()
     """Active page number of the notebook. Min: 0, Max: 100."""
@@ -505,95 +537,89 @@ class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixi
 
 
 class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
+    """.. image:: img/plugin/effects/fruity-send.png"""
+
     INTERNAL_NAME = "Fruity Send"
     dry = StructProp[int]()
     """Linear. Defaults to maximum value.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 0     | 0%        |
-    | Max     | 256   | 100%      |
+    ==== ===== =========
+    Type Value Mix (wet)
+    ==== ===== =========
+    Min  0     0%
+    Max  256   100%
+    ==== ===== =========
     """
 
     pan = StructProp[int]()
     """Linear.
 
-    | Type    | Value | Representation |
-    | ------- | :---: | -------------- |
-    | Min     | -128  | 100% left      |
-    | Max     | 127   | 100% right     |
-    | Default | 0     | Centred        |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -128  100% left
+    Max     127   100% right
+    Default 0     Centred
+    ======= ===== ==============
     """
 
     send_to = StructProp[int]()
-    """Target insert index; depends on insert routing. Default: -1 (Master)."""
+    """Target insert index; depends on insert routing. Defaults to -1 (Master)."""
 
     volume = StructProp[int]()
     """Logarithmic.
 
-    | Type     | Value | Representation |
-    | -------- | :---: | :------------: |
-    | Min      | 0     | -INFdB / 0.00  |
-    | Max      | 320   | 5.6dB / 1.90   |
-    | Default  | 256   | 0.0dB / 1.00   |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     0     -INFdB / 0.00
+    Max     320   5.6dB / 1.90
+    Default 256   0.0dB / 1.00
+    ======= ===== ==============
     """
 
 
 class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelReprMixin):
+    """.. image:: img/plugin/effects/fruity-soft-clipper.png"""
+
     INTERNAL_NAME = "Fruity Soft Clipper"
     post = StructProp[int]()
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    | ------- | :---: | --------- |
-    | Min     | 0     | 0%        |
-    | Max     | 160   | 100%      |
-    | Default | 128   | 80%       |
+    ======= ===== =========
+    Type    Value Mix (wet)
+    ======= ===== =========
+    Min     0     0%
+    Max     160   100%
+    Default 128   80%
+    ======= ===== =========
     """
 
     threshold = StructProp[int]()
     """Logarithmic.
 
-    | Type     | Value | Representation |
-    | -------- | :---: | :------------: |
-    | Min      | 1     | -INFdB / 0.00  |
-    | Max      | 127   | 0.0dB / 1.00   |
-    | Default  | 100   | -4.4dB / 0.60  |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     1     -INFdB / 0.00
+    Max     127   0.0dB / 1.00
+    Default 100   -4.4dB / 0.60
+    ======= ===== ==============
     """
-
-
-@enum.unique
-class SoundgoodizerMode(enum.IntEnum):
-    A = 0
-    B = 1
-    C = 2
-    D = 3
-
-
-class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
-    INTERNAL_NAME = "Soundgoodizer"
-    amount = StructProp[int]()
-    """Logarithmic.
-
-    | Type    | Value |
-    | ------- | :---: |
-    | Min     | 0     |
-    | Max     | 1000  |
-    | Default | 600   |
-    """
-
-    mode = StructProp[SoundgoodizerMode]()
-    """4 preset modes (A, B, C and D)."""
 
 
 @enum.unique
 class StereoEnhancerEffectPosition(enum.IntEnum):
+    """Used by :attr:`FruityStereoEnhancer.effect_position`."""
+
     Pre = 0
     Post = 1
 
 
 @enum.unique
 class StereoEnhancerPhaseInversion(enum.IntEnum):
+    """Used by :attr:`FruityStereoEnhancer.phase_inversion`."""
+
     None_ = 0
     Left = 1
     Right = 2
@@ -602,49 +628,86 @@ class StereoEnhancerPhaseInversion(enum.IntEnum):
 class FruityStereoEnhancer(
     _PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin
 ):
+    """.. image:: img/plugin/effects/fruity-stereo-enhancer.png"""
+
     INTERNAL_NAME = "Fruity Stereo Enhancer"
     effect_position = StructProp[StereoEnhancerEffectPosition]()
-    """Default: StereoEnhancerEffectPosition.Post."""
+    """Defaults to :attr:`StereoEnhancerEffectPosition.Post`."""
 
     pan = StructProp[int]()
     """Linear.
 
-    | Type    | Value | Representation |
-    | ------- | :---: | -------------- |
-    | Min     | -128  | 100% left      |
-    | Max     | 127   | 100% right     |
-    | Default | 0     | Centred        |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -128  100% left
+    Max     127   100% right
+    Default 0     Centred
+    ======= ===== ==============
     """
 
     phase_inversion = StructProp[StereoEnhancerPhaseInversion]()
-    """Default: StereoEnhancerPhaseInversion.None_."""
+    """Default to :attr:`~StereoEnhancerPhaseInversion.None_`."""
 
     phase_offset = StructProp[int]()
     """Linear.
 
-    | Type    | Value | Representation |
-    | ------- | :---: | -------------- |
-    | Min     | -512  | 500ms L        |
-    | Max     | 512   | 500ms R        |
-    | Default | 0     | No offset      |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -512  500ms L
+    Max     512   500ms R
+    Default 0     No offset
+    ======= ===== ==============
     """
 
     stereo_separation = StructProp[int]()
     """Linear.
 
-    | Type    | Value | Representation |
-    | ------- | :---: | -------------- |
-    | Min     | -96   | 100% separated |
-    | Max     | 96    | 100% merged    |
-    | Default | 0     | No effect      |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     -96   100% separated
+    Max     96    100% merged
+    Default 0     No effect
+    ======= ===== ==============
     """
 
     volume = StructProp[int]()
     """Logarithmic.
 
-    | Type     | Value | Representation |
-    | -------- | :---: | :------------: |
-    | Min      | 0     | -INFdB / 0.00  |
-    | Max      | 320   | 5.6dB / 1.90   |
-    | Default  | 256   | 0.0dB / 1.00   |
+    ======= ===== ==============
+    Type    Value Representation
+    ======= ===== ==============
+    Min     0     -INFdB / 0.00
+    Max     320   5.6dB / 1.90
+    Default 256   0.0dB / 1.00
+    ======= ===== ==============
     """
+
+
+@enum.unique
+class SoundgoodizerMode(enum.IntEnum):
+    """Used by :attr:`Soundgoodizer.mode`."""
+
+    A = 0
+    B = 1
+    C = 2
+    D = 3
+
+
+class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
+    """.. image:: img/plugin/effects/soundgoodizer.png"""
+
+    INTERNAL_NAME = "Soundgoodizer"
+    amount = StructProp[int]()
+    """Logarithmic.
+
+    === ==== =======
+    Min Max  Default
+    0   1000 600
+    === ==== =======
+    """
+
+    mode = StructProp[SoundgoodizerMode]()
+    """4 preset modes (A, B, C and D)."""
