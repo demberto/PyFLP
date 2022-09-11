@@ -853,8 +853,9 @@ class KWProp(NamedPropMixin, RWProperty[T]):
 
 
 class EventProp(RWProperty[T]):
-    def __init__(self, *ids: EventEnum):
+    def __init__(self, *ids: EventEnum, default: T | None = None):
         self._ids = ids
+        self._default = default
 
     def __get__(self, instance: MultiEventModel, owner: Any = None) -> T | None:
         if owner is None:
@@ -867,6 +868,8 @@ class EventProp(RWProperty[T]):
                 continue
             else:
                 return event.value
+
+        return self._default
 
     def __set__(self, instance: MultiEventModel, value: T):
         for id in self._ids:

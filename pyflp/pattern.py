@@ -50,7 +50,6 @@ from ._base import (
     StructProp,
     U16Event,
     U32Event,
-    I32Event,
 )
 from .exceptions import ModelNotFound, NoModelsFound
 
@@ -99,14 +98,21 @@ class PatternsID(EventEnum):
     CurrentlySelected = (WORD + 3, U16Event)
 
 
-# TODO Undiscovered events
+# ChannelIID, _161, _162, Looped, Length occur when pattern is looped.
+# ChannelIID and _161 occur for every channel in order.
+# ! Looping a pattern puts timemarkers in it. The same TimeMarkerID events are
+# !used, which means I need to refactor it out from pyflp.arrangement.
 class PatternID(EventEnum):
+    Looped = (26, BoolEvent)
     New = (WORD + 1, U16Event)  # Marks the beginning of a new pattern, twice.
     Color = (DWORD + 22, ColorEvent)
     Name = TEXT + 1
-    # _157 = DWORD + 29   # FL 12.5+
-    # _158 = DWORD + 30   # default: -1
-    # _164 = DWORD + 36   # default: 0
+    # _157 = DWORD + 29  #: 12.5+
+    # _158 = DWORD + 30  # default: -1
+    ChannelIID = (DWORD + 32, U32Event)  # TODO (FL v20.1b1+)
+    _161 = (DWORD + 33, I32Event)  # TODO -3 if channel is looped else 0 (FL v20.1b1+)
+    _162 = (DWORD + 34, U32Event)  # TODO Appears when pattern is looped, default: 2
+    Length = (DWORD + 36, U32Event)
     Controllers = (DATA + 15, ControllerEvent)
     Notes = (DATA + 16, NotesEvent)
 
@@ -197,6 +203,15 @@ class Pattern(MultiEventModel, SupportsIndex):
     def index(self, value: int):
         for event in self._events[PatternID.New]:
             event.value = value
+
+    length = EventProp[int](PatternID.Length)
+    """The number of steps multiplied by the :attr:`pyflp.project.Project.ppq`.
+
+    Returns `None` if pattern is in Auto mode (i.e. :attr:`looped` is `False`).
+    """
+
+    looped = EventProp[bool](PatternID.Looped, default=False)
+    """Whether a pattern is in loop mode."""
 
     name = EventProp[str](PatternID.Name)
     """User given name of the pattern; None if not set."""
