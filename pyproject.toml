@@ -2,6 +2,37 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "pyflp"
+authors = [{ name = "demberto", email = "demberto@protonmail.com" }]
+description = "FL Studio project file parser"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+]
+license = { text = "GPL-3.0" }
+dependencies = [
+  "bytesioex>=0.1.2",
+  "colour>=0.1.5",
+  'typing_extensions>=4.3.0;python_version<"3.8"',
+]
+dynamic = ["version"]
+
+[project.urls]
+Source = "https://github.com/demberto/PyFLP"
+Changelog = "https://github.com/demberto/PyFLP/blob/master/CHANGELOG.md"
+Documentation = "https://pyflp.rtfd.io"
+"Bug Tracker" = "https://github.com/demberto/PyFLP/issues"
+
 [tool.coverage.run]
 branch = true
 parallel = true
@@ -36,6 +67,12 @@ venv = ".venv"
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = "tests"
+
+[tool.setuptools]
+packages = ["pyflp"]
+
+[tool.setuptools.dynamic]
+version = { file = "VERSION" }
 
 [tool.tbump]
 github_url = "https://github.com/demberto/PyFLP/"
