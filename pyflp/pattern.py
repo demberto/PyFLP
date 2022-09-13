@@ -177,15 +177,8 @@ class Controller(SingleEventModel):
 # all channel events (if they exist). The rest is stored later on as it occurs.
 class Pattern(MultiEventModel, SupportsIndex):
     def __repr__(self):
-        if self.name is None:
-            repr = "Unnamed pattern"
-        else:
-            repr = "Pattern " + self.name
-
         num_notes = len(tuple(self.notes))
-        if num_notes > 0:
-            return f"{repr} with {num_notes} notes"
-        return f"Empty {repr}"
+        return f"Pattern (index={self.index}, name={self.name}, {num_notes} notes)"
 
     def __index__(self):
         return self.index
@@ -229,13 +222,13 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         """Returns the pattern with the specified `index`.
 
         Args:
-            index (SupportsIndex): An integer based index value from 0.
+            index (SupportsIndex): Internal index used by the pattern.
 
         Raises:
             ModelNotFound: When a pattern of `index` could not be found.
         """
-        for idx, pattern in enumerate(self):
-            if idx == index:
+        for pattern in self:
+            if pattern.__index__() == index:
                 return pattern
         raise ModelNotFound(index)
 

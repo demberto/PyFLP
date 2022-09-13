@@ -723,6 +723,12 @@ class MultiEventModel(ModelBase):
                 tmp[event.id].append(event)
         self._events.update(tmp)
 
+    def __eq__(self, o: object):
+        if not isinstance(o, type(self)):
+            raise TypeError(f"Cannot compare {type(o)!r} with {type(self)!r}")
+
+        return o.events_astuple() == self.events_astuple()
+
     def events_astuple(self):
         """Returns a tuple of events used by the model in their original order."""
         return self._events_tuple
