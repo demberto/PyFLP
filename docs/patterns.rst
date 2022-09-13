@@ -20,5 +20,7 @@ Event IDs
 
 .. autoclass:: PatternsID
    :members:
+   :member-order: bysource
 .. autoclass:: PatternID
    :members:
+   :member-order: bysource

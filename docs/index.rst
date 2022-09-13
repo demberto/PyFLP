@@ -19,6 +19,10 @@ PyFLP
    changelog
    contributing
 
+.. sidebar-links::
+   :github:
+   :pypi: PyFLP
+
 Indices and tables
 ==================
 

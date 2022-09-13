@@ -7,5 +7,6 @@ furo
 myst-parser
 sphinx
 sphinx-copybutton
+sphinx-design
 sphinx-hoverxref
-sphinx-inline-tabs
+sphinxcontrib-images

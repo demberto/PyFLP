@@ -170,8 +170,10 @@ class _MixerParamsID(enum.IntEnum):
 
 # ? Maybe added in FL Studio v6.0.1
 class InsertDock(enum.Enum):
-    """See Also:
-    :attr:`Insert.dock`
+    """![](https://bit.ly/3eLum9D)
+
+    See Also:
+        :attr:`Insert.dock`
     """
 
     Left = enum.auto()
@@ -277,7 +279,7 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
 class InsertEQ(ModelBase):
     """Post-effect :class:`Insert` EQ with 3 adjustable bands.
 
-    .. image:: img/mixer/insert/eq.png
+    ![](https://bit.ly/3RUCQt6)
 
     See Also:
         :attr:`Insert.eq`
@@ -338,7 +340,7 @@ class _MixerParamProp(RWProperty[T]):
 class Slot(MultiEventModel, SupportsIndex):
     """Represents an effect slot in an `Insert` / mixer channel.
 
-    .. image:: img/mixer/slots.png
+    ![](https://bit.ly/3RUDtTu)
     """
 
     def __init__(self, *events: AnyEvent, params: list[_MixerParamsItem] = []):
@@ -465,6 +467,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
     @property
     def dock(self) -> InsertDock | None:
+        """![](https://bit.ly/3eLum9D)"""
         events = self._events.get(InsertID.Flags)
         if events is not None:
             event = cast(InsertFlagsEvent, events[0])
@@ -479,7 +482,10 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
     @property
     def eq(self) -> InsertEQ:
-        """3-band post EQ."""
+        """3-band post EQ.
+
+        ![](https://bit.ly/3RUCQt6)
+        """
         return InsertEQ(self._kw["params"])
 
     icon = EventProp[int](InsertID.Icon)
@@ -512,8 +518,6 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     @property
     def routes(self) -> Iterator[int]:
         """Send volumes to routed inserts.
-
-        .. image:: img/mixer/insert/route.png
 
         *New in FL Studio v4.0*.
         """
@@ -557,7 +561,7 @@ class _MixerKW(TypedDict):
 # TODO FL Studio version in which slots were increased to 10
 # TODO A move() method to change the placement of Inserts; it's difficult!
 class Mixer(MultiEventModel, Sequence[Insert]):
-    """.. image:: img/mixer/preview.png"""
+    """![](https://bit.ly/3eOsblF)"""
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_MixerKW]):
         super().__init__(*events, **kw)
@@ -628,6 +632,7 @@ class Mixer(MultiEventModel, Sequence[Insert]):
         """Estimated max number of inserts including sends, master and current.
 
         Maximum number of slots w.r.t. FL Studio:
+
         * 1.6.5: 4 inserts + master, 5 in total
         * 2.0.1: 8
         * 3.0.0: 16 inserts, 2 sends.

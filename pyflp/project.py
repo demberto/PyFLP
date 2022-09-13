@@ -90,7 +90,7 @@ class PanLaw(enum.IntEnum):
 class FileFormat(enum.IntEnum):
     """File formats used by FL Studio.
 
-    *New in FL Studio version 2.5.0*: FST (FL Studio State) file format.
+    *New in FL Studio v2.5.0*: FST (FL Studio State) file format.
     """
 
     None_ = -1
@@ -154,16 +154,7 @@ class _ProjectKW(TypedDict):
 
 
 class Project(MultiEventModel):
-    """Represents an FL Studio project.
-
-    .. tab:: Information
-
-        .. image:: img/project/info.png
-
-    .. tab:: Settings
-
-        .. image:: img/project/settings.png
-    """
+    """Represents an FL Studio project."""
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ProjectKW]):
         super().__init__(*events, **kw)
@@ -270,7 +261,7 @@ class Project(MultiEventModel):
     genre = EventProp[str](ProjectID.Genre)
     """Genre of the song to be embedded in exported WAV & MP3.
 
-    *New in FL Studio v5.0.*
+    *New in FL Studio v5.0*.
     """
 
     licensed = EventProp[bool](ProjectID.Licensed)

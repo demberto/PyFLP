@@ -22,9 +22,9 @@ import sys
 from typing import DefaultDict, List, cast
 
 if sys.version_info >= (3, 8):
-    from typing import SupportsIndex, TypedDict
+    from typing import Literal, SupportsIndex, TypedDict
 else:
-    from typing_extensions import SupportsIndex, TypedDict
+    from typing_extensions import Literal, SupportsIndex, TypedDict
 
 if sys.version_info >= (3, 9):
     from collections.abc import Iterable, Iterator, Sequence
@@ -126,7 +126,7 @@ class ArrangementsID(EventEnum):
     TimeSigBeat = (18, U8Event)
     Current = (WORD + 36, U16Event)
     WindowHeight = (DWORD + 5, U32Event)
-    LoopPos = (DWORD + 24, U32Event)  # 1.3.8+
+    LoopPos = (DWORD + 24, U32Event)  #: 1.3.8+
 
 
 @enum.unique
@@ -244,7 +244,7 @@ class TimeMarker(MultiEventModel):
             return f"Signature {self.name!r} ({time_sig}) @ {self.position!r}"
         return f"Unnamed {time_sig} signature @ {self.position!r}"
 
-    denominator = EventProp[int](TimeMarkerID.Denominator)
+    denominator: EventProp[int] = EventProp[int](TimeMarkerID.Denominator)
     name = EventProp[str](TimeMarkerID.Name)
     numerator = EventProp[int](TimeMarkerID.Numerator)
 
@@ -259,7 +259,10 @@ class TimeMarker(MultiEventModel):
 
     @property
     def type(self) -> TimeMarkerType | None:
-        """.. image:: img/arrangement/timemarker/action.png"""
+        """The action with which a time marker is associated.
+
+        ![](https://bit.ly/3RDM1yn)
+        """
         events = self._events.get(TimeMarkerID.Position)
         if events is not None:
             event = events[0]
@@ -275,12 +278,7 @@ class _TrackKW(TypedDict):
 class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     """Represents a track in an arrangement on which playlist items are arranged.
 
-    .. image:: img/arrangement/track/preview.png
-
-    Performance options - :attr:`motion`, :attr:`position_sync`, :attr:`press`,
-    :attr:`tolerant`, :attr:`trigger_sync`, :attr:`queued`.
-
-    .. image:: img/arrangement/track/performance-settings.png
+    ![](https://bit.ly/3de6R8y)
     """
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_TrackKW]):
@@ -350,9 +348,8 @@ class _ArrangementKW(TypedDict):
 class Arrangement(MultiEventModel, SupportsIndex):
     """Contains them timemarkers and tracks in an arrangement.
 
-    .. image:: img/arrangement/preview.jpg
-
-    *New in v12.9.1*: Support for multiple arrangements.
+    ![](https://bit.ly/3B6is1z)
+    *New in FL Studio v12.9.1*: Support for multiple arrangements.
     """
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
@@ -434,7 +431,7 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
         super().__init__(*events, **kw)
 
-    def __getitem__(self, index: SupportsIndex):
+    def __getitem__(self, index: SupportsIndex) -> Arrangement:
         """Returns the arrangement at :attr:`Arrangement.index`.
 
         Raises:
@@ -504,10 +501,10 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
     """Window height / track width used by the interface."""
 
     loop_pos = EventProp[int](ArrangementsID.LoopPos)
-    """*New in FL Studio v1.3.8.*"""
+    """*New in FL Studio v1.3.8*."""
 
     @property
-    def max_tracks(self):
+    def max_tracks(self) -> Literal[500, 199]:
         version = dataclasses.astuple(self._kw["version"])
         return 500 if version >= (12, 9, 1) else 199
 

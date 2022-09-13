@@ -279,6 +279,8 @@ class _PluginBase(MultiEventModel, Generic[_PE_co]):
     """Whether plugin page toolbar is hidden or not.
 
     .. image:: img/plugin/toolbar_collapse.gif
+
+    ![](https://bit.ly/3qzOMoO)
     """
 
     demo_mode = _WrapperProp(_WrapperFlags.DemoMode)
@@ -296,6 +298,8 @@ class _PluginBase(MultiEventModel, Generic[_PE_co]):
     """Whether the plugin editor is maximized or minimized.
 
     .. image:: img/plugin/maximize.gif
+
+    ![](https://bit.ly/3QDMWO3)
     """
 
     multithreaded = _WrapperProp(_WrapperFlags.ThreadedProcessing)
@@ -345,18 +349,6 @@ class PluginIOInfo(SingleEventModel):
 class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     """Represents a VST2 or a VST3 generator or effect.
 
-    .. tab:: Processing
-
-        .. image:: img/plugin/wrapper/processing.png
-
-    .. tab:: Settings
-
-        .. image:: img/plugin/wrapper/settings.png
-
-    .. tab:: Troubleshooting
-
-        .. image:: img/plugin/wrapper/troubleshooting.png
-
     *New in FL Studio v1.5.23*: VST2 support (beta).
     *New in FL Studio v9.0.3*: VST3 support.
     """
@@ -400,7 +392,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
 
 
 class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
-    """.. image:: img/plugin/generators/boobass.png"""
+    """![](https://bit.ly/3Bk3aGK)"""
 
     INTERNAL_NAME = "BooBass"
     bass = StructProp[int]()
@@ -432,7 +424,7 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
 
 
 class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
-    """.. image:: img/plugin/effects/fruity-balance.png"""
+    """![](https://bit.ly/3RWItqU)"""
 
     INTERNAL_NAME = "Fruity Balance"
     pan = StructProp[int]()
@@ -469,7 +461,7 @@ class FruityFastDistKind(enum.IntEnum):
 
 
 class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin):
-    """.. image:: img/plugin/effects/fruity-fast-dist.png"""
+    """![](https://bit.ly/3qT6Jil)"""
 
     INTERNAL_NAME = "Fruity Fast Dist"
     kind = StructProp[FruityFastDistKind]()
@@ -520,7 +512,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
 
 
 class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixin):
-    """.. image:: img/plugin/effects/fruity-notebook2.png"""
+    """![](https://bit.ly/3RHa4g5)"""
 
     INTERNAL_NAME = "Fruity NoteBook 2"
     active_page = StructProp[int]()
@@ -537,7 +529,7 @@ class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixi
 
 
 class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
-    """.. image:: img/plugin/effects/fruity-send.png"""
+    """![](https://bit.ly/3DqjvMu)"""
 
     INTERNAL_NAME = "Fruity Send"
     dry = StructProp[int]()
@@ -580,7 +572,7 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
 
 
 class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelReprMixin):
-    """.. image:: img/plugin/effects/fruity-soft-clipper.png"""
+    """![](https://bit.ly/3BCWfJX)"""
 
     INTERNAL_NAME = "Fruity Soft Clipper"
     post = StructProp[int]()
@@ -628,7 +620,7 @@ class StereoEnhancerPhaseInversion(enum.IntEnum):
 class FruityStereoEnhancer(
     _PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin
 ):
-    """.. image:: img/plugin/effects/fruity-stereo-enhancer.png"""
+    """![](https://bit.ly/3DoHvji)"""
 
     INTERNAL_NAME = "Fruity Stereo Enhancer"
     effect_position = StructProp[StereoEnhancerEffectPosition]()
@@ -697,7 +689,7 @@ class SoundgoodizerMode(enum.IntEnum):
 
 
 class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
-    """.. image:: img/plugin/effects/soundgoodizer.png"""
+    """![](https://bit.ly/3dip70y)"""
 
     INTERNAL_NAME = "Soundgoodizer"
     amount = StructProp[int]()

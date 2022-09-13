@@ -2,13 +2,30 @@
 
 from __future__ import annotations
 
+import enum
+import inspect
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-from pyflp._base import EventEnum, NestedProp, ROProperty  # noqa
-from pyflp.plugin import PluginProp  # noqa
+# import myst_parser as myst  # noqa
+from pyflp._base import (  # noqa
+    EventEnum,
+    EventProp,
+    IterProp,
+    ModelBase,
+    NestedProp,
+    StructProp,
+)
+
+BITLY_LINK = re.compile(r"!\[.*\]\(https://bit\.ly/[A-z0-9]*\)")
+NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
+EVENT_ID_DOC = re.compile(r"([0-9\.]*)\+")
+FL_BADGE = (
+    "https://img.shields.io/badge/FL-%s+-5f686d?labelColor=ff7629&style=flat-square"
+)
 
 project = "PyFLP"
 copyright = "2022, demberto"
@@ -18,14 +35,19 @@ extensions = [
     "hoverxref.extension",
     "myst_parser",
     "sphinx_copybutton",
+    "sphinx_design",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
     "sphinx.ext.duration",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "sphinx_inline_tabs",
+    "sphinx_toolbox",
+    "sphinx_toolbox.github",
+    "sphinx_toolbox.sidebar_links",
 ]
+myst_enable_extensions = ["colon_fence"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 html_theme = "furo"
 autodoc_inherit_docstrings = False
@@ -33,6 +55,7 @@ autodoc_default_options = {
     "undoc-members": True,
     "exclude-members": "INTERNAL_NAME",
     "show-inheritance": True,
+    "no-value": True,
 }
 needs_sphinx = "5.0"
 hoverxref_auto_ref = True
@@ -41,40 +64,107 @@ html_static_path = ["img"]
 napoleon_preprocess_types = True
 napoleon_attr_annotations = True
 html_permalinks_icon = "<span>#</span>"
-
-# TODO Replace New in FL Studio... with custom HTML elements
-# def iconize_flstudio(app, what, name, obj, options, lines):
-#     for idx, line in enumerate(lines):
-#         lines[idx] = line.replace("FL Studio v", "🥭 ")
+github_username = author
+github_repository = project
 
 
-# TODO https://stackoverflow.com/q/73674809
-def descriptor_annotations(app, what, name, obj, options, signature, return_annotation):
-    if isinstance(obj, NestedProp):
-        return ("", f"{obj._type.__name__} | None")
-    elif isinstance(obj, PluginProp):
-        return ("", "AnyPlugin | None")
-    elif (
-        isinstance(obj, ROProperty)
-        and return_annotation is None
-        and not isinstance(obj, property)
-        and what == "attribute"
-    ):
-        return ("", f"{obj.__orig_class__.__args__[0].__name__} | None")
+def badge_flstudio(app, what, name, obj, options, lines):
+    for line in lines:
+        if name.split(".")[-2].endswith("ID"):  # Event ID member
+            match = EVENT_ID_DOC.fullmatch(line)
+        else:
+            match = NEW_IN_FL.fullmatch(line)
+
+        if match is not None:
+            groups = tuple(
+                filter(
+                    lambda group: group != "",
+                    map(lambda group: group.strip(), match.groups()),
+                )
+            )
+
+            if len(groups) == 1:
+                lines.insert(0, f".. image:: {FL_BADGE % groups[0]}")
+                lines.insert(1, "")
+            elif len(groups) == 2:
+                grid = f"""
+                .. figure:: {FL_BADGE % groups[0]}
+                    :align: left
+                    :alt: New in FL Studio v{groups[0]}
+
+                    {groups[1].strip()}
+
+                """
+                lines[:0] = grid.splitlines()  # https://stackoverflow.com/a/25855473
+            lines.remove(line)
+
+
+def remove_image_links(app, what, name, obj, options, lines):
+    """Removes markdown image links from the docstrings.
+
+    This ensures that I control the images shown in docstrings and Sphinx
+    separately.
+    """
+    for line in lines:
+        if BITLY_LINK.fullmatch(line) is not None:
+            lines.remove(line)
+
+
+def add_annotations(app, what, name, obj, options, signature, return_annotation):
+    if what == "class" and issubclass(obj, ModelBase):
+        annotations = {}
+        for name_, type in vars(obj).items():
+            if isinstance(obj, (IterProp, NestedProp)):
+                annotations[name_] = type._type
+            elif hasattr(type, "__orig_class__"):
+                annotations[name_] = type.__orig_class__.__args__[0]
+
+            if isinstance(type, (EventProp, StructProp)):
+                annotations[name_] |= None
+
+        if hasattr(obj, "__annotations__"):
+            obj.__annotations__.update(annotations)
+        else:
+            obj.__annotations__ = annotations
+
+
+def autodoc_markdown(app, what, name, obj, options, lines):
+    ...
+
+
+def remove_model_signature(app, what, name, obj, options, signature, return_annotation):
+    """Removes the :func:`ModelBase.__init__` args from the docstrings.
+
+    It's an implementation detail, and only clutters the docs.
+    """
+    if what == "class" and issubclass(obj, ModelBase):
+        return ("", return_annotation)
+
+
+def remove_enum_signature(app, what, name, obj, options, signature, return_annotation):
+    """Removes erroneous :attr:`signature` = '(value)' for `enum.Enum` subclasses."""
+    if inspect.isclass(obj) and issubclass(obj, enum.Enum):  # Event ID class
+        return ("", return_annotation)
 
 
 def include_obsolete_ids(app, what, name, obj, skip, options):
-    if isinstance(obj, EventEnum):
+    """Includes obsolete / undocumented (prefixed with a `_`) event IDs."""
+    if isinstance(obj, EventEnum):  # EventID member
         return False
 
 
 def show_model_dunders(app, what, name, obj, skip, options):
-    if name in ("__getitem__", "__setitem__", "__iter__", "__len__"):
+    """ModelBase subclasses show these dunders regardless of any settings."""
+    if name in ("__getitem__", "__setitem__", "__iter__", "__len__", "__index__"):
         return False
 
 
 def setup(app):
-    # app.connect("autodoc-process-docstring", iconize_flstudio)
-    app.connect("autodoc-process-signature", descriptor_annotations)
+    app.connect("autodoc-process-docstring", badge_flstudio)
+    app.connect("autodoc-process-docstring", remove_image_links)
+    # app.connect("autodoc-process-docstring", autodoc_markdown)
+    app.connect("autodoc-process-signature", add_annotations)
+    app.connect("autodoc-process-signature", remove_model_signature)
+    app.connect("autodoc-process-signature", remove_enum_signature)
     app.connect("autodoc-skip-member", include_obsolete_ids)
     app.connect("autodoc-skip-member", show_model_dunders)

@@ -52,7 +52,7 @@ class ControllerID(EventEnum):
 
 
 class RemoteController(SingleEventModel, ModelReprMixin):
-    """.. image:: img/controller/remote.png
+    """![](https://bit.ly/3S0i4Zf)
 
     *New in FL Studio v3.3.0*.
     """

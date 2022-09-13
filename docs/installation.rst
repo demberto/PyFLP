@@ -1,57 +1,59 @@
 Installation
 ============
 
-.. tab:: PyPi (Recommended)
+.. tab-set::
 
-  .. code-block::
+    .. tab-item:: PyPi (Recommended)
 
-    pip install --upgrade pyflp
+      .. code-block::
 
-.. tab:: Github repo
+        pip install --upgrade pyflp
 
-  1. Clone this repo
+    .. tab-item:: Github repo
 
-  .. code-block::
+      1. Clone this repo
 
-    git clone https://github.com/demberto/PyFLP
+      .. code-block::
 
-  2. Navigate to newly created folder
+        git clone https://github.com/demberto/PyFLP
 
-  .. code-block:: bat
+      1. Navigate to newly created folder
 
-      cd PyFLP
+      .. code-block:: bat
 
-  3. Install
+          cd PyFLP
 
-    Normal installation:
+      1. Install
 
-    .. code-block::
-
-      pip install .
-
-    *This allows you to install a version with the latest changes from the
-    repo. However, it might be broken.*
-
-    *OR*
-
-    Editable install:
-
-    .. code-block::
-
-      pip install -e .
-
-    *Preferred way for developing and testing PyFLP, if virtualenv is not
-    an option for you.*
-
-.. tab:: Github releases
-
-    1. Go to `Releases <https://github.com/demberto/PyFLP/releases>`_ tab.
-
-    2. Download the build distrbution wheel (\ **.whl**\) and the
-        source tarball (\ **.tar.gz**\ ), optionally.
-
-    3. Install them via pip, for e.g.
+        Normal installation:
 
         .. code-block::
 
-          pip install pyflp-1.1.0-py3-none-any.whl
+          pip install .
+
+        *This allows you to install a version with the latest changes from the
+        repo. However, it might be broken.*
+
+        *OR*
+
+        Editable install:
+
+        .. code-block::
+
+          pip install -e .
+
+        *Preferred way for developing and testing PyFLP, if virtualenv is not
+        an option for you.*
+
+    .. tab-item:: Github releases
+
+        1. Go to `Releases <https://github.com/demberto/PyFLP/releases>`_ tab.
+
+        2. Download the build distrbution wheel (\ **.whl**\) and the
+            source tarball (\ **.tar.gz**\ ), optionally.
+
+        3. Install them via pip, for e.g.
+
+            .. code-block::
+
+              pip install pyflp-1.1.0-py3-none-any.whl

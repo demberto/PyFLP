@@ -191,22 +191,22 @@ class ChannelID(EventEnum):
     Type = (21, U8Event)
     RoutedTo = (22, I8Event)
     # FXProperties = 27
-    IsLocked = (32, BoolEvent)  # 12.3+
+    IsLocked = (32, BoolEvent)  #: 12.3+
     New = (WORD, U16Event)
     # Fx = WORD + 5
     # FadeStereo = WORD + 6
     Cutoff = (WORD + 7, U16Event)
     _VolWord = (WORD + 8, U16Event)
     _PanWord = (WORD + 9, U16Event)
-    Preamp = (WORD + 10, U16Event)  # 1.2.12+
-    FadeOut = (WORD + 11, U16Event)  # ? 1.7.6+
+    Preamp = (WORD + 10, U16Event)  #: 1.2.12+
+    FadeOut = (WORD + 11, U16Event)  #: 1.7.6+
     FadeIn = (WORD + 12, U16Event)
     # DotNote = WORD + 13
     # DotPitch = WORD + 14
     # DotMix = WORD + 15
     Resonance = (WORD + 19, U16Event)
     # _LoopBar = WORD + 20
-    StereoDelay = (WORD + 21, U16Event)  # 1.3.56+
+    StereoDelay = (WORD + 21, U16Event)  #: 1.3.56+
     # Fx3 = WORD + 22
     # DotReso = WORD + 23
     # DotCutOff = WORD + 24
@@ -214,7 +214,7 @@ class ChannelID(EventEnum):
     # Dot = WORD + 27
     # DotRel = WORD + 32
     # DotShift = WORD + 28
-    Children = (WORD + 30, U16Event)  # 3.4.0+
+    Children = (WORD + 30, U16Event)  #: 3.4.0+
     Swing = (WORD + 33, U16Event)
     # Echo = DWORD + 2
     # FxSine = DWORD + 3
@@ -222,8 +222,8 @@ class ChannelID(EventEnum):
     RootNote = (DWORD + 7, U32Event)
     # _MainResoCutOff = DWORD + 9
     # DelayModXY = DWORD + 10
-    Reverb = (DWORD + 11, U32Event)  # 1.4.0+
-    StretchTime = (DWORD + 12, F32Event)  # 5.0+
+    Reverb = (DWORD + 11, U32Event)  #: 1.4.0+
+    StretchTime = (DWORD + 12, F32Event)  #: 5.0+
     FineTune = (DWORD + 14, I32Event)
     SamplerFlags = (DWORD + 15, U32Event)
     LayerFlags = (DWORD + 16, U32Event)
@@ -243,7 +243,7 @@ class ChannelID(EventEnum):
 
 @enum.unique
 class DisplayGroupID(EventEnum):
-    Name = TEXT + 39  # 3.4.0+
+    Name = TEXT + 39  #: 3.4.0+
 
 
 @enum.unique
@@ -332,7 +332,10 @@ class DisplayGroup(MultiEventModel, ModelReprMixin):
 
 
 class Arp(SingleEventModel, ModelReprMixin):
-    """.. image:: img/channel/arp.png"""
+    """Used by :class:`Sampler`: and :class:`Instrument`.
+
+    ![](https://bit.ly/3Lbk7Yi)
+    """
 
     chord = StructProp[int]()
     """Index of the selected arpeggio chord."""
@@ -358,7 +361,12 @@ class Arp(SingleEventModel, ModelReprMixin):
 
 
 class Delay(SingleEventModel, ModelReprMixin):
-    """.. image:: img/channel/delay.png"""
+    """Echo delay / fat mode section.
+
+    Used by :class:`Sampler` and :class:`Instrument`.
+
+    ![](https://bit.ly/3RyzbBD)
+    """
 
     # is_fat_mode: Optional[bool] = None    #: 3.4.0+
     # is_ping_pong: Optional[bool] = None   #: 1.7.6+
@@ -377,7 +385,9 @@ class Delay(SingleEventModel, ModelReprMixin):
 
 
 class LevelAdjusts(SingleEventModel, ModelReprMixin):
-    """.. image:: img/channel/level-adjusts.png
+    """Used by :class:`Layer`, :class:`Instrument` and :class:`Sampler`
+
+    ![](https://bit.ly/3xkKeGn)
 
     *New in FL Studio v3.3.0*.
     """
@@ -389,7 +399,10 @@ class LevelAdjusts(SingleEventModel, ModelReprMixin):
 
 
 class Time(MultiEventModel, ModelReprMixin):
-    """.. image:: img/channel/time.png"""
+    """Used by :class:`Sampler` and :class:`Instrument`.
+
+    ![](https://bit.ly/3xjxUGG)
+    """
 
     swing = EventProp[int](ChannelID.Swing)
     # gate: int
@@ -398,9 +411,9 @@ class Time(MultiEventModel, ModelReprMixin):
 
 
 class Reverb(SingleEventModel, ModelReprMixin):
-    """Precalculated sample reverb, sounds shitty af.
+    """Precalculated reverb used by :class:`Sampler`.
 
-    .. image:: img/channel/fx/reverb.png
+    ![](https://bit.ly/3L9N4nj)
 
     *New in FL Studio v1.4.0*.
     """
@@ -440,13 +453,8 @@ class Reverb(SingleEventModel, ModelReprMixin):
 class FX(MultiEventModel, ModelReprMixin):
     """Pre-calculated effects used by :class:`Sampler`.
 
-    .. tab:: Page 1
-
-        .. image:: img/channel/fx1.png
-
-    .. tab:: Page 2
-
-        .. image:: img/channel/fx2.png
+    ![](https://bit.ly/3U3Ys8l)
+    ![](https://bit.ly/3qvdBSN)
 
     See Also:
         :attr:`Sampler.fx`
@@ -462,7 +470,7 @@ class FX(MultiEventModel, ModelReprMixin):
     Max 256
     === ===
 
-    *New in FL Studio v1.2.12.*
+    *New in FL Studio v1.2.12*.
     """
 
     cutoff = EventProp[int](ChannelID.Cutoff)
@@ -515,14 +523,14 @@ class FX(MultiEventModel, ModelReprMixin):
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
     """.. image:: img/channel/fx/stereo-delay.png
 
-    *New in FL Studio v1.3.56.*
+    *New in FL Studio v1.3.56*.
     """
 
 
 class Envelope(SingleEventModel, ModelReprMixin):
     """A PAHDSR envelope for various :class:`Sampler` paramters.
 
-    .. image:: img/channel/envelope.png
+    ![](https://bit.ly/3d9WCCh)
 
     See Also:
         :attr:`Sampler.envelopes`
@@ -650,7 +658,7 @@ class Envelope(SingleEventModel, ModelReprMixin):
 class LFO(SingleEventModel, ModelReprMixin):
     """A basic LFO for certain :class:`Sampler` parameters.
 
-    .. image:: img/channel/lfo.png
+    ![](https://bit.ly/3RG5Jtw)
 
     See Also:
         :attr:`Sampler.lfos`
@@ -674,7 +682,10 @@ class LFO(SingleEventModel, ModelReprMixin):
 
 
 class Polyphony(SingleEventModel, ModelReprMixin):
-    """.. image:: img/channel/polyphony.png"""
+    """Used by :class:`Sampler` and :class:`Instrument`.
+
+    ![](https://bit.ly/3DlvWcl)
+    """
 
     is_mono = FlagProp(_PolyphonyFlags.Mono)
     is_porta = FlagProp(_PolyphonyFlags.Porta)
@@ -686,7 +697,9 @@ class Polyphony(SingleEventModel, ModelReprMixin):
 
 
 class Tracking(SingleEventModel, ModelReprMixin):
-    """.. image:: img/channel/tracking.png
+    """Used by :class:`Sampler` and :class:`Instrument`.
+
+    ![](https://bit.ly/3eIAjnG)
 
     *New in FL Studio v3.3.0*.
     """
@@ -698,9 +711,11 @@ class Tracking(SingleEventModel, ModelReprMixin):
 
 
 class Keyboard(MultiEventModel, ModelReprMixin):
-    """.. image:: img/channel/keyboard.png
+    """Used by :class:`Sampler` and :class:`Instrument`.
 
-    *New in FL Studio v1.3.56.*
+    ![](https://bit.ly/3qwIK8r)
+
+    *New in FL Studio v1.3.56*.
     """
 
     fine_tune = EventProp[int](ChannelID.FineTune)
@@ -722,7 +737,10 @@ class Keyboard(MultiEventModel, ModelReprMixin):
 
 
 class Playback(MultiEventModel, ModelReprMixin):
-    """.. image:: img/channel/playback.png"""
+    """Used by :class:`Sampler` and :class:`Instrument`.
+
+    ![](https://bit.ly/3xjSypY)
+    """
 
     # ping_pong_loop: bool
     # start_offset: int
@@ -730,7 +748,9 @@ class Playback(MultiEventModel, ModelReprMixin):
 
 
 class TimeStretching(MultiEventModel, ModelReprMixin):
-    """.. image:: img/channel/stretching.png
+    """Used by :class:`Sampler`.
+
+    ![](https://bit.ly/3eIAjnG)
 
     *New in FL Studio v5.0*.
     """
@@ -850,7 +870,10 @@ class Channel(MultiEventModel, SupportsIndex):
     # If the channel is not zipped, underlying event is not stored.
     @property
     def zipped(self) -> bool:
-        """Whether the channel is in zipped state."""
+        """Whether the channel is in zipped state.
+
+        ![](https://bit.ly/3DlT8qZ)
+        """
         if ChannelID.Zipped in self._events:
             return self._events[ChannelID.Zipped][0].value
         return False
@@ -862,13 +885,13 @@ class Channel(MultiEventModel, SupportsIndex):
 
 
 class Automation(Channel):
-    """.. image:: img/channel/automation.png"""
+    """![](https://bit.ly/3RXQhIN)"""
 
 
 class Layer(Channel, Sequence[Channel]):
-    """.. image:: img/channel/layer.png
+    """![](https://bit.ly/3S2MLgf)
 
-    *New in FL Studio v3.4.0.*
+    *New in FL Studio v3.4.0*.
     """
 
     def __getitem__(self, index: str | SupportsIndex):
@@ -920,7 +943,7 @@ class Instrument(_SamplerInstrument):
 
 # TODO New in FL Studio v1.4.0 & v1.5.23: Sampler spectrum views
 class Sampler(_SamplerInstrument):
-    """.. image:: img/channel/sampler.png"""
+    """![](https://bit.ly/3DlHPiI)"""
 
     def __repr__(self):
         return f"{repr(self.sample_path) or 'Empty'} {super().__repr__()}"
@@ -977,7 +1000,7 @@ class Sampler(_SamplerInstrument):
 
 
 class ChannelRack(MultiEventModel, Sequence[Channel]):
-    """.. image:: img/channel/rack.png"""
+    """![](https://bit.ly/3RXR50h)"""
 
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
