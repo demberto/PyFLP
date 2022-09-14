@@ -434,10 +434,9 @@ class Reverb(SingleEventModel, ModelReprMixin):
     def mix(self) -> int | None:
         """Mix % (wet). Defaults to minimum value.
 
-        === ===
-        Min 0
-        Max 256
-        === ===
+        | Min | Max |
+        |-----|-----|
+        | 0   | 256 |
         """
         if self._event:
             return self._event.value - self.type
@@ -465,10 +464,9 @@ class FX(MultiEventModel, ModelReprMixin):
 
     .. image:: img/channel/fx/boost.png
 
-    === ===
-    Min 0
-    Max 256
-    === ===
+    | Min | Max |
+    |-----|-----|
+    | 0   | 256 |
 
     *New in FL Studio v1.2.12*.
     """
@@ -478,10 +476,9 @@ class FX(MultiEventModel, ModelReprMixin):
 
     .. image:: img/channel/fx/cutoff.png
 
-    === ====
-    Min 0
-    Max 1024
-    === ====
+    | Min | Max  |
+    |-----|------|
+    | 0   | 1024 |
     """
 
     fade_in = EventProp[int](ChannelID.FadeIn)
@@ -489,10 +486,9 @@ class FX(MultiEventModel, ModelReprMixin):
 
     .. image:: img/channel/fx/fade-in.png
 
-    === ====
-    Min 0
-    Max 1024
-    === ====
+    | Min | Max  |
+    |-----|------|
+    | 0   | 1024 |
     """
 
     fade_out = EventProp[int](ChannelID.FadeOut)
@@ -500,10 +496,9 @@ class FX(MultiEventModel, ModelReprMixin):
 
     .. image:: img/channel/fx/fade-out.png
 
-    === ====
-    Min 0
-    Max 1024
-    === ====
+    | Min | Max  |
+    |-----|------|
+    | 0   | 1024 |
 
     *New in FL Studio v1.7.6*.
     """
@@ -513,10 +508,9 @@ class FX(MultiEventModel, ModelReprMixin):
 
     .. image:: img/channel/fx/resonance.png
 
-    === ====
-    Min 0
-    Max 1024
-    === ====
+    | Min | Max  |
+    |-----|------|
+    | 0   | 1024 |
     """
 
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
@@ -544,84 +538,70 @@ class Envelope(SingleEventModel, ModelReprMixin):
     predelay = StructProp[int](prop="envelope.predelay")
     """Linear. Defaults to minimum value.
 
-    ======= ======== ============
-    Type    Value    Mix (wet)
-    ======= ======== ============
-    Min     100      0%
-    Max     65536    100%
-    ======= ======== ============
+    | Type | Value | Mix (wet) |
+    |------|-------|-----------|
+    | Min  | 100   | 0%        |
+    | Max  | 65536 | 100%      |
     """
 
     attack = StructProp[int](prop="envelope.attack")
     """Linear.
 
-    ========== ======== ============
-    Type       Value    Mix (wet)
-    ========== ======== ============
-    Min        100      0%
-    Max        65536    100%
-    Default    20000    31%
-    ========== ======== ============
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    | Default | 20000 | 31%       |
     """
 
     hold = StructProp[int](prop="envelope.hold")
     """Linear.
 
-    ========== ======== ============
-    Type       Value    Mix (wet)
-    ========== ======== ============
-    Min        100      0%
-    Max        65536    100%
-    Default    20000    31%
-    ========== ======== ============
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    | Default | 20000 | 31%       |
     """
 
     decay = StructProp[int](prop="envelope.decay")
     """Linear.
 
-    ========== ======== ============
-    Type       Value    Mix (wet)
-    ========== ======== ============
-    Min        100      0%
-    Max        65536    100%
-    Default    30000    46%
-    ========== ======== ============
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    | Default | 30000 | 46%       |
     """
 
     sustain = StructProp[int](prop="envelope.sustain")
     """Linear.
 
-    ========== ======== ============
-    Type       Value    Mix (wet)
-    ========== ======== ============
-    Min        0        0%
-    Max        128      100%
-    Default    50       39%
-    ========== ======== ============
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | 0     | 0%        |
+    | Max     | 128   | 100%      |
+    | Default | 50    | 39%       |
     """
 
     release = StructProp[int](prop="envelope.release")
     """Linear.
 
-    ========== ======== ============
-    Type       Value    Mix (wet)
-    ========== ======== ============
-    Min        100      0%
-    Max        65536    100%
-    Default    20000    31%
-    ========== ======== ============
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | 100   | 0%        |
+    | Max     | 65536 | 100%      |
+    | Default | 20000 | 31%       |
     """
 
     attack_tension = StructProp[int](prop="envelope.attack_tension")
     """Linear.
 
-    ========== ======== ============
-    Type       Value    Mix (wet)
-    ========== ======== ============
-    Min        -128     -100%
-    Max        128      100%
-    Default    0        0%
-    ========== ======== ============
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | -128  | -100%     |
+    | Max     | 128   | 100%      |
+    | Default | 0     | 0%        |
 
     *New in FL Studio v3.5.4*.
     """
@@ -629,13 +609,11 @@ class Envelope(SingleEventModel, ModelReprMixin):
     sustain_tension = StructProp[int](prop="envelope.sustain_tension")
     """Linear.
 
-    ========== ======== ============
-    Type       Value    Mix (wet)
-    ========== ======== ============
-    Min        -128     -100%
-    Max        128      100%
-    Default    0        0%
-    ========== ======== ============
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | -128  | -100%     |
+    | Max     | 128   | 100%      |
+    | Default | 0     | 0%        |
 
     *New in FL Studio v3.5.4*.
     """
@@ -643,13 +621,11 @@ class Envelope(SingleEventModel, ModelReprMixin):
     release_tension = StructProp[int](prop="envelope.release_tension")
     """Linear.
 
-    ========== ======== ============
-    Type       Value    Mix (wet)
-    ========== ======== ============
-    Min        -128     -100%
-    Max        128      100%
-    Default    -101     -79%
-    ========== ======== ============
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | -128  | -100%     |
+    | Max     | 128   | 100%      |
+    | Default | -101  | -79%      |
 
     *New in FL Studio v3.5.4*.
     """
@@ -699,7 +675,7 @@ class Polyphony(SingleEventModel, ModelReprMixin):
 class Tracking(SingleEventModel, ModelReprMixin):
     """Used by :class:`Sampler` and :class:`Instrument`.
 
-    ![](https://bit.ly/3eIAjnG)
+    ![](https://bit.ly/3DmveM8)
 
     *New in FL Studio v3.3.0*.
     """
@@ -809,10 +785,9 @@ class Channel(MultiEventModel, SupportsIndex):
     @property
     def pan(self) -> int | None:
         """
-        === ===== =======
-        Min Max   Default
-        0   12800 10000
-        === ===== =======
+        | Min | Max   | Default |
+        |-----|-------|---------|
+        | 0   | 12800 | 10000   |
         """  # noqa
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pan"]
@@ -840,10 +815,9 @@ class Channel(MultiEventModel, SupportsIndex):
     @property
     def volume(self) -> int | None:
         """
-        === ===== =======
-        Min Max   Default
-        0   12800 10000
-        === ===== =======
+        | Min | Max   | Default |
+        |-----|-------|---------|
+        | 0   | 12800 | 10000   |
         """  # noqa
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["volume"]
@@ -1109,10 +1083,8 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
     swing = EventProp[int](RackID.Swing)
     """Global channel swing mix. Linear. Defaults to minimum value.
 
-    ======= ======== ============
-    Type    Value    Mix (wet)
-    ======= ======== ============
-    Min     0        0%
-    Max     128      100%
-    ======= ======== ============
+    | Type | Value | Mix (wet) |
+    |------|-------|-----------|
+    | Min  | 0     | 0%        |
+    | Max  | 128   | 100%      |
     """

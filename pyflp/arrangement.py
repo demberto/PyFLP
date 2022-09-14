@@ -314,13 +314,11 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     height = StructProp[float](id=TrackID.Data)
     """Track height in FL's interface. Linear.
 
-    ======= ======= ==========
-    Type    Value   Percentage
-    ======= ======= ==========
-    Min     0.0     0%
-    Max     18.4    1840%
-    Default 1.0     100%
-    ======= ======= ==========
+    | Type    | Value | Percentage |
+    |---------|-------|------------|
+    | Min     | 0.0   | 0%         |
+    | Max     | 18.4  | 1840%      |
+    | Default | 1.0   | 100%       |
     """
 
     icon = StructProp[int](id=TrackID.Data)

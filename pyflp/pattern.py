@@ -121,13 +121,11 @@ class Note(SingleEventModel):
     fine_pitch = StructProp[int]()
     """Linear.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -128  -100 cents
-    Max     127   +100 cents
-    Default 0     No fine tuning
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -128  | -100 cents     |
+    | Max     | 127   | +100 cents     |
+    | Default | 0     | No fine tuning |
 
     *New in FL Studio v3.3.0*.
     """

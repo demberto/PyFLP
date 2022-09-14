@@ -230,21 +230,23 @@ class InsertEQBand(ModelBase):
 
     gain = _InsertEQBandProp()
     """
-    ===== ==== =======
-    Min   Max  Default
-    -1800 1800 0
-    ===== ==== =======
+    | Min   | Max  | Default |
+    |-------|------|---------|
+    | -1800 | 1800 | 0       |
     """
 
     freq = _InsertEQBandProp()
-    """Min - 0, Max - 65536, default depends on band."""
+    """
+    | Min | Max   | Default             |
+    |-----|-------|:--------------------|
+    | 0   | 65536 | Depends on the band |
+    """
 
     reso = _InsertEQBandProp()
     """
-    === ===== =======
-    Min Max   Default
-    0   65536 17500
-    === ===== =======
+    | Min | Max   | Default |
+    |-----|-------|---------|
+    | 0   | 65536 | 17500   |
     """
 
 
@@ -368,13 +370,11 @@ class Slot(MultiEventModel, SupportsIndex):
     mix = _MixerParamProp[int](_MixerParamsID.SlotMix)
     """Dry/Wet mix. Defaults to maximum value.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -6400 100% left
-    Max     6400  100% right
-    Default 0     Centred
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -6400 | 100% left      |
+    | Max     | 6400  | 100% right     |
+    | Default | 0     | Centred        |
     """
 
     name = EventProp[str](PluginID.Name)
@@ -399,7 +399,10 @@ class _InsertKW(TypedDict):
 
 
 class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
-    """Represents a mixer track to which channel from the rack are routed to."""
+    """Represents a mixer track to which channel from the rack are routed to.
+
+    ![](https://bit.ly/3LeGKuN)
+    """
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_InsertKW]):
         super().__init__(*events, **kw)
@@ -506,13 +509,11 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     pan = _MixerParamProp[int](_MixerParamsID.Pan)
     """Linear.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -6400 100% left
-    Max     6400  100% right
-    Default 0     Centred
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -6400 | 100% left      |
+    | Max     | 6400  | 100% right     |
+    | Default | 0     | Centred        |
     """
 
     polarity_reversed = FlagProp(_InsertFlags.PolarityReversed, InsertID.Flags)
@@ -535,25 +536,21 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     stereo_separation = _MixerParamProp[int](_MixerParamsID.StereoSeparation)
     """Linear.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -64   100% merged
-    Max     64    100% separated
-    Default 0     No effect
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -64   | 100% merged    |
+    | Max     | 64    | 100% separated |
+    | Default | 0     | No effect      |
     """
 
     volume = _MixerParamProp[int](_MixerParamsID.Volume)
     """Post volume fader. Logarithmic.
 
-    ======= ===== ===================
-    Type    Value Representation
-    ======= ===== ===================
-    Min     0     0% / -INFdB / 0.00
-    Max     16000 125% / 5.6dB / 1.90
-    Default 12800 100% / 0.0dB / 1.00
-    ======= ===== ===================
+    | Type    | Value | Representation      |
+    |---------|-------|---------------------|
+    | Min     | 0     | 0% / -INFdB / 0.00  |
+    | Max     | 16000 | 125% / 5.6dB / 1.90 |
+    | Default | 12800 | 100% / 0.0dB / 1.00 |
     """
 
 

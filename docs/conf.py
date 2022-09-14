@@ -7,10 +7,12 @@ import inspect
 import os
 import re
 import sys
+from urllib.request import urlopen
 
 sys.path.insert(0, os.path.abspath(".."))
 
-# import myst_parser as myst  # noqa
+import m2r2
+
 from pyflp._base import (  # noqa
     EventEnum,
     EventProp,
@@ -20,12 +22,13 @@ from pyflp._base import (  # noqa
     StructProp,
 )
 
-BITLY_LINK = re.compile(r"!\[.*\]\(https://bit\.ly/[A-z0-9]*\)")
+BITLY_LINK = re.compile(r"!\[.*\]\((https://bit\.ly/[A-z0-9]*)\)")
 NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
 EVENT_ID_DOC = re.compile(r"([0-9\.]*)\+")
 FL_BADGE = (
     "https://img.shields.io/badge/FL-%s+-5f686d?labelColor=ff7629&style=flat-square"
 )
+GHUC_PREFIX = "https://raw.githubusercontent.com/demberto/PyFLP/master/docs/"
 
 project = "PyFLP"
 copyright = "2022, demberto"
@@ -33,7 +36,7 @@ author = "demberto"
 release = "2.0.0a0"
 extensions = [
     "hoverxref.extension",
-    "myst_parser",
+    "m2r2",
     "sphinx_copybutton",
     "sphinx_design",
     "sphinx.ext.autodoc",
@@ -47,20 +50,17 @@ extensions = [
     "sphinx_toolbox.github",
     "sphinx_toolbox.sidebar_links",
 ]
-myst_enable_extensions = ["colon_fence"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 html_theme = "furo"
 autodoc_inherit_docstrings = False
 autodoc_default_options = {
     "undoc-members": True,
     "exclude-members": "INTERNAL_NAME",
-    "show-inheritance": True,
     "no-value": True,
 }
 needs_sphinx = "5.0"
 hoverxref_auto_ref = True
 coverage_ignore_pyobjects = ["[A-Z][A-z0-9]*Event"]
-html_static_path = ["img"]
 napoleon_preprocess_types = True
 napoleon_attr_annotations = True
 html_permalinks_icon = "<span>#</span>"
@@ -99,15 +99,13 @@ def badge_flstudio(app, what, name, obj, options, lines):
             lines.remove(line)
 
 
-def remove_image_links(app, what, name, obj, options, lines):
-    """Removes markdown image links from the docstrings.
-
-    This ensures that I control the images shown in docstrings and Sphinx
-    separately.
-    """
-    for line in lines:
-        if BITLY_LINK.fullmatch(line) is not None:
-            lines.remove(line)
+def transform_image_links(app, what, name, obj, options, lines):
+    """Convert Bit.ly markdown image links to local reStructuredText ones."""
+    for idx, line in enumerate(lines):
+        match = BITLY_LINK.fullmatch(line)
+        if match is not None:
+            url = urlopen(match[1]).geturl()
+            lines[idx] = f".. image:: {url.replace(GHUC_PREFIX, '', 1)}"
 
 
 def add_annotations(app, what, name, obj, options, signature, return_annotation):
@@ -129,7 +127,9 @@ def add_annotations(app, what, name, obj, options, signature, return_annotation)
 
 
 def autodoc_markdown(app, what, name, obj, options, lines):
-    ...
+    newlines = m2r2.convert("\n".join(lines)).splitlines()
+    lines.clear()
+    lines.extend(newlines)
 
 
 def remove_model_signature(app, what, name, obj, options, signature, return_annotation):
@@ -161,8 +161,8 @@ def show_model_dunders(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect("autodoc-process-docstring", badge_flstudio)
-    app.connect("autodoc-process-docstring", remove_image_links)
-    # app.connect("autodoc-process-docstring", autodoc_markdown)
+    app.connect("autodoc-process-docstring", transform_image_links)
+    app.connect("autodoc-process-docstring", autodoc_markdown)
     app.connect("autodoc-process-signature", add_annotations)
     app.connect("autodoc-process-signature", remove_model_signature)
     app.connect("autodoc-process-signature", remove_enum_signature)

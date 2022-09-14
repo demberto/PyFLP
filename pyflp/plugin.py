@@ -399,28 +399,25 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     bass = StructProp[int]()
     """Volume of the bass region.
 
-    === ===== =======
-    Min Max   Default
-    0   65535 32767
-    === ===== =======
+    | Min | Max   | Default |
+    |-----|-------|---------|
+    | 0   | 65535 | 32767   |
     """
 
     high = StructProp[int]()
     """Volume of the high region.
 
-    === ===== =======
-    Min Max   Default
-    0   65535 32767
-    === ===== =======
+    | Min | Max   | Default |
+    |-----|-------|---------|
+    | 0   | 65535 | 32767   |
     """
 
     mid = StructProp[int]()
     """Volume of the mid region.
 
-    === ===== =======
-    Min Max   Default
-    0   65535 32767
-    === ===== =======
+    | Min | Max   | Default |
+    |-----|-------|---------|
+    | 0   | 65535 | 32767   |
     """
 
 
@@ -431,25 +428,21 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     pan = StructProp[int]()
     """Linear.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -128  100% left
-    Max     127   100% right
-    Default 0     Centred
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -128  | 100% left      |
+    | Max     | 127   | 100% right     |
+    | Default | 0     | Centred        |
     """
 
     volume = StructProp[int]()
     """Logarithmic.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     0     -INFdB / 0.00
-    Max     320   5.6dB / 1.90
-    Default 256   0.0dB / 1.00
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | -INFdB / 0.00  |
+    | Max     | 320   | 5.6dB / 1.90   |
+    | Default | 256   | 0.0dB / 1.00   |
     """
 
 
@@ -469,46 +462,38 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     mix = StructProp[int]()
     """Linear. Defaults to maximum value.
 
-    ==== ===== =========
-    Type Value Mix (wet)
-    ==== ===== =========
-    Min  0     0%
-    Max  128   100%
-    ==== ===== =========
+    | Type | Value | Mix (wet) |
+    |------|-------|-----------|
+    | Min  | 0     | 0%        |
+    | Max  | 128   | 100%      |
     """
 
     post = StructProp[int]()
     """Linear. Defaults to maximum value.
 
-    ==== ===== =========
-    Type Value Mix (wet)
-    ==== ===== =========
-    Min  0     0%
-    Max  128   100%
-    ==== ===== =========
+    | Type | Value | Mix (wet) |
+    |------|-------|-----------|
+    | Min  | 0     | 0%        |
+    | Max  | 128   | 100%      |
     """
 
     pre = StructProp[int]()
     """Linear.
 
-    ======= ===== ==========
-    Type    Value Percentage
-    ======= ===== ==========
-    Min     64    33%
-    Max     192   100%
-    Default 128   67%
-    ======= ===== ==========
+    | Type    | Value | Percentage |
+    |---------|-------|------------|
+    | Min     | 64    | 33%        |
+    | Max     | 192   | 100%       |
+    | Default | 128   | 67%        |
     """
 
     threshold = StructProp[int]()
     """Linear, Stepped. Defaults to maximum value.
 
-    ==== ===== ==========
-    Type Value Percentage
-    ==== ===== ==========
-    Min  1     10%
-    Max  10    100%
-    ==== ===== ==========
+    | Type | Value | Percentage |
+    |------|-------|------------|
+    | Min  | 1     | 10%        |
+    | Max  | 10    | 100%       |
     """
 
 
@@ -536,24 +521,20 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     dry = StructProp[int]()
     """Linear. Defaults to maximum value.
 
-    ==== ===== =========
-    Type Value Mix (wet)
-    ==== ===== =========
-    Min  0     0%
-    Max  256   100%
-    ==== ===== =========
+    | Type | Value | Mix (wet) |
+    |------|-------|-----------|
+    | Min  | 0     | 0%        |
+    | Max  | 256   | 100%      |
     """
 
     pan = StructProp[int]()
     """Linear.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -128  100% left
-    Max     127   100% right
-    Default 0     Centred
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -128  | 100% left      |
+    | Max     | 127   | 100% right     |
+    | Default | 0     | Centred        |
     """
 
     send_to = StructProp[int]()
@@ -562,13 +543,11 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     volume = StructProp[int]()
     """Logarithmic.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     0     -INFdB / 0.00
-    Max     320   5.6dB / 1.90
-    Default 256   0.0dB / 1.00
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | -INFdB / 0.00  |
+    | Max     | 320   | 5.6dB / 1.90   |
+    | Default | 256   | 0.0dB / 1.00   |
     """
 
 
@@ -579,25 +558,21 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
     post = StructProp[int]()
     """Linear.
 
-    ======= ===== =========
-    Type    Value Mix (wet)
-    ======= ===== =========
-    Min     0     0%
-    Max     160   100%
-    Default 128   80%
-    ======= ===== =========
+    | Type    | Value | Mix (wet) |
+    |---------|-------|-----------|
+    | Min     | 0     | 0%        |
+    | Max     | 160   | 100%      |
+    | Default | 128   | 80%       |
     """
 
     threshold = StructProp[int]()
     """Logarithmic.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     1     -INFdB / 0.00
-    Max     127   0.0dB / 1.00
-    Default 100   -4.4dB / 0.60
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 1     | -INFdB / 0.00  |
+    | Max     | 127   | 0.0dB / 1.00   |
+    | Default | 100   | -4.4dB / 0.60  |
     """
 
 
@@ -630,13 +605,11 @@ class FruityStereoEnhancer(
     pan = StructProp[int]()
     """Linear.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -128  100% left
-    Max     127   100% right
-    Default 0     Centred
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -128  | 100% left      |
+    | Max     | 127   | 100% right     |
+    | Default | 0     | Centred        |
     """
 
     phase_inversion = StructProp[StereoEnhancerPhaseInversion]()
@@ -645,37 +618,31 @@ class FruityStereoEnhancer(
     phase_offset = StructProp[int]()
     """Linear.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -512  500ms L
-    Max     512   500ms R
-    Default 0     No offset
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -512  | 500ms L        |
+    | Max     | 512   | 500ms R        |
+    | Default | 0     | No offset      |
     """
 
     stereo_separation = StructProp[int]()
     """Linear.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     -96   100% separated
-    Max     96    100% merged
-    Default 0     No effect
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -96   | 100% separated |
+    | Max     | 96    | 100% merged    |
+    | Default | 0     | No effect      |
     """
 
     volume = StructProp[int]()
     """Logarithmic.
 
-    ======= ===== ==============
-    Type    Value Representation
-    ======= ===== ==============
-    Min     0     -INFdB / 0.00
-    Max     320   5.6dB / 1.90
-    Default 256   0.0dB / 1.00
-    ======= ===== ==============
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | -INFdB / 0.00  |
+    | Max     | 320   | 5.6dB / 1.90   |
+    | Default | 256   | 0.0dB / 1.00   |
     """
 
 
@@ -696,10 +663,9 @@ class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     amount = StructProp[int]()
     """Logarithmic.
 
-    === ==== =======
-    Min Max  Default
-    0   1000 600
-    === ==== =======
+    | Min | Max  | Default |
+    |-----|------|---------|
+    | 0   | 1000 | 600     |
     """
 
     mode = StructProp[SoundgoodizerMode]()
