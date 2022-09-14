@@ -8,26 +8,12 @@ Mixer
 Classes
 -------
 
-.. grid::
-
-   .. grid-item::
-
-      .. autoclass:: Insert
-         :members:
-
-   .. grid-item::
-      :child-align: end
-
-      .. image:: img/mixer/insert/preview.png
-
-.. image:: img/mixer/slots.png
+.. autoclass:: Insert
+    :members:
 .. autoclass:: Slot
    :members:
-
-.. image:: img/mixer/insert/eq.png
 .. autoclass:: InsertEQ
    :members:
-
 .. autoclass:: InsertEQBand
    :members:
 

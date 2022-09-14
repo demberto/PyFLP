@@ -2,7 +2,6 @@ Controllers
 ===========
 
 .. module:: pyflp.controller
-.. image:: img/controller/remote.png
 .. autoclass:: RemoteController
    :members:
 

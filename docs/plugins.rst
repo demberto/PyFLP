@@ -25,38 +25,24 @@ Plugins
 Generators
 ----------
 
-.. image:: img/plugin/generators/boobass.png
 .. autoclass:: BooBass
    :members:
 
 Effects
 -------
 
-.. image:: img/plugin/effects/fruity-balance.png
 .. autoclass:: FruityBalance
    :members:
-
-.. image:: img/plugin/effects/fruity-fast-dist.png
 .. autoclass:: FruityFastDist
    :members:
-
-.. image:: img/plugin/effects/fruity-notebook2.png
 .. autoclass:: FruityNotebook2
    :members:
-
-.. image:: img/plugin/effects/fruity-send.png
 .. autoclass:: FruitySend
    :members:
-
-.. image:: img/plugin/effects/fruity-soft-clipper.png
 .. autoclass:: FruitySoftClipper
    :members:
-
-.. image:: img/plugin/effects/fruity-stereo-enhancer.png
 .. autoclass:: FruityStereoEnhancer
    :members:
-
-.. image:: img/plugin/effects/soundgoodizer.png
 .. autoclass:: Soundgoodizer
    :members:
 

@@ -8,7 +8,6 @@ Arrangements
 Arrangement
 -----------
 
-.. image:: img/arrangement/preview.jpg
 .. autoclass:: Arrangement
    :members:
 
