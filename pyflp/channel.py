@@ -872,7 +872,7 @@ class Channel(MultiEventModel, SupportsIndex):
     def zipped(self) -> bool:
         """Whether the channel is in zipped state.
 
-        ![](https://bit.ly/3DlT8qZ)
+        ![](https://bit.ly/3S2imib)
         """
         if ChannelID.Zipped in self._events:
             return self._events[ChannelID.Zipped][0].value
