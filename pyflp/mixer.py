@@ -32,9 +32,9 @@ else:
     from typing import Iterator, Sequence
 
 if sys.version_info >= (3, 11):
-    from typing import Never, NotRequired, Unpack
+    from typing import NotRequired, Unpack
 else:
-    from typing_extensions import NotRequired, Unpack, Never
+    from typing_extensions import NotRequired, Unpack
 
 import colour
 
@@ -174,7 +174,7 @@ class InsertDock(enum.Enum):
 
     See Also:
         :attr:`Insert.dock`
-    """
+    """  # noqa
 
     Left = enum.auto()
     Middle = enum.auto()
@@ -343,8 +343,8 @@ class Slot(MultiEventModel, SupportsIndex):
     ![](https://bit.ly/3RUDtTu)
     """
 
-    def __init__(self, *events: AnyEvent, params: list[_MixerParamsItem] = []):
-        super().__init__(*events, params=params)
+    def __init__(self, *events: AnyEvent, params: list[_MixerParamsItem] | None = None):
+        super().__init__(*events, params=params or [])
 
     def __repr__(self) -> str:
         repr = "Unnamed slot" if self.name is None else f"Slot {self.name!r}"
@@ -445,7 +445,7 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
                     except IndexError:
                         pass
 
-            if len(events) == 0:
+            if not events:
                 break
 
             index += 1
@@ -467,13 +467,16 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
     @property
     def dock(self) -> InsertDock | None:
-        """![](https://bit.ly/3eLum9D)"""
+        """The position (left, middle or right) where insert is docked in mixer.
+
+        ![](https://bit.ly/3eLum9D)
+        """
         events = self._events.get(InsertID.Flags)
         if events is not None:
             event = cast(InsertFlagsEvent, events[0])
             if _InsertFlags.DockMiddle in event["flags"]:
                 return InsertDock.Middle
-            elif _InsertFlags.DockRight in event["flags"]:
+            if _InsertFlags.DockRight in event["flags"]:
                 return InsertDock.Right
             return InsertDock.Left
 
@@ -561,20 +564,35 @@ class _MixerKW(TypedDict):
 # TODO FL Studio version in which slots were increased to 10
 # TODO A move() method to change the placement of Inserts; it's difficult!
 class Mixer(MultiEventModel, Sequence[Insert]):
-    """![](https://bit.ly/3eOsblF)"""
+    """Represents the mixer which contains :class:`Insert`s.
+
+    ![](https://bit.ly/3eOsblF)
+    """
+
+    _MAX_INSERTS = {
+        (1, 6, 5): 5,
+        (2, 0, 1): 8,
+        (3, 0, 0): 18,
+        (3, 3, 0): 20,
+        (4, 0, 0): 64,
+        (9, 0, 0): 105,
+        (12, 9, 0): 127,
+    }
+
+    _MAX_SLOTS = {(1, 6, 5): 4, (3, 0, 0): 8}
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_MixerKW]):
         super().__init__(*events, **kw)
 
     # Inserts don't store their index internally.
     def __getitem__(self, index: SupportsIndex):
-        """Returns an insert with the specified `index`.
+        """Returns an insert with the specified :attr:`index`.
 
         Args:
             index (SupportsIndex): A zero based integer value.
 
         Raises:
-            ModelNotFound: An insert with the specified `index` could not be found.
+            ModelNotFound: An :class:`Insert` with :attr:`index` isn't found.
         """
         for idx, insert in enumerate(self):
             if idx == index:
@@ -590,15 +608,16 @@ class Mixer(MultiEventModel, Sequence[Insert]):
 
         for event in reversed(self._events_tuple):
             if event.id == MixerID.Params:
-                event = cast(MixerParamsEvent, event)
-                items = cast(List[_MixerParamsItem], event.items)
+                items = cast(
+                    List[_MixerParamsItem], cast(MixerParamsEvent, event).items
+                )
 
                 for item in items:
                     params_dict[(item["channel_data"] >> 6) & 0x7F].append(item)
 
         for event in self._events_tuple:
-            for enum in (InsertID, SlotID):
-                if event.id in enum:
+            for enum_ in (InsertID, SlotID):
+                if event.id in enum_:
                     events.append(event)
 
             if event.id == InsertID.Output:
@@ -615,7 +634,7 @@ class Mixer(MultiEventModel, Sequence[Insert]):
         """Returns the number of inserts present in the project.
 
         Raises:
-            NoModelsFound: When no inserts could be found.
+            NoModelsFound: No inserts could be found.
         """
         if InsertID.Flags not in self._events:
             raise NoModelsFound
@@ -628,7 +647,7 @@ class Mixer(MultiEventModel, Sequence[Insert]):
     """Whether automatic plugin delay compensation is enabled for the inserts."""
 
     @property
-    def max_inserts(self):
+    def max_inserts(self) -> int:
         """Estimated max number of inserts including sends, master and current.
 
         Maximum number of slots w.r.t. FL Studio:
@@ -642,36 +661,22 @@ class Mixer(MultiEventModel, Sequence[Insert]):
         * 12.9.0: 125 + master + current.
         """
         version = dataclasses.astuple(self._kw["version"])
-
-        if version >= (1, 6, 5):
-            return 5
-        elif version >= (2, 0, 1):
-            return 8
-        elif version >= (3, 0, 0):
-            return 18
-        elif version >= (3, 3, 0):
-            return 20
-        elif version >= (4, 0, 0):
-            return 64
-        elif version >= (9, 0, 0):
-            return 105
-        elif version >= (12, 9, 0):
-            return 127
-
-        return Never
+        for k, v in self._MAX_INSERTS.items():
+            if version <= k:
+                return v
+        return 127
 
     @property
-    def max_slots(self):
+    def max_slots(self) -> int:
         """Estimated max number of effect slots per insert.
 
         Maximum number of slots w.r.t. FL Studio:
-        - 1.6.5: 4
-        - 3.3.0: 8
+
+        * 1.6.5: 4
+        * 3.3.0: 8
         """
         version = dataclasses.astuple(self._kw["version"])
-
-        if version >= (1, 6, 5):
-            return 4
-        elif version >= (3, 3, 0):
-            return 8
+        for k, v in self._MAX_SLOTS.items():
+            if version <= k:
+                return v
         return 10

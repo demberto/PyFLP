@@ -11,6 +11,8 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
+"""Contains the types used by the public API and other project-wide properties."""
+
 from __future__ import annotations
 
 import datetime
@@ -165,8 +167,8 @@ class Project(MultiEventModel):
     def _collect_events(self, *enums: type[EventEnum]) -> list[AnyEvent]:
         events: list[AnyEvent] = []
         for event in self._events_tuple:
-            for enum in enums:
-                if event.id in enum:
+            for enum_ in enums:
+                if event.id in enum_:
                     events.append(event)
                     break
         return events
@@ -210,8 +212,8 @@ class Project(MultiEventModel):
             if event.id == InsertID.Flags:
                 break
 
-            for enum in (ChannelID, DisplayGroupID, PluginID, RackID):
-                if event.id in enum:
+            for enum_ in (ChannelID, DisplayGroupID, PluginID, RackID):
+                if event.id in enum_:
                     events.append(event)
                     break
 
@@ -312,7 +314,7 @@ class Project(MultiEventModel):
             c2 = ord(char) - 49 - idx
 
             for c in c1, c2:
-                if c > 0 and c <= 127:
+                if 0 < c <= 127:
                     licensee.append(c)
                     break
         event.value = licensee.decode("ascii")
@@ -386,6 +388,7 @@ class Project(MultiEventModel):
         Raises:
             UnexpectedType: When a fine-tuned tempo (float) isn't supported.
                 Use an `int` (coarse tempo) value.
+            PropertyCannotBeSet: If underlying event isn't found.
             ValueError: When a tempo outside the allowed range is set.
 
         * *Changed in FL Studio v1.4.2*: Max tempo increased to 999 (int).
@@ -409,10 +412,11 @@ class Project(MultiEventModel):
                 ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine
             )
 
-        if self.version >= FLVersion(1, 4, 2) and self.version < FLVersion(11):
-            max_tempo = 999.000
-        else:
-            max_tempo = 522.000
+        max_tempo = (
+            999.000
+            if self.version >= FLVersion(1, 4, 2) and self.version < FLVersion(11)
+            else 522.000
+        )
 
         if isinstance(value, float) and self.version < FLVersion(3, 4, 0):
             raise UnexpectedType(int, float)
@@ -464,7 +468,7 @@ class Project(MultiEventModel):
         """
         events = self._events[ProjectID.FLVersion]
         event = cast(AsciiEvent, events[0])
-        return FLVersion(*tuple(map(int, event.value.split("."))))
+        return FLVersion(*tuple(int(part) for part in event.value.split(".")))
 
     @version.setter
     def version(self, value: FLVersion | str | tuple[int, ...]):
@@ -476,14 +480,14 @@ class Project(MultiEventModel):
             if value.build is not None:
                 parts.append(value.build)
         elif isinstance(value, str):
-            parts = tuple(map(int, value.split(".")))
+            parts = tuple(int(part) for part in value.split("."))
         else:
             parts = value
 
         if len(parts) < 3 or len(parts) > 4:
             raise ExpectedValue("Expected format: major.minor.build.patch?")
 
-        version = ".".join(map(str, parts))
+        version = ".".join(str(part) for part in parts)
         self._events[ProjectID.FLVersion][0].value = version
         if len(parts) == 4 and ProjectID.FLBuild in self._events:
             self._events[ProjectID.FLBuild][0].value = parts[3]

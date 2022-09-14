@@ -103,8 +103,9 @@ class _SoundgoodizerStruct(StructBase):
 
 class _WrapperStruct(StructBase):
     PROPS = {
-        "_u16": 16,
-        "flags": "H",
+        "_u16": 16,  # 16
+        "flags": "H",  # 18
+        "_u34": 34,  # 52
     }
 
 
@@ -392,7 +393,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
 
 
 class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3Bk3aGK)"""
+    """![](https://bit.ly/3Bk3aGK)"""  # noqa
 
     INTERNAL_NAME = "BooBass"
     bass = StructProp[int]()
@@ -424,7 +425,7 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
 
 
 class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3RWItqU)"""
+    """![](https://bit.ly/3RWItqU)"""  # noqa
 
     INTERNAL_NAME = "Fruity Balance"
     pan = StructProp[int]()
@@ -461,7 +462,7 @@ class FruityFastDistKind(enum.IntEnum):
 
 
 class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3qT6Jil)"""
+    """![](https://bit.ly/3qT6Jil)"""  # noqa
 
     INTERNAL_NAME = "Fruity Fast Dist"
     kind = StructProp[FruityFastDistKind]()
@@ -512,7 +513,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
 
 
 class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3RHa4g5)"""
+    """![](https://bit.ly/3RHa4g5)"""  # noqa
 
     INTERNAL_NAME = "Fruity NoteBook 2"
     active_page = StructProp[int]()
@@ -529,7 +530,7 @@ class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixi
 
 
 class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3DqjvMu)"""
+    """![](https://bit.ly/3DqjvMu)"""  # noqa
 
     INTERNAL_NAME = "Fruity Send"
     dry = StructProp[int]()
@@ -572,7 +573,7 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
 
 
 class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3BCWfJX)"""
+    """![](https://bit.ly/3BCWfJX)"""  # noqa
 
     INTERNAL_NAME = "Fruity Soft Clipper"
     post = StructProp[int]()
@@ -620,7 +621,7 @@ class StereoEnhancerPhaseInversion(enum.IntEnum):
 class FruityStereoEnhancer(
     _PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin
 ):
-    """![](https://bit.ly/3DoHvji)"""
+    """![](https://bit.ly/3DoHvji)"""  # noqa
 
     INTERNAL_NAME = "Fruity Stereo Enhancer"
     effect_position = StructProp[StereoEnhancerEffectPosition]()
@@ -689,7 +690,7 @@ class SoundgoodizerMode(enum.IntEnum):
 
 
 class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3dip70y)"""
+    """![](https://bit.ly/3dip70y)"""  # noqa
 
     INTERNAL_NAME = "Soundgoodizer"
     amount = StructProp[int]()

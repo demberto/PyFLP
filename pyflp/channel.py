@@ -385,7 +385,7 @@ class Delay(SingleEventModel, ModelReprMixin):
 
 
 class LevelAdjusts(SingleEventModel, ModelReprMixin):
-    """Used by :class:`Layer`, :class:`Instrument` and :class:`Sampler`
+    """Used by :class:`Layer`, :class:`Instrument` and :class:`Sampler`.
 
     ![](https://bit.ly/3xkKeGn)
 
@@ -813,7 +813,7 @@ class Channel(MultiEventModel, SupportsIndex):
         Min Max   Default
         0   12800 10000
         === ===== =======
-        """
+        """  # noqa
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pan"]
 
@@ -844,7 +844,7 @@ class Channel(MultiEventModel, SupportsIndex):
         Min Max   Default
         0   12800 10000
         === ===== =======
-        """
+        """  # noqa
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["volume"]
 
@@ -885,11 +885,16 @@ class Channel(MultiEventModel, SupportsIndex):
 
 
 class Automation(Channel):
-    """![](https://bit.ly/3RXQhIN)"""
+    """Represents an automation clip present in the channel rack.
+
+    ![](https://bit.ly/3RXQhIN)
+    """
 
 
 class Layer(Channel, Sequence[Channel]):
-    """![](https://bit.ly/3S2MLgf)
+    """Represents a layer channel present in the channel rack.
+
+    ![](https://bit.ly/3S2MLgf)
 
     *New in FL Studio v3.4.0*.
     """
@@ -937,13 +942,18 @@ class _SamplerInstrument(Channel):
 
 
 class Instrument(_SamplerInstrument):
+    """Represents a native or a 3rd party plugin loaded in a channel."""
+
     plugin = PluginProp({VSTPluginEvent: VSTPlugin, BooBassEvent: BooBass})
     """The plugin loaded into the channel."""
 
 
 # TODO New in FL Studio v1.4.0 & v1.5.23: Sampler spectrum views
 class Sampler(_SamplerInstrument):
-    """![](https://bit.ly/3DlHPiI)"""
+    """Represents the native Sampler, either as a clip or a channel.
+
+    ![](https://bit.ly/3DlHPiI)
+    """
 
     def __repr__(self):
         return f"{repr(self.sample_path) or 'Empty'} {super().__repr__()}"
@@ -986,8 +996,8 @@ class Sampler(_SamplerInstrument):
     def pitch_shift(self, value: int):
         try:
             event = self._events[ChannelID.Levels][0]
-        except KeyError:
-            raise PropertyCannotBeSet(ChannelID.Levels)
+        except KeyError as exc:
+            raise PropertyCannotBeSet(ChannelID.Levels) from exc
         else:
             cast(LevelsEvent, event)["pitch_shift"] = value
 
@@ -1000,7 +1010,10 @@ class Sampler(_SamplerInstrument):
 
 
 class ChannelRack(MultiEventModel, Sequence[Channel]):
-    """![](https://bit.ly/3RXR50h)"""
+    """Represents the channel rack, contains all :class:`Channel`s.
+
+    ![](https://bit.ly/3RXR50h)
+    """
 
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
@@ -1009,19 +1022,19 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
         """Gets a channel from the rack based on its IID or index.
 
         Args:
-            index (str | SupportsIndex): Compared with `Channel.iid` if an `str`
-                or compared with the index in the order which channels are found.
+            index (str | SupportsIndex): Compared with :attr:`Channel.iid` if
+                a string or the index of the order in which channels are found.
 
         Raises:
-            ChannelNotFound: When a channel with an IID or index of `index` is
-                not found.
+            ChannelNotFound: A :class:`Channel` with an IID or index of
+                :attr:`index` isn't found.
         """
         for idx, channel in enumerate(self):
             if (isinstance(index, str) and int(index) == channel.iid) or (index == idx):
                 return channel
         raise ChannelNotFound(index)
 
-    def __iter__(self):
+    def __iter__(self):  # pylint: disable=too-complex
         ch_dict: dict[int, Channel] = {}
         events: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
         cur_ch_events = []

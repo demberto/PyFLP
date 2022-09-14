@@ -25,7 +25,7 @@ To save a project back:
     >>> pyflp.save(project, "/path/to/save.flp")
 
 Full docs are available at https://pyflp.rtfd.io.
-"""
+"""  # noqa
 
 from __future__ import annotations
 
@@ -56,6 +56,9 @@ __all__ = ["parse", "save"]
 
 
 def parse(file: str | pathlib.Path) -> Project:
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
+    # pylint: disable=too-complex
     """Parse an FL Studio project file.
 
     Args:
@@ -63,6 +66,7 @@ def parse(file: str | pathlib.Path) -> Project:
 
     Raises:
         HeaderCorrupted: When an invalid value is found in the file header.
+        VersionNotDetected: A correct string type couldn't be determined.
 
     Returns:
         Project: The parsed object.
@@ -81,13 +85,13 @@ def parse(file: str | pathlib.Path) -> Project:
     format = stream.read_H()  # 10
     try:
         format = FileFormat(format)
-    except ValueError:
-        raise HeaderCorrupted("Unsupported project file format")
+    except ValueError as exc:
+        raise HeaderCorrupted("Unsupported project file format") from exc
 
     channel_count = stream.read_H()  # 12
     if channel_count is None:
         raise HeaderCorrupted("Channel count couldn't be read")
-    elif channel_count < 0:
+    if channel_count < 0:
         raise HeaderCorrupted("Channel count can't be less than zero")
 
     ppq = stream.read_H()  # 14
@@ -170,7 +174,7 @@ def save(project: Project, file: str):
     stream.seek(4, 1)  # leave space for total event size
 
     events_size = 0
-    for event in project._events_tuple:
+    for event in project.events_astuple():
         events_size += len(event)
         stream.write(bytes(event))
 

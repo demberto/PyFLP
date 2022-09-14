@@ -55,11 +55,7 @@ class UnexpectedType(Error, TypeError):
 
 class PropertyCannotBeSet(Error, AttributeError):
     def __init__(self, *ids: int):
-        if len(ids) > 0:
-            msg = f"Property cannot be set as event(s) {ids!r} was / were not found"
-        else:
-            msg = "Property cannot be set"
-        super().__init__(msg)
+        super().__init__(f"Event(s) {ids!r} was / were not found")
 
 
 class ExpectedValue(Error, ValueError):
@@ -72,13 +68,13 @@ class DataCorrupted(Error):
 
 
 class HeaderCorrupted(DataCorrupted, ValueError):
-    """Header chunk contains an unexpected / invalid value."""
+    """Header chunk contains an unexpected / invalid value.
+
+    Args:
+        desc (str): A string containing details about what is corrupted.
+    """
 
     def __init__(self, desc: str):
-        """
-        Args:
-            desc (str): A string containing details about what is corrupted.
-        """
         super().__init__(f"Error parsing header: {desc}")
 
 

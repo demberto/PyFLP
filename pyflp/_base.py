@@ -11,11 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""
-pyflp._base
-===========
-
-Contains internal implementation details and shared types.
+"""Contains internal implementation details and shared types.
 
 This module can briefly be divided into:
 - Event classes & handling logic.
@@ -23,6 +19,8 @@ This module can briefly be divided into:
 - Custom descriptors.
 - Public and internal types and dataclasses.
 """
+
+# pylint: disable=super-init-not-called
 
 from __future__ import annotations
 
@@ -32,17 +30,13 @@ import dataclasses
 import enum
 import sys
 import warnings
+from collections.abc import Hashable, Sized
 from typing import (
     Any,
     ClassVar,
     DefaultDict,
     Dict,
     Generic,
-    Hashable,
-    Iterable,
-    Iterator,
-    Sized,
-    SupportsBytes,
     Tuple,
     TypeVar,
     Union,
@@ -52,12 +46,12 @@ from typing import (
 if sys.version_info >= (3, 8):
     from typing import Final, Protocol, SupportsIndex, runtime_checkable
 else:
-    from typing_extensions import (
-        Final,
-        Protocol,
-        runtime_checkable,
-        SupportsIndex,
-    )
+    from typing_extensions import Final, Protocol, SupportsIndex, runtime_checkable
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Iterable, Iterator
+else:
+    from typing import Iterable, Iterator
 
 import colour
 from bytesioex import (
@@ -73,7 +67,7 @@ from bytesioex import (
     UShort,
 )
 
-from .exceptions import *
+from .exceptions import EventIDOutOfRange, InvalidEventChunkSize, PropertyCannotBeSet
 
 BYTE: Final = 0
 WORD: Final = 64
@@ -90,7 +84,8 @@ T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
 
 
-class EventBase(abc.ABC, Generic[T], Hashable, Sized, SupportsBytes):
+# ! MRO erros when deriving from SupportsBytes on Python 3.7
+class EventBase(Generic[T], Sized, Hashable):
     """Abstract base class representing an event."""
 
     def __init__(self, id: int, data: bytes):
@@ -121,7 +116,7 @@ class EventBase(abc.ABC, Generic[T], Hashable, Sized, SupportsBytes):
     @property
     def value(self) -> T:
         """Deserialized event-type specific value."""
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis
 
     @value.setter
     def value(self, value: T):
@@ -350,14 +345,14 @@ class VarintEventBase(EventBase[T], abc.ABC):
     def _to_varint(buffer: bytes):
         ret = bytearray()
         buflen = len(buffer)
-        while True:
+        while buflen <= 0:
             towrite = buflen & 0x7F
             buflen >>= 7
             if buflen > 0:
                 towrite |= 0x80
             ret.append(towrite)
-            if buflen <= 0:
-                break
+            # if buflen <= 0:
+            #     break
         return ret
 
     def __len__(self):
@@ -482,8 +477,7 @@ class _StructMeta(type):
     }
 
     def __new__(cls, name: str, bases: Any, attrs: dict[str, Any]):
-        """Populates `Struct.OFFSETS` and `Struct.SIZE`."""
-
+        """Populates :attr:`Struct.OFFSETS` and :attr:`Struct.SIZE`."""
         if "PROPS" not in attrs:
             raise AttributeError(f"Class {name} doesn't have a PROPS attribute")
 
@@ -603,7 +597,7 @@ class StructEventBase(DataEventBase):
         return f"{cls} (id={self.id!r}, size={size}, props={props!r})"
 
 
-class ListEventBase(DataEventBase, abc.ABC, Iterable[StructBase]):
+class ListEventBase(DataEventBase, Iterable[StructBase]):
     """Base class for events storing an array of structured data."""
 
     STRUCT: ClassVar[type[StructBase]]
@@ -614,7 +608,7 @@ class ListEventBase(DataEventBase, abc.ABC, Iterable[StructBase]):
         self.unparsed = False
 
         size = type(self).STRUCT.SIZE
-        if self._stream_len % size == 0:
+        if not self._stream_len % size:
             for _ in range(int(self._stream_len / size)):
                 self.items.append(type(self).STRUCT(self._stream))
         else:
@@ -779,7 +773,7 @@ class NamedPropMixin:
         self._prop = prop or ""
 
     def __set_name__(self, _: Any, name: str):
-        if self._prop == "":
+        if not self._prop:
             self._prop = name
 
 
@@ -808,10 +802,11 @@ class FlagProp(RWProperty[bool]):
 
     def _get_struct(self, instance: ModelBase) -> StructEventBase | None:
         if isinstance(instance, SingleEventModel):
-            return cast(StructEventBase, instance._event)
-        elif isinstance(instance, MultiEventModel) and self._id is not None:
+            return cast(StructEventBase, instance.event())
+
+        if isinstance(instance, MultiEventModel) and self._id is not None:
             try:
-                event = instance._events[self._id][0]
+                event = instance.events_asdict()[self._id][0]
             except (KeyError, IndexError):
                 pass
             else:
@@ -887,7 +882,7 @@ class EventProp(RWProperty[T]):
                 event.value = value
 
 
-class IterProp(ROProperty[Iterator[SEMT_co]]):
+class IterProp(ROProperty[Iterable[SEMT_co]]):
     def __init__(self, id: EventEnum, type: type[SEMT_co]):
         self._id = id
         self._type = type
@@ -929,9 +924,10 @@ class StructProp(NamedPropMixin, RWProperty[T]):
 
     def _get_event(self, instance: Any) -> AnyEvent | None:
         if isinstance(instance, SingleEventModel):
-            return instance._event
-        elif isinstance(instance, MultiEventModel) and self._id is not None:
-            events = instance._events.get(self._id)
+            return instance.event()
+
+        if isinstance(instance, MultiEventModel) and self._id is not None:
+            events = instance.events_asdict().get(self._id)
             if events is not None:
                 return events[0]
 

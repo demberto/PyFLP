@@ -370,11 +370,11 @@ class Arrangement(MultiEventModel, SupportsIndex):
     name = EventProp[str](ArrangementID.Name)
     """Name of the arrangement; defaults to **Arrangement**."""
 
-    def _collect_events(self, enum: type[EventEnum]):
+    def _collect_events(self, enum_: type[EventEnum]):
         counter: list[int] = []
         ins_events: list[list[AnyEvent]] = []
         for id, events in self._events.items():
-            if id in enum:
+            if id in enum_:
                 counter.append(len(events))
                 ins_events.append(events)
 
@@ -398,11 +398,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
     def tracks(self) -> Iterator[Track]:
         count = 0
         event = None
-
-        if dataclasses.astuple(self._kw["version"]) >= (12, 9, 1):
-            max_idx = 499
-        else:
-            max_idx = 198
+        max_idx = 499 if dataclasses.astuple(self._kw["version"]) >= (12, 9, 1) else 198
 
         if ArrangementID.Playlist in self._events:
             event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
@@ -463,8 +459,8 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
             elif event.id == ArrangementsID.Current:
                 return make_arr()  # last arrangement
 
-            for enum in (ArrangementID, TimeMarkerID, TrackID):
-                if event.id in enum:
+            for enum_ in (ArrangementID, TimeMarkerID, TrackID):
+                if event.id in enum_:
                     events.append(event)
                     break
 

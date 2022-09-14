@@ -264,6 +264,7 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
 
     @property
     def current(self) -> Pattern | None:
+        """Returns the currently selected pattern."""
         if PatternsID.CurrentlySelected in self._events:
             index = self._events[PatternsID.CurrentlySelected][0].value
             for pattern in self:

@@ -20,11 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
 ]
 license = { text = "GPL-3.0" }
-dependencies = [
-  "bytesioex>=0.1.2",
-  "colour>=0.1.5",
-  'typing_extensions>=4.3.0',
-]
+dependencies = ["bytesioex>=0.1.2", "colour>=0.1.5", 'typing_extensions>=4.3.0']
 dynamic = ["version"]
 
 [project.urls]
@@ -36,6 +32,7 @@ Documentation = "https://pyflp.rtfd.io"
 [tool.coverage.run]
 branch = true
 parallel = true
+omit = ["main.py"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -47,15 +44,34 @@ exclude_lines = [
 ]
 ignore_errors = true
 
-
 [tool.isort]
 profile = "black"
+
+[tool.pylint.design]
+max-parents = 8
+
+[tool.pylint.format]
+max-module-lines = 1200
 
 [tool.pylint.MASTER]
 jobs = 0 # Parallel execution
 
 [tool.pylint.'MESSAGE CONTROL']
-disable = ["duplicate-code", "invalid-name"]
+disable = [
+  "docstring-first-line-empty",
+  "empty-comment",
+  "inherit-non-class",              # https://github.com/PyCQA/pylint/issues/3505#issuecomment-1246655178
+  "inconsistent-return-statements",
+  "invalid-name",
+  "no-member",
+  "redefined-builtin",
+  "missing-class-docstring",
+  "missing-function-docstring",
+  "too-few-public-methods",
+  "useless-parent-delegation",
+  "while-used",
+  "wrong-import-position",
+]
 
 [tool.pyright]
 reportPrivateUsage = false
