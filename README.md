@@ -1,6 +1,6 @@
 <!-- PROJECT SHIELDS -->
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![GitHub Workflow Status][workflow-shield]][workflow-shield]
@@ -60,9 +60,13 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
 <table>
-  <tr>
-    <td align="center"><a href="https://github.com/nickberry17"><img src="https://avatars.githubusercontent.com/u/18670565?v=4?s=100" width="100px;" alt=""/><br /><sub><b>nickberry17</b></sub></a><br /><a href="https://github.com/demberto/PyFLP/commits?author=nickberry17" title="Code">💻</a></td>
-  </tr>
+  <tbody>
+    <tr>
+      <td align="center"><a href="https://github.com/nickberry17"><img src="https://avatars.githubusercontent.com/u/18670565?v=4?s=50" width="50px;" alt=""/><br /><sub><b>nickberry17</b></sub></a><br /><a href="https://github.com/demberto/PyFLP/commits?author=nickberry17" title="Code">💻</a></td>
+      <td align="center"><a href="https://github.com/zacanger"><img src="https://avatars.githubusercontent.com/u/12520493?v=4?s=50" width="50px;" alt=""/><br /><sub><b>zacanger</b></sub></a><br /><a href="https://github.com/demberto/PyFLP/issues?q=author%3Azacanger" title="Bug reports">🐛</a> <a href="https://github.com/demberto/PyFLP/commits?author=zacanger" title="Documentation">📖</a></td>
+      <td align="center"><a href="https://github.com/ttaschke"><img src="https://avatars.githubusercontent.com/u/7067750?v=4?s=50" width="50px;" alt=""/><br /><sub><b>Tim</b></sub></a><br /><a href="https://github.com/demberto/PyFLP/commits?author=ttaschke" title="Documentation">📖</a> <a href="https://github.com/demberto/PyFLP/commits?author=ttaschke" title="Code">💻</a></td>
+    </tr>
+  </tbody>
 </table>
 
 <!-- markdownlint-restore -->

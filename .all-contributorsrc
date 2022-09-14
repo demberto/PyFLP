@@ -23,6 +23,16 @@
         "bug",
         "doc"
       ]
+    },
+    {
+      "login": "ttaschke",
+      "name": "Tim",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7067750?v=4",
+      "profile": "https://github.com/ttaschke",
+      "contributions": [
+        "doc",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
