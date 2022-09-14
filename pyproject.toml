@@ -23,7 +23,7 @@ license = { text = "GPL-3.0" }
 dependencies = [
   "bytesioex>=0.1.2",
   "colour>=0.1.5",
-  'typing_extensions>=4.3.0;python_version<"3.8"',
+  'typing_extensions>=4.3.0',
 ]
 dynamic = ["version"]
 
