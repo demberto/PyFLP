@@ -30,7 +30,7 @@ FL_BADGE = (
 project = "PyFLP"
 copyright = "2022, demberto"
 author = "demberto"
-release = "2.0.0"
+release = "2.0.0a0"
 extensions = [
     "hoverxref.extension",
     "myst_parser",

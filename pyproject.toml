@@ -110,11 +110,12 @@ regex = '''
 message_template = "version: bump to {new_version}"
 tag_template = "v{new_version}"
 
-# For each file to patch, add a [[tool.tbump.file]] config
-# section containing the path of the file, relative to the
-# tbump.toml location.
 [[tool.tbump.file]]
 src = "VERSION"
+
+[[tool.tbump.file]]
+src = "docs/conf.py"
+search = "release = {current_version}"
 
 [[tool.tbump.before_commit]]
 name = "check changelog"
