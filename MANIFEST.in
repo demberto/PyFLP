@@ -8,16 +8,10 @@ include docs/conf.py
 include docs/Makefile
 include docs/make.bat
 include docs/requirements.txt
-recursive-include docs/img *.gif
-recursive-include docs/img *.jpg
-recursive-include docs/img *.png
 recursive-include docs *.rst
-prune docs/_build
-prune docs/_images
+recursive-include docs/img *.gif *.jpg *.png
 recursive-include pyflp *.py
-recursive-include tests *.md
-recursive-include tests *.py
-recursive-include tests *.flp
+recursive-include tests *.md *.py *.flp
 include *.txt
 include *.yaml
 include VERSION
