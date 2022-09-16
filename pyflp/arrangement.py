@@ -377,7 +377,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
                 ins_events.append(events)
 
         ins_dict: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
-        for i in range(max(counter)):
+        for i in range(max(counter, default=0)):
             for sublist in ins_events:
                 try:
                     event = sublist[i]
@@ -441,26 +441,25 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
     # parse; it contains ArrangementID.New event followed by TimeMarker events
     # followed by 500 TrackID events. TimeMarkers occured before new arrangement
     # event in initial versions of FL20, making them harder to group.
+    # TODO This logic might not work on older versions of FL.
     def __iter__(self) -> Iterator[Arrangement]:
-        first = True
-        events: list[AnyEvent] = []
+        """Provides an iterator over :class:`Arrangement`s found in the project.
 
-        def make_arr():
-            return Arrangement(*events, version=self._kw["version"])
-
+        Raises:
+            NoModelsFound: When no arrangements are found.
+        """
+        arrs_evs: list[list[AnyEvent]] = [[] for _ in range(len(self))]
+        idx = 0
         for event in self._events_tuple:
             if event.id == ArrangementID.New:
-                if not first:
-                    yield make_arr()
-                    events = []
-                first = not first
-            elif event.id == ArrangementsID.Current:
-                return make_arr()  # last arrangement
+                idx = event.value
 
             for enum_ in (ArrangementID, TimeMarkerID, TrackID):
                 if event.id in enum_:
-                    events.append(event)
-                    break
+                    arrs_evs[idx].append(event)
+
+        for arr_evs in arrs_evs:
+            yield Arrangement(*arr_evs, version=self._kw["version"])
 
     def __len__(self):
         """The number of arrangements present in the project.
@@ -488,8 +487,8 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
             index = event.value
             try:
                 return list(self)[index]
-            except IndexError:
-                raise ModelNotFound(index)
+            except IndexError as exc:
+                raise ModelNotFound(index) from exc
 
     height = EventProp[int](ArrangementsID.WindowHeight)
     """Window height / track width used by the interface."""

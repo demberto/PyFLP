@@ -164,22 +164,32 @@ class Project(MultiEventModel):
     def __repr__(self) -> str:
         return f"FL Studio {str(self.version)} {self.format.name}"
 
-    def _collect_events(self, *enums: type[EventEnum]) -> list[AnyEvent]:
-        events: list[AnyEvent] = []
+    def _collect_events(self, *enums: type[EventEnum]):
         for event in self._events_tuple:
             for enum_ in enums:
                 if event.id in enum_:
-                    events.append(event)
+                    yield event
                     break
-        return events
 
     @property
     def arrangements(self) -> Arrangements:
         """Provides an iterator over arrangements and other related properties."""
-        return Arrangements(
-            *self._collect_events(ArrangementID, ArrangementsID, TrackID, TimeMarkerID),
-            version=self.version,
-        )
+        arrnew_occured = False
+        filtered_events: list[AnyEvent] = []
+        for event in self._collect_events(
+            ArrangementID, ArrangementsID, TrackID, TimeMarkerID
+        ):
+            if event.id == ArrangementID.New:
+                arrnew_occured = True
+
+            # * Prevents accidentally passing on Pattern's timemarkers
+            # TODO This logic will still be incorrect if arrangement's
+            # timemarkers occur before ArrangementID.New event.
+            elif event.id in TimeMarkerID and not arrnew_occured:
+                continue
+            filtered_events.append(event)
+
+        return Arrangements(*filtered_events, version=self.version)
 
     artists = EventProp[str](ProjectID.Artists)
     """Authors / artists info. to be embedded in exported WAV & MP3.

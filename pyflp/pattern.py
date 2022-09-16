@@ -101,7 +101,8 @@ class PatternsID(EventEnum):
 # ChannelIID, _161, _162, Looped, Length occur when pattern is looped.
 # ChannelIID and _161 occur for every channel in order.
 # ! Looping a pattern puts timemarkers in it. The same TimeMarkerID events are
-# !used, which means I need to refactor it out from pyflp.arrangement.
+# ! used, which means I need to refactor it out from pyflp.arrangement.
+# TODO Patterns share TimeMarker events with Arrangements
 class PatternID(EventEnum):
     Looped = (26, BoolEvent)
     New = (WORD + 1, U16Event)  # Marks the beginning of a new pattern, twice.
