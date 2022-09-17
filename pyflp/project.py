@@ -218,6 +218,10 @@ class Project(MultiEventModel):
     def channels(self) -> ChannelRack:
         """Provides an iterator over channels and channel rack properties."""
         events: list[AnyEvent] = []
+
+        if RackID.WindowHeight in self._events:
+            events.append(self._events[RackID.WindowHeight][0])
+
         for event in self._events_tuple:
             if event.id == InsertID.Flags:
                 break

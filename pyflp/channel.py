@@ -250,6 +250,7 @@ class DisplayGroupID(EventEnum):
 class RackID(EventEnum):
     Swing = (11, U8Event)
     _FitToSteps = (13, U8Event)
+    WindowHeight = (DWORD + 5, U32Event)
 
 
 @enum.unique
@@ -1071,6 +1072,9 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
         if DisplayGroupID.Name in self._events:
             for event in self._events[DisplayGroupID.Name]:
                 yield DisplayGroup(event)
+
+    height = EventProp[int](RackID.WindowHeight)
+    """Window height of the channel rack in the interface (in pixels)."""
 
     @property
     def instruments(self) -> Iterator[Instrument]:

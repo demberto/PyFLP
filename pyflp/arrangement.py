@@ -128,7 +128,6 @@ class ArrangementsID(EventEnum):
     TimeSigNum = (17, U8Event)
     TimeSigBeat = (18, U8Event)
     Current = (WORD + 36, U16Event)
-    WindowHeight = (DWORD + 5, U32Event)
     LoopPos = (DWORD + 24, U32Event)  #: 1.3.8+
 
 
@@ -508,9 +507,6 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
                 return list(self)[index]
             except IndexError as exc:
                 raise ModelNotFound(index) from exc
-
-    height = EventProp[int](ArrangementsID.WindowHeight)
-    """Window height / track width used by the interface."""
 
     loop_pos = EventProp[int](ArrangementsID.LoopPos)
     """*New in FL Studio v1.3.8*."""

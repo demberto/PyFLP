@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `PlaylistItemBase.group` for `ChannelPlaylistItem` and `PatternPlaylistItem` [#36].
 - Updated contributor's guide.
-- VSCode: Python extension configuration, recommended extensions and tasks
+- VSCode: Python extension configuration, recommended extensions and tasks.
+- `ChannelRack.height`.
 
 ### Fixed
 
@@ -23,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tracks don't get assigned playlist items [#37].
 - KeyError when accessing `Track.content_locked` [#38].
 - Channel type wasn't correctly detected at times [#40].
+- `Arrangements.height` was actually `ChannelRack.height` [#43].
+
+### Removed
+
+- `Arrangements.height`.
 
 [#32]: https://github.com/demberto/PyFLP/issues/32
 [#33]: https://github.com/demberto/PyFLP/issues/33
@@ -30,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#37]: https://github.com/demberto/PyFLP/issues/37
 [#38]: https://github.com/demberto/PyFLP/issues/38
 [#40]: https://github.com/demberto/PyFLP/issues/40
+[#43]: https://github.com/demberto/PyFLP/issues/43
 
 ## [2.0.0a0] - 2022-09-14
 

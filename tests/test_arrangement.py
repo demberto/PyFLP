@@ -11,7 +11,6 @@ from pyflp.arrangement import Arrangement, Arrangements, Track
 def test_arrangements(arrangements: Arrangements):
     assert len(arrangements) == 2
     assert arrangements.current == arrangements[0]
-    assert arrangements.height == 456
     assert arrangements.loop_pos is None
     assert arrangements.max_tracks == 500
     assert arrangements.time_signature.num == 4

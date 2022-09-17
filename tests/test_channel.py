@@ -9,6 +9,7 @@ from pyflp.channel import Channel, ChannelRack, Sampler
 def test_channels(rack: ChannelRack):
     assert len(rack) == 18
     assert rack.fit_to_steps is None
+    assert rack.height == 636
     assert [group.name for group in rack.groups] == ["Audio", "Generators", "Unsorted"]
     assert not rack.swing
 
