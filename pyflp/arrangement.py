@@ -102,7 +102,7 @@ class _TrackStruct(StructBase):
         "enabled": "bool",  # 13
         "height": "f",  # 17
         "locked_height": "f",  # 21
-        "locked_to_content": "bool",  # 22
+        "content_locked": "bool",  # 22
         "motion": "I",  # 26
         "press": "I",  # 30
         "trigger_sync": "I",  # 34

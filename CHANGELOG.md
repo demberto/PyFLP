@@ -17,9 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `_PlaylistItemStruct.track_index` should be 2 bytes [#36].
 - Tracks don't get assigned playlist items [#37].
+- KeyError when accessing `Track.content_locked` [#38].
 
 [#36]: https://github.com/demberto/PyFLP/issues/36
 [#37]: https://github.com/demberto/PyFLP/issues/37
+[#38]: https://github.com/demberto/PyFLP/issues/38
 
 ## [2.0.0a0] - 2022-09-14
 
