@@ -21,7 +21,7 @@ PyFLP is a parser for FL Studio project (.flp) files written in Python.
 
 **Python 3.7+** required:
 
-```
+```console
 pip install --upgrade pyflp
 ```
 

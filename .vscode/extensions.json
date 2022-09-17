@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "aaron-bond.better-comments", // Highlighting annotated comments
+    "bierner.markdown-preview-github-styles", // Github-style markdown preview
+    "DavidAnson.vscode-markdownlint", // Lint markdown files, just like code
+    "EditorConfig.EditorConfig", // For .editorconfig
+    "ms-vscode.hexeditor", // For viewing FLP's directly in VSCode
+    "ms-python.python", // Pyright, docstrings
+    "njpwerner.autodocstring", // Create docstrings quickly
+    "redhat.vscode-yaml", // For YAML files
+    "tamasfe.even-better-toml", // For pyproject.toml
+    "trond-snekvik.simple-rst", // Sphinx rST docs
+  ]
+}

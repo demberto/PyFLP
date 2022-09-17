@@ -6,12 +6,14 @@
     {
       "label": "coverage: all",
       "type": "shell",
-      "command": "coverage run -m pytest && coverage combine && coverage report && coverage html && start htmlcov/index.html"
+      "command": "coverage run -m pytest && coverage combine && coverage report && coverage html && start htmlcov/index.html",
+      "problemMatcher": []
     },
     {
-      "label": "venv: activate",
+      "label": "sphinx: clean run",
       "type": "shell",
-      "command": "./venv/Scripts/activate"
+      "command": "./docs/make.bat clean && ./docs/make.bat html && start ./docs/_build/index.html",
+      "problemMatcher": []
     }
   ]
 }

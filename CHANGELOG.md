@@ -12,13 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `PlaylistItemBase.group` for `ChannelPlaylistItem` and `PatternPlaylistItem` [#36].
+- Updated contributor's guide.
+- VSCode: Python extension configuration, recommended extensions and tasks
 
 ### Fixed
 
+- `Arrangement` parsing logic is incorrect [#32].
+- `Track.color` returns `int` instead of `colour.Color` [#33].
 - `_PlaylistItemStruct.track_index` should be 2 bytes [#36].
 - Tracks don't get assigned playlist items [#37].
 - KeyError when accessing `Track.content_locked` [#38].
 
+[#32]: https://github.com/demberto/PyFLP/issues/32
+[#33]: https://github.com/demberto/PyFLP/issues/33
 [#36]: https://github.com/demberto/PyFLP/issues/36
 [#37]: https://github.com/demberto/PyFLP/issues/37
 [#38]: https://github.com/demberto/PyFLP/issues/38
