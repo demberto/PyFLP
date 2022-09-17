@@ -365,6 +365,8 @@ class Slot(MultiEventModel, SupportsIndex):
     """'Fruity Wrapper' for VST/AU plugins or factory name for native plugins."""
 
     enabled = _MixerParamProp[bool](_MixerParamsID.SlotEnabled)
+    """![](https://bit.ly/3dqDzUA)"""
+
     icon = EventProp[int](PluginID.Icon)
     index = EventProp[int](SlotID.Index)
     mix = _MixerParamProp[int](_MixerParamsID.SlotMix)
@@ -466,7 +468,11 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     """Whether the left and right channels are swapped."""
 
     color = EventProp[colour.Color](InsertID.Color)
-    """*New in FL Studio v4.0*."""
+    """*New in FL Studio v4.0*.
+
+    Defaults to #636C71 (granite gray).
+    Values below 20 for any color component (R, G or B) are ignored by FL.
+    """
 
     @property
     def dock(self) -> InsertDock | None:
@@ -485,7 +491,10 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
             return InsertDock.Left
 
     enabled = FlagProp(_InsertFlags.Enabled, InsertID.Flags)
-    """Whether an insert in the mixer is enabled or disabled."""
+    """Whether an insert in the mixer is enabled or disabled.
+
+    ![](https://bit.ly/3BoRBOj)
+    """
 
     @property
     def eq(self) -> InsertEQ:
@@ -497,16 +506,23 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
     icon = EventProp[int](InsertID.Icon)
     input = EventProp[int](InsertID.Input)
+    """![](https://bit.ly/3RO0ckC)"""
+
     is_solo = FlagProp(_InsertFlags.Solo, InsertID.Flags)
     """Whether the insert is solo'd."""
 
     locked = FlagProp(_InsertFlags.Locked, InsertID.Flags)
-    """Whether an insert in the mixer is in locked state."""
+    """Whether an insert in the mixer is in locked state.
+
+    ![](https://bit.ly/3SdPbc2)
+    """
 
     name = EventProp[str](InsertID.Name)
     """*New in FL Studio v3.5.4*."""
 
     output = EventProp[int](InsertID.Output)
+    """![](https://bit.ly/3LjWjBD)"""
+
     pan = _MixerParamProp[int](_MixerParamsID.Pan)
     """Linear.
 
@@ -515,6 +531,8 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     | Min     | -6400 | 100% left      |
     | Max     | 6400  | 100% right     |
     | Default | 0     | Centred        |
+
+    ![](https://bit.ly/3DsZRj4)
     """
 
     polarity_reversed = FlagProp(_InsertFlags.PolarityReversed, InsertID.Flags)

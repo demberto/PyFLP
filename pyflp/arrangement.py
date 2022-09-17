@@ -323,7 +323,16 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
         return f"Track {self.name!r} {suffix}"
 
     color = _TrackColorProp(id=TrackID.Data)
+    """Defaults to #485156 (dark slate gray).
+
+    Note:
+        Unlike `Channel.color` or `Insert.color`, values below 20
+        for any color component are NOT ignored by FL Studio.
+    """
+
     content_locked = StructProp[bool](id=TrackID.Data)
+
+    # TODO Add link to GIF from docs once Bitly quota is available again.
     enabled = StructProp[bool](id=TrackID.Data)
     grouped = StructProp[bool](id=TrackID.Data)
     """Whether grouped with the track above (index - 1) or not."""
@@ -343,6 +352,7 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     items = KWProp[List[PlaylistItemBase]]()
     """Playlist items present on the track."""
 
+    # TODO Add link to GIF from docs once Bitly quota is available again.
     locked = StructProp[bool](id=TrackID.Data)
     """Whether the tracked is in a locked state."""
 

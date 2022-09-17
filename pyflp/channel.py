@@ -750,10 +750,9 @@ class Channel(MultiEventModel, SupportsIndex):
         return cast(int, self.iid)
 
     color = EventProp[colour.Color](PluginID.Color)
-    """
-    Caution:
-        Values lesser than 0x14 for any color component (R, G or B) won't take
-        effect in FL probably. FL doesn't allow you to do it as well.
+    """Defaults to #5C656A (granite gray).
+
+    Values below 20 for any color component (R, G or B) are ignored by FL.
     """
 
     controllers = KWProp[List[RemoteController]]()
@@ -769,6 +768,7 @@ class Channel(MultiEventModel, SupportsIndex):
         :attr:`name`
     """
 
+    # TODO Add link to GIF from docs once Bitly quota is available again.
     enabled = EventProp[bool](ChannelID.IsEnabled)
     group = KWProp[DisplayGroup]()
     """Display group / filter under which this channel is grouped."""
@@ -777,6 +777,8 @@ class Channel(MultiEventModel, SupportsIndex):
     iid = EventProp[int](ChannelID.New)
     keyboard = NestedProp(Keyboard, ChannelID.FineTune, ChannelID.RootNote)
     locked = EventProp[bool](ChannelID.IsLocked)
+    """![](https://bit.ly/3BOBc7j)"""
+
     name = EventProp[str](PluginID.Name, ChannelID._Name)
     """The name associated with a channel.
 
