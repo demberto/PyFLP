@@ -330,14 +330,22 @@ class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
 class ColorEvent(DWordEventBase[colour.Color]):
     """A 4 byte event which stores a color."""
 
+    @staticmethod
+    def decode(buf: bytes):
+        r, g, b = (c / 255 for c in buf[:3])
+        return colour.Color(rgb=(r, g, b))
+
+    @staticmethod
+    def encode(color: colour.Color):
+        return bytes(int(c * 255) for c in color.get_rgb()) + b"\x00"
+
     @property
     def value(self):
-        r, g, b = (c / 255 for c in self._raw[:3])
-        return colour.Color(rgb=(r, g, b))
+        return self.decode(self._raw)
 
     @value.setter
     def value(self, value: colour.Color):
-        self._raw = bytes(int(c * 255) for c in value.get_rgb()) + b"\x00"
+        self._raw = self.encode(value)
 
 
 class VarintEventBase(EventBase[T], abc.ABC):

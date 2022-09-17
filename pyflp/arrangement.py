@@ -19,7 +19,7 @@ import collections
 import dataclasses
 import enum
 import sys
-from typing import DefaultDict, List, cast
+from typing import Any, DefaultDict, List, Optional, cast
 
 if sys.version_info >= (3, 8):
     from typing import Literal, SupportsIndex, TypedDict
@@ -44,11 +44,13 @@ from ._base import (
     TEXT,
     WORD,
     AnyEvent,
+    ColorEvent,
     EventEnum,
     EventProp,
     FLVersion,
     KWProp,
     ListEventBase,
+    ModelBase,
     MultiEventModel,
     NestedProp,
     StructBase,
@@ -275,6 +277,17 @@ class _TrackKW(TypedDict):
     items: list[_PlaylistItemStruct]
 
 
+class _TrackColorProp(StructProp[colour.Color]):
+    def __get__(self, instance: ModelBase, owner: Any = None):
+        value = cast(Optional[int], super().__get__(instance, owner))
+        if value is not None:
+            return ColorEvent.decode(value.to_bytes(4, "little"))
+
+    def __set__(self, instance: ModelBase, value: colour.Color):
+        color_u32 = int.from_bytes(ColorEvent.encode(value), "little")
+        super().__set__(instance, color_u32)  # type: ignore
+
+
 class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     """Represents a track in an arrangement on which playlist items are arranged.
 
@@ -305,7 +318,7 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
             return f"Unnamed track {suffix}"
         return f"Track {self.name!r} {suffix}"
 
-    color = StructProp[colour.Color](id=TrackID.Data)
+    color = _TrackColorProp(id=TrackID.Data)
     content_locked = StructProp[bool](id=TrackID.Data)
     enabled = StructProp[bool](id=TrackID.Data)
     grouped = StructProp[bool](id=TrackID.Data)
