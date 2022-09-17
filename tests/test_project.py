@@ -9,7 +9,7 @@ from pyflp.project import FileFormat, FLVersion, PanLaw, Project
 
 def test_project(project: Project):
     assert project.artists == "demberto"
-    assert project.channel_count == 12
+    assert project.channel_count == 18
     assert (
         project.comments
         == textwrap.dedent(

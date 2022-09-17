@@ -749,13 +749,19 @@ class Channel(MultiEventModel, SupportsIndex):
         return cast(int, self.iid)
 
     color = EventProp[colour.Color](PluginID.Color)
+    """
+    Caution:
+        Values lesser than 0x14 for any color component (R, G or B) won't take
+        effect in FL probably. FL doesn't allow you to do it as well.
+    """
+
     controllers = KWProp[List[RemoteController]]()
     internal_name = EventProp[str](PluginID.InternalName)
     """Internal name of the channel.
 
     The value of this depends on the type of `plugin`:
 
-    * Native (stock) plugin: The factory name of the plugin.
+    * Native (stock) plugin: Empty *afaik*.
     * VST instruments: "Fruity Wrapper".
 
     See Also:
@@ -1020,19 +1026,23 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
                 cur_ch_events.append(event)
 
         for iid, ch_events in events.items():
-            ct = None
+            ct = Channel  # In case an older version doesn't have ChannelID.Type
             for event in ch_events:
                 if event.id == ChannelID.Type:
                     if event.value == ChannelType.Automation:
                         ct = Automation
-                    elif event.value == ChannelType.Instrument:
-                        ct = Instrument
                     elif event.value == ChannelType.Layer:
                         ct = Layer
                     elif event.value == ChannelType.Sampler:
                         ct = Sampler
-                    else:
-                        ct = Channel
+                    elif event.value in (ChannelType.Instrument, ChannelType.Native):
+                        ct = Instrument
+                elif (
+                    event.id == ChannelID.SamplePath
+                    or (event.id == PluginID.InternalName and event.value == "")
+                    and ct == Instrument
+                ):
+                    ct = Sampler  # see #40
 
             if ct is not None:
                 cur_ch = ch_dict[iid] = ct(*ch_events, channels=ch_dict)
