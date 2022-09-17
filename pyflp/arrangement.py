@@ -84,7 +84,8 @@ class _PlaylistItemStruct(StructBase):
         "pattern_base": "H",  # 6
         "item_index": "H",  # 8
         "length": "I",  # 12
-        "track_index": "i",  # 16
+        "track_index": "H",  # 14
+        "group": "H",  # 16
         "_u2": 2,  # 18
         "item_flags": "H",  # 20
         "_u4": 4,  # 24
@@ -193,9 +194,13 @@ class TimeMarkerType(enum.IntEnum):
 
 class PlaylistItemBase(MultiEventModel):
     def __repr__(self):
-        return f"{type(self)} @ {self.position!r} of {self.length}"
+        cls = type(self).__name__
+        return f"{cls} @ {self.position!r} of {self.length} in group {self.group}"
 
     end_offset = StructProp[int]()
+    group = StructProp[int]()
+    """Returns 0 for no group, else a group number for clips in the same group."""
+
     length = StructProp[int]()
     muted = StructProp[bool]()
     """Whether muted / disabled in the playlist. *New in FL Studio v9.0.0*."""

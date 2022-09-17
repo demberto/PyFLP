@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- markdownlint-disable -->
+
+## 2.0.0a1 - Unreleased
+
+### Added
+
+- `PlaylistItemBase.group` for `ChannelPlaylistItem` and `PatternPlaylistItem` [#36].
+
+### Fixed
+
+- `_PlaylistItemStruct.track_index` should be 2 bytes [#36].
+
+[#36]: https://github.com/demberto/PyFLP/issues/36
 ## [2.0.0a0] - 2022-09-14
 
 PyFLP has been rewritten ✨
