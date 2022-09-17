@@ -413,20 +413,21 @@ class Arrangement(MultiEventModel, SupportsIndex):
     @property
     def tracks(self) -> Iterator[Track]:
         count = 0
-        event = None
+        pl_event = None
         max_idx = 499 if dataclasses.astuple(self._kw["version"]) >= (12, 9, 1) else 198
 
         if ArrangementID.Playlist in self._events:
-            event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
+            pl_event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
 
         for events in self._collect_events(TrackID):
             items: list[_PlaylistItemStruct] = []
-            if event is not None:
-                for item in event.items:
+            if pl_event is not None:
+                for item in pl_event.items:
                     idx = item["track_index"]
                     if max_idx - idx == count:
                         items.append(cast(_PlaylistItemStruct, item))
             yield Track(*events, items=items)
+            count += 1
 
 
 class TimeSignature(MultiEventModel):
