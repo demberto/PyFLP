@@ -1,5 +1,10 @@
-from pyflp import Project
+from __future__ import annotations
+
+from pyflp.mixer import Mixer
 
 
-def test_mixer(project: Project):
-    assert len(project.mixer) == 127
+def test_mixer(mixer: Mixer):
+    assert len(mixer) == 127
+    assert mixer.apdc
+    assert mixer.max_inserts == 127
+    assert mixer.max_slots == 10
