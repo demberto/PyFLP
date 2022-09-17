@@ -477,9 +477,10 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
         events = self._events.get(InsertID.Flags)
         if events is not None:
             event = cast(InsertFlagsEvent, events[0])
-            if _InsertFlags.DockMiddle in event["flags"]:
+            flags = _InsertFlags(event["flags"])
+            if _InsertFlags.DockMiddle in flags:
                 return InsertDock.Middle
-            if _InsertFlags.DockRight in event["flags"]:
+            if _InsertFlags.DockRight in flags:
                 return InsertDock.Right
             return InsertDock.Left
 
