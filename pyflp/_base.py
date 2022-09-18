@@ -832,7 +832,10 @@ class FlagProp(RWProperty[bool]):
         self._prop = prop
         self._inverted = inverted
 
-    def _get_struct(self, instance: ModelBase) -> StructEventBase | None:
+    def _get_struct(self, instance: ModelBase):
+        if isinstance(instance, ItemModel):
+            return cast(StructEventBase, instance)
+
         if isinstance(instance, SingleEventModel):
             return cast(StructEventBase, instance.event())
 

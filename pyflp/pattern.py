@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import collections
+import enum
 import sys
 import warnings
 from typing import DefaultDict, cast
@@ -42,6 +43,7 @@ from ._base import (
     ColorEvent,
     EventEnum,
     EventProp,
+    FlagProp,
     I32Event,
     ItemModel,
     ListEventBase,
@@ -118,6 +120,11 @@ class PatternID(EventEnum):
     Notes = (DATA + 16, NotesEvent)
 
 
+@enum.unique
+class _NoteFlags(enum.IntFlag):
+    Slide = 1 << 3
+
+
 class Note(ItemModel[_NoteStruct]):
     def __repr__(self) -> str:
         return "Note {} @ {} of length {} for channel #{}".format(
@@ -188,6 +195,9 @@ class Note(ItemModel[_NoteStruct]):
     | --- | --- | ------- |
     | 0   | 128 | 64      |
     """
+
+    slide = FlagProp(_NoteFlags.Slide)
+    """Whether note is a sliding note."""
 
     velocity = StructProp[int]()
     """

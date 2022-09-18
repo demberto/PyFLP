@@ -73,6 +73,13 @@ def test_note_release(notes: tuple[Note, ...]):
     # fmt: on
 
 
+def test_note_slide(notes: tuple[Note, ...]):
+    # fmt: off
+    assert [n.slide for n in filter(lambda n: n.rack_channel == 11, notes)] == [True, False] * 2
+    # fmt: on
+    assert not all(n.slide for n in filter(lambda n: n.rack_channel != 11, notes))
+
+
 def test_notes(patterns: Patterns):
     for pattern in patterns:
         notes = tuple(pattern)

@@ -14,9 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PlaylistItemBase.group` for `ChannelPlaylistItem` and `PatternPlaylistItem` [#36].
 - More info in contributor's guide.
 - VSCode Python extension configuration, recommended extensions and tasks.
-- `ChannelRack.height`.
+- `ChannelRack.height` which tells the height of the channel rack in pixels.
 - `Track[x]` returns `Track.items[x]`.
 - `Patterns` warns when tried to be accessed with an index of 0.
+- `Note.slide` which indicates whether a note is a sliding note.
 
 ### Changed
 
