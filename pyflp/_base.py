@@ -49,9 +49,9 @@ else:
     from typing_extensions import Final, Protocol, SupportsIndex, runtime_checkable
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterable
 else:
-    from typing import Iterable, Iterator
+    from typing import Iterable
 
 import colour
 from bytesioex import (
@@ -616,7 +616,7 @@ class ListEventBase(DataEventBase, Iterable[StructBase]):
         self.unparsed = False
 
         size = type(self).STRUCT.SIZE
-        if not self._stream_len % size:
+        if self._stream_len % size == 0:
             for _ in range(int(self._stream_len / size)):
                 self.items.append(type(self).STRUCT(self._stream))
         else:
@@ -695,7 +695,29 @@ class ModelBase(abc.ABC):
         """
 
 
+ST = TypeVar("ST", bound=StructBase)
+
+
+class ItemModel(ModelBase, Generic[ST]):
+    """Base class for event-less models."""
+
+    def __init__(self, item: ST, **kw: Any):
+        self._item = item
+        super().__init__(**kw)
+
+    def __getitem__(self, prop: str):
+        return self._item[prop]
+
+    def __setitem__(self, prop: str, value: Any):
+        self._item[prop] = value
+
+    def sizeof(self) -> int:
+        return self._item.SIZE
+
+
 class SingleEventModel(ModelBase):
+    """Base class for models whose properties are derived from a single event."""
+
     def __init__(self, event: AnyEvent, **kw: Any):
         super().__init__(**kw)
         self._event = event
@@ -862,6 +884,8 @@ class KWProp(NamedPropMixin, RWProperty[T]):
 
 
 class EventProp(RWProperty[T]):
+    """Properties bound directly to one of fixed size or string events."""
+
     def __init__(self, *ids: EventEnum, default: T | None = None):
         self._ids = ids
         self._default = default
@@ -890,23 +914,26 @@ class EventProp(RWProperty[T]):
                 event.value = value
 
 
-class IterProp(ROProperty[Iterable[SEMT_co]]):
-    def __init__(self, id: EventEnum, type: type[SEMT_co]):
+ItemType = Iterable[ItemModel[ST]]
+
+
+class ItemsProp(ROProperty[ItemType[ST]]):
+    """Properties whose event contains a collection of :class:`ItemModel`s."""
+
+    def __init__(self, id: EventEnum, type: type[ItemModel[ST]]):
         self._id = id
         self._type = type
 
-    def __get__(
-        self, instance: MultiEventModel, owner: Any = None
-    ) -> Iterator[SEMT_co]:
+    def __get__(self, instance: MultiEventModel, owner: Any = None) -> ItemType[ST]:
         if owner is None:
             return NotImplemented
 
         events = instance._events.get(self._id)
         if events is not None:
-            event = events[0]
-            if isinstance(event, ListEventBase):
-                if not event.unparsed:
-                    yield self._type(event)
+            event = cast(ListEventBase, events[0])
+            if not event.unparsed:
+                for item in event.items:
+                    yield self._type(cast(ST, item))
 
 
 class NestedProp(ROProperty[MT_co]):
@@ -926,31 +953,39 @@ class NestedProp(ROProperty[MT_co]):
 
 
 class StructProp(NamedPropMixin, RWProperty[T]):
+    """Properties obtained from a :class:`StructBase`."""
+
     def __init__(self, prop: str | None = None, id: EventEnum | None = None):
         super().__init__(prop)
         self._id = id
 
-    def _get_event(self, instance: Any) -> AnyEvent | None:
+    def _get_event(self, instance: Any) -> StructEventBase | None:
         if isinstance(instance, SingleEventModel):
-            return instance.event()
+            return cast(StructEventBase, instance.event())
 
         if isinstance(instance, MultiEventModel) and self._id is not None:
             events = instance.events_asdict().get(self._id)
             if events is not None:
-                return events[0]
+                return cast(StructEventBase, events[0])
 
     def __get__(self, instance: ModelBase, owner: Any = None) -> T | None:
         if owner is None:
             return NotImplemented
 
+        if isinstance(instance, ItemModel):
+            return instance[self._prop]
+
         event = self._get_event(instance)
-        if isinstance(event, StructEventBase):
+        if event is not None:
             return event[self._prop]
 
     def __set__(self, instance: ModelBase, value: T):
-        event = self._get_event(instance)
-        if isinstance(event, StructEventBase):
-            event[self._prop] = value
+        if isinstance(instance, ItemModel):
+            instance[self._prop] = value
+        else:
+            event = self._get_event(instance)
+            if event is not None:
+                event[self._prop] = value
 
 
 @dataclasses.dataclass(frozen=True, order=True)
@@ -962,6 +997,6 @@ class FLVersion:
 
     def __str__(self):
         version = f"{self.major}.{self.minor}.{self.patch}"
-        if self.build:
-            return version + f".{self.build}"
+        if self.build is not None:
+            return f"{version}.{self.build}"
         return version

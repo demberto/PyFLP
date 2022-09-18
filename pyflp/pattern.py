@@ -42,10 +42,10 @@ from ._base import (
     EventEnum,
     EventProp,
     I32Event,
-    IterProp,
+    ItemModel,
+    ItemsProp,
     ListEventBase,
     MultiEventModel,
-    SingleEventModel,
     StructBase,
     StructProp,
     U16Event,
@@ -72,7 +72,7 @@ class _NoteStruct(StructBase):
         "position": "I",  # 4
         "flags": "H",  # 6
         "rack_channel": "H",  # 8
-        "duration": "I",  # 12
+        "length": "I",  # 12
         "key": "I",  # 16
         "fine_pitch": "b",  # 17
         "_u1": 1,  # 18
@@ -118,7 +118,12 @@ class PatternID(EventEnum):
     Notes = (DATA + 16, NotesEvent)
 
 
-class Note(SingleEventModel):
+class Note(ItemModel[_NoteStruct]):
+    def __repr__(self) -> str:
+        return "Note {} @ {} of length {} for channel #{}".format(
+            self.key, self.position, self.length, self.rack_channel
+        )
+
     fine_pitch = StructProp[int]()
     """Linear.
 
@@ -131,7 +136,9 @@ class Note(SingleEventModel):
     *New in FL Studio v3.3.0*.
     """
 
-    key = StructProp[int]()  # TODO Separate property and chord/scale detection
+    # TODO Separate property and chord/scale detection
+    # TODO Return note names instead of integers
+    key = StructProp[int]()
     """0-131 for C0-B10. Can hold stamped chords and scales also."""
 
     length = StructProp[int]()
@@ -164,7 +171,7 @@ class Note(SingleEventModel):
     """Min - 0, Max - 128."""
 
 
-class Controller(SingleEventModel):
+class Controller(ItemModel[_ContollerStruct]):
     channel = StructProp[int]()
     """Corresponds to the containing channel's `Channel.IID`."""
 
@@ -183,7 +190,7 @@ class Pattern(MultiEventModel, SupportsIndex):
         return self.index
 
     color = EventProp[colour.Color](PatternID.Color)
-    controllers = IterProp(PatternID.Controllers, Controller)
+    controllers = ItemsProp(PatternID.Controllers, Controller)
     """Parameter automations associated with this pattern (if any)."""
 
     @property
@@ -208,7 +215,7 @@ class Pattern(MultiEventModel, SupportsIndex):
     name = EventProp[str](PatternID.Name)
     """User given name of the pattern; None if not set."""
 
-    notes = IterProp(PatternID.Notes, Note)
+    notes = ItemsProp(PatternID.Notes, Note)
     """MIDI notes contained inside the pattern."""
 
 

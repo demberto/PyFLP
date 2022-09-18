@@ -19,7 +19,7 @@ import collections
 import dataclasses
 import enum
 import sys
-from typing import DefaultDict, List, NamedTuple, cast
+from typing import Any, DefaultDict, List, NamedTuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex, TypedDict
@@ -209,7 +209,7 @@ class _InsertEQBandKW(TypedDict, total=False):
 
 
 class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
-    def __get__(self, instance: ModelBase, owner: object = None) -> int | None:
+    def __get__(self, instance: ModelBase, owner: Any = None) -> int | None:
         if not isinstance(instance, InsertEQBand) or owner is None:
             return NotImplemented
         return instance._kw[self._prop]["msg"]
@@ -219,7 +219,7 @@ class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
 
 
 class InsertEQBand(ModelBase):
-    def __init__(self, **kw: _InsertEQBandKW):
+    def __init__(self, **kw: Unpack[_InsertEQBandKW]):
         super().__init__(**kw)
 
     def __repr__(self):
@@ -274,7 +274,7 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
                 items["gain"] = param
             elif id == self._ids.reso:
                 items["reso"] = param
-        return InsertEQBand(kw=items)
+        return InsertEQBand(**items)
 
 
 # Stored in MixerID.Parameters event.

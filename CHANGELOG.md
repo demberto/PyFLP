@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - KeyError when accessing `Track.content_locked` [#38].
 - Channel type wasn't correctly detected at times [#40].
 - `Arrangements.height` was actually `ChannelRack.height` [#43].
-- TypeError when accessing `Insert.dock` [#44]
+- TypeError when accessing `Insert.dock` [#44].
+- `Pattern.note` and `Pattern.controllers` [#48].
 
 ### Removed
 
@@ -39,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#40]: https://github.com/demberto/PyFLP/issues/40
 [#43]: https://github.com/demberto/PyFLP/issues/43
 [#43]: https://github.com/demberto/PyFLP/issues/44
+[#48]: https://github.com/demberto/PyFLP/issues/48
 
 ## [2.0.0a0] - 2022-09-14
 

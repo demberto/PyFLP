@@ -21,9 +21,9 @@ import sys
 from typing import DefaultDict, List, Tuple, cast
 
 if sys.version_info >= (3, 8):
-    from typing import SupportsIndex
+    from typing import Final, SupportsIndex
 else:
-    from typing_extensions import SupportsIndex
+    from typing_extensions import Final, SupportsIndex
 
 if sys.version_info >= (3, 9):
     from collections.abc import Iterator, Sequence
@@ -45,7 +45,6 @@ from ._base import (
     FlagProp,
     I8Event,
     I32Event,
-    IterProp,
     KWProp,
     ModelReprMixin,
     MultiEventModel,
@@ -921,7 +920,14 @@ class _SamplerInstrument(Channel):
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
     stretching = NestedProp(TimeStretching, ChannelID.StretchTime)
     time = NestedProp(Time, ChannelID.Swing)
-    tracking = IterProp(ChannelID.Tracking, Tracking)
+
+    @property
+    def tracking(self) -> dict[str, Tracking] | None:
+        """A :class:`Tracking` each for Volume & Keyboard."""
+        events = self._events.get(ChannelID.Tracking)
+        if events is not None:
+            lfos = map(lambda e: Tracking(e), events)
+            return {k: v for k, v in zip(("volume", "keyboard"), lfos)}
 
 
 class Instrument(_SamplerInstrument):
@@ -938,8 +944,10 @@ class Sampler(_SamplerInstrument):
     ![](https://bit.ly/3DlHPiI)
     """
 
+    _ENVLFO_NAMES: Final = ("Panning", "Volume", "Mod X", "Mod Y", "Pitch")
+
     def __repr__(self):
-        return f"{repr(self.sample_path) or 'Empty'} {super().__repr__()}"
+        return f"{super().__repr__()} has {repr(self.sample_path) or 'Empty'}"
 
     au_sample_rate = EventProp[int](ChannelID.AUSampleRate)
     """AU-format sample specific."""
@@ -949,8 +957,13 @@ class Sampler(_SamplerInstrument):
 
     # FL's interface doesn't have an envelope for panning, but still stores
     # the default values in event data.
-    envelopes = IterProp(ChannelID.EnvelopeLFO, Envelope)
-    """One each for Volume, Panning, Mod X, Mod Y and Pitch :class:`Envelope`."""
+    @property
+    def envelopes(self) -> dict[str, Envelope] | None:
+        """An :class:`Envelope` each for Volume, Panning, Mod X, Mod Y and Pitch."""
+        events = self._events.get(ChannelID.EnvelopeLFO)
+        if events is not None:
+            envelopes = map(lambda e: Envelope(e), events)
+            return {k: v for k, v in zip(self._ENVLFO_NAMES, envelopes)}
 
     fx = NestedProp(
         FX,
@@ -962,8 +975,13 @@ class Sampler(_SamplerInstrument):
         ChannelID.StereoDelay,
     )
 
-    lfos = IterProp(ChannelID.EnvelopeLFO, LFO)
-    """One each for Volume, Panning, Mod X, Mod Y and Pitch :class:`LFO`."""
+    @property
+    def lfos(self) -> dict[str, LFO] | None:
+        """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch."""
+        events = self._events.get(ChannelID.EnvelopeLFO)
+        if events is not None:
+            lfos = map(lambda e: LFO(e), events)
+            return {k: v for k, v in zip(self._ENVLFO_NAMES, lfos)}
 
     @property
     def pitch_shift(self) -> int | None:

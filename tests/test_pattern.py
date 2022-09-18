@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import pytest
-
-from pyflp.pattern import Pattern, Patterns
+from pyflp.pattern import Patterns
 
 
 def test_patterns(patterns: Patterns):
@@ -11,12 +9,13 @@ def test_patterns(patterns: Patterns):
     assert patterns.play_cut_notes
 
 
-@pytest.fixture(scope="session")
-def pat_tuple(patterns: Patterns):
-    return tuple(patterns)
-
-
-def test_names(pat_tuple: tuple[Pattern, ...]):
-    assert set(pattern.name for pattern in pat_tuple) == set(
+def test_names(patterns: Patterns):
+    assert set(pattern.name for pattern in patterns) == set(
         ("Default", "Colored", "MIDI", "Timemarkers", "Selected")
     )
+
+
+def test_notes(patterns: Patterns):
+    for pattern in patterns:
+        notes = tuple(pattern.notes)
+        assert len(notes) == 32 if pattern.index == 3 else not notes

@@ -16,7 +16,7 @@ import m2r2
 from pyflp._base import (  # noqa
     EventEnum,
     EventProp,
-    IterProp,
+    ItemsProp,
     ModelBase,
     NestedProp,
     StructProp,
@@ -112,7 +112,7 @@ def add_annotations(app, what, name, obj, options, signature, return_annotation)
     if what == "class" and issubclass(obj, ModelBase):
         annotations = {}
         for name_, type in vars(obj).items():
-            if isinstance(obj, (IterProp, NestedProp)):
+            if isinstance(obj, (ItemsProp, NestedProp)):
                 annotations[name_] = type._type
             elif hasattr(type, "__orig_class__"):
                 annotations[name_] = type.__orig_class__.__args__[0]

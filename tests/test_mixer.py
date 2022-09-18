@@ -57,6 +57,25 @@ def test_insert_dock(inserts: tuple[Insert]):
             assert insert.dock == InsertDock.Middle
 
 
+def test_insert_enabled(inserts: tuple[Insert]):
+    for insert in inserts:
+        assert not insert.enabled if insert.name == "Disabled" else insert.enabled
+
+
+# def test_insert_eq(inserts: tuple[Insert]):
+#     for insert in inserts:
+#         if insert.name == "Post EQ":
+#             assert insert.eq.low.freq == 0
+#             assert insert.eq.low.gain == 1800
+#             assert insert.eq.low.reso == 0
+#             assert insert.eq.mid.freq == 33145
+#             assert insert.eq.mid.gain == 0
+#             assert insert.eq.mid.reso == 17500
+#             assert insert.eq.high.freq == 55825
+#             assert insert.eq.high.gain == -1800
+#             assert insert.eq.high.reso == 65536
+
+
 def test_insert_name(inserts: tuple[Insert]):
     assert [insert.name for insert in inserts] == [
         "Master",
@@ -79,9 +98,9 @@ def test_insert_name(inserts: tuple[Insert]):
         "Docked right",
         "Bypassed",
         "Plugin Test",
-        "Slot Check",
+        "Effect slots",
         "50ms track latency",
         "Armed",
-        "Post EQ check",
+        "Post EQ",
         "50ms input latency",
     ]
