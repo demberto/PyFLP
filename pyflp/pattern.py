@@ -75,7 +75,8 @@ class _NoteStruct(StructBase):
         "flags": "H",  # 6
         "rack_channel": "H",  # 8
         "length": "I",  # 12
-        "key": "I",  # 16
+        "key": "H",  # 14
+        "group": "H",  # 16
         "fine_pitch": "B",  # 17
         "_u1": 1,  # 18
         "release": "B",  # 19
@@ -143,7 +144,10 @@ class Note(ItemModel[_NoteStruct]):
     *New in FL Studio v3.3.0*.
     """
 
-    # TODO Separate property and chord/scale detection
+    # TODO #47
+    group = StructProp[int]()
+    """A number shared by notes in the same group or 0 if ungrouped."""
+
     # TODO Return note names instead of integers
     key = StructProp[int]()
     """0-131 for C0-B10. Can hold stamped chords and scales also."""

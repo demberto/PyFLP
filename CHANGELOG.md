@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ChannelRack.height` which tells the height of the channel rack in pixels.
 - `Track[x]` returns `Track.items[x]`.
 - `Patterns` warns when tried to be accessed with an index of 0.
+- `Note.group`, a number which notes of the same group share.
 - `Note.slide` which indicates whether a note is a sliding note.
 
 ### Changed
