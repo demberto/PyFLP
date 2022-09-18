@@ -17,12 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ChannelRack.height` which tells the height of the channel rack in pixels.
 - `Track[x]` returns `Track.items[x]`.
 - `Patterns` warns when tried to be accessed with an index of 0.
-- `Note.group`, a number which notes of the same group share.
+- `Note.group`, a number which notes of the same group share [#28].
 - `Note.slide` which indicates whether a note is a sliding note.
 
 ### Changed
 
 - `Pattern.notes` refactored into `Pattern.__iter__`.
+- `Sampler.sample_path` returns `pathlib.Path` instead of `str` now [#41].
 
 ### Fixed
 
@@ -42,12 +43,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Arrangements.height`.
 
+[#28]: https://github.com/demberto/PyFLP/issues/28
 [#32]: https://github.com/demberto/PyFLP/issues/32
 [#33]: https://github.com/demberto/PyFLP/issues/33
 [#36]: https://github.com/demberto/PyFLP/issues/36
 [#37]: https://github.com/demberto/PyFLP/issues/37
 [#38]: https://github.com/demberto/PyFLP/issues/38
 [#40]: https://github.com/demberto/PyFLP/issues/40
+[#40]: https://github.com/demberto/PyFLP/issues/41
 [#43]: https://github.com/demberto/PyFLP/issues/43
 [#43]: https://github.com/demberto/PyFLP/issues/44
 [#48]: https://github.com/demberto/PyFLP/issues/48

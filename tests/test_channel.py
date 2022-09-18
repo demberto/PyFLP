@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pathlib
+
 import colour
 import pytest
 
@@ -76,7 +78,7 @@ def test_sampler_path(samplers: tuple[Sampler, ...]):
     for sampler in samplers:
         if sampler.name == "22in Kick":
             # fmt: off
-            assert sampler.sample_path == r"%FLStudioFactoryData%\Data\Patches\Packs\Drums\Kicks\22in Kick.wav" # noqa
+            assert sampler.sample_path == pathlib.Path(r"%FLStudioFactoryData%\Data\Patches\Packs\Drums\Kicks\22in Kick.wav")
             # fmt: on
         else:
             assert not sampler.sample_path

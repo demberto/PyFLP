@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import collections
 import enum
+import pathlib
 import sys
 from typing import DefaultDict, List, Tuple, cast
 
@@ -1002,12 +1003,25 @@ class Sampler(_SamplerInstrument):
         else:
             cast(LevelsEvent, event)["pitch_shift"] = value
 
-    playback = NestedProp[Playback](Playback, ChannelID.UsesLoopPoints)
-    sample_path = EventProp[str](ChannelID.SamplePath)
-    """Absolute path of a sample file on the disk.
+    playback = NestedProp(Playback, ChannelID.UsesLoopPoints)
 
-    Contains the string `%FLStudioFactoryData%` for stock samples.
-    """
+    @property
+    def sample_path(self) -> pathlib.Path | None:
+        """Absolute path of a sample file on the disk.
+
+        Contains the string `%FLStudioFactoryData%` for stock samples.
+        """
+        events = self._events.get(ChannelID.SamplePath)
+        if events is not None:
+            return pathlib.Path(events[0].value)
+
+    @sample_path.setter
+    def sample_path(self, value: pathlib.Path):
+        if self.sample_path is None:
+            raise PropertyCannotBeSet(ChannelID.SamplePath)
+
+        path = "" if str(value) == "." else str(value)
+        self._events[ChannelID.SamplePath][0].value = path
 
 
 class ChannelRack(MultiEventModel, Sequence[Channel]):
