@@ -17,7 +17,8 @@ from __future__ import annotations
 
 import collections
 import sys
-from typing import DefaultDict
+import warnings
+from typing import DefaultDict, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex
@@ -25,9 +26,9 @@ else:
     from typing_extensions import SupportsIndex
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Iterable, Iterator, Sequence
 else:
-    from typing import Sequence, Iterator
+    from typing import Sequence, Iterator, Iterable
 
 import colour
 
@@ -43,7 +44,6 @@ from ._base import (
     EventProp,
     I32Event,
     ItemModel,
-    ItemsProp,
     ListEventBase,
     MultiEventModel,
     StructBase,
@@ -74,11 +74,11 @@ class _NoteStruct(StructBase):
         "rack_channel": "H",  # 8
         "length": "I",  # 12
         "key": "I",  # 16
-        "fine_pitch": "b",  # 17
+        "fine_pitch": "B",  # 17
         "_u1": 1,  # 18
         "release": "B",  # 19
         "midi_channel": "B",  # 20
-        "pan": "b",  # 21
+        "pan": "B",  # 21
         "velocity": "B",  # 22
         "mod_x": "B",  # 23
         "mod_y": "B",  # 24
@@ -129,9 +129,9 @@ class Note(ItemModel[_NoteStruct]):
 
     | Type    | Value | Representation |
     |---------|-------|----------------|
-    | Min     | -128  | -100 cents     |
-    | Max     | 127   | +100 cents     |
-    | Default | 0     | No fine tuning |
+    | Min     | 0     | -1200 cents    |
+    | Max     | 240   | +1200 cents    |
+    | Default | 120   | No fine tuning |
 
     *New in FL Studio v3.3.0*.
     """
@@ -142,6 +142,8 @@ class Note(ItemModel[_NoteStruct]):
     """0-131 for C0-B10. Can hold stamped chords and scales also."""
 
     length = StructProp[int]()
+    """Returns 0 for notes punched in through step sequencer."""
+
     midi_channel = StructProp[int]()
     """Used for a variety of purposes.
 
@@ -152,23 +154,47 @@ class Note(ItemModel[_NoteStruct]):
     """
 
     mod_x = StructProp[int]()
-    """Filter cutoff."""
+    """Plugin configurable parameter.
+
+    | Min | Max | Default |
+    | --- | --- | ------- |
+    | 0   | 255 | 128     |
+    """
 
     mod_y = StructProp[int]()
-    """Filter resonance."""
+    """Plugin configurable parameter.
+
+    | Min | Max | Default |
+    | --- | --- | ------- |
+    | 0   | 255 | 128     |
+    """
 
     pan = StructProp[int]()
-    """Min - -128, Max - 127."""
+    """
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 100% left      |
+    | Max     | 128   | 100% right     |
+    | Default | 64    | Centered       |
+    """
 
     position = StructProp[int]()
     rack_channel = StructProp[int]()
-    """Corresponds to the containing channel's `Channel.IID`."""
+    """Containing channel's :attr:`Channel.IID`."""
 
     release = StructProp[int]()
-    """Min - 0, Max - 128."""
+    """
+    | Min | Max | Default |
+    | --- | --- | ------- |
+    | 0   | 128 | 64      |
+    """
 
     velocity = StructProp[int]()
-    """Min - 0, Max - 128."""
+    """
+    | Min | Max | Default |
+    | --- | --- | ------- |
+    | 0   | 128 | 100     |
+    """
 
 
 class Controller(ItemModel[_ContollerStruct]):
@@ -181,17 +207,30 @@ class Controller(ItemModel[_ContollerStruct]):
 
 # As of the latest version of FL, note and controller events are stored before
 # all channel events (if they exist). The rest is stored later on as it occurs.
-class Pattern(MultiEventModel, SupportsIndex):
+class Pattern(MultiEventModel, Iterable[Note], SupportsIndex):
     def __repr__(self):
-        num_notes = len(tuple(self.notes))
+        num_notes = len(tuple(self))
         return f"Pattern (index={self.index}, name={self.name}, {num_notes} notes)"
 
     def __index__(self):
         return self.index
 
+    def __iter__(self) -> Iterator[Note]:
+        """MIDI notes contained inside the pattern."""
+        if PatternID.Notes in self._events:
+            event = cast(NotesEvent, self._events[PatternID.Notes][0])
+            for item in event.items:
+                yield Note(cast(_NoteStruct, item))
+
     color = EventProp[colour.Color](PatternID.Color)
-    controllers = ItemsProp(PatternID.Controllers, Controller)
-    """Parameter automations associated with this pattern (if any)."""
+
+    @property
+    def controllers(self) -> Iterator[Controller]:
+        """Parameter automations associated with this pattern (if any)."""
+        if PatternID.Controllers in self._events:
+            event = cast(ControllerEvent, self._events[PatternID.Controllers])
+            for item in event.items:
+                yield Controller(cast(_ContollerStruct, item))
 
     @property
     def index(self) -> int:
@@ -215,16 +254,13 @@ class Pattern(MultiEventModel, SupportsIndex):
     name = EventProp[str](PatternID.Name)
     """User given name of the pattern; None if not set."""
 
-    notes = ItemsProp(PatternID.Notes, Note)
-    """MIDI notes contained inside the pattern."""
-
 
 class Patterns(MultiEventModel, Sequence[Pattern]):
     def __repr__(self):
         indexes = [pattern.__index__() for pattern in self]
         return f"{len(indexes)} Patterns {indexes!r}"
 
-    def __getitem__(self, index: SupportsIndex):
+    def __getitem__(self, index: SupportsIndex) -> Pattern:
         """Returns the pattern with the specified `index`.
 
         Args:
@@ -233,6 +269,10 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         Raises:
             ModelNotFound: When a pattern of `index` could not be found.
         """
+        if index == 0:
+            warnings.warn("Patterns use a 1 based index; try 1 instead", stacklevel=0)
+            return NotImplemented
+
         for pattern in self:
             if pattern.__index__() == index:
                 return pattern

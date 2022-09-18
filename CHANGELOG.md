@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VSCode Python extension configuration, recommended extensions and tasks.
 - `ChannelRack.height`.
 - `Track[x]` returns `Track.items[x]`.
+- `Patterns` warns when tried to be accessed with an index of 0.
+
+### Changed
+
+- `Pattern.notes` refactored into `Pattern.__iter__`.
 
 ### Fixed
 
@@ -29,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeError when accessing `Insert.dock` [#44].
 - `Pattern.note` and `Pattern.controllers` [#48].
 - `Track.items` [#49]
+- Certain properties of `Note` were interpreted incorrectly.
 
 ### Removed
 

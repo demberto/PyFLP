@@ -616,6 +616,8 @@ class ListEventBase(DataEventBase, Iterable[StructBase]):
         self.unparsed = False
 
         size = type(self).STRUCT.SIZE
+
+        # ? Make this lazily evaluated
         if self._stream_len % size == 0:
             for _ in range(int(self._stream_len / size)):
                 self.items.append(type(self).STRUCT(self._stream))
@@ -912,28 +914,6 @@ class EventProp(RWProperty[T]):
                 continue
             else:
                 event.value = value
-
-
-ItemType = Iterable[ItemModel[ST]]
-
-
-class ItemsProp(ROProperty[ItemType[ST]]):
-    """Properties whose event contains a collection of :class:`ItemModel`s."""
-
-    def __init__(self, id: EventEnum, type: type[ItemModel[ST]]):
-        self._id = id
-        self._type = type
-
-    def __get__(self, instance: MultiEventModel, owner: Any = None) -> ItemType[ST]:
-        if owner is None:
-            return NotImplemented
-
-        events = instance._events.get(self._id)
-        if events is not None:
-            event = cast(ListEventBase, events[0])
-            if not event.unparsed:
-                for item in event.items:
-                    yield self._type(cast(ST, item))
 
 
 class NestedProp(ROProperty[MT_co]):
