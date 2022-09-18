@@ -48,6 +48,7 @@ from ._base import (
     EventEnum,
     EventProp,
     FLVersion,
+    ItemModel,
     KWProp,
     ListEventBase,
     ModelBase,
@@ -191,10 +192,11 @@ class TimeMarkerType(enum.IntEnum):
     """Used for time signature markers."""
 
 
-class PlaylistItemBase(MultiEventModel):
+class PlaylistItemBase(ItemModel[_PlaylistItemStruct]):
     def __repr__(self):
-        cls = type(self).__name__
-        return f"{cls} @ {self.position!r} of {self.length} in group {self.group}"
+        return "{} @ {} of length {} in group {}".format(
+            type(self).__name__, self.position, self.length, self.group
+        )
 
     end_offset = StructProp[int]()
     group = StructProp[int]()
@@ -278,7 +280,7 @@ class TimeMarker(MultiEventModel):
 
 
 class _TrackKW(TypedDict):
-    items: list[_PlaylistItemStruct]
+    items: list[PlaylistItemBase]
 
 
 class _TrackColorProp(StructProp[colour.Color]):
@@ -305,6 +307,9 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
         """An integer in the range of 1 to :attr:`~Arrangements.max_tracks`."""
         return self.index or NotImplemented
 
+    def __getitem__(self, index: SupportsIndex):
+        return self.items[index]
+
     def __iter__(self):
         """An iterator over :attr:`items`."""
         return iter(self.items)
@@ -326,11 +331,12 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     """Defaults to #485156 (dark slate gray).
 
     Note:
-        Unlike `Channel.color` or `Insert.color`, values below 20
-        for any color component are NOT ignored by FL Studio.
+        Unlike :attr:`Channel.color` and :attr:`Insert.color`, values
+        below 20 for any color component are NOT ignored by FL Studio.
     """
 
     content_locked = StructProp[bool](id=TrackID.Data)
+    """Defaults to `False`."""
 
     # TODO Add link to GIF from docs once Bitly quota is available again.
     enabled = StructProp[bool](id=TrackID.Data)
@@ -348,6 +354,8 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     """
 
     icon = StructProp[int](id=TrackID.Data)
+    """Returns 0 if not set, else an internal icon ID."""
+
     index = StructProp[int](id=TrackID.Data)
     items = KWProp[List[PlaylistItemBase]]()
     """Playlist items present on the track."""
@@ -358,12 +366,25 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
 
     locked_height = StructProp[float](id=TrackID.Data)
     motion = StructProp[TrackMotion](id=TrackID.Data)
+    """Defaults to :attr:`TrackMotion.Stay`."""
+
     name = EventProp[str](TrackID.Name)
+    """Returns `None` if not set."""
+
     position_sync = StructProp[TrackSync](id=TrackID.Data)
+    """Defaults to :attr:`TrackSync.Off`."""
+
     press = StructProp[TrackPress](id=TrackID.Data)
+    """Defaults to :attr:`TrackPress.Retrigger`."""
+
     tolerant = StructProp[bool](id=TrackID.Data)
+    """Defaults to `True`."""
+
     trigger_sync = StructProp[TrackSync](id=TrackID.Data)
+    """Defaults to :attr:`TrackSync.FourBeats`."""
+
     queued = StructProp[bool](id=TrackID.Data)
+    """Defaults to `False`."""
 
 
 class _ArrangementKW(TypedDict):
@@ -429,12 +450,12 @@ class Arrangement(MultiEventModel, SupportsIndex):
             pl_event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
 
         for events in self._collect_events(TrackID):
-            items: list[_PlaylistItemStruct] = []
+            items: list[PlaylistItemBase] = []
             if pl_event is not None:
                 for item in pl_event.items:
                     idx = item["track_index"]
                     if max_idx - idx == count:
-                        items.append(cast(_PlaylistItemStruct, item))
+                        items.append(PlaylistItemBase(cast(_PlaylistItemStruct, item)))
             yield Track(*events, items=items)
             count += 1
 
@@ -471,7 +492,7 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
     # event in initial versions of FL20, making them harder to group.
     # TODO This logic might not work on older versions of FL.
     def __iter__(self) -> Iterator[Arrangement]:
-        """Provides an iterator over :class:`Arrangement`s found in the project.
+        """Provides an iterator over :class:`Arrangement` found in the project.
 
         Raises:
             NoModelsFound: When no arrangements are found.

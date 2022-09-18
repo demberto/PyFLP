@@ -5,7 +5,14 @@ from typing import Callable
 import colour
 import pytest
 
-from pyflp.arrangement import Arrangement, Arrangements, Track
+from pyflp.arrangement import (
+    Arrangement,
+    Arrangements,
+    Track,
+    TrackMotion,
+    TrackPress,
+    TrackSync,
+)
 
 
 def test_arrangements(arrangements: Arrangements):
@@ -27,7 +34,7 @@ def arrangement(arrangements: Arrangements):
 
 @pytest.fixture(scope="session")
 def tracks(arrangement: Callable[[int], Arrangement]):
-    return tuple(arrangement(0).tracks)[:15]
+    return tuple(arrangement(0).tracks)[:21]
 
 
 def test_track_color(tracks: tuple[Track, ...]):
@@ -81,15 +88,28 @@ def test_track_items(tracks: tuple[Track, ...]):
             num_items = 16
         if track.name == "MIDI":
             num_items = 4
+            assert [i.position for i in track.items] == [
+                p * 384 for p in range(num_items)
+            ]
         elif track.name in ("Cut pattern", "Automation"):
             num_items = 1
 
         assert len(track.items) == num_items
+        assert [i.group for i in track.items] == [0] * num_items
 
 
 def test_track_locked(tracks: tuple[Track, ...]):
     for track in tracks:
         assert track.locked if track.name == "Locked" else not track.locked
+
+
+def test_track_motion(tracks: tuple[Track, ...]):
+    for track in tracks:
+        assert (
+            track.motion == TrackMotion.Random
+            if track.name == "Random Motion"
+            else track.motion == TrackMotion.Stay
+        )
 
 
 def test_track_name(tracks: tuple[Track, ...]):
@@ -109,16 +129,52 @@ def test_track_name(tracks: tuple[Track, ...]):
         "Locked to size",
         "Min Size",
         "Max Size",
+        "Latched",
+        "Random Motion",
+        "Trigger Sync OFF",
+        "Position Sync AUTO",
+        "Queued",
+        "Intolerant",
     ]
+
+
+def test_track_position_sync(tracks: tuple[Track, ...]):
+    for track in tracks:
+        assert (
+            track.position_sync == TrackSync.Auto
+            if track.name == "Position Sync AUTO"
+            else track.position_sync == TrackSync.Off
+        )
+
+
+def test_track_press(tracks: tuple[Track, ...]):
+    for track in tracks:
+        assert (
+            track.press == TrackPress.Latch
+            if track.name == "Latched"
+            else track.press == TrackPress.Retrigger
+        )
+
+
+def test_track_tolerant(tracks: tuple[Track, ...]):
+    for track in tracks:
+        assert not track.tolerant if track.name == "Intolerant" else track.tolerant
+
+
+def test_track_queued(tracks: tuple[Track, ...]):
+    for track in tracks:
+        assert track.queued if track.name == "Queued" else not track.queued
 
 
 def test_first_arrangement(arrangement: Callable[[int], Arrangement]):
     arr = arrangement(0)
     assert arr.name == "Just tracks"
     assert not tuple(arr.timemarkers)
+    assert len(tuple(arr.tracks)) == 500
 
 
 def test_second_arrangement(arrangement: Callable[[int], Arrangement]):
     arr = arrangement(1)
     assert arr.name == "Just timemarkers"
     assert len(tuple(arr.timemarkers)) == 11
+    assert len(tuple(arr.tracks)) == 500

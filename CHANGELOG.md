@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `PlaylistItemBase.group` for `ChannelPlaylistItem` and `PatternPlaylistItem` [#36].
-- Updated contributor's guide.
-- VSCode: Python extension configuration, recommended extensions and tasks.
+- More info in contributor's guide.
+- VSCode Python extension configuration, recommended extensions and tasks.
 - `ChannelRack.height`.
+- `Track[x]` returns `Track.items[x]`.
 
 ### Fixed
 
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Arrangements.height` was actually `ChannelRack.height` [#43].
 - TypeError when accessing `Insert.dock` [#44].
 - `Pattern.note` and `Pattern.controllers` [#48].
+- `Track.items` [#49]
 
 ### Removed
 
@@ -41,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#43]: https://github.com/demberto/PyFLP/issues/43
 [#43]: https://github.com/demberto/PyFLP/issues/44
 [#48]: https://github.com/demberto/PyFLP/issues/48
+[#48]: https://github.com/demberto/PyFLP/issues/49
 
 ## [2.0.0a0] - 2022-09-14
 
