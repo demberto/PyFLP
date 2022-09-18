@@ -99,10 +99,10 @@ class FileFormat(enum.IntEnum):
     """Temporary file."""
 
     Project = 0
-    """FL Studio project (\\*.flp)."""
+    """FL Studio project (.flp)."""
 
     Score = 0x10
-    """FL Studio score (\\*.fsc). Stores pattern notes and controller events."""
+    """FL Studio score (.fsc). Stores pattern notes and controller events."""
 
     Automation = 24
     """Stores controller events and automation channels as FST."""

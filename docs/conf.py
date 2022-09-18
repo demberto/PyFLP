@@ -13,14 +13,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 import m2r2
 
-from pyflp._base import (  # noqa
-    EventEnum,
-    EventProp,
-    ItemsProp,
-    ModelBase,
-    NestedProp,
-    StructProp,
-)
+from pyflp._base import EventEnum, EventProp, ModelBase, NestedProp, StructProp
 
 BITLY_LINK = re.compile(r"!\[.*\]\((https://bit\.ly/[A-z0-9]*)\)")
 NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
@@ -112,7 +105,7 @@ def add_annotations(app, what, name, obj, options, signature, return_annotation)
     if what == "class" and issubclass(obj, ModelBase):
         annotations = {}
         for name_, type in vars(obj).items():
-            if isinstance(obj, (ItemsProp, NestedProp)):
+            if isinstance(obj, NestedProp):
                 annotations[name_] = type._type
             elif hasattr(type, "__orig_class__"):
                 annotations[name_] = type.__orig_class__.__args__[0]
