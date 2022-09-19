@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import colour
-import pytest
 
 from pyflp.mixer import Insert, InsertDock, Mixer
 
@@ -11,11 +10,6 @@ def test_mixer(mixer: Mixer):
     assert mixer.apdc
     assert mixer.max_inserts == 127
     assert mixer.max_slots == 10
-
-
-@pytest.fixture(scope="session")
-def inserts(mixer: Mixer):
-    return tuple(mixer)[:25]
 
 
 def test_insert_bypassed(inserts: tuple[Insert]):

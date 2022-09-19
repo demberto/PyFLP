@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Pattern.notes` refactored into `Pattern.__iter__`.
 - `Sampler.sample_path` returns `pathlib.Path` instead of `str` now [#41].
+- `PluginID.Data` events get parsed during event collection itself.
 
 ### Fixed
 
@@ -38,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Pattern.note` and `Pattern.controllers` [#48].
 - `Track.items` [#49]
 - Certain properties of `Note` were interpreted incorrectly.
+- `Slot.plugin` wasn't working at all (events, properties, repr) [#53].
 
 ### Removed
 
@@ -54,7 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#43]: https://github.com/demberto/PyFLP/issues/43
 [#43]: https://github.com/demberto/PyFLP/issues/44
 [#48]: https://github.com/demberto/PyFLP/issues/48
-[#48]: https://github.com/demberto/PyFLP/issues/49
+[#49]: https://github.com/demberto/PyFLP/issues/49
+[#53]: https://github.com/demberto/PyFLP/issues/53
 
 ## [2.0.0a0] - 2022-09-14
 

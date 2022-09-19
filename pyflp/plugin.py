@@ -40,9 +40,10 @@ from ._base import (
     StructBase,
     StructEventBase,
     StructProp,
+    T,
     U32Event,
     U64DataEvent,
-    UnknownDataEvent,
+    T,
 )
 
 __all__ = [
@@ -179,7 +180,7 @@ class _VSTPluginEventID(enum.IntEnum):
     Inputs = 31
     Outputs = 32
     PluginInfo = 50
-    FourCC = (51, "fourcc")  # Not present for Waveshells
+    FourCC = (51, "fourcc")  # Not present for Waveshells & VST3
     GUID = (52, "guid")
     State = (53, "state")
     Name = (54, "name")
@@ -203,7 +204,6 @@ class _WrapperFlags(enum.IntFlag):
     _EditorSize = 2 << 16
 
 
-# TODO Try implementing __getitem__ and __setitem__
 class VSTPluginEvent(DataEventBase):
     VST_MARKERS = (8, 10)
 
@@ -229,8 +229,14 @@ class VSTPluginEvent(DataEventBase):
                     isascii = True
                 subevent = U64DataEvent(subid, subdata, isascii)
                 subkey = getattr(_VSTPluginEventID(subid), "key") or subid
-                self._props[subkey] = subdata
+                self._props[subkey] = subdata.decode("ascii") if isascii else subdata
                 self._events.append(subevent)
+
+    def __getitem__(self, prop: str):
+        return self._props[prop]
+
+    def __setitem__(self, prop: str, value: Any):
+        self._props[prop] = value
 
     def __bytes__(self) -> bytes:
         self._stream.seek(0)
@@ -246,7 +252,7 @@ class VSTPluginEvent(DataEventBase):
 
 @enum.unique
 class PluginID(EventEnum):
-    """Event IDs shared by `Channel` and `Slot`."""
+    """IDs shared by :class:`pyflp.channel.Channel` and :class:`pyflp.mixer.Slot`."""
 
     Color = (DWORD, ColorEvent)
     Icon = (DWORD + 27, U32Event)
@@ -255,7 +261,8 @@ class PluginID(EventEnum):
     # Plugin wrapper data, windows pos of plugin etc, currently
     # selected plugin wrapper page; minimized, closed or not
     Wrapper = (DATA + 4, WrapperEvent)
-    Data = (DATA + 5, UnknownDataEvent)  #: 1.6.5+
+    # * The type of this event is decided during event collection
+    Data = DATA + 5  #: 1.6.5+
 
 
 @runtime_checkable
@@ -268,8 +275,8 @@ _PE_co = TypeVar("_PE_co", bound=AnyEvent, covariant=True)
 
 
 class _WrapperProp(FlagProp):
-    def __init__(self, flag: _WrapperFlags):
-        super().__init__(flag, PluginID.Wrapper)
+    def __init__(self, flag: _WrapperFlags, **kw: Any):
+        super().__init__(flag, PluginID.Wrapper, **kw)
 
 
 class _PluginBase(MultiEventModel, Generic[_PE_co]):
@@ -298,8 +305,6 @@ class _PluginBase(MultiEventModel, Generic[_PE_co]):
     maximized = _WrapperProp(_WrapperFlags.Maximized)
     """Whether the plugin editor is maximized or minimized.
 
-    .. image:: img/plugin/maximize.gif
-
     ![](https://bit.ly/3QDMWO3)
     """
 
@@ -325,14 +330,14 @@ class PluginProp(RWProperty[AnyPlugin]):
             return NotImplemented
 
         try:
-            wrapper = cast(WrapperEvent, instance._events[PluginID.Wrapper][0])
-            params = instance._events[PluginID.Data][0]
+            wrapper_ev = instance._events[PluginID.Wrapper][0]
+            param_ev = instance._events[PluginID.Data][0]
         except (KeyError, IndexError):
             return
 
         for etype, ptype in self._types.items():
-            if isinstance(params, etype):
-                return ptype(params, wrapper)
+            if isinstance(param_ev, etype):
+                return ptype(param_ev, wrapper_ev)
 
     def __set__(self, instance: MultiEventModel, value: AnyPlugin):
         if isinstance(value, _IPlugin):
@@ -340,6 +345,11 @@ class PluginProp(RWProperty[AnyPlugin]):
         events = value.events_asdict()
         instance._events[PluginID.Data] = events[PluginID.Data]
         instance._events[PluginID.Wrapper] = events[PluginID.Wrapper]
+
+
+class _PluginDataProp(StructProp[T]):
+    def __init__(self, prop: str | None = None):
+        super().__init__(prop, PluginID.Data)
 
 
 class PluginIOInfo(SingleEventModel):
@@ -355,48 +365,48 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     """
 
     INTERNAL_NAME = "Fruity Wrapper"
-    fourcc = StructProp[str]()
+    fourcc = _PluginDataProp[str]()
     """A unique four character code identifying the plugin.
 
     A database can be found on Steinberg's developer portal.
     """
 
-    guid = StructProp[bytes]()  # See issue #8
-    midi_in = StructProp[int]()
+    guid = _PluginDataProp[bytes]()  # See issue #8
+    midi_in = _PluginDataProp[int]()
     """MIDI Input Port. Min: 0, Max: 255."""
 
-    midi_out = StructProp[int]()
+    midi_out = _PluginDataProp[int]()
     """MIDI Output Port. Min: 0, Max: 255."""
 
-    name = StructProp[str]()
+    name = _PluginDataProp[str]()
     """Factory name of the plugin."""
 
-    num_inputs = StructProp[int]()
+    num_inputs = _PluginDataProp[int]()
     """Number of inputs the plugin supports."""
 
-    num_outputs = StructProp[int]()
+    num_outputs = _PluginDataProp[int]()
     """Number of outputs the plugin supports."""
 
-    pitch_bend = StructProp[int]()
+    pitch_bend = _PluginDataProp[int]()
     """Pitch bend range sent to the plugin (in semitones)."""
 
-    plugin_path = StructProp[str]()
+    plugin_path = _PluginDataProp[str]()
     """The absolute path to the plugin binary."""
 
-    state = StructProp[bytes]()
+    state = _PluginDataProp[bytes]()
     """Plugin specific preset data blob."""
 
-    vendor = StructProp[int]()
+    vendor = _PluginDataProp[int]()
     """Plugin developer (vendor) name."""
 
-    vst_number = StructProp[int]()  # TODO
+    vst_number = _PluginDataProp[int]()  # TODO
 
 
 class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3Bk3aGK)"""  # noqa
 
     INTERNAL_NAME = "BooBass"
-    bass = StructProp[int]()
+    bass = _PluginDataProp[int]()
     """Volume of the bass region.
 
     | Min | Max   | Default |
@@ -404,7 +414,7 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     | 0   | 65535 | 32767   |
     """
 
-    high = StructProp[int]()
+    high = _PluginDataProp[int]()
     """Volume of the high region.
 
     | Min | Max   | Default |
@@ -412,7 +422,7 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     | 0   | 65535 | 32767   |
     """
 
-    mid = StructProp[int]()
+    mid = _PluginDataProp[int]()
     """Volume of the mid region.
 
     | Min | Max   | Default |
@@ -425,7 +435,7 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3RWItqU)"""  # noqa
 
     INTERNAL_NAME = "Fruity Balance"
-    pan = StructProp[int]()
+    pan = _PluginDataProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -435,7 +445,7 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     | Default | 0     | Centred        |
     """
 
-    volume = StructProp[int]()
+    volume = _PluginDataProp[int]()
     """Logarithmic.
 
     | Type    | Value | Representation |
@@ -458,8 +468,8 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     """![](https://bit.ly/3qT6Jil)"""  # noqa
 
     INTERNAL_NAME = "Fruity Fast Dist"
-    kind = StructProp[FruityFastDistKind]()
-    mix = StructProp[int]()
+    kind = _PluginDataProp[FruityFastDistKind]()
+    mix = _PluginDataProp[int]()
     """Linear. Defaults to maximum value.
 
     | Type | Value | Mix (wet) |
@@ -468,7 +478,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     | Max  | 128   | 100%      |
     """
 
-    post = StructProp[int]()
+    post = _PluginDataProp[int]()
     """Linear. Defaults to maximum value.
 
     | Type | Value | Mix (wet) |
@@ -477,7 +487,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     | Max  | 128   | 100%      |
     """
 
-    pre = StructProp[int]()
+    pre = _PluginDataProp[int]()
     """Linear.
 
     | Type    | Value | Percentage |
@@ -487,7 +497,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     | Default | 128   | 67%        |
     """
 
-    threshold = StructProp[int]()
+    threshold = _PluginDataProp[int]()
     """Linear, Stepped. Defaults to maximum value.
 
     | Type | Value | Percentage |
@@ -501,16 +511,16 @@ class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixi
     """![](https://bit.ly/3RHa4g5)"""  # noqa
 
     INTERNAL_NAME = "Fruity NoteBook 2"
-    active_page = StructProp[int]()
+    active_page = _PluginDataProp[int]()
     """Active page number of the notebook. Min: 0, Max: 100."""
 
-    editable = StructProp[bool]()
+    editable = _PluginDataProp[bool]()
     """Whether the notebook is marked as editable or read-only.
 
     This attribute is just a visual marker used by FL Studio.
     """
 
-    pages = StructProp[Dict[int, str]]()
+    pages = _PluginDataProp[Dict[int, str]]()
     """A dict of page numbers to their contents."""
 
 
@@ -518,7 +528,7 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3DqjvMu)"""  # noqa
 
     INTERNAL_NAME = "Fruity Send"
-    dry = StructProp[int]()
+    dry = _PluginDataProp[int]()
     """Linear. Defaults to maximum value.
 
     | Type | Value | Mix (wet) |
@@ -527,7 +537,7 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     | Max  | 256   | 100%      |
     """
 
-    pan = StructProp[int]()
+    pan = _PluginDataProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -537,10 +547,10 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     | Default | 0     | Centred        |
     """
 
-    send_to = StructProp[int]()
+    send_to = _PluginDataProp[int]()
     """Target insert index; depends on insert routing. Defaults to -1 (Master)."""
 
-    volume = StructProp[int]()
+    volume = _PluginDataProp[int]()
     """Logarithmic.
 
     | Type    | Value | Representation |
@@ -555,7 +565,7 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
     """![](https://bit.ly/3BCWfJX)"""  # noqa
 
     INTERNAL_NAME = "Fruity Soft Clipper"
-    post = StructProp[int]()
+    post = _PluginDataProp[int]()
     """Linear.
 
     | Type    | Value | Mix (wet) |
@@ -565,7 +575,7 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
     | Default | 128   | 80%       |
     """
 
-    threshold = StructProp[int]()
+    threshold = _PluginDataProp[int]()
     """Logarithmic.
 
     | Type    | Value | Representation |
@@ -599,10 +609,10 @@ class FruityStereoEnhancer(
     """![](https://bit.ly/3DoHvji)"""  # noqa
 
     INTERNAL_NAME = "Fruity Stereo Enhancer"
-    effect_position = StructProp[StereoEnhancerEffectPosition]()
+    effect_position = _PluginDataProp[StereoEnhancerEffectPosition]()
     """Defaults to :attr:`StereoEnhancerEffectPosition.Post`."""
 
-    pan = StructProp[int]()
+    pan = _PluginDataProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -612,10 +622,10 @@ class FruityStereoEnhancer(
     | Default | 0     | Centred        |
     """
 
-    phase_inversion = StructProp[StereoEnhancerPhaseInversion]()
+    phase_inversion = _PluginDataProp[StereoEnhancerPhaseInversion]()
     """Default to :attr:`~StereoEnhancerPhaseInversion.None_`."""
 
-    phase_offset = StructProp[int]()
+    phase_offset = _PluginDataProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -625,7 +635,7 @@ class FruityStereoEnhancer(
     | Default | 0     | No offset      |
     """
 
-    stereo_separation = StructProp[int]()
+    stereo_separation = _PluginDataProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -635,7 +645,7 @@ class FruityStereoEnhancer(
     | Default | 0     | No effect      |
     """
 
-    volume = StructProp[int]()
+    volume = _PluginDataProp[int]()
     """Logarithmic.
 
     | Type    | Value | Representation |
@@ -660,7 +670,7 @@ class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3dip70y)"""  # noqa
 
     INTERNAL_NAME = "Soundgoodizer"
-    amount = StructProp[int]()
+    amount = _PluginDataProp[int]()
     """Logarithmic.
 
     | Min | Max  | Default |
@@ -668,5 +678,11 @@ class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     | 0   | 1000 | 600     |
     """
 
-    mode = StructProp[SoundgoodizerMode]()
+    mode = _PluginDataProp[SoundgoodizerMode]()
     """4 preset modes (A, B, C and D)."""
+
+
+def get_event_by_internal_name(name: str) -> type[StructEventBase] | None:
+    for cls in _PluginBase.__subclasses__():
+        if getattr(cls, "INTERNAL_NAME", None) == name:
+            return cls.__orig_bases__[0].__args__[0]  # type: ignore

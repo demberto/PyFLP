@@ -50,6 +50,7 @@ from ._base import (
     UnknownDataEvent,
 )
 from .exceptions import HeaderCorrupted, VersionNotDetected
+from .plugin import PluginID, get_event_by_internal_name
 from .project import VALID_PPQS, FileFormat, Project, ProjectID
 
 __all__ = ["parse", "save"]
@@ -110,6 +111,7 @@ def parse(file: str | pathlib.Path) -> Project:
     if file_size != events_size + 22:
         raise HeaderCorrupted("Data chunk size corrupted")
 
+    plug_name = None
     str_type = None
     stream.seek(22)  # Back to start of events
     while True:
@@ -149,6 +151,11 @@ def parse(file: str | pathlib.Path) -> Project:
                 if str_type is None:
                     raise VersionNotDetected
                 event_type = str_type
+
+                if id == PluginID.InternalName:
+                    plug_name = event_type(id, value).value
+            elif id == PluginID.Data and plug_name is not None:
+                event_type = get_event_by_internal_name(plug_name) or UnknownDataEvent
             else:
                 event_type = UnknownDataEvent
 

@@ -343,9 +343,21 @@ class Project(MultiEventModel):
     @property
     def mixer(self) -> Mixer:
         """Provides an iterator over inserts and other mixer related properties."""
-        return Mixer(
-            *self._collect_events(MixerID, InsertID, SlotID), version=self.version
-        )
+        events: list[AnyEvent] = []
+        inserts_began = False
+        for event in self._events_tuple:
+            # * Cannot use self._collect_events to first gather these and add
+            # * PluginID events later; as it breaks the order of occurence.
+            for enum_ in (MixerID, InsertID, SlotID):
+                if event.id in enum_:
+                    # TODO Find a more reliable to detect when inserts start.
+                    inserts_began = True
+                    events.append(event)
+
+            if event.id in PluginID and inserts_began:
+                events.append(event)
+
+        return Mixer(*events, version=self.version)
 
     @property
     def patterns(self) -> Patterns:

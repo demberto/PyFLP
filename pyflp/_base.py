@@ -582,7 +582,7 @@ class StructEventBase(DataEventBase):
                 f"Event {id} not parsed entirely; "
                 f"parsed {self._stream.tell()}, found {self._stream_len} bytes",
                 RuntimeWarning,
-                stacklevel=2,  # shows event.append(...) code in traceback
+                stacklevel=0,
             )
 
     def __bytes__(self):
@@ -772,7 +772,7 @@ class ModelReprMixin:
 
     def __repr__(self):
         values_dict: dict[str, Any] = {}
-        for var in vars(self):
+        for var in filter(lambda var: not var.startswith("_"), vars(self)):
             if isinstance(getattr(type(self), var), ROProperty):
                 values_dict[var] = getattr(self, var, None)
 

@@ -397,6 +397,7 @@ class Slot(MultiEventModel, SupportsIndex):
 
 class _InsertKW(TypedDict):
     index: SupportsIndex
+    max_slots: int
     params: NotRequired[list[_MixerParamsItem]]
 
 
@@ -432,10 +433,9 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     def __index__(self) -> int:
         return self._kw["index"]
 
-    def __iter__(self):
-        """Provides an iterator over the effect slots (empty & used) of an insert."""
-        index = 0
-        while True:
+    def __iter__(self) -> Iterator[Slot]:
+        """Iterator over the effect empty and used slots."""
+        for index in range(self._kw["max_slots"] + 1):
             events: list[AnyEvent] = []
             params: list[_MixerParamsItem] = []
 
@@ -443,17 +443,10 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
                 if param["channel_data"] % 0x3F == index:
                     params.append(param)
 
-            for id, events in self._events.items():
-                if id in SlotID or id in PluginID:
-                    try:
-                        events.append(events[index])
-                    except IndexError:
-                        pass
+            for id, subevents in self._events.items():
+                if (id in SlotID or id in PluginID) and index < len(subevents):
+                    events.append(subevents[index])
 
-            if not events:
-                break
-
-            index += 1
             yield Slot(*events, params=params)
 
     def __len__(self):
@@ -580,7 +573,7 @@ class _MixerKW(TypedDict):
 # TODO FL Studio version in which slots were increased to 10
 # TODO A move() method to change the placement of Inserts; it's difficult!
 class Mixer(MultiEventModel, Sequence[Insert]):
-    """Represents the mixer which contains :class:`Insert`s.
+    """Represents the mixer which contains :class:`Insert` instances.
 
     ![](https://bit.ly/3eOsblF)
     """
@@ -605,7 +598,7 @@ class Mixer(MultiEventModel, Sequence[Insert]):
         """Returns an insert with the specified :attr:`index`.
 
         Args:
-            index (SupportsIndex): A zero based integer value.
+            index (SupportsIndex): A zero based index. Use 0 for master.
 
         Raises:
             ModelNotFound: An :class:`Insert` with :attr:`index` isn't found.
@@ -632,7 +625,7 @@ class Mixer(MultiEventModel, Sequence[Insert]):
                     params_dict[(item["channel_data"] >> 6) & 0x7F].append(item)
 
         for event in self._events_tuple:
-            for enum_ in (InsertID, SlotID):
+            for enum_ in (InsertID, PluginID, SlotID):
                 if event.id in enum_:
                     events.append(event)
 
@@ -640,9 +633,14 @@ class Mixer(MultiEventModel, Sequence[Insert]):
                 try:
                     params_list = params_dict[index]
                 except IndexError:
-                    yield Insert(*events, index=index)
+                    yield Insert(*events, index=index, max_slots=self.max_slots)
                 else:
-                    yield Insert(*events, index=index, params=params_list)
+                    yield Insert(
+                        *events,
+                        index=index,
+                        max_slots=self.max_slots,
+                        params=params_list,
+                    )
                 events = []
                 index += 1
 
