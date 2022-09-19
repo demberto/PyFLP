@@ -771,13 +771,15 @@ class ModelReprMixin:
     """I am too lazy to make one `__repr__()` for every model."""
 
     def __repr__(self):
-        values_dict: dict[str, Any] = {}
-        for var in filter(lambda var: not var.startswith("_"), vars(self)):
-            if isinstance(getattr(type(self), var), ROProperty):
-                values_dict[var] = getattr(self, var, None)
+        mapping: dict[str, Any] = {}
+        cls = type(self)
+        for var in filter(lambda var: not var.startswith("_"), vars(cls)):
+            if isinstance(getattr(cls, var), ROProperty):
+                mapping[var] = getattr(self, var, None)
 
-        values = ", ".join([f"{k}={v!r}" for k, v in values_dict.items()])
-        return f"{type(self).__name__} ({values})"
+        return "{} ({})".format(
+            cls.__name__, ", ".join([f"{k}={v!r}" for k, v in mapping.items()])
+        )
 
 
 MT_co = TypeVar("MT_co", bound=ModelBase, covariant=True)
