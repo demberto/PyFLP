@@ -43,7 +43,6 @@ from ._base import (
     T,
     U32Event,
     U64DataEvent,
-    T,
 )
 
 __all__ = [
@@ -77,7 +76,7 @@ class _FruityFastDistStruct(StructBase):
 
 
 class _FruitySendStruct(StructBase):
-    PROPS = dict.fromkeys(("pan", "dry", "volume", "send_to"), "I")
+    PROPS = {"pan": "I", "dry": "I", "volume": "I", "send_to": "i"}
 
 
 class _FruitySoftClipperStruct(StructBase):
