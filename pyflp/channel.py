@@ -1025,7 +1025,7 @@ class Sampler(_SamplerInstrument):
 
 
 class ChannelRack(MultiEventModel, Sequence[Channel]):
-    """Represents the channel rack, contains all :class:`Channel`s.
+    """Represents the channel rack, contains all :class:`Channel` instances.
 
     ![](https://bit.ly/3RXR50h)
     """

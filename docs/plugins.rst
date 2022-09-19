@@ -2,6 +2,8 @@ Plugins
 =======
 
 .. module:: pyflp.plugin
+.. autoclass:: _PluginBase
+   :members:
 .. autoclass:: VSTPlugin
    :members:
 
