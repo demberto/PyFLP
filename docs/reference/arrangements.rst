@@ -29,7 +29,7 @@ TimeMarker
 .. autoclass:: TimeMarker
    :members:
 
-.. grid:: auto
+.. grid::
 
    .. grid-item::
 
@@ -38,6 +38,7 @@ TimeMarker
 
    .. grid-item::
       :child-align: center
+      :columns: auto
 
       .. image:: /img/arrangement/timemarker/action.png
 
@@ -75,7 +76,7 @@ Track
    .. autoattribute:: queued
    .. autoattribute:: color
 
-.. grid:: auto
+.. grid::
 
    .. grid-item::
 
@@ -84,10 +85,11 @@ Track
 
    .. grid-item::
       :child-align: center
+      :columns: auto
 
       .. image:: /img/arrangement/track/motion.png
 
-.. grid:: auto
+.. grid::
 
    .. grid-item::
 
@@ -96,10 +98,11 @@ Track
 
    .. grid-item::
       :child-align: center
+      :columns: auto
 
       .. image:: /img/arrangement/track/press.png
 
-.. grid:: auto
+.. grid::
 
    .. grid-item::
 
@@ -108,13 +111,14 @@ Track
 
    .. grid-item::
       :child-align: center
+      :columns: auto
 
       .. image:: /img/arrangement/track/sync.png
 
 Classes
 -------
 
-.. grid:: auto
+.. grid::
 
    .. grid-item::
 
@@ -123,6 +127,7 @@ Classes
 
    .. grid-item::
       :child-align: center
+      :columns: auto
 
       .. image:: /img/arrangement/time-signature.png
 

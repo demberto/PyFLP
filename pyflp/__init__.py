@@ -15,12 +15,12 @@
 PyFLP - FL Studio project file parser
 =====================================
 
-To load a project file:
+Load a project file:
 
     >>> import pyflp
     >>> project = pyflp.parse("/path/to/parse.flp")
 
-To save a project back:
+Save the project:
 
     >>> pyflp.save(project, "/path/to/save.flp")
 
@@ -58,6 +58,7 @@ __all__ = ["parse", "save"]
 
 def parse(file: str | pathlib.Path) -> Project:
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
     # pylint: disable=too-complex
     """Parse an FL Studio project file.

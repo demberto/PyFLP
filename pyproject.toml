@@ -74,10 +74,11 @@ disable = [
 ]
 
 [tool.pyright]
+ignore = ["./venv"]
 reportPrivateUsage = false
 reportMissingTypeStubs = false
 venvPath = "."
-venv = ".venv"
+venv = "venv"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

@@ -7,7 +7,6 @@ import inspect
 import os
 import re
 import sys
-from urllib.request import urlopen
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -18,7 +17,7 @@ from pyflp._base import EventEnum, EventProp, ModelBase, NestedProp, StructProp
 BITLY_LINK = re.compile(r"!\[.*\]\((https://bit\.ly/[A-z0-9]*)\)")
 NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
 EVENT_ID_DOC = re.compile(r"([0-9\.]*)\+")
-FL_BADGE = "https://img.shields.io/badge/FL%20Studio-%s+-5f686d?labelColor=ff7629&style=for-the-badge"
+FL_BADGE = "https://img.shields.io/badge/FL%20Studio-{}+-5f686d?labelColor=ff7629&style=for-the-badge"
 GHUC_PREFIX = "https://raw.githubusercontent.com/demberto/PyFLP/master/docs/"
 
 project = "PyFLP"
@@ -36,6 +35,7 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_toolbox",
     "sphinx_toolbox.github",
@@ -75,12 +75,11 @@ def badge_flstudio(app, what, name, obj, options, lines):
             )
 
             if len(groups) == 1:
-                lines.insert(0, f".. image:: {FL_BADGE % groups[0]}")
+                lines.insert(0, f".. image:: {FL_BADGE.format(groups[0])}")
                 lines.insert(1, "")
             elif len(groups) == 2:
                 grid = f"""
-                .. figure:: {FL_BADGE % groups[0]}
-                    :align: left
+                .. figure:: {FL_BADGE.format(groups[0])}
                     :alt: New in FL Studio v{groups[0]}
 
                     {groups[1].strip()}
@@ -88,15 +87,6 @@ def badge_flstudio(app, what, name, obj, options, lines):
                 """
                 lines[:0] = grid.splitlines()  # https://stackoverflow.com/a/25855473
             lines.remove(line)
-
-
-def transform_image_links(app, what, name, obj, options, lines):
-    """Convert Bit.ly markdown image links to local reStructuredText ones."""
-    for idx, line in enumerate(lines):
-        match = BITLY_LINK.fullmatch(line)
-        if match is not None:
-            url = urlopen(match[1]).geturl()
-            lines[idx] = f".. image:: /{url.replace(GHUC_PREFIX, '', 1)}"
 
 
 def add_annotations(app, what, name, obj, options, signature, return_annotation):
@@ -152,7 +142,6 @@ def show_model_dunders(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect("autodoc-process-docstring", badge_flstudio)
-    app.connect("autodoc-process-docstring", transform_image_links)
     app.connect("autodoc-process-docstring", autodoc_markdown)
     app.connect("autodoc-process-signature", add_annotations)
     app.connect("autodoc-process-signature", remove_model_signature)
