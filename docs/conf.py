@@ -18,9 +18,7 @@ from pyflp._base import EventEnum, EventProp, ModelBase, NestedProp, StructProp
 BITLY_LINK = re.compile(r"!\[.*\]\((https://bit\.ly/[A-z0-9]*)\)")
 NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
 EVENT_ID_DOC = re.compile(r"([0-9\.]*)\+")
-FL_BADGE = (
-    "https://img.shields.io/badge/FL-%s+-5f686d?labelColor=ff7629&style=flat-square"
-)
+FL_BADGE = "https://img.shields.io/badge/FL%20Studio-%s+-5f686d?labelColor=ff7629&style=for-the-badge"
 GHUC_PREFIX = "https://raw.githubusercontent.com/demberto/PyFLP/master/docs/"
 
 project = "PyFLP"
@@ -98,7 +96,7 @@ def transform_image_links(app, what, name, obj, options, lines):
         match = BITLY_LINK.fullmatch(line)
         if match is not None:
             url = urlopen(match[1]).geturl()
-            lines[idx] = f".. image:: {url.replace(GHUC_PREFIX, '', 1)}"
+            lines[idx] = f".. image:: /{url.replace(GHUC_PREFIX, '', 1)}"
 
 
 def add_annotations(app, what, name, obj, options, signature, return_annotation):

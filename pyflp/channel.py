@@ -463,7 +463,7 @@ class FX(MultiEventModel, ModelReprMixin):
     boost = EventProp[int](ChannelID.Preamp)
     """Pre-amp gain. Defaults to minimum value.
 
-    .. image:: img/channel/fx/boost.png
+    .. image:: /img/channel/fx/boost.png
 
     | Min | Max |
     |-----|-----|
@@ -475,7 +475,7 @@ class FX(MultiEventModel, ModelReprMixin):
     cutoff = EventProp[int](ChannelID.Cutoff)
     """Filter Mod X. Defaults to maximum value.
 
-    .. image:: img/channel/fx/cutoff.png
+    .. image:: /img/channel/fx/cutoff.png
 
     | Min | Max  |
     |-----|------|
@@ -485,7 +485,7 @@ class FX(MultiEventModel, ModelReprMixin):
     fade_in = EventProp[int](ChannelID.FadeIn)
     """Quick fade-in. Defaults to minimum value.
 
-    .. image:: img/channel/fx/fade-in.png
+    .. image:: /img/channel/fx/fade-in.png
 
     | Min | Max  |
     |-----|------|
@@ -495,7 +495,7 @@ class FX(MultiEventModel, ModelReprMixin):
     fade_out = EventProp[int](ChannelID.FadeOut)
     """Quick fade-out. Defaults to minimum value.
 
-    .. image:: img/channel/fx/fade-out.png
+    .. image:: /img/channel/fx/fade-out.png
 
     | Min | Max  |
     |-----|------|
@@ -507,7 +507,7 @@ class FX(MultiEventModel, ModelReprMixin):
     resonance = EventProp[int](ChannelID.Resonance)
     """Filter Mod Y. Defaults to minimum value.
 
-    .. image:: img/channel/fx/resonance.png
+    .. image:: /img/channel/fx/resonance.png
 
     | Min | Max  |
     |-----|------|
@@ -516,7 +516,7 @@ class FX(MultiEventModel, ModelReprMixin):
 
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
-    """.. image:: img/channel/fx/stereo-delay.png
+    """.. image:: /img/channel/fx/stereo-delay.png
 
     *New in FL Studio v1.3.56*.
     """

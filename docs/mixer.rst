@@ -30,7 +30,7 @@ Enumerations
    .. grid-item::
       :child-align: center
 
-      .. image:: img/mixer/insert/dock.png
+      .. image:: /img/mixer/insert/dock.png
 
 Event IDs
 ---------

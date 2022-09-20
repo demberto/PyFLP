@@ -26,7 +26,7 @@ Project
             :columns: 12 8 8 8
             :margin: auto
 
-            .. image:: img/project/info.png
+            .. image:: /img/project/info.png
 
    .. dropdown:: Settings page
       :open:
@@ -43,7 +43,7 @@ Project
 
          .. grid-item::
 
-            .. image:: img/project/settings.png
+            .. image:: /img/project/settings.png
                :align: right
 
 Enumerations

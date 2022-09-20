@@ -285,8 +285,6 @@ class _PluginBase(MultiEventModel, Generic[_PE_co]):
     compact = _WrapperProp(_WrapperFlags.HideSettings)
     """Whether plugin page toolbar is hidden or not.
 
-    .. image:: img/plugin/toolbar_collapse.gif
-
     ![](https://bit.ly/3qzOMoO)
     """
 

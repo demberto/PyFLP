@@ -11,15 +11,15 @@ Plugins
 
       .. tab-item:: Settings
 
-         .. image:: img/plugin/wrapper/settings.png
+         .. image:: /img/plugin/wrapper/settings.png
 
       .. tab-item:: Processing
 
-         .. image:: img/plugin/wrapper/processing.png
+         .. image:: /img/plugin/wrapper/processing.png
 
       .. tab-item:: Troubleshooting
 
-         .. image:: img/plugin/wrapper/troubleshooting.png
+         .. image:: /img/plugin/wrapper/troubleshooting.png
 
 .. autoclass:: PluginIOInfo
    :members:

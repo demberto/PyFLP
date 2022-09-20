@@ -39,14 +39,14 @@ TimeMarker
    .. grid-item::
       :child-align: center
 
-      .. image:: img/arrangement/timemarker/action.png
+      .. image:: /img/arrangement/timemarker/action.png
 
 Track
 -----
 
 .. autoclass:: Track
 
-   .. image:: img/arrangement/track/preview.png
+   .. image:: /img/arrangement/track/preview.png
       :scale: 50 %
 
    .. grid::
@@ -65,7 +65,7 @@ Track
 
       .. grid-item::
 
-         .. image:: img/arrangement/track/performance-settings.png
+         .. image:: /img/arrangement/track/performance-settings.png
             :align: left
 
    .. autoattribute:: position_sync
@@ -85,7 +85,7 @@ Track
    .. grid-item::
       :child-align: center
 
-      .. image:: img/arrangement/track/motion.png
+      .. image:: /img/arrangement/track/motion.png
 
 .. grid:: auto
 
@@ -97,7 +97,7 @@ Track
    .. grid-item::
       :child-align: center
 
-      .. image:: img/arrangement/track/press.png
+      .. image:: /img/arrangement/track/press.png
 
 .. grid:: auto
 
@@ -109,7 +109,7 @@ Track
    .. grid-item::
       :child-align: center
 
-      .. image:: img/arrangement/track/sync.png
+      .. image:: /img/arrangement/track/sync.png
 
 Classes
 -------
@@ -124,7 +124,7 @@ Classes
    .. grid-item::
       :child-align: center
 
-      .. image:: img/arrangement/time-signature.png
+      .. image:: /img/arrangement/time-signature.png
 
 
 Event IDs
