@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Certain properties of `Note` were interpreted incorrectly.
 - `Slot.plugin` wasn't working at all (events, properties, repr) [#53].
 - `FruitySend.send_to` was interepreted incorrectly.
+- `Instrument.plugin` and `Slot.plugin` setter.
 
 ### Removed
 

@@ -338,7 +338,8 @@ class PluginProp(RWProperty[AnyPlugin]):
 
     def __set__(self, instance: MultiEventModel, value: AnyPlugin):
         if isinstance(value, _IPlugin):
-            self.internal_name = value.INTERNAL_NAME
+            # instance is Instrument | Slot
+            setattr(instance, "internal_name", value.INTERNAL_NAME)
         events = value.events_asdict()
         instance._events[PluginID.Data] = events[PluginID.Data]
         instance._events[PluginID.Wrapper] = events[PluginID.Wrapper]
