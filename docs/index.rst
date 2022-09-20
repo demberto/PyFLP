@@ -164,6 +164,8 @@ Save the project:
 
     pyflp.save(project, "/path/to/save.flp")
 
+Check the user guide for more information.
+
 Navigation
 ----------
 
@@ -171,17 +173,7 @@ Navigation
    :maxdepth: 2
    :titlesonly:
 
-   installation
-   api
-   arrangements
-   channels
-   controllers
-   exceptions
-   mixer
-   patterns
-   project
-   plugins
-   changelog
+   user-guide
    reference
    contributing
    changelog

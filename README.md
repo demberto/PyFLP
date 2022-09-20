@@ -113,6 +113,8 @@ Save the project:
 pyflp.save(project, "/path/to/save.flp")
 ```
 
+Check the [user guide](https://pyflp.rtfd.io/en/latest/user-guide)
+
 ## 🙏 Acknowledgements
 
 - Monad.FLParser: <https://github.com/monadgroup/FLParser>

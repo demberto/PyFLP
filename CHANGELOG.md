@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Note.group`, a number which notes of the same group share [#28].
 - `Note.slide` which indicates whether a note is a sliding note.
 - Plugin wrapper properties to docs.
+- A user guide section in docs.
 
 ### Changed
 
