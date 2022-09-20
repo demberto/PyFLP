@@ -269,7 +269,7 @@ class TimeMarker(MultiEventModel):
     def type(self) -> TimeMarkerType | None:
         """The action with which a time marker is associated.
 
-        ![](https://bit.ly/3RDM1yn)
+        [![](https://bit.ly/3RDM1yn)]()
         """
         events = self._events.get(TimeMarkerID.Position)
         if events is not None:
@@ -392,9 +392,10 @@ class _ArrangementKW(TypedDict):
 
 
 class Arrangement(MultiEventModel, SupportsIndex):
-    """Contains them timemarkers and tracks in an arrangement.
+    """Contains the timemarkers and tracks in an arrangement.
 
     ![](https://bit.ly/3B6is1z)
+
     *New in FL Studio v12.9.1*: Support for multiple arrangements.
     """
 

@@ -322,7 +322,7 @@ class InsertEQ(ModelBase):
 
 
 class _MixerParamProp(RWProperty[T]):
-    def __init__(self, id: _MixerParamsID) -> None:
+    def __init__(self, id: _MixerParamsID):  # pylint: disable=super-init-not-called
         self._id = id
 
     def __get__(self, instance: Insert, owner: object = None) -> T | None:

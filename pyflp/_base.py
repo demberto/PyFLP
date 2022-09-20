@@ -618,7 +618,7 @@ class ListEventBase(DataEventBase, Iterable[StructBase]):
         size = type(self).STRUCT.SIZE
 
         # ? Make this lazily evaluated
-        if self._stream_len % size == 0:
+        if not self._stream_len % size:
             for _ in range(int(self._stream_len / size)):
                 self.items.append(type(self).STRUCT(self._stream))
         else:
@@ -717,12 +717,21 @@ class ItemModel(ModelBase, Generic[ST]):
         return self._item.SIZE
 
 
-class SingleEventModel(ModelBase):
+class SingleEventModel(ModelBase, Hashable):
     """Base class for models whose properties are derived from a single event."""
 
     def __init__(self, event: AnyEvent, **kw: Any):
         super().__init__(**kw)
         self._event = event
+
+    def __eq__(self, o: object):
+        if not isinstance(o, type(self)):
+            raise TypeError(f"Cannot compare {type(o)!r} with {type(self)!r}")
+
+        return o.event() == self.event()
+
+    def __hash__(self) -> int:
+        return hash(self.event())
 
     def event(self) -> AnyEvent:
         """Returns the underlying event used by the model.
@@ -737,7 +746,7 @@ class SingleEventModel(ModelBase):
         return len(self._event)
 
 
-class MultiEventModel(ModelBase):
+class MultiEventModel(ModelBase, Hashable):
     def __init__(self, *events: AnyEvent, **kw: Any):
         super().__init__(**kw)
         self._events: dict[int, list[AnyEvent]] = {}
@@ -754,6 +763,9 @@ class MultiEventModel(ModelBase):
             raise TypeError(f"Cannot compare {type(o)!r} with {type(self)!r}")
 
         return o.events_astuple() == self.events_astuple()
+
+    def __hash__(self) -> int:
+        return hash(self.events_astuple())
 
     def events_astuple(self):
         """Returns a tuple of events used by the model in their original order."""
@@ -773,13 +785,13 @@ class ModelReprMixin:
     def __repr__(self):
         mapping: dict[str, Any] = {}
         cls = type(self)
+        # pylint: disable-next=bad-builtin
         for var in filter(lambda var: not var.startswith("_"), vars(cls)):
             if isinstance(getattr(cls, var), ROProperty):
                 mapping[var] = getattr(self, var, None)
 
-        return "{} ({})".format(
-            cls.__name__, ", ".join([f"{k}={v!r}" for k, v in mapping.items()])
-        )
+        params = ", ".join([f"{k}={v!r}" for k, v in mapping.items()])
+        return f"{cls.__name__} ({params})"
 
 
 MT_co = TypeVar("MT_co", bound=ModelBase, covariant=True)

@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Pattern.notes` refactored into `Pattern.__iter__`.
 - `Sampler.sample_path` returns `pathlib.Path` instead of `str` now [#41].
 - `PluginID.Data` events get parsed during event collection itself.
+- All models are now equatable and hashable.
 
 ### Fixed
 

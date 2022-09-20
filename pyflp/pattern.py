@@ -283,7 +283,7 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         Raises:
             ModelNotFound: When a pattern of `index` could not be found.
         """
-        if index == 0:
+        if not index:
             warnings.warn("Patterns use a 1 based index; try 1 instead", stacklevel=0)
             return NotImplemented
 
@@ -328,5 +328,5 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         if PatternsID.CurrentlySelected in self._events:
             index = self._events[PatternsID.CurrentlySelected][0].value
             for pattern in self:
-                if pattern.__index__() == index:
+                if pattern.index == index:
                     return pattern

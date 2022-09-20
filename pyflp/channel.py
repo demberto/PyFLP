@@ -927,8 +927,8 @@ class _SamplerInstrument(Channel):
         """A :class:`Tracking` each for Volume & Keyboard."""
         events = self._events.get(ChannelID.Tracking)
         if events is not None:
-            lfos = map(lambda e: Tracking(e), events)
-            return {k: v for k, v in zip(("volume", "keyboard"), lfos)}
+            tracking = [Tracking(e) for e in events]
+            return dict(zip(("volume", "keyboard"), tracking))
 
 
 class Instrument(_SamplerInstrument):
@@ -963,8 +963,8 @@ class Sampler(_SamplerInstrument):
         """An :class:`Envelope` each for Volume, Panning, Mod X, Mod Y and Pitch."""
         events = self._events.get(ChannelID.EnvelopeLFO)
         if events is not None:
-            envelopes = map(lambda e: Envelope(e), events)
-            return {k: v for k, v in zip(self._ENVLFO_NAMES, envelopes)}
+            envelopes = [Envelope(e) for e in events]
+            return dict(zip(self._ENVLFO_NAMES, envelopes))
 
     fx = NestedProp(
         FX,
@@ -981,8 +981,7 @@ class Sampler(_SamplerInstrument):
         """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch."""
         events = self._events.get(ChannelID.EnvelopeLFO)
         if events is not None:
-            lfos = map(lambda e: LFO(e), events)
-            return {k: v for k, v in zip(self._ENVLFO_NAMES, lfos)}
+            return dict(zip(self._ENVLFO_NAMES, [LFO(e) for e in events]))
 
     @property
     def pitch_shift(self) -> int | None:
@@ -1074,7 +1073,7 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
                         ct = Instrument
                 elif (
                     event.id == ChannelID.SamplePath
-                    or (event.id == PluginID.InternalName and event.value == "")
+                    or (event.id == PluginID.InternalName and not event.value)
                     and ct == Instrument
                 ):
                     ct = Sampler  # see #40
