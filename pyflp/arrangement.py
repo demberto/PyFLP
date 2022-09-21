@@ -38,7 +38,8 @@ else:
 
 import colour
 
-from ._base import (
+from ._descriptors import EventProp, KWProp, NestedProp, StructProp
+from ._events import (
     DATA,
     DWORD,
     TEXT,
@@ -46,21 +47,14 @@ from ._base import (
     AnyEvent,
     ColorEvent,
     EventEnum,
-    EventProp,
-    FLVersion,
-    ItemModel,
-    KWProp,
     ListEventBase,
-    ModelBase,
-    MultiEventModel,
-    NestedProp,
     StructBase,
     StructEventBase,
-    StructProp,
     U8Event,
     U16Event,
     U32Event,
 )
+from ._models import FLVersion, ItemModel, MultiEventModel
 from .channel import Channel
 from .exceptions import ModelNotFound, NoModelsFound
 from .pattern import Pattern
@@ -284,14 +278,14 @@ class _TrackKW(TypedDict):
 
 
 class _TrackColorProp(StructProp[colour.Color]):
-    def __get__(self, instance: ModelBase, owner: Any = None):
-        value = cast(Optional[int], super().__get__(instance, owner))
+    def _get(self, ev_or_ins: Any):
+        value = cast(Optional[int], super()._get(ev_or_ins))
         if value is not None:
             return ColorEvent.decode(value.to_bytes(4, "little"))
 
-    def __set__(self, instance: ModelBase, value: colour.Color):
+    def _set(self, ev_or_ins: Any, value: colour.Color):
         color_u32 = int.from_bytes(ColorEvent.encode(value), "little")
-        super().__set__(instance, color_u32)  # type: ignore
+        super()._set(ev_or_ins, color_u32)  # type: ignore
 
 
 class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
@@ -327,7 +321,7 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
             return f"Unnamed track {suffix}"
         return f"Track {self.name!r} {suffix}"
 
-    color = _TrackColorProp(id=TrackID.Data)
+    color = _TrackColorProp(TrackID.Data)
     """Defaults to #485156 (dark slate gray).
 
     Note:
@@ -335,15 +329,15 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
         below 20 for any color component are NOT ignored by FL Studio.
     """
 
-    content_locked = StructProp[bool](id=TrackID.Data)
+    content_locked = StructProp[bool](TrackID.Data)
     """Defaults to `False`."""
 
     # TODO Add link to GIF from docs once Bitly quota is available again.
-    enabled = StructProp[bool](id=TrackID.Data)
-    grouped = StructProp[bool](id=TrackID.Data)
+    enabled = StructProp[bool](TrackID.Data)
+    grouped = StructProp[bool](TrackID.Data)
     """Whether grouped with the track above (index - 1) or not."""
 
-    height = StructProp[float](id=TrackID.Data)
+    height = StructProp[float](TrackID.Data)
     """Track height in FL's interface. Linear.
 
     | Type    | Value | Percentage |
@@ -353,37 +347,37 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     | Default | 1.0   | 100%       |
     """
 
-    icon = StructProp[int](id=TrackID.Data)
+    icon = StructProp[int](TrackID.Data)
     """Returns 0 if not set, else an internal icon ID."""
 
-    index = StructProp[int](id=TrackID.Data)
+    index = StructProp[int](TrackID.Data)
     items = KWProp[List[PlaylistItemBase]]()
     """Playlist items present on the track."""
 
     # TODO Add link to GIF from docs once Bitly quota is available again.
-    locked = StructProp[bool](id=TrackID.Data)
+    locked = StructProp[bool](TrackID.Data)
     """Whether the tracked is in a locked state."""
 
-    locked_height = StructProp[float](id=TrackID.Data)
-    motion = StructProp[TrackMotion](id=TrackID.Data)
+    locked_height = StructProp[float](TrackID.Data)
+    motion = StructProp[TrackMotion](TrackID.Data)
     """Defaults to :attr:`TrackMotion.Stay`."""
 
     name = EventProp[str](TrackID.Name)
     """Returns `None` if not set."""
 
-    position_sync = StructProp[TrackSync](id=TrackID.Data)
+    position_sync = StructProp[TrackSync](TrackID.Data)
     """Defaults to :attr:`TrackSync.Off`."""
 
-    press = StructProp[TrackPress](id=TrackID.Data)
+    press = StructProp[TrackPress](TrackID.Data)
     """Defaults to :attr:`TrackPress.Retrigger`."""
 
-    tolerant = StructProp[bool](id=TrackID.Data)
+    tolerant = StructProp[bool](TrackID.Data)
     """Defaults to `True`."""
 
-    trigger_sync = StructProp[TrackSync](id=TrackID.Data)
+    trigger_sync = StructProp[TrackSync](TrackID.Data)
     """Defaults to :attr:`TrackSync.FourBeats`."""
 
-    queued = StructProp[bool](id=TrackID.Data)
+    queued = StructProp[bool](TrackID.Data)
     """Defaults to `False`."""
 
 

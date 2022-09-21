@@ -32,7 +32,8 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Unpack
 
-from ._base import (
+from ._descriptors import EventProp, KWProp
+from ._events import (
     DATA,
     DWORD,
     TEXT,
@@ -41,17 +42,14 @@ from ._base import (
     AsciiEvent,
     BoolEvent,
     EventEnum,
-    EventProp,
-    FLVersion,
     I16Event,
     I32Event,
-    KWProp,
-    MultiEventModel,
     StructBase,
     StructEventBase,
     U8Event,
     U32Event,
 )
+from ._models import FLVersion, MultiEventModel
 from .arrangement import (
     ArrangementID,
     Arrangements,

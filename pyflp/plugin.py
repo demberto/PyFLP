@@ -24,7 +24,8 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Protocol, runtime_checkable
 
-from ._base import (
+from ._descriptors import FlagProp, RWProperty, StructProp
+from ._events import (
     DATA,
     DWORD,
     TEXT,
@@ -32,18 +33,13 @@ from ._base import (
     ColorEvent,
     DataEventBase,
     EventEnum,
-    FlagProp,
-    ModelReprMixin,
-    MultiEventModel,
-    RWProperty,
-    SingleEventModel,
     StructBase,
     StructEventBase,
-    StructProp,
     T,
     U32Event,
     U64DataEvent,
 )
+from ._models import ModelReprMixin, MultiEventModel, SingleEventModel
 
 __all__ = [
     "BooBass",
@@ -347,7 +343,7 @@ class PluginProp(RWProperty[AnyPlugin]):
 
 class _PluginDataProp(StructProp[T]):
     def __init__(self, prop: str | None = None):
-        super().__init__(prop, PluginID.Data)
+        super().__init__(PluginID.Data, prop=prop)
 
 
 class PluginIOInfo(SingleEventModel):

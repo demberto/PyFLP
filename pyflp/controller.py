@@ -18,14 +18,8 @@ from __future__ import annotations
 import enum
 from typing import cast
 
-from ._base import (
-    DATA,
-    EventEnum,
-    ModelReprMixin,
-    SingleEventModel,
-    StructBase,
-    StructEventBase,
-)
+from ._events import DATA, EventEnum, StructBase, StructEventBase
+from ._models import ModelReprMixin, SingleEventModel
 
 __all__ = ["RemoteController"]
 

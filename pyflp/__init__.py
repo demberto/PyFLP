@@ -34,7 +34,7 @@ import pathlib
 
 from bytesioex import BytesIOEx
 
-from ._base import (
+from ._events import (
     DATA,
     DWORD,
     NEW_TEXT_IDS,

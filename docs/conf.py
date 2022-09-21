@@ -8,17 +8,20 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
-
 import m2r2
 
-from pyflp._base import EventEnum, EventProp, ModelBase, NestedProp, StructProp
+sys.path.insert(0, os.path.abspath(".."))
+
+from pyflp._descriptors import EventProp, NestedProp, StructProp
+from pyflp._events import EventEnum
+from pyflp._models import ModelBase
 
 BITLY_LINK = re.compile(r"!\[.*\]\((https://bit\.ly/[A-z0-9]*)\)")
 NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
 EVENT_ID_DOC = re.compile(r"([0-9\.]*)\+")
 FL_BADGE = "https://img.shields.io/badge/FL%20Studio-{}+-5f686d?labelColor=ff7629&style=for-the-badge"
 GHUC_PREFIX = "https://raw.githubusercontent.com/demberto/PyFLP/master/docs/"
+IGNORED_BITLY = ["3RDM1yn"]
 
 project = "PyFLP"
 copyright = "2022, demberto"
@@ -108,7 +111,8 @@ def add_annotations(app, what, name, obj, options, signature, return_annotation)
 
 
 def autodoc_markdown(app, what, name, obj, options, lines):
-    newlines = m2r2.convert("\n".join(lines)).splitlines()
+    filtered = [line for line in lines for link in IGNORED_BITLY if link not in line]
+    newlines = m2r2.convert("\n".join(filtered)).splitlines()
     lines.clear()
     lines.extend(newlines)
 

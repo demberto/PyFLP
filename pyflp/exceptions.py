@@ -15,6 +15,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._events import EventEnum
+
 __all__ = [
     "Error",
     "NoModelsFound",
@@ -54,7 +59,7 @@ class UnexpectedType(Error, TypeError):
 
 
 class PropertyCannotBeSet(Error, AttributeError):
-    def __init__(self, *ids: int):
+    def __init__(self, *ids: EventEnum):
         super().__init__(f"Event(s) {ids!r} was / were not found")
 
 

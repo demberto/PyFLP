@@ -38,7 +38,15 @@ else:
 
 import colour
 
-from ._base import (
+from ._descriptors import (
+    EventProp,
+    FlagProp,
+    KWProp,
+    NamedPropMixin,
+    ROProperty,
+    RWProperty,
+)
+from ._events import (
     DATA,
     DWORD,
     TEXT,
@@ -46,23 +54,15 @@ from ._base import (
     AnyEvent,
     ColorEvent,
     EventEnum,
-    EventProp,
-    FlagProp,
-    FLVersion,
     I16Event,
     I32Event,
-    KWProp,
     ListEventBase,
-    ModelBase,
-    MultiEventModel,
-    NamedPropMixin,
-    ROProperty,
-    RWProperty,
     StructBase,
     StructEventBase,
     T,
     U16Event,
 )
+from ._models import FLVersion, ModelBase, MultiEventModel
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound
 from .plugin import (

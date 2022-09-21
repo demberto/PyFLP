@@ -33,7 +33,8 @@ else:
 
 import colour
 
-from ._base import (
+from ._descriptors import EventProp, FlagProp, KWProp, NestedProp, StructProp
+from ._events import (
     DATA,
     DWORD,
     TEXT,
@@ -41,24 +42,17 @@ from ._base import (
     AnyEvent,
     BoolEvent,
     EventEnum,
-    EventProp,
     F32Event,
-    FlagProp,
     I8Event,
     I32Event,
-    KWProp,
-    ModelReprMixin,
-    MultiEventModel,
-    NestedProp,
-    SingleEventModel,
     StructBase,
     StructEventBase,
-    StructProp,
     U8Event,
     U16Event,
     U16TupleEvent,
     U32Event,
 )
+from ._models import ModelReprMixin, MultiEventModel, SingleEventModel
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
@@ -321,6 +315,11 @@ class ChannelType(enum.IntEnum):  # cuz Type would be a super generic name
     Layer = 3  # 3.4.0+
     Instrument = 4
     Automation = 5  # 5.0+
+
+
+class _LayerFlags(enum.IntFlag):
+    Random = 1 << 0
+    Crossfade = 1 << 1
 
 
 class DisplayGroup(MultiEventModel, ModelReprMixin):

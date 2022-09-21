@@ -33,7 +33,8 @@ else:
 
 import colour
 
-from ._base import (
+from ._descriptors import EventProp, FlagProp, StructProp
+from ._events import (
     DATA,
     DWORD,
     TEXT,
@@ -42,17 +43,13 @@ from ._base import (
     BoolEvent,
     ColorEvent,
     EventEnum,
-    EventProp,
-    FlagProp,
     I32Event,
-    ItemModel,
     ListEventBase,
-    MultiEventModel,
     StructBase,
-    StructProp,
     U16Event,
     U32Event,
 )
+from ._models import ItemModel, MultiEventModel
 from .exceptions import ModelNotFound, NoModelsFound
 
 __all__ = ["Note", "Controller", "Pattern", "Patterns"]
