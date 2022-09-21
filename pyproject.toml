@@ -116,7 +116,7 @@ src = "VERSION"
 
 [[tool.tbump.file]]
 src = "docs/conf.py"
-search = "release = {current_version}"
+search = "release = \"{current_version}\""
 
 [[tool.tbump.before_commit]]
 name = "check changelog"
