@@ -181,7 +181,8 @@ class ChannelID(EventEnum):
     _VolByte = (2, U8Event)
     _PanByte = (3, U8Event)
     Zipped = (15, BoolEvent)
-    UsesLoopPoints = (19, BoolEvent)
+    # _19 = (19, BoolEvent)
+    PingPongLoop = (20, BoolEvent)
     Type = (21, U8Event)
     RoutedTo = (22, I8Event)
     # FXProperties = 27
@@ -320,6 +321,14 @@ class ChannelType(enum.IntEnum):  # cuz Type would be a super generic name
 class _LayerFlags(enum.IntFlag):
     Random = 1 << 0
     Crossfade = 1 << 1
+
+
+class _SamplerFlags(enum.IntFlag):
+    Resample = 1 << 0
+    LoadRegions = 1 << 1
+    LoadSliceMarkers = 1 << 2
+    UsesLoopPoints = 1 << 3
+    KeepOnDisk = 1 << 8
 
 
 class DisplayGroup(MultiEventModel, ModelReprMixin):
@@ -737,6 +746,16 @@ class TimeStretching(MultiEventModel, ModelReprMixin):
     time = EventProp[float](ChannelID.StretchTime)
 
 
+class Content(MultiEventModel, ModelReprMixin):
+    """Used by :class:`Sampler`."""
+
+    # declick_mode: enum
+    keep_on_disk = FlagProp(_SamplerFlags.KeepOnDisk, ChannelID.SamplerFlags)
+    load_regions = FlagProp(_SamplerFlags.LoadRegions, ChannelID.SamplerFlags)
+    load_slices = FlagProp(_SamplerFlags.LoadSliceMarkers, ChannelID.SamplerFlags)
+    resample = FlagProp(_SamplerFlags.Resample, ChannelID.SamplerFlags)
+
+
 class Channel(MultiEventModel, SupportsIndex):
     """Represents a channel in the channel rack."""
 
@@ -906,7 +925,8 @@ class Layer(Channel, Sequence[Channel]):
         """Returns the number of channels whose parent this layer is."""
         return len(self._events.get(ChannelID.Children, []))
 
-    flags = EventProp[int](ChannelID.LayerFlags)  # TODO
+    crossfade = FlagProp(_LayerFlags.Crossfade, ChannelID.LayerFlags)
+    random = FlagProp(_LayerFlags.Random, ChannelID.LayerFlags)
 
 
 class _SamplerInstrument(Channel):
@@ -952,6 +972,7 @@ class Sampler(_SamplerInstrument):
     au_sample_rate = EventProp[int](ChannelID.AUSampleRate)
     """AU-format sample specific."""
 
+    content = NestedProp(Content, ChannelID.SamplerFlags)
     cut_group = EventProp[Tuple[int, int]](ChannelID.CutGroup)
     """Cut group in the form of (Cut self, cut by)."""
 

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Note.slide` which indicates whether a note is a sliding note.
 - Plugin wrapper properties to docs.
 - A user guide section in docs.
+- `Sampler.content`, `Layer.random` & `Layer.crossfade` [#24].
 
 ### Changed
 
@@ -45,11 +46,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Slot.plugin` wasn't working at all (events, properties, repr) [#53].
 - `FruitySend.send_to` was interepreted incorrectly.
 - `Instrument.plugin` and `Slot.plugin` setter.
+- `Playback.use_loop_points`.
 
 ### Removed
 
 - `Arrangements.height`.
 
+[#24]: https://github.com/demberto/PyFLP/issues/24
 [#28]: https://github.com/demberto/PyFLP/issues/28
 [#32]: https://github.com/demberto/PyFLP/issues/32
 [#33]: https://github.com/demberto/PyFLP/issues/33

@@ -5,7 +5,7 @@ import pathlib
 import colour
 import pytest
 
-from pyflp.channel import Channel, ChannelRack, Sampler
+from pyflp.channel import Channel, ChannelRack, Layer, Sampler
 
 
 def test_channels(rack: ChannelRack):
@@ -22,12 +22,13 @@ def channels(rack: ChannelRack):
 
 
 @pytest.fixture(scope="session")
-def samplers(channels: tuple[Channel, ...]):
-    samplers: list[Sampler] = []
-    for channel in channels:
-        if isinstance(channel, Sampler):
-            samplers.append(channel)
-    return samplers
+def layer(rack: ChannelRack):
+    return tuple(rack.layers)[0]
+
+
+@pytest.fixture(scope="session")
+def samplers(rack: ChannelRack):
+    return [s for s in rack.samplers]
 
 
 def test_channel_name(channels: tuple[Channel]):
@@ -64,6 +65,9 @@ def test_channel_color(channels: tuple[Channel, ...]):
             assert channel.color == colour.Color("#5C656A")
 
 
+# TODO: Test `Channel.content`
+
+
 def test_channel_enabled(channels: tuple[Channel, ...]):
     for ch in channels:
         assert not ch.enabled if ch.name == "Disabled" else ch.enabled
@@ -72,6 +76,14 @@ def test_channel_enabled(channels: tuple[Channel, ...]):
 def test_channel_icon(channels: tuple[Channel, ...]):
     for ch in channels:
         assert ch.icon == 116 if ch.name == "Iconified" else not ch.icon
+
+
+def test_layer_crossfade(layer: Layer):
+    assert layer.crossfade
+
+
+def test_layer_random(layer: Layer):
+    assert layer.random
 
 
 def test_sampler_path(samplers: tuple[Sampler, ...]):
