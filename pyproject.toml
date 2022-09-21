@@ -95,7 +95,7 @@ version = { file = "VERSION" }
 github_url = "https://github.com/demberto/PyFLP/"
 
 [tool.tbump.version]
-current = "2.0.0a0"
+current = "2.0.0a1"
 regex = '''
   (?P<major>\d+)
   \.

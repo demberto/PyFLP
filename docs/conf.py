@@ -26,7 +26,7 @@ IGNORED_BITLY = ["3RDM1yn"]
 project = "PyFLP"
 copyright = "2022, demberto"
 author = "demberto"
-release = "2.0.0a0"
+release = "2.0.0a1"
 extensions = [
     "hoverxref.extension",
     "m2r2",
