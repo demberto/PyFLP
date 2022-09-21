@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugin wrapper properties to docs.
 - A user guide section in docs.
 - `Sampler.content`, `Layer.random` & `Layer.crossfade` [#24].
+- `Playback.ping_pong_loop`.
 
 ### Changed
 

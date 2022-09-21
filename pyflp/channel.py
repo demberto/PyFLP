@@ -189,7 +189,7 @@ class ChannelID(EventEnum):
     IsLocked = (32, BoolEvent)  #: 12.3+
     New = (WORD, U16Event)
     # Fx = WORD + 5
-    # FadeStereo = WORD + 6
+    # FXFlags = WORD + 6
     Cutoff = (WORD + 7, U16Event)
     _VolWord = (WORD + 8, U16Event)
     _PanWord = (WORD + 9, U16Event)
@@ -722,14 +722,14 @@ class Keyboard(MultiEventModel, ModelReprMixin):
 
 
 class Playback(MultiEventModel, ModelReprMixin):
-    """Used by :class:`Sampler` and :class:`Instrument`.
+    """Used by :class:`Sampler`.
 
     ![](https://bit.ly/3xjSypY)
     """
 
-    # ping_pong_loop: bool
+    ping_pong_loop = EventProp[bool](ChannelID.PingPongLoop)
     # start_offset: int
-    use_loop_points = EventProp[bool](ChannelID.UsesLoopPoints)
+    use_loop_points = FlagProp(_SamplerFlags.UsesLoopPoints, ChannelID.SamplerFlags)
 
 
 class TimeStretching(MultiEventModel, ModelReprMixin):
@@ -1022,7 +1022,7 @@ class Sampler(_SamplerInstrument):
         else:
             cast(LevelsEvent, event)["pitch_shift"] = value
 
-    playback = NestedProp(Playback, ChannelID.UsesLoopPoints)
+    playback = NestedProp(Playback, ChannelID.SamplerFlags, ChannelID.PingPongLoop)
 
     @property
     def sample_path(self) -> pathlib.Path | None:
