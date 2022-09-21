@@ -146,7 +146,7 @@ PyFLP requires **Python 3.7+**.
 
             .. code-block::
 
-              pip install pyflp-2.0.0-py3-none-any.whl
+              pip install pyflp-2.0.0a1-py3-none-any.whl
 
 Getting Started
 ---------------
