@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable -->
 
+## 2.0.0a2 - Unreleased
+
+### Removed
+
+- Images for individual FX properties as they were redundant.
+
+[#55]: https://github.com/demberto/PyFLP/issues/55
+
 ## 2.0.0a1 - 2022-09-21
 
 ### Added
@@ -61,9 +69,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#37]: https://github.com/demberto/PyFLP/issues/37
 [#38]: https://github.com/demberto/PyFLP/issues/38
 [#40]: https://github.com/demberto/PyFLP/issues/40
-[#40]: https://github.com/demberto/PyFLP/issues/41
+[#41]: https://github.com/demberto/PyFLP/issues/41
 [#43]: https://github.com/demberto/PyFLP/issues/43
-[#43]: https://github.com/demberto/PyFLP/issues/44
+[#44]: https://github.com/demberto/PyFLP/issues/44
 [#48]: https://github.com/demberto/PyFLP/issues/48
 [#49]: https://github.com/demberto/PyFLP/issues/49
 [#53]: https://github.com/demberto/PyFLP/issues/53
