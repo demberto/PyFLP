@@ -138,7 +138,9 @@ class _ParametersStruct(StructBase):
         "arp.repeat": "I",  # 96 4.5.2+
         "_u12": 12,  # 108
         "stretching.mode": "i",  # 112
-        "_u46": 46,  # 158
+        "_u38": 36,  # 148
+        "playback.start_offset": "I",  # 152
+        "_u6": 6,  # 158
     }
 
 
@@ -749,7 +751,15 @@ class Playback(MultiEventModel, ModelReprMixin):
     """
 
     ping_pong_loop = EventProp[bool](ChannelID.PingPongLoop)
-    # start_offset: int
+    start_offset = StructProp[int](ChannelID.Parameters, prop="playback.start_offset")
+    """Linear. Defaults to minimum value.
+
+    | Type | Value      | Representation |
+    |------|------------|----------------|
+    | Min  | 0          | 0%             |
+    | Max  | 1072693248 | 100%           |
+    """
+
     use_loop_points = FlagProp(_SamplerFlags.UsesLoopPoints, ChannelID.SamplerFlags)
 
 
@@ -1042,7 +1052,9 @@ class Sampler(_SamplerInstrument):
         else:
             cast(LevelsEvent, event)["pitch_shift"] = value
 
-    playback = NestedProp(Playback, ChannelID.SamplerFlags, ChannelID.PingPongLoop)
+    playback = NestedProp(
+        Playback, ChannelID.SamplerFlags, ChannelID.PingPongLoop, ChannelID.Parameters
+    )
 
     @property
     def sample_path(self) -> pathlib.Path | None:

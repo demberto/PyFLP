@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `FX.clip`, `FX.fade_stereo`, `FX.swap_stereo` & `FX.reverse` [#55].
 - `TimeStretching.mode` and `StretchMode` [#56].
+- `Playback.start_offset` [#57].
 
 ### Changed
 
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [#55]: https://github.com/demberto/PyFLP/issues/55
 [#56]: https://github.com/demberto/PyFLP/issues/56
+[#57]: https://github.com/demberto/PyFLP/issues/57
 
 ## 2.0.0a1 - 2022-09-21
 
