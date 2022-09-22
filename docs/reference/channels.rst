@@ -63,6 +63,7 @@ Enumerations
 
    ArpDirection
    ChannelType
+   DeclickMode
    LFOShape
    ReverbType
    StretchMode
@@ -70,6 +71,8 @@ Enumerations
 .. autoclass:: ArpDirection
    :members:
 .. autoclass:: ChannelType
+   :members:
+.. autoclass:: DeclickMode
    :members:
 .. autoclass:: LFOShape
    :members:

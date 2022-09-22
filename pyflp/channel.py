@@ -72,6 +72,7 @@ __all__ = [
     "Layer",
     "ChannelRack",
     "ChannelNotFound",
+    "DeclickMode",
     "LFOShape",
     "ReverbType",
     "FX",
@@ -134,7 +135,9 @@ class _ParametersStruct(StructBase):
         "arp.time": "f",  # 56
         "arp.gate": "f",  # 60
         "arp.slide": "bool",  # 61
-        "_u31": 31,  # 92
+        "_u22": 22,  # 83
+        "content.declick_mode": "B",  # 84
+        "_u8": 8,  # 92
         "arp.repeat": "I",  # 96 4.5.2+
         "_u12": 12,  # 108
         "stretching.mode": "i",  # 112
@@ -343,6 +346,7 @@ class _SamplerFlags(enum.IntFlag):
     KeepOnDisk = 1 << 8
 
 
+@enum.unique
 class StretchMode(enum.IntEnum):
     Stretch = -1
     Resample = 0
@@ -355,6 +359,16 @@ class StretchMode(enum.IntEnum):
     E2Transient = 7
     E2Mono = 8
     E2Speech = 9
+
+
+@enum.unique
+class DeclickMode(enum.IntEnum):
+    OutOnly = 0
+    TransientNoBleeding = 1
+    Transient = 2
+    Generic = 3
+    Smooth = 4
+    Crossfade = 5
 
 
 class DisplayGroup(MultiEventModel, ModelReprMixin):
@@ -780,7 +794,9 @@ class TimeStretching(MultiEventModel, ModelReprMixin):
 class Content(MultiEventModel, ModelReprMixin):
     """Used by :class:`Sampler`."""
 
-    # declick_mode: enum
+    declick_mode = StructProp[DeclickMode](
+        ChannelID.Parameters, prop="content.declick_mode"
+    )
     keep_on_disk = FlagProp(_SamplerFlags.KeepOnDisk, ChannelID.SamplerFlags)
     load_regions = FlagProp(_SamplerFlags.LoadRegions, ChannelID.SamplerFlags)
     load_slices = FlagProp(_SamplerFlags.LoadSliceMarkers, ChannelID.SamplerFlags)
@@ -1001,7 +1017,7 @@ class Sampler(_SamplerInstrument):
     au_sample_rate = EventProp[int](ChannelID.AUSampleRate)
     """AU-format sample specific."""
 
-    content = NestedProp(Content, ChannelID.SamplerFlags)
+    content = NestedProp(Content, ChannelID.SamplerFlags, ChannelID.Parameters)
     cut_group = EventProp[Tuple[int, int]](ChannelID.CutGroup)
     """Cut group in the form of (Cut self, cut by)."""
 
