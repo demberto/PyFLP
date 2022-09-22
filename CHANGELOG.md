@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.0.0a2 - Unreleased
 
+### Added
+
+- `FX.clip`, `FX.fade_stereo`, `FX.swap_stereo` & `FX.reverse` [#55].
+
 ### Removed
 
 - Images for individual FX properties as they were redundant.

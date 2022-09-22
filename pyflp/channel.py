@@ -189,7 +189,7 @@ class ChannelID(EventEnum):
     IsLocked = (32, BoolEvent)  #: 12.3+
     New = (WORD, U16Event)
     # Fx = WORD + 5
-    # FXFlags = WORD + 6
+    FXFlags = (WORD + 6, U16Event)
     Cutoff = (WORD + 7, U16Event)
     _VolWord = (WORD + 8, U16Event)
     _PanWord = (WORD + 9, U16Event)
@@ -316,6 +316,13 @@ class ChannelType(enum.IntEnum):  # cuz Type would be a super generic name
     Layer = 3  # 3.4.0+
     Instrument = 4
     Automation = 5  # 5.0+
+
+
+class _FXFlags(enum.IntFlag):
+    FadeStereo = 1 << 0
+    Reverse = 1 << 1
+    Clip = 1 << 2
+    SwapStereo = 1 << 8
 
 
 class _LayerFlags(enum.IntFlag):
@@ -471,8 +478,6 @@ class FX(MultiEventModel, ModelReprMixin):
     boost = EventProp[int](ChannelID.Preamp)
     """Pre-amp gain. Defaults to minimum value.
 
-    .. image:: /img/channel/fx/boost.png
-
     | Min | Max |
     |-----|-----|
     | 0   | 256 |
@@ -480,10 +485,11 @@ class FX(MultiEventModel, ModelReprMixin):
     *New in FL Studio v1.2.12*.
     """
 
+    clip = FlagProp(_FXFlags.Clip, ChannelID.FXFlags)
+    """Whether output is clipped at 0dB for :attr:`boost`."""
+
     cutoff = EventProp[int](ChannelID.Cutoff)
     """Filter Mod X. Defaults to maximum value.
-
-    .. image:: /img/channel/fx/cutoff.png
 
     | Min | Max  |
     |-----|------|
@@ -493,8 +499,6 @@ class FX(MultiEventModel, ModelReprMixin):
     fade_in = EventProp[int](ChannelID.FadeIn)
     """Quick fade-in. Defaults to minimum value.
 
-    .. image:: /img/channel/fx/fade-in.png
-
     | Min | Max  |
     |-----|------|
     | 0   | 1024 |
@@ -503,8 +507,6 @@ class FX(MultiEventModel, ModelReprMixin):
     fade_out = EventProp[int](ChannelID.FadeOut)
     """Quick fade-out. Defaults to minimum value.
 
-    .. image:: /img/channel/fx/fade-out.png
-
     | Min | Max  |
     |-----|------|
     | 0   | 1024 |
@@ -512,10 +514,9 @@ class FX(MultiEventModel, ModelReprMixin):
     *New in FL Studio v1.7.6*.
     """
 
+    fade_stereo = FlagProp(_FXFlags.FadeStereo, ChannelID.FXFlags)
     resonance = EventProp[int](ChannelID.Resonance)
     """Filter Mod Y. Defaults to minimum value.
-
-    .. image:: /img/channel/fx/resonance.png
 
     | Min | Max  |
     |-----|------|
@@ -523,11 +524,14 @@ class FX(MultiEventModel, ModelReprMixin):
     """
 
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
-    stereo_delay = EventProp[int](ChannelID.StereoDelay)
-    """.. image:: /img/channel/fx/stereo-delay.png
+    reverse = FlagProp(_FXFlags.Reverse, ChannelID.FXFlags)
+    """Whether sample is reversed or not."""
 
-    *New in FL Studio v1.3.56*.
-    """
+    stereo_delay = EventProp[int](ChannelID.StereoDelay)
+    """*New in FL Studio v1.3.56*."""
+
+    swap_stereo = FlagProp(_FXFlags.SwapStereo, ChannelID.FXFlags)
+    """Whether left and right channels are swapped or not."""
 
 
 class Envelope(SingleEventModel, ModelReprMixin):

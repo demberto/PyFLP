@@ -28,6 +28,8 @@ These implement functionality used by :class:`Channel` or its subclasses.
 
 .. autoclass:: Arp
    :members:
+.. autoclass:: Content
+   :members:
 .. autoclass:: Delay
    :members:
 .. autoclass:: Envelope
