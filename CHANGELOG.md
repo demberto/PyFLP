@@ -12,12 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `FX.clip`, `FX.fade_stereo`, `FX.swap_stereo` & `FX.reverse` [#55].
+- `TimeStretching.mode` and `StretchMode` [#56].
+
+### Changed
+
+- Moved `stretching` to `Sampler`, instruments don't have it.
 
 ### Removed
 
 - Images for individual FX properties as they were redundant.
+- Redundant member `_SamplerInstrument.flags`.
 
 [#55]: https://github.com/demberto/PyFLP/issues/55
+[#56]: https://github.com/demberto/PyFLP/issues/56
 
 ## 2.0.0a1 - 2022-09-21
 

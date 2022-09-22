@@ -65,6 +65,7 @@ Enumerations
    ChannelType
    LFOShape
    ReverbType
+   StretchMode
 
 .. autoclass:: ArpDirection
    :members:
@@ -73,6 +74,8 @@ Enumerations
 .. autoclass:: LFOShape
    :members:
 .. autoclass:: ReverbType
+   :members:
+.. autoclass:: StretchMode
    :members:
 
 Event IDs

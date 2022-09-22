@@ -82,6 +82,7 @@ __all__ = [
     "Tracking",
     "Keyboard",
     "LevelAdjusts",
+    "StretchMode",
     "Time",
     "TimeStretching",
     "Polyphony",
@@ -135,7 +136,9 @@ class _ParametersStruct(StructBase):
         "arp.slide": "bool",  # 61
         "_u31": 31,  # 92
         "arp.repeat": "I",  # 96 4.5.2+
-        "_u62": 62,  # 158
+        "_u12": 12,  # 108
+        "stretching.mode": "i",  # 112
+        "_u46": 46,  # 158
     }
 
 
@@ -336,6 +339,20 @@ class _SamplerFlags(enum.IntFlag):
     LoadSliceMarkers = 1 << 2
     UsesLoopPoints = 1 << 3
     KeepOnDisk = 1 << 8
+
+
+class StretchMode(enum.IntEnum):
+    Stretch = -1
+    Resample = 0
+    E3Generic = 1
+    E3Mono = 2
+    SliceStretch = 3
+    SliceMap = 4
+    Auto = 5
+    E2Generic = 6
+    E2Transient = 7
+    E2Mono = 8
+    E2Speech = 9
 
 
 class DisplayGroup(MultiEventModel, ModelReprMixin):
@@ -744,7 +761,7 @@ class TimeStretching(MultiEventModel, ModelReprMixin):
     *New in FL Studio v5.0*.
     """
 
-    # mode: enum (new modes added in FL Studio v7.0.0)
+    mode = StructProp[StretchMode](ChannelID.Parameters, prop="stretching.mode")
     # multiplier: Optional[int] = None
     # pitch: Optional[int] = None
     time = EventProp[float](ChannelID.StretchTime)
@@ -936,13 +953,11 @@ class Layer(Channel, Sequence[Channel]):
 class _SamplerInstrument(Channel):
     arp = NestedProp(Arp, ChannelID.Parameters)
     delay = NestedProp(Delay, ChannelID.Delay)
-    flags = EventProp[int](ChannelID.SamplerFlags)  # TODO
     insert = EventProp[int](ChannelID.RoutedTo)
     """The index of the :class:`Insert` the channel is routed to. Min = -1."""
 
     level_adjusts = NestedProp(LevelAdjusts, ChannelID.LevelAdjusts)
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
-    stretching = NestedProp(TimeStretching, ChannelID.StretchTime)
     time = NestedProp(Time, ChannelID.Swing)
 
     @property
@@ -998,6 +1013,7 @@ class Sampler(_SamplerInstrument):
         ChannelID.Preamp,
         ChannelID.Resonance,
         ChannelID.StereoDelay,
+        ChannelID.FXFlags,
     )
 
     @property
@@ -1045,6 +1061,12 @@ class Sampler(_SamplerInstrument):
 
         path = "" if str(value) == "." else str(value)
         self._events[ChannelID.SamplePath][0].value = path
+
+    stretching = NestedProp(
+        TimeStretching,
+        ChannelID.StretchTime,
+        ChannelID.Parameters,
+    )
 
 
 class ChannelRack(MultiEventModel, Sequence[Channel]):
