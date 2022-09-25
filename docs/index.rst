@@ -97,7 +97,7 @@ PyFLP requires **Python 3.7+**.
 
       .. code-block::
 
-          python -m pip install -U pyflp
+          python -m pip install --pre -U pyflp
 
     .. tab-item:: Github repo
 
