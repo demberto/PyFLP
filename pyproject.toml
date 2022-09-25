@@ -89,7 +89,7 @@ testpaths = "tests"
 packages = ["pyflp"]
 
 [tool.setuptools.dynamic]
-version = { file = "VERSION" }
+version = { attr = "pyflp.__version__" }
 
 [tool.tbump]
 github_url = "https://github.com/demberto/PyFLP/"
@@ -112,7 +112,8 @@ message_template = "version: bump to {new_version}"
 tag_template = "v{new_version}"
 
 [[tool.tbump.file]]
-src = "VERSION"
+src = "pyflp/__init__.py"
+search = "__version__ = \"{current_version}\""
 
 [[tool.tbump.file]]
 src = "docs/conf.py"

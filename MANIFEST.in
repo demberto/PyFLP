@@ -14,4 +14,3 @@ recursive-include pyflp *.py
 recursive-include tests *.md *.py *.flp
 include *.txt
 include *.yaml
-include VERSION
