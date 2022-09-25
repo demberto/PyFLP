@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Playback.start_offset` [#57].
 - `Content.declick_mode` and `DeclickMode` [#58].
 - User guide and contibutor's guide.
+- Official support for Python 3.11.
 
 ### Changed
 

@@ -18,6 +18,7 @@ classifiers = [
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
 ]
 license = { text = "GPL-3.0" }
 dependencies = ["bytesioex>=0.1.2", "colour>=0.1.5", 'typing_extensions>=4.3.0']
