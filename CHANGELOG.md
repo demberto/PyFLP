@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TimeStretching.mode` and `StretchMode` [#56].
 - `Playback.start_offset` [#57].
 - `Content.declick_mode` and `DeclickMode` [#58].
+- User guide and contibutor's guide.
 
 ### Changed
 
