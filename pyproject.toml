@@ -54,8 +54,10 @@ max-parents = 8
 [tool.pylint.format]
 max-module-lines = 1200
 
-[tool.pylint.MASTER]
+[tool.pylint.main]
+fail-under = 9
 jobs = 0 # Parallel execution
+py-version = [3, 7]
 
 [tool.pylint.'MESSAGE CONTROL']
 disable = [
