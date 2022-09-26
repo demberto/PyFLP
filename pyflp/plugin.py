@@ -44,6 +44,7 @@ from ._models import ModelReprMixin, MultiEventModel, SingleEventModel
 __all__ = [
     "BooBass",
     "FruityBalance",
+    "FruityBloodOverdrive",
     "FruityFastDist",
     "FruityFastDistKind",
     "FruityNotebook2",
@@ -65,6 +66,23 @@ class _BooBassStruct(StructBase):
 
 class _FruityBalanceStruct(StructBase):
     PROPS = {"pan": "I", "volume": "I"}
+
+
+class _FruityBloodOverdriveStruct(StructBase):
+    PROPS = dict.fromkeys(
+        (
+            "plugin_marker",
+            "pre_band",
+            "color",
+            "pre_amp",
+            "x100",
+            "post_filter",
+            "post_gain",
+            "unknown_event_first",
+            "unknown_event_second",
+        ),
+        "I",
+    )
 
 
 class _FruityFastDistStruct(StructBase):
@@ -111,6 +129,10 @@ class BooBassEvent(StructEventBase):
 
 class FruityBalanceEvent(StructEventBase):
     STRUCT = _FruityBalanceStruct
+
+
+class FruityBloodOverdriveEvent(StructEventBase):
+    STRUCT = _FruityBloodOverdriveStruct
 
 
 class FruityFastDistEvent(StructEventBase):
@@ -448,6 +470,80 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     | Max     | 320   | 5.6dB / 1.90   |
     | Default | 256   | 0.0dB / 1.00   |
     """
+
+
+class FruityBloodOverdrive(
+    _PluginBase[FruityBloodOverdriveEvent], _IPlugin, ModelReprMixin
+):
+    """![]()"""  # noqa
+
+    INTERNAL_NAME = "Fruity Blood Overdrive"
+
+    plugin_marker = _PluginDataProp[int]()  # 3
+
+    pre_band = _PluginDataProp[int]()
+    """Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0.0000         |
+    | Max     | 10000 | 1.0000         |
+    | Default | 0     | 0.0000         |
+    """
+
+    color = _PluginDataProp[int]()
+    """Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0.0000         |
+    | Max     | 10000 | 1.0000         |
+    | Default | 5000  | 0.5000         |
+
+    """
+
+    pre_amp = _PluginDataProp[int]()
+    """Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0.0000         |
+    | Max     | 10000 | 1.0000         |
+    | Default | 0     | 0.0000         |
+    """
+
+    x100 = _PluginDataProp[bool]()
+    """Boolean.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Off     | 0     | Off            |
+    | On      | 1     | On             |
+    | Default | 0     | Off            |
+    """
+
+    post_filter = _PluginDataProp[int]()
+    """Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0.0000         |
+    | Max     | 10000 | 1.0000         |
+    | Default | 0     | 0.0000         |
+    """
+
+    post_gain = _PluginDataProp[int]()
+    """Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | -1.0000        |
+    | Max     | 10000 |  0.0000        |
+    | Default | 10000 |  0.0000        |
+    """
+
+    unknown_event_first = _PluginDataProp[int]()
+    unknown_event_second = _PluginDataProp[int]()
 
 
 @enum.unique

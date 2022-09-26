@@ -68,6 +68,8 @@ from .exceptions import ModelNotFound, NoModelsFound
 from .plugin import (
     FruityBalance,
     FruityBalanceEvent,
+    FruityBloodOverdrive,
+    FruityBloodOverdriveEvent,
     FruityFastDist,
     FruityFastDistEvent,
     FruityNotebook2,
@@ -385,6 +387,7 @@ class Slot(MultiEventModel, SupportsIndex):
             VSTPluginEvent: VSTPlugin,
             FruityBalanceEvent: FruityBalance,
             FruityFastDistEvent: FruityFastDist,
+            FruityBloodOverdriveEvent: FruityBloodOverdrive,
             FruityNotebook2Event: FruityNotebook2,
             FruitySendEvent: FruitySend,
             FruitySoftClipperEvent: FruitySoftClipper,

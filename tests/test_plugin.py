@@ -8,6 +8,7 @@ from pyflp.mixer import Insert
 from pyflp.plugin import (
     AnyPlugin,
     FruityBalance,
+    FruityBloodOverdrive,
     FruityFastDist,
     FruityFastDistKind,
     FruitySend,
@@ -23,7 +24,7 @@ from pyflp.plugin import (
 
 @pytest.fixture(scope="session")
 def plugins(inserts: tuple[Insert, ...]):
-    return [slot.plugin for slot in inserts[19]][:7]
+    return [slot.plugin for slot in inserts[19]][:8]
 
 
 def test_plugin_types(plugins: tuple[AnyPlugin, ...]):
@@ -35,6 +36,7 @@ def test_plugin_types(plugins: tuple[AnyPlugin, ...]):
         FruityStereoEnhancer,
         Soundgoodizer,
         VSTPlugin,
+        FruityBloodOverdrive,
     ]
 
 
@@ -91,3 +93,13 @@ def test_vst_plugin(plugins: tuple[AnyPlugin, ...]):
 
     with pytest.raises(KeyError):
         ott.fourcc
+
+
+def test_fruity_blood_overdrive(plugins: tuple[AnyPlugin, ...]):
+    fruity_blood_overdrive = cast(FruityBloodOverdrive, plugins[7])
+    print(plugins[7].color)
+    assert fruity_blood_overdrive.pre_band == 0
+    assert fruity_blood_overdrive.color == 5000
+    assert fruity_blood_overdrive.pre_amp == 0
+    assert fruity_blood_overdrive.x100 == 0
+    assert fruity_blood_overdrive.post_filter == 0

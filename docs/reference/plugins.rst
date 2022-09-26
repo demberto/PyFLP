@@ -37,6 +37,8 @@ Effects
    :members:
 .. autoclass:: FruityFastDist
    :members:
+.. autoclass:: FruityBloodOverdrive
+   :members:
 .. autoclass:: FruityNotebook2
    :members:
 .. autoclass:: FruitySend
