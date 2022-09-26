@@ -1,18 +1,18 @@
-VSCode integration
-==================
+Features
+========
 
 Godlevel docstrings
 -------------------
 
 PyFLP has been carefully written to take advantage of the features provided
-by a modern editor, like VSCode. One area, I particularly devoted a lot of
+by a modern editor, like VS Code. One area, I particularly devoted a lot of
 time to are docstrings.
 
 Since PyFLP's entire documentation is only its reference, I thought it might
 be challenging for a first time user to know where to find the data they need.
 
-Visual hints
-^^^^^^^^^^^^
+:far:`eye` Visual hints
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: /img/user-guide/images-dark.png
    :align: center
@@ -25,8 +25,8 @@ Visual hints
 To make it somewhat easier of a journey, I haved added links to images and GIFs
 from FL Studio's interface.
 
-Minimums, maximums and defaults
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:material-round:`tune;1.3em` Minimums, maximums and defaults
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: /img/user-guide/tables-dark.png
    :align: center
@@ -42,9 +42,9 @@ Its on their whims what they do with it. The values I suggest are only on a
 *last-I-checked-they-were-these* basis. However, my research till now has
 shown me that they rarely change.
 
-.. important:: For non-VSCode users
+.. important:: For non-VS Code users
 
-   VSCode uses a rather unstandardised format for parsing docstrings. Unlike
+   VS Code uses a rather unstandardised format for parsing docstrings. Unlike
    PyCharm, it cannot parse rST docstrings. Hence PyCharm users will get a
    rather bad result from the docstring previews where I have used tables and
    images, *unfortunately*.
@@ -53,3 +53,15 @@ shown me that they rarely change.
    accessible in both PyCharm and VSCode.
 
    .. seealso:: `#52 <https://github.com/demberto/PyFLP/issues/52>`_
+
+:octicon:`check-circle-fill;1em;sd-text-success` 100% type tested
+-----------------------------------------------------------------
+
+PyFLP is fully tested with `pyright <https://github.com/microsoft/pyright>`_,
+a static type checker built right into VS Code.
+
+:fas:`umbrella` 80%+ code coverage
+----------------------------------
+
+PyFLP boasts a total of more than 80+ combined code coverage across supported
+Python versions. Higher the coverage ⬆, lesser the amount of bugs 🐞
