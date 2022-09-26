@@ -26,21 +26,21 @@ IGNORED_BITLY = ["3RDM1yn"]
 project = "PyFLP"
 copyright = "2022, demberto"
 author = "demberto"
-release = "2.0.0a1"
+release = "2.0.0a1"  # Auto-updated by tbump
 extensions = [
     "hoverxref.extension",
-    "m2r2",
-    "sphinx_copybutton",
-    "sphinx_design",
-    "sphinx.ext.autodoc",
+    "m2r2",  # Markdown to reStructuredText conversion
+    "sphinx_copybutton",  # Copy button for code blocks
+    "sphinx_design",  # Grids, cards, icons and tabs
+    "sphinx.ext.autodoc",  # Sphinx secret sauce
     "sphinx.ext.autosummary",
-    "sphinx.ext.coverage",
+    "sphinx.ext.coverage",  # Find what I missed to autodoc
     "sphinx.ext.duration",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.napoleon",
-    "sphinx.ext.todo",
-    "sphinx.ext.viewcode",
-    "sphinx_toolbox",
+    "sphinx.ext.intersphinx",  # Automatic links to Python docs
+    "sphinx.ext.napoleon",  # Google-style docstrings
+    "sphinx.ext.todo",  # Items I need to document
+    "sphinx.ext.viewcode",  # "Show source" button next to autodoc output
+    "sphinx_toolbox",  # Badges and goodies
     "sphinx_toolbox.github",
     "sphinx_toolbox.more_autodoc.autoprotocol",
     "sphinx_toolbox.more_autodoc.sourcelink",
@@ -48,24 +48,27 @@ extensions = [
     "sphinx_toolbox.wikipedia",
 ]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-html_theme = "furo"
+html_theme = "furo"  # Nice light/dark theme; has an auto-switch mode
 autodoc_inherit_docstrings = False
 autodoc_default_options = {
-    "undoc-members": True,
-    "exclude-members": "INTERNAL_NAME",
-    "no-value": True,
+    "undoc-members": True,  # Show undocumented members
+    "exclude-members": "INTERNAL_NAME",  # Exclude these members
+    "no-value": True,  # Don't show a default value (for descriptors mainly)
 }
 needs_sphinx = "5.0"
 hoverxref_auto_ref = True
-coverage_ignore_pyobjects = ["[A-Z][A-z0-9]*Event"]
 napoleon_preprocess_types = True
 napoleon_attr_annotations = True
 html_permalinks_icon = "<span>#</span>"
 github_username = author
 github_repository = project
-autodoc_show_sourcelink = True
-todo_include_todos = True
-todo_emit_warnings = True
+autodoc_show_sourcelink = True  # sphinx_toolbox.more_autodoc.sourcelink
+todo_include_todos = True  # Include .. todo:: directives in output
+todo_emit_warnings = True  # Emit warnings about it as well, so I don't forget
+html_css_files = [
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+]  # https://sphinx-design.readthedocs.io/en/furo-theme/badges_buttons.html#fontawesome-icons
+sd_fontawesome_latex = True
 
 
 def badge_flstudio(app, what, name, obj, options, lines):
