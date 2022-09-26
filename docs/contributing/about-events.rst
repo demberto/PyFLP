@@ -1,11 +1,12 @@
-Events
-======
+Understanding events
+====================
 
 .. automodule:: pyflp._events
    :show-inheritance:
 
-The FLP format uses a :wikipedia:`Type-length-value` implementation.
-It's an incredibly bad format, full of bad design decisions *AFAIK*.
+The FLP format uses a :wikipedia:`Type-length-value` encoding to store almost
+all of it's data. *It's an incredibly bad format, full of bad design
+decisions AFAIK.*
 
 That being said, all the data except:
 
@@ -21,8 +22,8 @@ is stored in a structure called an **Event**.
    I recommend you to get acquainted with these topics, however as a
    contributor, I am sure you have an equivalent programming background.
 
-What is an **Event**?
----------------------
+❔ What is an **Event**?
+------------------------
 
 Following can be considered as a pseudo C-style structure of an event:
 
@@ -50,6 +51,9 @@ This table shows how the size of ``data`` is decided:
 +----------+------------------------------+-------------------------------+
 | 192-255  | ``varint``                   | 1 + ``encoded`` + ``decoded`` |
 +----------+------------------------------+-------------------------------+
+
+Events are the first stage of parsing in PyFLP. The :meth:`pyflp.parse` method
+gathers all events by reading an FLP file as a binary stream.
 
 Representation
 --------------

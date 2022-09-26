@@ -9,8 +9,8 @@ Reference
 
    reference/*
 
-API
----
+:material-outlined:`api` API
+----------------------------
 
 .. module:: pyflp
 .. autofunction:: parse

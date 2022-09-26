@@ -20,7 +20,7 @@ Guidelines
 5. ⚫⚪ Add images for both **light** and **dark** modes.
 
 
-Still to be documented
-----------------------
+🚧 Still to be documented
+--------------------------
 
 .. todolist::

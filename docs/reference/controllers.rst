@@ -1,5 +1,5 @@
-Controllers
-===========
+🎛 Controllers
+=============
 
 .. module:: pyflp.controller
 .. autoclass:: RemoteController

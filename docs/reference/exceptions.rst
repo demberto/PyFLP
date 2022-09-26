@@ -1,5 +1,5 @@
-Exceptions
-==========
+🛑 Exceptions
+==============
 
 .. automodule:: pyflp.exceptions
    :members:

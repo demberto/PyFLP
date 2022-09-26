@@ -1,7 +1,7 @@
-|vscode-icon| VSCode integration
-================================
+|vscode-icon| VS Code integration
+=================================
 
-I use VSCode for development. I have made certain changes to the workspace to
+I use VS Code for development. I have made certain changes to the workspace to
 suit my workflows and make life easier.
 
 .. todo Inspect whether venv creation can be automated through VSCode.
@@ -18,7 +18,7 @@ Check `settings.json
 Recommended extensions
 ^^^^^^^^^^^^^^^^^^^^^^
 
-When you open the repo directory in VSCode, you will get recommendations for
+When you open the repo directory in VS Code, you will get recommendations for
 extensions. I use these extensions myself. You can check `extensions.json
 <https://github.com/demberto/PyFLP/blob/master/.vscode/extensions.json>`_ to
 know why and where they are used.

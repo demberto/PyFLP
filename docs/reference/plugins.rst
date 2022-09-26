@@ -1,5 +1,5 @@
-Plugins
-=======
+\ :material-sharp:`extension;1.2em;sd-pb-1` Plugins
+===================================================
 
 .. module:: pyflp.plugin
 .. autoclass:: _PluginBase

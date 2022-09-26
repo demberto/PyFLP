@@ -1,20 +1,36 @@
-Descriptors
-===========
+\ :fas:`bars-staggered` Understanding descriptors
+==================================================
 
 .. automodule:: pyflp._descriptors
    :show-inheritance:
 
-Descriptors are one of the main reasons why PyFLP has been possible with very
-little code duplication while providing a clean Pythonic interface. You can
-read more about them here:
+A "descriptor" provides low-level managed attribute access, according to Python
+docs. *(slightly rephrased for my convenience)*. Its what ``@property`` uses
+internally.
 
-- <https://docs.python.org/3/howto/descriptor.html>
-- <https://realpython.com/python-descriptors/>, **especially** the `Why use
-  <https://realpython.com/python-descriptors/#why-use-python-descriptors>`_
-  section.
+    Descriptors are one of the main reasons why PyFLP has been possible with
+    very little code duplication while providing a clean Pythonic interface.
 
-❗ PyFLP 1.x *used* descriptors, but unfortunately not with lazy evaluation.
-That was a major PITA. Its one of the reasons why I rewrote PyFLP in v2.0.
+    .. note:: More about descriptors in Python
+
+        - <https://docs.python.org/3/howto/descriptor.html>
+        - <https://realpython.com/python-descriptors/>, **especially** the
+          `Why use Python descriptors?
+          <https://realpython.com/python-descriptors/#why-use-python-descriptors>`_
+          section.
+
+In PyFLP, descriptors are used to describe an attribute of a `model <./about-models>`_.
+Internally, they access the value of an `event <./about-events>`_ or one if its
+keys.
+
+Some common descriptors like ``name`` 🔤, ``color`` 🎨 or ``icon`` 🖼 are used by
+multiple different types of models. The descriptors used for these can be
+different depending upon the internal representation inside `events <./about-events>`_.
+
+.. note::
+
+   Throughout the documentation, I have used the term **descriptors** and
+   **properties** interchangeably.
 
 Reference
 ---------
@@ -25,13 +41,8 @@ Reference
 🙄 Since the ``typing`` module doesn't provide any type for descriptors, I
 needed to create my own:
 
-.. card:: ROProperty
-
-   .. autoprotocol:: ROProperty
-
-.. card:: RWProperty
-
-   .. autoprotocol:: RWProperty
+.. autoprotocol:: ROProperty
+.. autoprotocol:: RWProperty
 
 2️⃣ Descriptors
 ^^^^^^^^^^^^^^^
@@ -47,7 +58,7 @@ needed to create my own:
 
 .. autoclass:: NamedPropMixin
 
-➕ Making a new descriptor
----------------------------
+➕ Implementing a descriptor
+-----------------------------
 
 .. autoclass:: PropBase

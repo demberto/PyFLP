@@ -1,5 +1,5 @@
-Patterns
-========
+🎹 Patterns
+============
 
 .. module:: pyflp.pattern
 .. autoclass:: Patterns

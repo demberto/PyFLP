@@ -1,5 +1,5 @@
-Channel Rack
-=============
+\ :material-regular:`dns;1.2em;sd-pb-1` Channel Rack
+====================================================
 
 .. module:: pyflp.channel
 .. autoclass:: ChannelRack

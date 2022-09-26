@@ -1,5 +1,5 @@
-Project
-=======
+\ :fas:`file-waveform` Project
+==============================
 
 .. module:: pyflp.project
 

@@ -1,5 +1,5 @@
-Making a PR
-===========
+\ :fas:`code-pull-request` Making a PR
+======================================
 
 .. tip:: Format code with ``black``
 
