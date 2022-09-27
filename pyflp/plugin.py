@@ -78,8 +78,8 @@ class _FruityBloodOverdriveStruct(StructBase):
             "x100",
             "post_filter",
             "post_gain",
-            "unknown_event_first",
-            "unknown_event_second",
+            "_u1",
+            "_u2",
         ),
         "I",
     )
@@ -542,8 +542,8 @@ class FruityBloodOverdrive(
     | Default | 10000 |  0.0000        |
     """
 
-    unknown_event_first = _PluginDataProp[int]()
-    unknown_event_second = _PluginDataProp[int]()
+    _u1 = _PluginDataProp[int]()
+    _u2 = _PluginDataProp[int]()
 
 
 @enum.unique
