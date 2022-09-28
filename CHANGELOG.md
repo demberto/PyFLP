@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Moved `stretching` to `Sampler`, instruments don't have it.
 
+### Fixed
+
+- String are decoded as UTF16 when version is 11.5+ now [#65].
+
 ### Removed
 
 - Images for individual FX properties as they were redundant.
@@ -31,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#56]: https://github.com/demberto/PyFLP/issues/56
 [#57]: https://github.com/demberto/PyFLP/issues/57
 [#58]: https://github.com/demberto/PyFLP/issues/58
+[#65]: https://github.com/demberto/PyFLP/issues/65
 
 ## 2.0.0a1 - 2022-09-21
 

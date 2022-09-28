@@ -132,7 +132,8 @@ def parse(file: str | pathlib.Path) -> Project:
             value = stream.read(stream.read_v())
 
         if id == ProjectID.FLVersion:
-            if int(value.decode("ascii").split(".")[0]) >= 12:
+            parts = value.decode("ascii").rstrip("\0").split(".")
+            if [int(part) for part in parts][0:2] >= [11, 5]:
                 str_type = UnicodeEvent
             else:
                 str_type = AsciiEvent
