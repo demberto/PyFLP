@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Moved `stretching` to `Sampler`, instruments don't have it.
+- `Note.key` now returns a note name with octave [#66].
 
 ### Fixed
 
@@ -36,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#57]: https://github.com/demberto/PyFLP/issues/57
 [#58]: https://github.com/demberto/PyFLP/issues/58
 [#65]: https://github.com/demberto/PyFLP/issues/65
+[#66]: https://github.com/demberto/PyFLP/issues/66
 
 ## 2.0.0a1 - 2022-09-21
 

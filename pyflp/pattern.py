@@ -124,6 +124,8 @@ class _NoteFlags(enum.IntFlag):
 
 
 class Note(ItemModel[_NoteStruct]):
+    _NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
     def __repr__(self) -> str:
         return "Note {} @ {} of length {} for channel #{}".format(
             self.key, self.position, self.length, self.rack_channel
@@ -145,9 +147,31 @@ class Note(ItemModel[_NoteStruct]):
     group = StructProp[int]()
     """A number shared by notes in the same group or 0 if ungrouped."""
 
-    # TODO Return note names instead of integers
-    key = StructProp[int]()
-    """0-131 for C0-B10. Can hold stamped chords and scales also."""
+    @property
+    def key(self) -> str:
+        """Note name with octave, for e.g. 'C5' or 'A#3' ranging from C0 to B10.
+
+        Only sharp key names (C#, D#, etc.) are used, flats aren't.
+
+        Raises:
+            ValueError: A value not in between 0-131 is tried to be set.
+            ValueError: Invalid note name (not in the format {note-name}{octave}).
+        """
+        return self._NOTE_NAMES[self["key"] % 12] + str(self["key"] // 12)
+
+    @key.setter
+    def key(self, value: int | str):
+        if isinstance(value, int):
+            if value not in range(132):
+                raise ValueError("Expected a value between 0-131.")
+            self["key"] = value
+        else:
+            for i, name in enumerate(self._NOTE_NAMES):
+                if value.startswith(name):
+                    octave = int(value.replace(name, "", 1))
+                    self["key"] = octave * 12 + i
+            else:
+                raise ValueError(f"Invalid key name: {value}")
 
     length = StructProp[int]()
     """Returns 0 for notes punched in through step sequencer."""
