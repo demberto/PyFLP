@@ -564,7 +564,7 @@ class FX(MultiEventModel, ModelReprMixin):
     | 0   | 512 | 256     |
     """
 
-    ringmod = EventProp[tuple[int, int]](ChannelID.RingMod)
+    ringmod = EventProp[Tuple[int, int]](ChannelID.RingMod)
     """Ring modulation returned as a tuple of `(mix, frequency)`.
 
     Limits for both:
