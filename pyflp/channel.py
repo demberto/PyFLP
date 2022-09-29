@@ -928,7 +928,7 @@ class Channel(MultiEventModel, SupportsIndex):
         """
         | Min | Max   | Default |
         |-----|-------|---------|
-        | 0   | 12800 | 10000   |
+        | 0   | 12800 | 6400    |
         """  # noqa
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pan"]

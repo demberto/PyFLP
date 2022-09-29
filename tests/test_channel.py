@@ -77,6 +77,11 @@ def test_channel_icon(load_channel: ChannelFixture):
     assert load_channel("iconified.fst").icon == 116
 
 
+def test_channel_pan(load_channel: ChannelFixture):
+    assert load_channel(r"100%-left.fst").pan == 0
+    assert load_channel(r"100%-right.fst").pan == 12800
+
+
 def test_channel_volume(load_channel: ChannelFixture):
     assert load_channel("full-volume.fst").volume == 12800
     assert not load_channel("zero-volume.fst").volume
