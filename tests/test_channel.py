@@ -1,11 +1,60 @@
 from __future__ import annotations
 
 import pathlib
+from typing import Any, Callable
 
 import colour
 import pytest
 
-from pyflp.channel import Channel, ChannelRack, Layer, Sampler
+from pyflp import Project
+from pyflp.channel import (
+    Channel,
+    ChannelRack,
+    DeclickMode,
+    Instrument,
+    Layer,
+    ReverbType,
+    Sampler,
+)
+
+from .conftest import ModelFixture
+
+ChannelFixture = Callable[[str], Channel]
+InstrumentFixture = Callable[[str], Instrument]
+LayerFixture = Callable[[str], Layer]
+SamplerFixture = Callable[[str], Sampler]
+
+
+@pytest.fixture
+def load_channel(get_model: ModelFixture):
+    def wrapper(preset: str, type: type[Channel] = Channel):
+        return get_model(f"channels/{preset}", type)
+
+    return wrapper
+
+
+@pytest.fixture
+def load_instrument(load_channel: ModelFixture):
+    def wrapper(preset: str):
+        return load_channel(preset, Instrument)
+
+    return wrapper
+
+
+@pytest.fixture
+def load_layer(load_channel: Any):
+    def wrapper(preset: str):
+        return load_channel(preset, Layer)
+
+    return wrapper
+
+
+@pytest.fixture
+def load_sampler(load_channel: Any):
+    def wrapper(preset: str):
+        return load_channel(preset, Sampler)
+
+    return wrapper
 
 
 def test_channels(rack: ChannelRack):
@@ -16,81 +65,97 @@ def test_channels(rack: ChannelRack):
     assert not rack.swing
 
 
-@pytest.fixture(scope="session")
-def channels(rack: ChannelRack):
-    return tuple(rack)
+def test_channel_color(load_channel: ChannelFixture):
+    assert load_channel("colored.fst").color == colour.Color("#1414FF")
 
 
-@pytest.fixture(scope="session")
-def layer(rack: ChannelRack):
-    return tuple(rack.layers)[0]
+def test_channel_enabled(load_channel: ChannelFixture):
+    assert not load_channel("disabled.fst").enabled
 
 
-@pytest.fixture(scope="session")
-def samplers(rack: ChannelRack):
-    return [s for s in rack.samplers]
+def test_channel_icon(load_channel: ChannelFixture):
+    assert load_channel("iconified.fst").icon == 116
 
 
-def test_channel_name(channels: tuple[Channel]):
-    assert tuple(channel.name for channel in channels) == (
-        "BooBass",
-        "Instrument track",
-        "Layer",
-        "Sampler",
-        "Colored",
-        "Automation Clip",
-        "VST2",
-        "Audio Clip",
-        "Iconified",
-        "Fruit Kick",
-        "Plucked!",
-        "22in Kick",
-        "Zero Volume",
-        "Full Volume",
-        "100% L",
-        "100% R",
-        "Disabled",
-        "Locked",
+def test_channel_volume(load_channel: ChannelFixture):
+    assert load_channel("full-volume.fst").volume == 12800
+    assert not load_channel("zero-volume.fst").volume
+
+
+def test_instrument_keyboard(load_instrument: InstrumentFixture):
+    keyboard = load_instrument("keyboard.fst").keyboard
+    assert keyboard.fine_tune == 100
+    assert keyboard.root_note == 60
+
+
+def test_instrument_polyphony(load_instrument: InstrumentFixture):
+    polyphony = load_instrument("polyphony.fst").polyphony
+    assert polyphony.is_mono
+    assert polyphony.is_porta
+    assert polyphony.max == 4
+    assert polyphony.slide == 820
+
+
+def test_instrument_routing(load_instrument: InstrumentFixture):
+    assert load_instrument("routed.fst").insert == 125
+
+
+# ! Apparently, layer children events aren't stored in presets
+# def test_layer_children(load_layer: LayerFixture):
+
+
+def test_layer_crossfade(load_layer: LayerFixture):
+    assert load_layer("layer-crossfade.fst").crossfade
+
+
+def test_layer_random(load_layer: LayerFixture):
+    assert load_layer("layer-random.fst").random
+
+
+def test_rack_height(project: Project):
+    assert project.channels.height == 636
+
+
+def test_sampler_content(load_sampler: SamplerFixture):
+    content = load_sampler("sampler-content.fst").content
+    assert content.keep_on_disk
+    assert content.resample
+    assert not content.load_regions
+    assert not content.load_slices
+    assert content.declick_mode == DeclickMode.Generic
+
+
+def test_sampler_cut_group(load_sampler: SamplerFixture):
+    assert load_sampler("cut-groups.fst").cut_group == (1, 2)
+
+
+def test_sampler_fx(load_sampler: SamplerFixture):
+    fx = load_sampler("sampler-fx.fst").fx
+    assert fx.boost == 128
+    assert fx.clip
+    assert fx.cutoff == 16
+    assert fx.fade_in == 1024
+    assert fx.fade_out == 0
+    assert fx.fade_stereo
+    assert fx.freq_tilt == 0
+    assert fx.pogo == 256
+    assert fx.resonance == 640
+    assert fx.reverb.type == ReverbType.A
+    assert fx.reverb.mix == 128
+    assert not fx.reverse
+    assert fx.ringmod == (64, 192)
+    assert fx.stereo_delay == 4096
+    assert fx.swap_stereo
+
+
+def test_sampler_path(load_sampler: SamplerFixture):
+    assert load_sampler("sampler-path.fst").sample_path == pathlib.Path(
+        r"%FLStudioFactoryData%\Data\Patches\Packs\Drums\Kicks\22in Kick.wav"
     )
 
 
-def test_channel_color(channels: tuple[Channel, ...]):
-    for channel in channels:
-        if channel.name == "Colored":
-            assert channel.color == colour.Color("#1414FF")
-        elif channel.name in ("Audio track", "Instrument track"):
-            # Colors are synced with insert and track
-            assert channel.color == colour.Color("#485156")
-        else:
-            assert channel.color == colour.Color("#5C656A")
-
-
-# TODO: Test `Channel.content`
-
-
-def test_channel_enabled(channels: tuple[Channel, ...]):
-    for ch in channels:
-        assert not ch.enabled if ch.name == "Disabled" else ch.enabled
-
-
-def test_channel_icon(channels: tuple[Channel, ...]):
-    for ch in channels:
-        assert ch.icon == 116 if ch.name == "Iconified" else not ch.icon
-
-
-def test_layer_crossfade(layer: Layer):
-    assert layer.crossfade
-
-
-def test_layer_random(layer: Layer):
-    assert layer.random
-
-
-def test_sampler_path(samplers: tuple[Sampler, ...]):
-    for sampler in samplers:
-        if sampler.name == "22in Kick":
-            # fmt: off
-            assert sampler.sample_path == pathlib.Path(r"%FLStudioFactoryData%\Data\Patches\Packs\Drums\Kicks\22in Kick.wav")
-            # fmt: on
-        else:
-            assert not sampler.sample_path
+def test_sampler_playback(load_sampler: SamplerFixture):
+    playback = load_sampler("sampler-playback.fst").playback
+    assert playback.use_loop_points
+    assert playback.ping_pong_loop
+    assert playback.start_offset == 1072693248

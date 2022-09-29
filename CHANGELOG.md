@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Note.key` now returns a note name with octave [#66].
 - A cleaner implementation of `MixerParamsEvent`.
 - `Layer.__repr__` now shows the number of children also.
+- Separated test assets into presets for better isolation of results [#6].
 
 ### Fixed
 
@@ -46,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#65]: https://github.com/demberto/PyFLP/issues/65
 [#66]: https://github.com/demberto/PyFLP/issues/66
 [#68]: https://github.com/demberto/PyFLP/issues/68
+[#6]: https://github.com/demberto/PyFLP/issues/6
 
 ## 2.0.0a1 - 2022-09-21
 
