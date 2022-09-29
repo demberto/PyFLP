@@ -972,6 +972,9 @@ class Layer(Channel, Sequence[Channel]):
         """Returns the number of channels whose parent this layer is."""
         return len(self._events.get(ChannelID.Children, []))
 
+    def __repr__(self):
+        return f"{super().__repr__()} ({len(self) or 'no'} children)"
+
     crossfade = FlagProp(_LayerFlags.Crossfade, ChannelID.LayerFlags)
     random = FlagProp(_LayerFlags.Random, ChannelID.LayerFlags)
 
