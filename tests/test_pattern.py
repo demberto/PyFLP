@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Tuple
 
 import pytest
 
@@ -19,7 +19,7 @@ from .conftest import ModelFixture
 #         ("Default", "Colored", "MIDI", "Timemarkers", "Selected")
 #     )
 
-NotesFixture = Callable[[str], tuple[Note, ...]]
+NotesFixture = Callable[[str], Tuple[Note, ...]]
 
 
 @pytest.fixture

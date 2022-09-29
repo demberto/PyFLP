@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, TypeVar
+from typing import Callable, Type, TypeVar
 
 import pytest
 
@@ -23,7 +23,7 @@ from pyflp.plugin import (
 from .conftest import ModelFixture
 
 T = TypeVar("T", bound=AnyPlugin)
-PluginFixture = Callable[[str, type[T]], T]
+PluginFixture = Callable[[str, Type[T]], T]
 
 
 @pytest.fixture
