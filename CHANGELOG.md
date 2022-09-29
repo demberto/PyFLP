@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved `stretching` to `Sampler`, instruments don't have it.
 - `Note.key` now returns a note name with octave [#66].
 - A cleaner implementation of `MixerParamsEvent`.
+- `Layer.__repr__` now shows the number of children also.
 
 ### Fixed
 
