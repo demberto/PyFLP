@@ -87,6 +87,14 @@ def test_channel_volume(load_channel: ChannelFixture):
     assert not load_channel("zero-volume.fst").volume
 
 
+def test_instrument_delay(load_instrument: InstrumentFixture):
+    delay = load_instrument("delay.fst").delay
+    assert delay.feedback == 12800
+    assert delay.echoes == 10
+    assert delay.pan == -6400
+    assert delay.time == 144
+
+
 def test_instrument_keyboard(load_instrument: InstrumentFixture):
     keyboard = load_instrument("keyboard.fst").keyboard
     assert keyboard.fine_tune == 100

@@ -423,14 +423,50 @@ class Delay(SingleEventModel, ModelReprMixin):
     # mod_y: Optional[int] = None
 
     echoes = StructProp[int]()
-    """Number of echoes generated for each note."""
+    """Number of echoes generated for each note.
+
+    | Min | Max |
+    |-----|-----|
+    | 1   | 10  |
+    """
 
     feedback = StructProp[int]()
-    """Factor with which the volume of every next echo is multiplied."""
+    """Factor with which the volume of every next echo is multiplied.
+
+    Defaults to minimum value.
+
+    | Type | Value | Representation |
+    |------|-------|----------------|
+    | Min  | 0     | 0%             |
+    | Max  | 25600 | 200%           |
+    """
 
     pan = StructProp[int]()
+    """
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -6400 | 100% left      |
+    | Max     | 6400  | 100% right     |
+    | Default | 0     | Centred        |
+    """
+
     pitch_shift = StructProp[int]()
+    """Pitch shift (in cents).
+
+    | Min   | Max   | Default |
+    |-------|-------|---------|
+    | -1200 | 1200  | 0       |
+    """
+
     time = StructProp[int]()
+    """Tempo-synced delay time. PPQ dependant.
+
+    | Type    | Value     | Representation |
+    |---------|-----------|----------------|
+    | Min     | 0         | 0:00           |
+    | Max     | PPQ * 4   | 8:00           |
+    | Default | PPQ * 3/2 | 3:00           |
+    """
 
 
 class LevelAdjusts(SingleEventModel, ModelReprMixin):
