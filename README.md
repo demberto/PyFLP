@@ -113,7 +113,7 @@ Save the project:
 pyflp.save(project, "/path/to/save.flp")
 ```
 
-Check the [user guide](https://pyflp.rtfd.io/en/latest/user-guide)
+Check the [user guide](https://pyflp.rtfd.io/en/latest/user-guide.html)
 
 ## 🙏 Acknowledgements
 
@@ -153,5 +153,5 @@ about contributing.
 The code in this project has been licensed under the [GNU Public License v3][gpl3].
 
 <!-- LINKS -->
-[contributors-guide]: https://github.com/demberto/PyFLP/blob/master/CONTRIBUTING.md
+[contributors-guide]: https://pyflp.readthedocs.io/en/latest/contributing.html
 [gpl3]: https://www.gnu.org/licenses/gpl-3.0.en.html
