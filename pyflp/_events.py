@@ -520,6 +520,9 @@ class StructBase(metaclass=_StructMeta):
             else:
                 self._props[key] = getattr(self._stream, f"read_{type_or_size}")()
 
+    def __repr__(self):
+        return f"{type(self).__name__} ({self._props})"
+
     def __bytes__(self):
         return self._stream.getvalue()
 
