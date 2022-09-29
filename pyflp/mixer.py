@@ -20,7 +20,7 @@ import enum
 import sys
 import warnings
 from collections import defaultdict
-from typing import Any, DefaultDict, List, NamedTuple, cast
+from typing import Any, DefaultDict, Dict, List, NamedTuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex, TypedDict
@@ -143,7 +143,7 @@ class _MixerParamsID(enum.IntEnum):
     HighQ = 226
 
 
-MixerParameterMapping = dict[_MixerParamsID, _MixerParamsItem]
+MixerParameterMapping = Dict[_MixerParamsID, _MixerParamsItem]
 
 
 @dataclasses.dataclass
