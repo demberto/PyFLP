@@ -196,7 +196,7 @@ class ChannelID(EventEnum):
     # FXProperties = 27
     IsLocked = (32, BoolEvent)  #: 12.3+
     New = (WORD, U16Event)
-    # Fx = WORD + 5
+    FreqTilt = (WORD + 5, U16Event)
     FXFlags = (WORD + 6, U16Event)
     Cutoff = (WORD + 7, U16Event)
     _VolWord = (WORD + 8, U16Event)
@@ -210,7 +210,7 @@ class ChannelID(EventEnum):
     Resonance = (WORD + 19, U16Event)
     # _LoopBar = WORD + 20
     StereoDelay = (WORD + 21, U16Event)  #: 1.3.56+
-    # Fx3 = WORD + 22
+    Pogo = (WORD + 22, U16Event)
     # DotReso = WORD + 23
     # DotCutOff = WORD + 24
     # ShiftDelay = WORD + 25
@@ -220,7 +220,7 @@ class ChannelID(EventEnum):
     Children = (WORD + 30, U16Event)  #: 3.4.0+
     Swing = (WORD + 33, U16Event)
     # Echo = DWORD + 2
-    # FxSine = DWORD + 3
+    RingMod = (DWORD + 3, U16TupleEvent)
     CutGroup = (DWORD + 4, U16TupleEvent)
     RootNote = (DWORD + 7, U32Event)
     # _MainResoCutOff = DWORD + 9
@@ -526,7 +526,7 @@ class FX(MultiEventModel, ModelReprMixin):
 
     | Min | Max  |
     |-----|------|
-    | 0   | 1024 |
+    | 16  | 1024 |
     """
 
     fade_in = EventProp[int](ChannelID.FadeIn)
@@ -548,12 +548,45 @@ class FX(MultiEventModel, ModelReprMixin):
     """
 
     fade_stereo = FlagProp(_FXFlags.FadeStereo, ChannelID.FXFlags)
+    freq_tilt = EventProp[int](ChannelID.FreqTilt)
+    """Shifts the frequency balance. Bi-polar.
+
+    | Min | Max | Default |
+    |-----|-----|---------|
+    | 0   | 256 | 128     |
+    """
+
+    pogo = EventProp[int](ChannelID.Pogo)
+    """Pitch bend effect. Bipolar.
+
+    | Min | Max | Default |
+    |-----|-----|---------|
+    | 0   | 512 | 256     |
+    """
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+    ringmod = EventProp[Tuple[int, int]](ChannelID.RingMod)
+=======
+    ringmod = EventProp[tuple[int, int]](ChannelID.RingMod)
+>>>>>>> e39fdb3 (feat: add some `FX` properties via #55)
+=======
+    ringmod = EventProp[Tuple[int, int]](ChannelID.RingMod)
+>>>>>>> dae94f9 (fixup: ~)
+    """Ring modulation returned as a tuple of `(mix, frequency)`.
+
+    Limits for both:
+    | Min | Max | Default |
+    |-----|-----|---------|
+    | 0   | 256 | 128     |
+    """
+
     resonance = EventProp[int](ChannelID.Resonance)
     """Filter Mod Y. Defaults to minimum value.
 
     | Min | Max  |
     |-----|------|
-    | 0   | 1024 |
+    | 0   | 640  |
     """
 
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
@@ -561,7 +594,13 @@ class FX(MultiEventModel, ModelReprMixin):
     """Whether sample is reversed or not."""
 
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
-    """*New in FL Studio v1.3.56*."""
+    """
+    | Min | Max  | Default |
+    |-----|------|---------|
+    | 0   | 4096 | 2048    |
+
+    *New in FL Studio v1.3.56*.
+    """
 
     swap_stereo = FlagProp(_FXFlags.SwapStereo, ChannelID.FXFlags)
     """Whether left and right channels are swapped or not."""
@@ -710,12 +749,25 @@ class Polyphony(SingleEventModel, ModelReprMixin):
     """
 
     is_mono = FlagProp(_PolyphonyFlags.Mono)
+    """Whether monophonic mode is enabled or not."""
+
     is_porta = FlagProp(_PolyphonyFlags.Porta)
     """*New in FL Studio v3.3.0*."""
 
     max = StructProp[int]()
+    """Max number of voices."""
+
     slide = StructProp[int]()
-    """*New in FL Studio v3.3.0*."""
+    """Portamento time.
+
+    | Type    | Value | Representation  |
+    |---------|-------|-----------------|
+    | Min     | 0     | 0:00            |
+    | Max     | 1660  | 8:00 (8 steps)  |
+    | Default | 820   | 0:12 (1/2 step) |
+
+    *New in FL Studio v3.3.0*.
+    """
 
 
 class Tracking(SingleEventModel, ModelReprMixin):
@@ -743,7 +795,8 @@ class Keyboard(MultiEventModel, ModelReprMixin):
     fine_tune = EventProp[int](ChannelID.FineTune)
     """-100 to +100 cents."""
 
-    root_note = EventProp[int](ChannelID.RootNote)
+    # TODO Return this as a note name, like `Note.key`
+    root_note = EventProp[int](ChannelID.RootNote, default=60)
     """Min - 0 (C0), Max - 131 (B10)."""
 
     # main_pitch_enabled = StructProp[bool](ChannelID.Parameters)
@@ -983,7 +1036,10 @@ class _SamplerInstrument(Channel):
     arp = NestedProp(Arp, ChannelID.Parameters)
     delay = NestedProp(Delay, ChannelID.Delay)
     insert = EventProp[int](ChannelID.RoutedTo)
-    """The index of the :class:`Insert` the channel is routed to. Min = -1."""
+    """The index of the :class:`Insert` the channel is routed to according to FL
+
+    "Current" insert = -1, Master = 0 and so on... till :attr:`Mixer.max_inserts`.
+    """
 
     level_adjusts = NestedProp(LevelAdjusts, ChannelID.LevelAdjusts)
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
@@ -1039,8 +1095,12 @@ class Sampler(_SamplerInstrument):
         ChannelID.Cutoff,
         ChannelID.FadeIn,
         ChannelID.FadeOut,
+        ChannelID.FreqTilt,
+        ChannelID.Pogo,
         ChannelID.Preamp,
         ChannelID.Resonance,
+        ChannelID.Reverb,
+        ChannelID.RingMod,
         ChannelID.StereoDelay,
         ChannelID.FXFlags,
     )
