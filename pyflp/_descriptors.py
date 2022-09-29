@@ -65,6 +65,8 @@ class NamedPropMixin:
             self._prop = name
 
 
+# TODO An "adapter" class hierarchy, used by the getter/setters
+# to transform integers into more human-readable representations.
 class PropBase(abc.ABC, RWProperty[T]):
     def __init__(self, *ids: EventEnum, default: T | None = None):
         self._ids = ids

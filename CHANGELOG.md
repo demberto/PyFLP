@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `FX.clip`, `FX.fade_stereo`, `FX.swap_stereo` & `FX.reverse` [#55].
+- `FX.clip`, `FX.fade_stereo`, `FX.freq_tilt`, `FX.pogo`, `FX.ringmod`,
+  `FX.swap_stereo` & `FX.reverse` [#55].
 - `TimeStretching.mode` and `StretchMode` [#56].
 - `Playback.start_offset` [#57].
 - `Content.declick_mode` and `DeclickMode` [#58].
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - String are decoded as UTF16 when version is 11.5+ now [#65].
 - `Insert.stereo_separation` docstring for maximum, minimum value.
 - `U16TupleEvent.value` [#68].
+- Minimum and maximum value docstrings for certain `FX` properties.
 
 ### Removed
 
