@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import abc
 import enum
+import struct
 import sys
 import warnings
 from collections.abc import Hashable, Sized
@@ -65,6 +66,7 @@ NEW_TEXT_IDS: Final = (
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
+UShortTuple = struct.Struct("HH")
 
 
 # ! MRO erros when deriving from SupportsBytes on Python 3.7
@@ -303,11 +305,11 @@ class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
 
     @property
     def value(self) -> tuple[int, int]:
-        return UInt.unpack(self._raw)
+        return UShortTuple.unpack(self._raw)
 
     @value.setter
     def value(self, value: tuple[int, int]):
-        self._raw = UInt.pack(*value)
+        self._raw = UShortTuple.pack(*value)
 
 
 class ColorEvent(DWordEventBase[colour.Color]):
