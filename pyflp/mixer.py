@@ -15,10 +15,11 @@
 
 from __future__ import annotations
 
-import collections
 import dataclasses
 import enum
 import sys
+import warnings
+from collections import defaultdict
 from typing import Any, DefaultDict, List, NamedTuple, cast
 
 if sys.version_info >= (3, 8):
@@ -53,6 +54,7 @@ from ._events import (
     WORD,
     AnyEvent,
     ColorEvent,
+    DataEventBase,
     EventEnum,
     I16Event,
     I32Event,
@@ -64,7 +66,7 @@ from ._events import (
 )
 from ._models import FLVersion, ModelBase, MultiEventModel
 from .controller import RemoteController
-from .exceptions import ModelNotFound, NoModelsFound
+from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
     FruityBalance,
     FruityBalanceEvent,
@@ -107,7 +109,7 @@ class _InsertRoutingStruct(StructBase):
 class _MixerParamsItem(StructBase):
     PROPS = {
         "_u4": 4,  # 4
-        "id": "b",  # 5
+        "id": "B",  # 5
         "_u1": 1,  # 6
         "channel_data": "H",  # 8
         "msg": "i",  # 12
@@ -122,8 +124,60 @@ class InsertRoutingEvent(ListEventBase):
     STRUCT = _InsertRoutingStruct
 
 
-class MixerParamsEvent(ListEventBase):
-    STRUCT = _MixerParamsItem
+@enum.unique
+class _MixerParamsID(enum.IntEnum):
+    SlotEnabled = 0
+    SlotMix = 1
+    RouteVolStart = 64  # 64 - 191 are send level events
+    Volume = 192
+    Pan = 193
+    StereoSeparation = 194
+    LowGain = 208
+    MidGain = 209
+    HighGain = 210
+    LowFreq = 216
+    MidFreq = 217
+    HighFreq = 218
+    LowQ = 224
+    MidQ = 225
+    HighQ = 226
+
+
+MixerParameterMapping = dict[_MixerParamsID, _MixerParamsItem]
+
+
+@dataclasses.dataclass
+class _InsertItems:
+    slots: DefaultDict[int, MixerParameterMapping] = dataclasses.field(
+        default_factory=lambda: defaultdict(dict)
+    )
+    own: MixerParameterMapping = dataclasses.field(default_factory=dict)
+
+
+# TODO This is one hell of an event, it needs a docs page of its own.
+class MixerParamsEvent(DataEventBase):
+    def __init__(self, id: int, data: bytes):
+        super().__init__(id, data)
+        self.items: DefaultDict[int, _InsertItems] = defaultdict(_InsertItems)
+        self.unparsed = False
+
+        if not self._stream_len % _MixerParamsItem.SIZE:
+            for _ in range(int(self._stream_len / _MixerParamsItem.SIZE)):
+                item = _MixerParamsItem(self._stream)
+                insert_idx = (item["channel_data"] >> 6) & 0x7F
+                slot_idx = item["channel_data"] & 0x3F
+                insert = self.items[insert_idx]
+
+                if item["id"] in (_MixerParamsID.SlotEnabled, _MixerParamsID.SlotMix):
+                    insert.slots[slot_idx][item["id"]] = item
+                else:
+                    insert.own[item["id"]] = item
+        else:
+            self.unparsed = True
+            warnings.warn(
+                f"Cannot parse event {id} as event "
+                "size is not a multiple of struct size"
+            )
 
 
 @enum.unique
@@ -146,26 +200,6 @@ class MixerID(EventEnum):
 @enum.unique
 class SlotID(EventEnum):
     Index = (WORD + 34, U16Event)
-
-
-@enum.unique
-class _MixerParamsID(enum.IntEnum):
-    SlotEnabled = 0
-    # SlotVolume = 1
-    SlotMix = 1
-    RouteVolStart = 64  # 64 - 191 are send level events
-    Volume = 192
-    Pan = 193
-    StereoSeparation = 194
-    LowGain = 208
-    MidGain = 209
-    HighGain = 210
-    LowFreq = 216
-    MidFreq = 217
-    HighFreq = 218
-    LowQ = 224
-    MidQ = 225
-    HighQ = 226
 
 
 # ? Maybe added in FL Studio v6.0.1
@@ -329,14 +363,16 @@ class _MixerParamProp(RWProperty[T]):
         if owner is None:
             return NotImplemented
 
-        for param in instance._kw["params"]:
-            if param["id"] == self._id:
-                return param["msg"]
+        for id, item in cast(_InsertItems, instance._kw["params"]).own.items():
+            if id == self._id:
+                return item["msg"]
 
     def __set__(self, instance: Insert, value: T):
-        for param in instance._kw["params"]:
-            if param["id"] == self._id:
-                param["msg"] = value
+        for id, item in cast(_InsertItems, instance._kw["params"]).own.items():
+            if id == self._id:
+                item["msg"] = value
+        else:
+            raise PropertyCannotBeSet(self._id)
 
 
 class Slot(MultiEventModel, SupportsIndex):
@@ -398,9 +434,13 @@ class Slot(MultiEventModel, SupportsIndex):
 class _InsertKW(TypedDict):
     index: SupportsIndex
     max_slots: int
-    params: NotRequired[list[_MixerParamsItem]]
+    params: NotRequired[_InsertItems]
 
 
+# TODO Need to make a `load()` method which will be able to parse preset files
+# (by looking at Project.format) and use `MixerParameterEvent.items` to get
+# remaining data. Normally, the `Mixer` passes this information to the Inserts
+# (and Inserts to the `Slot`s directly).
 class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
     """Represents a mixer track to which channel from the rack are routed to.
 
@@ -435,19 +475,14 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
     def __iter__(self) -> Iterator[Slot]:
         """Iterator over the effect empty and used slots."""
-        for index in range(self._kw["max_slots"] + 1):
+        for i in range(self._kw["max_slots"] + 1):
             events: list[AnyEvent] = []
-            params: list[_MixerParamsItem] = []
-
-            for param in self._kw["params"]:
-                if param["channel_data"] % 0x3F == index:
-                    params.append(param)
 
             for id, subevents in self._events.items():
-                if (id in SlotID or id in PluginID) and index < len(subevents):
-                    events.append(subevents[index])
+                if id in (*SlotID, *PluginID) and i < len(subevents):
+                    events.append(subevents[i])
 
-            yield Slot(*events, params=params)
+            yield Slot(*events, params=self._kw["params"][i])
 
     def __len__(self):
         if SlotID.Index in self._events:
@@ -550,8 +585,8 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
     | Type    | Value | Representation |
     |---------|-------|----------------|
-    | Min     | -64   | 100% merged    |
-    | Max     | 64    | 100% separated |
+    | Min     | 64    | 100% merged    |
+    | Max     | -64   | 100% separated |
     | Default | 0     | No effect      |
     """
 
@@ -611,27 +646,18 @@ class Mixer(MultiEventModel, Sequence[Insert]):
     def __iter__(self) -> Iterator[Insert]:
         index = 0
         events: list[AnyEvent] = []
-        params_dict: DefaultDict[int, list[_MixerParamsItem]] = collections.defaultdict(
-            list
-        )
+        params: dict[int, _InsertItems] = {}
 
-        for event in reversed(self._events_tuple):
-            if event.id == MixerID.Params:
-                items = cast(
-                    List[_MixerParamsItem], cast(MixerParamsEvent, event).items
-                )
-
-                for item in items:
-                    params_dict[(item["channel_data"] >> 6) & 0x7F].append(item)
+        if MixerID.Params in self._events:
+            params = cast(MixerParamsEvent, self._events[MixerID.Params]).items
 
         for event in self._events_tuple:
-            for enum_ in (InsertID, PluginID, SlotID):
-                if event.id in enum_:
-                    events.append(event)
+            if event.id in (*InsertID, *PluginID, *SlotID):
+                events.append(event)
 
             if event.id == InsertID.Output:
                 try:
-                    params_list = params_dict[index]
+                    items = params[index]
                 except IndexError:
                     yield Insert(*events, index=index, max_slots=self.max_slots)
                 else:
@@ -639,7 +665,7 @@ class Mixer(MultiEventModel, Sequence[Insert]):
                         *events,
                         index=index,
                         max_slots=self.max_slots,
-                        params=params_list,
+                        params=items,
                     )
                 events = []
                 index += 1

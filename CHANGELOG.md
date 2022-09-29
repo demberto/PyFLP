@@ -17,15 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Content.declick_mode` and `DeclickMode` [#58].
 - User guide and contibutor's guide.
 - Official support for Python 3.11.
+- Super basic `__repr__` for `StructBase` to ease debugging.
 
 ### Changed
 
 - Moved `stretching` to `Sampler`, instruments don't have it.
 - `Note.key` now returns a note name with octave [#66].
+- A cleaner implementation of `MixerParamsEvent`.
 
 ### Fixed
 
 - String are decoded as UTF16 when version is 11.5+ now [#65].
+- `Insert.stereo_separation` docstring for maximum, minimum value.
 
 ### Removed
 
