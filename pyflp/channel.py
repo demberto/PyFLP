@@ -771,9 +771,31 @@ class Tracking(SingleEventModel, ModelReprMixin):
     """
 
     middle_value = StructProp[int]()
+    """Note index. Min: C0 (0), Max: B10 (131)."""
+
     mod_x = StructProp[int]()
+    """Bipolar.
+
+    | Min  | Max | Default |
+    |------|-----|---------|
+    | -256 | 256 | 0       |
+    """
+
     mod_y = StructProp[int]()
+    """Bipolar.
+
+    | Min  | Max | Default |
+    |------|-----|---------|
+    | -256 | 256 | 0       |
+    """
+
     pan = StructProp[int]()
+    """Bipolar.
+
+    | Min  | Max | Default |
+    |------|-----|---------|
+    | -256 | 256 | 0       |
+    """
 
 
 class Keyboard(MultiEventModel, ModelReprMixin):

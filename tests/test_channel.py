@@ -100,6 +100,17 @@ def test_instrument_routing(load_instrument: InstrumentFixture):
     assert load_instrument("routed.fst").insert == 125
 
 
+def test_instrument_tracking(load_instrument: InstrumentFixture):
+    tracking = load_instrument("tracking.fst").tracking
+    assert tracking and len(tracking) == 2
+
+    key_tracking = tracking["keyboard"]
+    assert key_tracking.middle_value == 84
+    assert key_tracking.mod_x == -256
+    assert key_tracking.mod_y == 256
+    assert key_tracking.pan == 256
+
+
 # ! Apparently, layer children events aren't stored in presets
 # def test_layer_children(load_layer: LayerFixture):
 
