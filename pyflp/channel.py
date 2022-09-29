@@ -97,7 +97,7 @@ class ChannelNotFound(ModelNotFound, KeyError):
 
 
 class _DelayStruct(StructBase):
-    PROPS = dict.fromkeys(("feedback", "pan", "pitch_shift", "echoes", "time"), "I")
+    PROPS = dict.fromkeys(("feedback", "pan", "pitch_shift", "echoes", "time"), "i")
 
 
 class _EnvelopeLFOStruct(StructBase):  # 2.5.0+
