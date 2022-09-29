@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - String are decoded as UTF16 when version is 11.5+ now [#65].
 - `Insert.stereo_separation` docstring for maximum, minimum value.
+- `U16TupleEvent.value` [#68].
 
 ### Removed
 
@@ -41,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#58]: https://github.com/demberto/PyFLP/issues/58
 [#65]: https://github.com/demberto/PyFLP/issues/65
 [#66]: https://github.com/demberto/PyFLP/issues/66
+[#68]: https://github.com/demberto/PyFLP/issues/68
 
 ## 2.0.0a1 - 2022-09-21
 
