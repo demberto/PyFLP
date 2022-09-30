@@ -28,14 +28,14 @@ from collections.abc import Hashable, Sized
 from typing import Any, ClassVar, Dict, Generic, Tuple, TypeVar, Union, cast
 
 if sys.version_info >= (3, 8):
-    from typing import Final, SupportsIndex
+    from typing import Final
 else:
-    from typing_extensions import Final, SupportsIndex
+    from typing_extensions import Final
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Iterator
 else:
-    from typing import Iterable
+    from typing import Iterable, Iterator
 
 import colour
 from bytesioex import (
@@ -51,7 +51,12 @@ from bytesioex import (
     UShort,
 )
 
-from .exceptions import EventIDOutOfRange, InvalidEventChunkSize, PropertyCannotBeSet
+from .exceptions import (
+    EventIDOutOfRange,
+    InvalidEventChunkSize,
+    ListEventNotParsed,
+    PropertyCannotBeSet,
+)
 
 BYTE: Final = 0
 WORD: Final = 64
@@ -338,14 +343,13 @@ class VarintEventBase(EventBase[T], abc.ABC):
     def _to_varint(buffer: bytes):
         ret = bytearray()
         buflen = len(buffer)
-        while buflen <= 0:
+        while True:
             towrite = buflen & 0x7F
             buflen >>= 7
-            if buflen > 0:
-                towrite |= 0x80
+            if buflen <= 0:
+                break
+            towrite |= 0x80
             ret.append(towrite)
-            # if buflen <= 0:
-            #     break
         return ret
 
     def __len__(self):
@@ -440,7 +444,7 @@ class DataEventBase(VarintEventBase[bytes]):
             EventIDOutOfRange: `id` is not in the range of 208-255.
         """
         if id < DATA:
-            raise EventIDOutOfRange(id, DATA, 255)
+            raise EventIDOutOfRange(id, DATA, 256)
 
         self._stream_len = len(data)
         self._stream = BytesIOEx(data)
@@ -471,17 +475,17 @@ class _StructMeta(type):
 
     def __new__(cls, name: str, bases: Any, attrs: dict[str, Any]):
         """Populates :attr:`Struct.OFFSETS` and :attr:`Struct.SIZE`."""
-        if "PROPS" not in attrs:
+        if "PROPS" not in attrs:  # pragma: no cover
             raise AttributeError(f"Class {name} doesn't have a PROPS attribute")
 
         offset = 0
         offsets = attrs["OFFSETS"] = {}
-        for key, type_or_size in cast(Dict[str, Any], attrs["PROPS"]).items():
-            offsets[key] = offset
-            if isinstance(type_or_size, int):
-                offset += type_or_size
+        for k, type_or_len in cast(Dict[str, Union[str, int]], attrs["PROPS"]).items():
+            offsets[k] = offset
+            if isinstance(type_or_len, int):
+                offset += type_or_len
             else:
-                offset += cls.SIZES[type_or_size]
+                offset += cls.SIZES[type_or_len]
         attrs["SIZE"] = offset
         return type.__new__(cls, name, bases, attrs)
 
@@ -512,45 +516,41 @@ class StructBase(metaclass=_StructMeta):
     """
 
     def __init__(self, stream: BytesIOEx):
-        self._props: dict[str, Any] = dict.fromkeys(type(self).PROPS)
         self._stream = stream
-        self._stream_len = len(stream.getvalue())
-
-        for key, type_or_size in type(self).PROPS.items():
-            if isinstance(type_or_size, int):
-                self._props[key] = self._stream.read(type_or_size)
-            else:
-                self._props[key] = getattr(self._stream, f"read_{type_or_size}")()
+        self._initial_len = len(stream.getvalue())
 
     def __repr__(self):
-        return f"{type(self).__name__} ({self._props})"
+        return "{} {}".format(
+            type(self).__name__, [f"{prop}={self[prop]}" for prop in self.PROPS]
+        )
 
     def __bytes__(self):
         return self._stream.getvalue()
 
     def __len__(self):
-        return self._stream_len
+        return self._initial_len
 
     def __contains__(self, key: str):
-        return key in self._props
+        return key in self.PROPS
 
-    def __getitem__(self, key: str):
-        return self._props[key]
+    def __getitem__(self, key: str) -> Any:
+        self._stream.seek(self.OFFSETS[key])
+        type_or_size = self.PROPS[key]
+        if isinstance(type_or_size, int):
+            return self._stream.read(type_or_size)
+        else:
+            return getattr(self._stream, f"read_{type_or_size}")()
 
     def __setitem__(self, key: str, value: Any):
-        if key not in type(self).PROPS:
-            raise KeyError(key)
-
-        self._stream.seek(type(self).OFFSETS[key])
-        type_or_size = type(self).PROPS[key]
+        self._stream.seek(self.OFFSETS[key])
+        type_or_size = self.PROPS[key]
         if isinstance(type_or_size, int):
             self._stream.write(value)
         else:
             getattr(self._stream, f"write_{type_or_size}")(value)
 
-        if len(self._stream.getvalue()) > self._stream_len and self.TRUNCATE:
+        if len(self._stream.getvalue()) > self._initial_len and self.TRUNCATE:
             raise PropertyCannotBeSet
-        self._props[key] = value
 
 
 class StructEventBase(DataEventBase):
@@ -565,10 +565,10 @@ class StructEventBase(DataEventBase):
     def __init__(self, id: int, data: bytes):
         super().__init__(id, data)
         self._struct = self.STRUCT(self._stream)
-        if self._stream.tell() < self._stream_len:
+        if self.STRUCT.SIZE < len(data):  # pragma: no cover
             warnings.warn(
                 f"Event {id} not parsed entirely; "
-                f"parsed {self._stream.tell()}, found {self._stream_len} bytes",
+                f"parsed {self._stream.tell()}, found {len(data)} bytes",
                 RuntimeWarning,
                 stacklevel=0,
             )
@@ -587,10 +587,12 @@ class StructEventBase(DataEventBase):
         self._struct[key] = value
 
     def __repr__(self):
-        cls = type(self).__name__
-        size = self._stream_len
-        props = self._struct._props
-        return f"{cls} (id={self.id!r}, size={size}, props={props!r})"
+        return "{} (id={}, size={}, props={})".format(
+            type(self).__name__,
+            self.id,
+            len(self._stream.getvalue()),
+            [f"{prop}={self[prop]}" for prop in self.STRUCT.PROPS],
+        )
 
 
 class ListEventBase(DataEventBase, Iterable[StructBase]):
@@ -600,36 +602,50 @@ class ListEventBase(DataEventBase, Iterable[StructBase]):
 
     def __init__(self, id: int, data: bytes):
         super().__init__(id, data)
-        self.items: list[StructBase] = []
         self.unparsed = False
 
-        size = type(self).STRUCT.SIZE
-
-        # ? Make this lazily evaluated
-        if not self._stream_len % size:
-            for _ in range(int(self._stream_len / size)):
-                self.items.append(type(self).STRUCT(self._stream))
-        else:
+        if len(data) % self.STRUCT.SIZE:
             self.unparsed = True
             warnings.warn(
                 f"Cannot parse event {id} as event "
                 "size is not a multiple of struct size"
             )
 
-    def __getitem__(self, index: SupportsIndex):
-        return self.items[index]
+    @property
+    def num_items(self):  # * __len__() is already used up
+        if self.unparsed:
+            raise ListEventNotParsed
 
-    def __setitem__(self, index: SupportsIndex, item: StructBase):
-        self.items[index] = item
+        return len(self._stream.getvalue()) // self.STRUCT.SIZE
 
-    def __iter__(self):
-        return iter(self.items)
+    def __getitem__(self, index: int):
+        if self.unparsed:
+            raise ListEventNotParsed
+
+        if index > self.num_items:
+            raise IndexError(index)
+
+        self._stream.seek(self.STRUCT.SIZE * index)
+        return self.STRUCT(BytesIOEx(self._stream.read(self.STRUCT.SIZE)))
+
+    def __setitem__(self, index: int, item: StructBase):
+        if self.unparsed:
+            raise ListEventNotParsed
+
+        if index > self.num_items:
+            raise IndexError(index)
+
+        self._stream.seek(self.STRUCT.SIZE * index)
+        self._stream.write(bytes(item))
+
+    def __iter__(self) -> Iterator[StructBase]:
+        for i in range(self.num_items):
+            yield self[i]
 
     def __repr__(self):
-        cls = type(self).__name__
-        size = self._stream_len
-        num_items = len(self.items)
-        return f"{cls} (id={self.id!r}, size={size}, {num_items} items)"
+        return "{} (id={}, size={}, {} items)".format(
+            type(self).__name__, self.id, len(self._stream.getvalue()), self.num_items
+        )
 
 
 class UnknownDataEvent(DataEventBase):

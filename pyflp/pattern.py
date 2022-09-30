@@ -124,7 +124,7 @@ class _NoteFlags(enum.IntFlag):
 
 
 class Note(ItemModel[_NoteStruct]):
-    _NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    _NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
     def __repr__(self) -> str:
         return "Note {} @ {} of length {} for channel #{}".format(
@@ -254,7 +254,7 @@ class Pattern(MultiEventModel, Iterable[Note], SupportsIndex):
         """MIDI notes contained inside the pattern."""
         if PatternID.Notes in self._events:
             event = cast(NotesEvent, self._events[PatternID.Notes][0])
-            for item in event.items:
+            for item in event:
                 yield Note(cast(_NoteStruct, item))
 
     color = EventProp[colour.Color](PatternID.Color)
@@ -264,7 +264,7 @@ class Pattern(MultiEventModel, Iterable[Note], SupportsIndex):
         """Parameter automations associated with this pattern (if any)."""
         if PatternID.Controllers in self._events:
             event = cast(ControllerEvent, self._events[PatternID.Controllers])
-            for item in event.items:
+            for item in event:
                 yield Controller(cast(_ContollerStruct, item))
 
     @property

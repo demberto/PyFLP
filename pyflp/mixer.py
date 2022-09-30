@@ -38,6 +38,7 @@ else:
     from typing_extensions import NotRequired, Unpack
 
 import colour
+from bytesioex import BytesIOEx
 
 from ._descriptors import (
     EventProp,
@@ -143,7 +144,7 @@ class _MixerParamsID(enum.IntEnum):
     HighQ = 226
 
 
-MixerParameterMapping = Dict[_MixerParamsID, _MixerParamsItem]
+MixerParameterMapping = Dict[int, _MixerParamsItem]
 
 
 @dataclasses.dataclass
@@ -154,24 +155,26 @@ class _InsertItems:
     own: MixerParameterMapping = dataclasses.field(default_factory=dict)
 
 
-# TODO This is one hell of an event, it needs a docs page of its own.
+# TODO Refactor to keep it as DRY from StructEventBase
 class MixerParamsEvent(DataEventBase):
     def __init__(self, id: int, data: bytes):
         super().__init__(id, data)
         self.items: DefaultDict[int, _InsertItems] = defaultdict(_InsertItems)
         self.unparsed = False
 
-        if not self._stream_len % _MixerParamsItem.SIZE:
-            for _ in range(int(self._stream_len / _MixerParamsItem.SIZE)):
-                item = _MixerParamsItem(self._stream)
+        if not len(data) % _MixerParamsItem.SIZE:
+            for _ in range(len(data) // _MixerParamsItem.SIZE):
+                stream = BytesIOEx(self._stream.read(_MixerParamsItem.SIZE))
+                item = _MixerParamsItem(stream)
                 insert_idx = (item["channel_data"] >> 6) & 0x7F
                 slot_idx = item["channel_data"] & 0x3F
                 insert = self.items[insert_idx]
+                id = item["id"]
 
-                if item["id"] in (_MixerParamsID.SlotEnabled, _MixerParamsID.SlotMix):
-                    insert.slots[slot_idx][item["id"]] = item
+                if id in (_MixerParamsID.SlotEnabled, _MixerParamsID.SlotMix):
+                    insert.slots[slot_idx][id] = item
                 else:
-                    insert.own[item["id"]] = item
+                    insert.own[id] = item
         else:
             self.unparsed = True
             warnings.warn(
@@ -311,7 +314,7 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
         return InsertEQBand(**items)
 
 
-# Stored in MixerID.Parameters event.
+# Stored in MixerID.Params event.
 class InsertEQ(ModelBase):
     """Post-effect :class:`Insert` EQ with 3 adjustable bands.
 
@@ -572,10 +575,10 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
 
         *New in FL Studio v4.0*.
         """
-        items = cast(InsertRoutingEvent, self._events[InsertID.Routing][0]).items
-        for idx, param in enumerate(self._kw["params"]):
-            if param["id"] >= _MixerParamsID.RouteVolStart and items[idx]["is_routed"]:
-                yield param["msg"]
+        items = iter(cast(InsertRoutingEvent, self._events[InsertID.Routing][0]))
+        for id, item in cast(_InsertItems, self._kw["params"]).own.items():
+            if id >= _MixerParamsID.RouteVolStart and next(items)["is_routed"]:
+                yield item["msg"]
 
     separator_shown = FlagProp(_InsertFlags.SeparatorShown, InsertID.Flags)
     """Whether separator is shown before the insert."""
@@ -649,7 +652,7 @@ class Mixer(MultiEventModel, Sequence[Insert]):
         params: dict[int, _InsertItems] = {}
 
         if MixerID.Params in self._events:
-            params = cast(MixerParamsEvent, self._events[MixerID.Params]).items
+            params = cast(MixerParamsEvent, self._events[MixerID.Params][0]).items
 
         for event in self._events_tuple:
             if event.id in (*InsertID, *PluginID, *SlotID):

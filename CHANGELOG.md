@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Layer.__repr__` now shows the number of children also.
 - Separated test assets into presets for better isolation of results [#6].
 - Renamed `LFO.is_synced` to `LFO.synced` and `LFO.is_retrig` to `LFO.retring`.
+- `StructBase` and `ListEventBase` are lazily evaluated now.
 
 ### Fixed
 
