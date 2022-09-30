@@ -6,7 +6,6 @@ from typing import Any, Callable
 import colour
 import pytest
 
-from pyflp import Project
 from pyflp.channel import (
     Channel,
     ChannelRack,
