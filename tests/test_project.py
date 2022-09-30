@@ -12,7 +12,7 @@ from pyflp.project import VALID_PPQS, FileFormat, FLVersion, PanLaw, Project
 
 def test_project(project: Project):
     assert project.artists == "demberto"
-    assert project.channel_count == 18
+    assert project.channel_count == 19
     assert (
         project.comments
         == textwrap.dedent(

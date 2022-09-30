@@ -59,9 +59,9 @@ def load_sampler(load_channel: Any):
 
 
 def test_channels(rack: ChannelRack):
-    assert len(rack) == 18
+    assert len(rack) == 19
     assert rack.fit_to_steps is None
-    assert rack.height == 636
+    assert rack.height == 646
     assert [group.name for group in rack.groups] == ["Audio", "Generators", "Unsorted"]
     assert not rack.swing
 
@@ -143,10 +143,6 @@ def test_layer_crossfade(load_layer: LayerFixture):
 
 def test_layer_random(load_layer: LayerFixture):
     assert load_layer("layer-random.fst").random
-
-
-def test_rack_height(project: Project):
-    assert project.channels.height == 636
 
 
 def test_sampler_content(load_sampler: SamplerFixture):
