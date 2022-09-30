@@ -130,7 +130,7 @@ class _LevelAdjustsStruct(StructBase):
 
 
 class _LevelsStruct(StructBase):
-    PROPS = {"pan": "I", "volume": "I", "pitch_shift": "I", "_u12": 12}
+    PROPS = {"pan": "I", "volume": "I", "pitch_shift": "i", "_u12": 12}
 
 
 class _ParametersStruct(StructBase):

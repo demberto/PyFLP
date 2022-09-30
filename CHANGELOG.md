@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Insert.stereo_separation` docstring for maximum, minimum value.
 - `U16TupleEvent.value` [#68].
 - Minimum and maximum value docstrings for certain `FX` properties.
+- `Sampler.pitch_shift` internal representation.
 
 ### Removed
 
