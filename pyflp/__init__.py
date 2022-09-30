@@ -92,10 +92,8 @@ def parse(file: str | pathlib.Path) -> Project:
         raise HeaderCorrupted("Unsupported project file format") from exc
 
     channel_count = stream.read_H()  # 12
-    if channel_count is None:
+    if channel_count is None:  # pragma: no cover
         raise HeaderCorrupted("Channel count couldn't be read")
-    if channel_count < 0:
-        raise HeaderCorrupted("Channel count can't be less than zero")
 
     ppq = stream.read_H()  # 14
     if ppq not in VALID_PPQS:
@@ -105,7 +103,7 @@ def parse(file: str | pathlib.Path) -> Project:
         raise HeaderCorrupted("Unexpected data chunk magic; expected 'FLdt'")
 
     events_size = stream.read_I()  # 22
-    if events_size is None:
+    if events_size is None:  # pragma: no cover
         raise HeaderCorrupted("Data chunk size couldn't be read")
 
     stream.seek(0, os.SEEK_END)
@@ -151,8 +149,8 @@ def parse(file: str | pathlib.Path) -> Project:
             elif id < TEXT:
                 event_type = U32Event
             elif id < DATA or id in NEW_TEXT_IDS:
-                if str_type is None:
-                    raise VersionNotDetected
+                if str_type is None:  # pragma: no cover
+                    raise VersionNotDetected  # ! This should never happen
                 event_type = str_type
 
                 if id == PluginID.InternalName:

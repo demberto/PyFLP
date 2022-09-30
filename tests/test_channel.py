@@ -88,6 +88,14 @@ def test_channel_volume(load_channel: ChannelFixture):
     assert not load_channel("zero-volume.fst").volume
 
 
+def test_channel_zipped(rack: ChannelRack):
+    for channel in rack:
+        if channel.name == "Zipped":
+            assert channel.zipped
+        else:
+            assert not channel.zipped
+
+
 def test_instrument_delay(load_instrument: InstrumentFixture):
     delay = load_instrument("delay.fst").delay
     assert delay.feedback == 12800
@@ -228,6 +236,11 @@ def test_sampler_path(load_sampler: SamplerFixture):
     assert load_sampler("sampler-path.fst").sample_path == pathlib.Path(
         r"%FLStudioFactoryData%\Data\Patches\Packs\Drums\Kicks\22in Kick.wav"
     )
+
+
+def test_sampler_pitch_shift(load_sampler: SamplerFixture):
+    assert load_sampler("+4800-cents.fst").pitch_shift == 4800
+    assert load_sampler("-4800-cents.fst").pitch_shift == -4800
 
 
 def test_sampler_playback(load_sampler: SamplerFixture):

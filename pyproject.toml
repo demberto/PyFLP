@@ -37,11 +37,11 @@ omit = ["main.py"]
 
 [tool.coverage.report]
 exclude_lines = [
-  "pragma: no cover",          # Have to re-enable the standard pragma
+  "pragma: no cover",         # Have to re-enable the standard pragma
   "def __repr__",
-  "raise AssertionError",
-  "raise NotImplementedError",
-  "@(abc\\.)?abstractmethod",
+  "...",                      # Ellipsis operator used in protocols
+  "if owner is None:",        # Descriptor __get__() checks
+  "@(abc\\.)?abstractmethod", # "@abc.abstractmethod" or "@abstractmethod"
 ]
 ignore_errors = true
 
@@ -56,8 +56,8 @@ max-module-lines = 1200
 
 [tool.pylint.main]
 fail-under = 9
-jobs = 0 # Parallel execution
-py-version = [3, 7]
+jobs = 0            # Parallel execution
+py-version = [3, 7] # ! Somehow this doesn't seem to work
 
 [tool.pylint.'MESSAGE CONTROL']
 disable = [
@@ -67,13 +67,13 @@ disable = [
   "inconsistent-return-statements",
   "invalid-name",
   "no-member",
-  "redefined-builtin",
+  "redefined-builtin",              # Really a non issue in small scopes
   "missing-class-docstring",
   "missing-function-docstring",
-  "too-few-public-methods",
-  "useless-parent-delegation",
+  "too-few-public-methods",         # Useless; PyFLP exploits descriptors
+  "useless-parent-delegation",      # This is bugged; an empty __init__ with a docstring doesn't call super()
   "while-used",
-  "wrong-import-position",
+  "wrong-import-position",          # isort is smart enough
 ]
 
 [tool.pyright]

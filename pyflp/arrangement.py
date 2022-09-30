@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import collections
-import dataclasses
 import enum
 import sys
 from typing import Any, DefaultDict, List, Optional, cast
@@ -439,7 +438,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
     def tracks(self) -> Iterator[Track]:
         count = 0
         pl_event = None
-        max_idx = 499 if dataclasses.astuple(self._kw["version"]) >= (12, 9, 1) else 198
+        max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
 
         if ArrangementID.Playlist in self._events:
             pl_event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
@@ -447,7 +446,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
         for events in self._collect_events(TrackID):
             items: list[PlaylistItemBase] = []
             if pl_event is not None:
-                for item in pl_event.items:
+                for item in pl_event:
                     idx = item["track_index"]
                     if max_idx - idx == count:
                         items.append(PlaylistItemBase(cast(_PlaylistItemStruct, item)))
@@ -539,8 +538,7 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
 
     @property
     def max_tracks(self) -> Literal[500, 199]:
-        version = dataclasses.astuple(self._kw["version"])
-        return 500 if version >= (12, 9, 1) else 199
+        return 500 if self._kw["version"] >= FLVersion(12, 9, 1) else 199
 
     time_signature = NestedProp(
         TimeSignature, ArrangementsID.TimeSigNum, ArrangementsID.TimeSigBeat

@@ -5,7 +5,7 @@ from typing import Callable, cast
 import colour
 import pytest
 
-from pyflp.mixer import Insert, Mixer, MixerID, MixerParamsEvent
+from pyflp.mixer import Insert, InsertDock, Mixer, MixerID, MixerParamsEvent
 
 from .conftest import ModelFixture
 
@@ -30,13 +30,6 @@ def get_insert(get_model: ModelFixture):
     return wrapper
 
 
-# def test_mixer(mixer: Mixer):
-#     assert len(mixer) == 127
-#     assert mixer.apdc
-#     assert mixer.max_inserts == 127
-#     assert mixer.max_slots == 10
-
-
 def test_insert_bypassed(get_insert: InsertFixture):
     assert get_insert("effects-bypassed.fst").bypassed
 
@@ -49,19 +42,19 @@ def test_insert_color(get_insert: InsertFixture):
     assert get_insert("colored.fst").color == colour.Color("#FF1414")
 
 
-# def test_insert_dock(get_insert: InsertFixture):
-#     for insert in inserts:
-#         if insert.name in ("Docked left", "Master"):
-#             assert insert.dock == InsertDock.Left
-#         # fmt: off
-#         elif (
-#             insert.name == "Docked right" or
-#             insert.__index__() in (101, 102, 103, 104)
-#         ):
-#             # fmt: on
-#             assert insert.dock == InsertDock.Right
-#         else:
-#             assert insert.dock == InsertDock.Middle
+def test_insert_dock(inserts: tuple[Insert, ...]):
+    for insert in inserts:
+        if insert.name in ("Docked left", "Master"):
+            assert insert.dock == InsertDock.Left
+        # fmt: off
+        elif (
+            insert.name == "Docked right" or
+            insert.__index__() in (101, 102, 103, 104)
+        ):
+            # fmt: on
+            assert insert.dock == InsertDock.Right
+        else:
+            assert insert.dock == InsertDock.Middle
 
 
 def test_insert_enabled(get_insert: InsertFixture):
@@ -81,8 +74,8 @@ def test_insert_polarity_reversed(get_insert: InsertFixture):
     assert get_insert("polarity-reversed.fst").polarity_reversed
 
 
-# def test_insert_routes(get_insert: InsertFixture):
-# ! Routing information is not stored in presets
+def test_insert_routes(inserts: tuple[Insert, ...]):
+    assert not tuple(inserts[5].routes)
 
 
 def test_insert_stereo_separation(get_insert: InsertFixture):
@@ -102,3 +95,9 @@ def test_insert_stereo_separation(get_insert: InsertFixture):
 #             assert insert.eq.high.freq == 55825
 #             assert insert.eq.high.gain == -1800
 #             assert insert.eq.high.reso == 65536
+
+
+def test_mixer(mixer: Mixer):
+    assert mixer.apdc
+    assert len(mixer) == mixer.max_inserts == 127
+    assert mixer.max_slots == 10
