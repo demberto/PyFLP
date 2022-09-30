@@ -13,8 +13,8 @@ internally.
 
     .. note:: More about descriptors in Python
 
-        - <https://docs.python.org/3/howto/descriptor.html>
-        - <https://realpython.com/python-descriptors/>, **especially** the
+        - `<https://docs.python.org/3/howto/descriptor.html>`_
+        - `<https://realpython.com/python-descriptors/>`_, **especially** the
           `Why use Python descriptors?
           <https://realpython.com/python-descriptors/#why-use-python-descriptors>`_
           section.

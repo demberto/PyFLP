@@ -32,8 +32,9 @@ extensions = [
     "m2r2",  # Markdown to reStructuredText conversion
     "sphinx_copybutton",  # Copy button for code blocks
     "sphinx_design",  # Grids, cards, icons and tabs
+    "sphinxcontrib.spelling",  # Catch spelling mistakes
     "sphinx.ext.autodoc",  # Sphinx secret sauce
-    "sphinx.ext.autosummary",
+    "sphinx.ext.autosummary",  # Summary of contents table
     "sphinx.ext.coverage",  # Find what I missed to autodoc
     "sphinx.ext.duration",
     "sphinx.ext.intersphinx",  # Automatic links to Python docs
@@ -42,10 +43,10 @@ extensions = [
     "sphinx.ext.viewcode",  # "Show source" button next to autodoc output
     "sphinx_toolbox",  # Badges and goodies
     "sphinx_toolbox.github",
-    "sphinx_toolbox.more_autodoc.autoprotocol",
-    "sphinx_toolbox.more_autodoc.sourcelink",
-    "sphinx_toolbox.sidebar_links",
-    "sphinx_toolbox.wikipedia",
+    "sphinx_toolbox.more_autodoc.autoprotocol",  # Autodoc extension for typing.Protocol
+    "sphinx_toolbox.more_autodoc.sourcelink",  # Python docs-style source code link
+    "sphinx_toolbox.sidebar_links",  # Links to repo and PyPi project in the sidebar
+    "sphinx_toolbox.wikipedia",  # Diretive for wikipedia topics.
 ]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 html_theme = "furo"  # Nice light/dark theme; has an auto-switch mode
@@ -73,6 +74,7 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 
 def badge_flstudio(app, what, name, obj, options, lines):
+    """Convert FL Studio version information in docstrings to nice badges."""
     for line in lines:
         if name.split(".")[-2].endswith("ID"):  # Event ID member
             match = EVENT_ID_DOC.fullmatch(line)
@@ -103,6 +105,7 @@ def badge_flstudio(app, what, name, obj, options, lines):
 
 
 def add_annotations(app, what, name, obj, options, signature, return_annotation):
+    """Add type annotations for descriptors."""
     if what == "class" and issubclass(obj, ModelBase):
         annotations = {}
         for name_, type in vars(obj).items():
@@ -121,6 +124,11 @@ def add_annotations(app, what, name, obj, options, signature, return_annotation)
 
 
 def autodoc_markdown(app, what, name, obj, options, lines):
+    """Convert all markdown in docstrings to reStructuredText.
+
+    This includes images and tables. Docstrings are in markdown for VSCode
+    compatibility.
+    """
     filtered = [line for line in lines for link in IGNORED_BITLY if link not in line]
     newlines = m2r2.convert("\n".join(filtered)).splitlines()
     lines.clear()

@@ -81,6 +81,6 @@ Help the tools that power **PyFLP**
 -----------------------------------
 
 - `BytesIOEx <https://github.com/dmberto/BytesIOEx>`_ is a library I wrote to
-   ease the conversion of C's types into Python's types while reading an FLP.
+  ease the conversion of C's types into Python's types while reading an FLP.
 - `colour <https://github.com/vaab/colour>`_ powers the conversion of colors
-   into powerful and easy Python objects.
+  into powerful and easy Python objects.

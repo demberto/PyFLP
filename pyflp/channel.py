@@ -604,6 +604,7 @@ class FX(MultiEventModel, ModelReprMixin):
     """Ring modulation returned as a tuple of `(mix, frequency)`.
 
     Limits for both:
+
     | Min | Max | Default |
     |-----|-----|---------|
     | 0   | 256 | 128     |

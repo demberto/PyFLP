@@ -10,3 +10,4 @@ sphinx-copybutton
 sphinx-design
 sphinx-hoverxref
 sphinx-toolbox
+sphinxcontrib-spelling
