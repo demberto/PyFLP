@@ -22,9 +22,9 @@ import sys
 from typing import DefaultDict, List, Tuple, cast
 
 if sys.version_info >= (3, 8):
-    from typing import Final, SupportsIndex
+    from typing import Literal, SupportsIndex
 else:
-    from typing_extensions import Final, SupportsIndex
+    from typing_extensions import Literal, SupportsIndex
 
 if sys.version_info >= (3, 9):
     from collections.abc import Iterator, Sequence
@@ -91,6 +91,9 @@ __all__ = [
     "ChannelType",
 ]
 
+EnvelopeName = Literal["Panning", "Volume", "Mod X", "Mod Y", "Pitch"]
+LFOName = EnvelopeName
+
 
 class ChannelNotFound(ModelNotFound, KeyError):
     pass
@@ -110,10 +113,14 @@ class _EnvelopeLFOStruct(StructBase):  # 2.5.0+
         "envelope.decay": "i",  # 24
         "envelope.sustain": "i",  # 28
         "envelope.release": "i",  # 32
-        "_u20": 20,  # 52
+        "envelope.amount": "i",  # 36
+        "lfo.predelay": "I",  # 40
+        "lfo.attack": "I",  # 44
+        "lfo.amount": "i",  # 48
+        "lfo.speed": "I",  # 52
         "lfo.shape": "i",  # 56
         "envelope.attack_tension": "i",  # 60
-        "envelope.sustain_tension": "i",  # 64
+        "envelope.decay_tension": "i",  # 64
         "envelope.release_tension": "i",  # 68
     }
 
@@ -269,10 +276,15 @@ class ArpDirection(enum.IntEnum):
 
 
 @enum.unique
+class _EnvelopeFlags(enum.IntFlag):
+    TempoSync = 1 << 0
+    Unknown = 1 << 2  # Occurs for volume envlope only. Likely a bug in FL's serialiser
+
+
+@enum.unique
 class _LFOFlags(enum.IntFlag):
     TempoSync = 1 << 1
-    Unknown = 1 << 2  # Occurs for volume envlope only.
-    Retrig = 1 << 5
+    PhaseRetrig = 1 << 5
 
 
 @enum.unique
@@ -652,76 +664,89 @@ class Envelope(SingleEventModel, ModelReprMixin):
     predelay = StructProp[int](prop="envelope.predelay")
     """Linear. Defaults to minimum value.
 
-    | Type | Value | Mix (wet) |
-    |------|-------|-----------|
-    | Min  | 100   | 0%        |
-    | Max  | 65536 | 100%      |
+    | Type | Value | Representation |
+    |------|-------|----------------|
+    | Min  | 100   | 0%             |
+    | Max  | 65536 | 100%           |
+    """
+
+    amount = StructProp[int](prop="envelope.amount")
+    """Linear. Bipolar.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -128  | -100%          |
+    | Max     | 128   | 100%           |
+    | Default | 0     | 0%             |
     """
 
     attack = StructProp[int](prop="envelope.attack")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    |---------|-------|-----------|
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
-    | Default | 20000 | 31%       |
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 100   | 0%             |
+    | Max     | 65536 | 100%           |
+    | Default | 20000 | 31%            |
     """
 
     hold = StructProp[int](prop="envelope.hold")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    |---------|-------|-----------|
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
-    | Default | 20000 | 31%       |
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 100   | 0%             |
+    | Max     | 65536 | 100%           |
+    | Default | 20000 | 31%            |
     """
 
     decay = StructProp[int](prop="envelope.decay")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    |---------|-------|-----------|
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
-    | Default | 30000 | 46%       |
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 100   | 0%             |
+    | Max     | 65536 | 100%           |
+    | Default | 30000 | 46%            |
     """
 
     sustain = StructProp[int](prop="envelope.sustain")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    |---------|-------|-----------|
-    | Min     | 0     | 0%        |
-    | Max     | 128   | 100%      |
-    | Default | 50    | 39%       |
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0%             |
+    | Max     | 128   | 100%           |
+    | Default | 50    | 39%            |
     """
 
     release = StructProp[int](prop="envelope.release")
     """Linear.
 
-    | Type    | Value | Mix (wet) |
-    |---------|-------|-----------|
-    | Min     | 100   | 0%        |
-    | Max     | 65536 | 100%      |
-    | Default | 20000 | 31%       |
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 100   | 0%             |
+    | Max     | 65536 | 100%           |
+    | Default | 20000 | 31%            |
     """
 
-    attack_tension = StructProp[int](prop="envelope.attack_tension")
-    """Linear.
+    synced = FlagProp(_EnvelopeFlags.TempoSync)
+    """Whether envelope is synced to tempo or not."""
 
-    | Type    | Value | Mix (wet) |
-    |---------|-------|-----------|
-    | Min     | -128  | -100%     |
-    | Max     | 128   | 100%      |
-    | Default | 0     | 0%        |
+    attack_tension = StructProp[int](prop="envelope.attack_tension")
+    """Linear. Bipolar.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -128  | -100%          |
+    | Max     | 128   | 100%           |
+    | Default | 0     | 0%             |
 
     *New in FL Studio v3.5.4*.
     """
 
-    sustain_tension = StructProp[int](prop="envelope.sustain_tension")
-    """Linear.
+    decay_tension = StructProp[int](prop="envelope.decay_tension")
+    """Linear. Bipolar.
 
     | Type    | Value | Mix (wet) |
     |---------|-------|-----------|
@@ -733,7 +758,7 @@ class Envelope(SingleEventModel, ModelReprMixin):
     """
 
     release_tension = StructProp[int](prop="envelope.release_tension")
-    """Linear.
+    """Linear. Bipolar.
 
     | Type    | Value | Mix (wet) |
     |---------|-------|-----------|
@@ -756,15 +781,49 @@ class LFO(SingleEventModel, ModelReprMixin):
     *New in FL Studio v2.5.0*.
     """
 
-    # amount: Optional[int] = None
-    # attack: Optional[int] = None
-    # predelay: Optional[int] = None
-    # speed: Optional[int] = None
+    amount = StructProp[int](prop="lfo.amount")
+    """Linear. Bipolar.
 
-    is_synced = FlagProp(_LFOFlags.TempoSync)
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -128  | -100%          |
+    | Max     | 128   | 100%           |
+    | Default | 0     | 0%             |
+    """
+
+    attack = StructProp[int](prop="lfo.attack")
+    """Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 100   | 0%             |
+    | Max     | 65536 | 100%           |
+    | Default | 20000 | 31%            |
+    """
+
+    predelay = StructProp[int](prop="lfo.predelay")
+    """Linear. Defaults to minimum value.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 100   | 0%             |
+    | Max     | 65536 | 100%           |
+    """
+
+    speed = StructProp[int](prop="lfo.speed")
+    """Logarithmic. Provides tempo synced options.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 200   | 0%             |
+    | Max     | 65536 | 100%           |
+    | Default | 32950 | 50% (16 steps) |
+    """
+
+    synced = FlagProp(_LFOFlags.TempoSync)
     """Whether LFO is synced with tempo."""
 
-    is_retrig = FlagProp(_LFOFlags.Retrig)
+    retrig = FlagProp(_LFOFlags.PhaseRetrig)
     """Whether LFO phase is in global / retriggered mode."""
 
     shape = StructProp[LFOShape](prop="lfo.shape")
@@ -1119,8 +1178,6 @@ class Sampler(_SamplerInstrument):
     ![](https://bit.ly/3DlHPiI)
     """
 
-    _ENVLFO_NAMES: Final = ("Panning", "Volume", "Mod X", "Mod Y", "Pitch")
-
     def __repr__(self):
         return f"{super().__repr__()} has {repr(self.sample_path) or 'Empty'}"
 
@@ -1134,12 +1191,12 @@ class Sampler(_SamplerInstrument):
     # FL's interface doesn't have an envelope for panning, but still stores
     # the default values in event data.
     @property
-    def envelopes(self) -> dict[str, Envelope] | None:
+    def envelopes(self) -> dict[EnvelopeName, Envelope] | None:
         """An :class:`Envelope` each for Volume, Panning, Mod X, Mod Y and Pitch."""
         events = self._events.get(ChannelID.EnvelopeLFO)
         if events is not None:
             envelopes = [Envelope(e) for e in events]
-            return dict(zip(self._ENVLFO_NAMES, envelopes))
+            return dict(zip(EnvelopeName.__args__, envelopes))  # type: ignore
 
     fx = NestedProp(
         FX,
@@ -1157,11 +1214,12 @@ class Sampler(_SamplerInstrument):
     )
 
     @property
-    def lfos(self) -> dict[str, LFO] | None:
+    def lfos(self) -> dict[LFOName, LFO] | None:
         """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch."""
         events = self._events.get(ChannelID.EnvelopeLFO)
         if events is not None:
-            return dict(zip(self._ENVLFO_NAMES, [LFO(e) for e in events]))
+            lfos = [LFO(e) for e in events]
+            return dict(zip(LFOName.__args__, lfos))  # type: ignore
 
     @property
     def pitch_shift(self) -> int | None:

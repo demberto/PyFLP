@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User guide and contibutor's guide.
 - Official support for Python 3.11.
 - Super basic `__repr__` for `StructBase` to ease debugging.
+- `Envelope.amount`, `Envelope.synced`, `LFO.amount`,
+  `LFO.attack`, `LFO.predelay` & `LFO.speed` [#69].
 
 ### Changed
 
@@ -27,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A cleaner implementation of `MixerParamsEvent`.
 - `Layer.__repr__` now shows the number of children also.
 - Separated test assets into presets for better isolation of results [#6].
+- Renamed `LFO.is_synced` to `LFO.synced` and `LFO.is_retrig` to `LFO.retring`.
 
 ### Fixed
 
@@ -40,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Images for individual FX properties as they were redundant.
 - Redundant member `_SamplerInstrument.flags`.
 
+[#6]: https://github.com/demberto/PyFLP/issues/6
 [#55]: https://github.com/demberto/PyFLP/issues/55
 [#56]: https://github.com/demberto/PyFLP/issues/56
 [#57]: https://github.com/demberto/PyFLP/issues/57
@@ -47,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#65]: https://github.com/demberto/PyFLP/issues/65
 [#66]: https://github.com/demberto/PyFLP/issues/66
 [#68]: https://github.com/demberto/PyFLP/issues/68
-[#6]: https://github.com/demberto/PyFLP/issues/6
+[#69]: https://github.com/demberto/PyFLP/issues/69
 
 ## 2.0.0a1 - 2022-09-21
 

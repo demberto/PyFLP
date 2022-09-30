@@ -13,6 +13,7 @@ from pyflp.channel import (
     DeclickMode,
     Instrument,
     Layer,
+    LFOShape,
     ReverbType,
     Sampler,
 )
@@ -151,6 +152,57 @@ def test_sampler_content(load_sampler: SamplerFixture):
 
 def test_sampler_cut_group(load_sampler: SamplerFixture):
     assert load_sampler("cut-groups.fst").cut_group == (1, 2)
+
+
+def test_sampler_envelopes(load_sampler: SamplerFixture):
+    envelopes = load_sampler("envelope.fst").envelopes
+    assert envelopes and len(envelopes) == 5
+
+    volume = envelopes["Volume"]
+    assert volume.enabled
+    assert volume.predelay == 100
+    assert volume.attack == 100
+    assert volume.hold == 100
+    assert volume.decay == 100
+    assert volume.sustain == 0
+    assert volume.release == 100
+    assert volume.synced
+    assert volume.attack_tension == volume.release_tension == volume.decay_tension == 0
+
+    mod_x = envelopes["Mod X"]
+    assert mod_x.enabled
+    assert mod_x.predelay == 65536
+    assert mod_x.attack == 65536
+    assert mod_x.hold == 65536
+    assert mod_x.decay == 65536
+    assert mod_x.sustain == 128
+    assert mod_x.release == 65536
+    assert mod_x.amount == 128
+    assert not mod_x.synced
+    assert mod_x.attack_tension == mod_x.release_tension == mod_x.decay_tension == 128
+
+
+def test_sampler_lfo(load_sampler: SamplerFixture):
+    lfos = load_sampler("lfo.fst").lfos
+    assert lfos and len(lfos) == 5
+
+    volume = lfos["Volume"]
+    assert volume.amount == 128
+    assert volume.attack == 65536
+    assert volume.predelay == 100
+    assert volume.shape == LFOShape.Pulse
+    assert volume.speed == 65536
+    assert volume.retrig
+    assert not volume.synced
+
+    mod_x = lfos["Mod X"]
+    assert mod_x.amount == -128
+    assert mod_x.attack == 100
+    assert mod_x.predelay == 65536
+    assert mod_x.shape == LFOShape.Sine
+    assert mod_x.speed == 200
+    assert not mod_x.retrig
+    assert mod_x.synced
 
 
 def test_sampler_fx(load_sampler: SamplerFixture):
