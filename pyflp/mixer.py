@@ -459,19 +459,21 @@ class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
             return f"Unnamed insert #{self.__index__()}"
         return f"Insert {self.name!r} #{self.__index__()}"
 
-    def __getitem__(self, index: SupportsIndex):
-        """Returns an effect slot of the specified `index`.
+    def __getitem__(self, i: int | str):
+        """Returns an effect slot of the specified index or name.
 
         Args:
-            index (SupportsIndex): A zero based integer value.
+            i (int): An index in the range of 0 to :attr:`Mixer.max_slots`
+                or the name of the :class:`Slot`.
 
         Raises:
-            ModelNotFound: An effect slot with the specified `index` couldn't be found.
+            ModelNotFound: An effect :class:`Slot` with the specified index
+                or name isn't found.
         """
         for idx, slot in enumerate(self):
-            if idx == index:
+            if (isinstance(i, int) and idx == i) or i == slot.name:
                 return slot
-        raise ModelNotFound(index)
+        raise ModelNotFound(i)
 
     def __index__(self) -> int:
         return self._kw["index"]
@@ -632,19 +634,22 @@ class Mixer(MultiEventModel, Sequence[Insert]):
         super().__init__(*events, **kw)
 
     # Inserts don't store their index internally.
-    def __getitem__(self, index: SupportsIndex):
-        """Returns an insert with the specified :attr:`index`.
+    def __getitem__(self, i: int | str):
+        """Returns an insert with the specified index or name.
 
         Args:
-            index (SupportsIndex): A zero based index. Use 0 for master.
+            i (int | str): An index between 0 to :attr:`Mixer.max_inserts`
+                resembling the one shown by FL Studio in its interface or the
+                name of the insert. Use 0 for master and -1 for "current" insert.
 
         Raises:
-            ModelNotFound: An :class:`Insert` with :attr:`index` isn't found.
+            ModelNotFound: An :class:`Insert` with the specifcied name or index
+                isn't found.
         """
         for idx, insert in enumerate(self):
-            if idx == index:
+            if (isinstance(i, int) and idx == i + 1) or i == insert.name:
                 return insert
-        raise ModelNotFound(index)
+        raise ModelNotFound(i)
 
     def __iter__(self) -> Iterator[Insert]:
         index = 0

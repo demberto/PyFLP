@@ -295,23 +295,24 @@ class Patterns(MultiEventModel, Sequence[Pattern]):
         indexes = [pattern.__index__() for pattern in self]
         return f"{len(indexes)} Patterns {indexes!r}"
 
-    def __getitem__(self, index: SupportsIndex) -> Pattern:
-        """Returns the pattern with the specified `index`.
+    def __getitem__(self, i: int | str) -> Pattern:
+        """Returns the pattern with the specified index or :attr:`Pattern.name`.
 
         Args:
-            index (SupportsIndex): Internal index used by the pattern.
+            i (int | str): Internal index used by the pattern or its name.
 
         Raises:
-            ModelNotFound: When a pattern of `index` could not be found.
+            ModelNotFound: A :class:`Pattern` with the specified name or index
+                isn't found.
         """
-        if not index:
+        if not i:
             warnings.warn("Patterns use a 1 based index; try 1 instead", stacklevel=0)
             return NotImplemented
 
         for pattern in self:
-            if pattern.__index__() == index:
+            if pattern.__index__() == i:
                 return pattern
-        raise ModelNotFound(index)
+        raise ModelNotFound(i)
 
     def __iter__(self) -> Iterator[Pattern]:
         """An iterator over the patterns found in the project."""

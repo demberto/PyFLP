@@ -468,16 +468,21 @@ class Arrangements(MultiEventModel, Sequence[Arrangement]):
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
         super().__init__(*events, **kw)
 
-    def __getitem__(self, index: SupportsIndex) -> Arrangement:
-        """Returns the arrangement at :attr:`Arrangement.index`.
+    def __getitem__(self, i: int | str) -> Arrangement:
+        """Returns an arrangement based either on its index or name.
+
+        Args:
+            i (int | str): The index of the arrangement in which they occur or
+                :attr:`Arrangement.name` of the arrangement to lookup for.
 
         Raises:
-            ModelNotFound: An arrangement with `index` could not be found.
+            ModelNotFound: An :class:`Arrangement` with the specifed name or
+                index isn't found.
         """
-        for arrangement in self:
-            if arrangement.__index__() == index:
-                return arrangement
-        raise ModelNotFound(index)
+        for arr in self:
+            if (isinstance(i, str) and i == arr.name) or arr.__index__() == i:
+                return arr
+        raise ModelNotFound(i)
 
     # TODO Verify ArrangementsID.Current is the end
     # FL changed event ordering a lot, the latest being the most easiest to

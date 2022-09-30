@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Separated test assets into presets for better isolation of results [#6].
 - Renamed `LFO.is_synced` to `LFO.synced` and `LFO.is_retrig` to `LFO.retring`.
 - `StructBase` and `ListEventBase` are lazily evaluated now.
+- Model collections are indexable by item names as well [#45].
 
 ### Fixed
 
@@ -46,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redundant member `_SamplerInstrument.flags`.
 
 [#6]: https://github.com/demberto/PyFLP/issues/6
+[#45]: https://github.com/demberto/PyFLP/issues/45
 [#55]: https://github.com/demberto/PyFLP/issues/55
 [#56]: https://github.com/demberto/PyFLP/issues/56
 [#57]: https://github.com/demberto/PyFLP/issues/57

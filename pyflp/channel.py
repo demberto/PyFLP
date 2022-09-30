@@ -1278,21 +1278,20 @@ class ChannelRack(MultiEventModel, Sequence[Channel]):
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
 
-    def __getitem__(self, index: str | SupportsIndex):
-        """Gets a channel from the rack based on its IID or index.
+    def __getitem__(self, i: str | int):
+        """Gets a channel from the rack based on its IID or name.
 
         Args:
-            index (str | SupportsIndex): Compared with :attr:`Channel.iid` if
-                a string or the index of the order in which channels are found.
+            i (str | int): Compared with :attr:`Channel.iid` if a string or the
+                :attr:`Channel.display_name`.
 
         Raises:
-            ChannelNotFound: A :class:`Channel` with an IID or index of
-                :attr:`index` isn't found.
+            ChannelNotFound: A channel with the specified IID or name isn't found.
         """
-        for idx, channel in enumerate(self):
-            if (isinstance(index, str) and int(index) == channel.iid) or (index == idx):
-                return channel
-        raise ChannelNotFound(index)
+        for ch in self:
+            if (isinstance(i, int) and i == ch.iid) or (i == ch.display_name):
+                return ch
+        raise ChannelNotFound(i)
 
     def __iter__(self):  # pylint: disable=too-complex
         ch_dict: dict[int, Channel] = {}
