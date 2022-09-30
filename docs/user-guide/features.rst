@@ -1,8 +1,8 @@
 Features
 ========
 
-Godlevel docstrings
--------------------
+📝 Godlevel docstrings
+----------------------
 
 PyFLP has been carefully written to take advantage of the features provided
 by a modern editor, like VS Code. One area, I particularly devoted a lot of
@@ -11,8 +11,8 @@ time to are docstrings.
 Since PyFLP's entire documentation is only its reference, I thought it might
 be challenging for a first time user to know where to find the data they need.
 
-:far:`eye` Visual hints
-^^^^^^^^^^^^^^^^^^^^^^^
+:fas:`eye;sd-text-info` Visual hints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: /img/user-guide/images-dark.png
    :align: center
@@ -25,8 +25,8 @@ be challenging for a first time user to know where to find the data they need.
 To make it somewhat easier of a journey, I haved added links to images and GIFs
 from FL Studio's interface.
 
-:material-round:`tune;1.3em` Minimums, maximums and defaults
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:fas:`table;sd-text-info` Minimums, maximums and defaults
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: /img/user-guide/tables-dark.png
    :align: center
@@ -60,8 +60,8 @@ shown me that they rarely change.
 PyFLP is fully tested with `pyright <https://github.com/microsoft/pyright>`_,
 a static type checker built right into VS Code.
 
-:fas:`umbrella` 80%+ code coverage
-----------------------------------
+:fas:`umbrella;sd-text-primary` 80%+ code coverage
+--------------------------------------------------
 
 PyFLP boasts a total of more than 80+ combined code coverage across supported
 Python versions. Higher the coverage ⬆, lesser the amount of bugs 🐞

@@ -31,5 +31,3 @@ hear.
 
 .. |pytest-icon| image:: /img/contributing/pytest.svg
     :width: 32
-
-.. todo:: Find a way to color SVGs
