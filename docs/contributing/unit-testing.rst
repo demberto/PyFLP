@@ -6,8 +6,8 @@ basically no control over 😫; for a parser made almost completely by reversing
 the format is hard.
 
 Luckily, FL Studio comes with a handy feature 🚀 to export "presets" for various
-`models <./models.rst>`_ like :class:`Channel`, :class:`Insert` and so on. This
-is used for **isolating** test results. A look 👀 at `tests/assets directory
+`models <./about-models.rst>`_ like :class:`Channel`, :class:`Insert` and so on.
+This is used for **isolating** test results. A look 👀 at `tests/assets directory
 <https://github.com/demberto/PyFLP/tree/master/tests/assets>`_ shows what
 possible models and properties could be tested from a preset file. I have tried
 to divide into a single model or an individual property whenever possible.

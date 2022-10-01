@@ -63,7 +63,7 @@ An event ID is represented in an ``EventEnum`` subclass.
 .. autoclass:: EventEnumMeta
 .. autoclass:: EventEnum
 
-These enums are documented throughout the `reference <../reference>`_.
+These enums are documented throughout the :doc:`reference <../reference>`.
 
 For each of the range above, I have created a number of classes to match the
 exact type of ``data`` indicated by its usage. What I mean by this statement
@@ -153,7 +153,7 @@ applied by the ID range itself.
         saving this valuable event ID space as well ❕
 
 Fast forward many versions later, FL still uses this weird mixture of fixed and
-variable size events to represent what I call a `model <./about-model>`_.
+variable size events to represent what I call a :doc:`model <./about-models>`.
 
 .. todo::
 

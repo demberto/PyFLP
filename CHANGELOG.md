@@ -140,7 +140,7 @@ encourage you to upgrade to this version. **I WILL NOT BE MAINTAINING OLDER VERS
 
 ### Fixed
 
-- [#9](https://github.com/demberto/PyFLP/issues/9), thanks to @zacanger.
+- [#9](https://github.com/demberto/PyFLP/pull/9), thanks to @zacanger.
 
 ## [1.1.1] - 2022-07-10
 
@@ -269,7 +269,7 @@ have been fixed as well, while Python 3.6 support has been deprecated.
 - Constructor of `Project` has been simplified.
 - `VSTPlugin`'s underlying event now supports saving, it has been refactored out of `_parse_data_event` also.
 - `InsertParametersEvent` to replace the equivalent parsing in `Insert._parse_data_event`.
-- The [TODO](https://github.com/demberto/PyFLP/blob/master/TODO.md) has been changed to reflect the type of goals.
+- The `TODO` *(deleted now)* has been changed to reflect the type of goals.
 - `_FLObject.save` is now `_FLObject._save`.
 - Some constants present in `utils.py` have been moved to `constants.py`.
 - Docs include a brief summary of the underlying data event wherever applicable.
@@ -295,30 +295,30 @@ have been fixed as well, while Python 3.6 support has been deprecated.
 
 ### **Highlights**
 
-- **PyFLP has passed the null test for a full project of mine (FL 20.7.2) 🥳**
-- This library uses code from [FLParser](https://github.com/monadgroup/FLParser), a GPL license project, PyFLP is now under GPL
-- API reference documentation is complete now
-- Few new events implemented for `Channel`
-- Refactored `FLObject` and `Plugin`
+- **PyFLP has passed the null test for a full project of mine (FL 20.7.2) 🥳**.
+- This library uses code from [FLParser](https://github.com/monadgroup/FLParser), a GPL license project, PyFLP is now under GPL.
+- API reference documentation is complete now.
+- Few new events implemented for `Channel`.
+- Refactored `FLObject` and `Plugin`.
 
 #### `FLObject` refactoring
 
-- `parseprop` is now `_parseprop`
-- All `_parseprop` delegates are now "protected" as well
-- `setprop` is now `_setprop`
+- `parseprop` is now `_parseprop`.
+- All `_parseprop` delegates are now "protected" as well.
+- `setprop` is now `_setprop`.
 
 ### Added
 
-- `ChannelEvent.Delay` is implemented by `ChannelDelay` and `Channel.delay`
-- `Event.to_raw` and `Event.dump` now log when they are called
-- [Exceptions](https://github.com/demberto/PyFLP/tree/master/exceptions.py) `DataCorruptionDetected` and `OperationNotPermitted`
+- `ChannelEvent.Delay` is implemented by `ChannelDelay` and `Channel.delay`.
+- `Event.to_raw` and `Event.dump` now log when they are called.
+- Exceptions `DataCorruptionDetected` and `OperationNotPermitted`.
 
 ### Fixed
 
-- Can definitely say, all naming inconsistencies have been fixed
-- Fixed `TimeMarker` assign to `Arrangement` logic in `Parser`
-- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, caused due to double dumping of same events
-- Empty pattern events, `PatternEvent.Name` and `PatternEvent.Color` don't get saved
+- Can definitely say, all naming inconsistencies have been fixed.
+- Fixed `TimeMarker` assign to `Arrangement` logic in `Parser`.
+- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, caused due to double dumping of same events.
+- Empty pattern events, `PatternEvent.Name` and `PatternEvent.Color` don't get saved.
 
 ---
 
@@ -328,15 +328,15 @@ have been fixed as well, while Python 3.6 support has been deprecated.
 
 ### Added
 
-- More docs
-- Add some new properties/events to `Channel`
-- A sample [empty FLP]("tests/assets/FL 20.8.3/Empty.flp") has been provided to allow running tests
-- All `FLObject` subclasses now have a basic `__repr__` method
+- More docs.
+- Add some new properties/events to `Channel`.
+- A sample empty FLP has been provided to allow running tests.
+- All `FLObject` subclasses now have a basic `__repr__` method.
 
 ### Fixed
 
-- Improve the GitHub workflow action, uploads to PyPI will not happen unless the test is passed
-- ~~Fix all naming inconsistencies caused due to migration to [`BytesIOEx`](https://github.com/demberto/BytesIOEx)~~ Not all
+- Improve the GitHub workflow action, uploads to PyPI will not happen unless the test is passed.
+- ~~Fix all naming inconsistencies caused due to migration to [`BytesIOEx`](https://github.com/demberto/BytesIOEx)~~ Not all.
 
 ### Known issues
 
@@ -348,21 +348,21 @@ Same as in 0.1.1
 
 ### **Highlights**
 
-- Changed documentation from Sphinx to MkDocs
-- [FLPInfo](https://github.com/demberto/FLPInfo) is now a separate package
-- [FLPInspect](https://github.com/demberto/FLPInspect) is now a separate package
-- PyFLP now uses [BytesIOEx](https://github.com/demberto/BytesIOEx/) as an external dependency
+- Changed documentation from Sphinx to MkDocs.
+- [FLPInfo](https://github.com/demberto/FLPInfo) is now a separate package.
+- [FLPInspect](https://github.com/demberto/FLPInspect) is now a separate package.
+- PyFLP now uses [BytesIOEx](https://github.com/demberto/BytesIOEx/) as an external dependency.
 
 ### Fixed
 
-- `ByteEvent`, `WordEvent` and `DWordEvent` now raise a `TypeError`
-  when they are initialised with the wrong size of data
-- Fix setup.cfg, project structure is now as expected, imports will work
-- [Docs](https://pyflp.rtfd.io/) are now up and running
+- `ByteEvent`, `WordEvent` and `DWordEvent` now raise a `TypeError`.
+  when they are initialised with the wrong size of data.
+- Fix setup.cfg, project structure is now as expected, imports will work.
+- [Docs](https://pyflp.rtfd.io/) are now up and running.
 
 ### Known issues
 
-- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known
+- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
 ---
 
@@ -372,36 +372,36 @@ Same as in 0.1.1
 
 - `flpinspect` - An FLP Event Viewer made using Tkinter.
 - `flpinfo` - A CLI utility to get basic information about an FLP.
-- Switched to MIT License
+- Switched to MIT License.
 
 ### Added
 
-- Lots of changes, refactoring and code cleanup of `pyflp`
-- New docs
-- Changes to `README`
-- Adopted [`black`](https://github.com/psf/black) coding style
-- Added a `log_level` argument to `Parser`
-- `Project.create_zip` copies stock samples as well now
-- `Project.get_events` for getting just the events; they are not parsed
-  Read [docs](https://pyflp.rtfd.io) for more info about this
-- `Event` classes now have an `__eq__` and `__repr__` method
+- Lots of changes, refactoring and code cleanup of `pyflp`.
+- New docs.
+- Changes to `README`.
+- Adopted [`black`](https://github.com/psf/black) coding style.
+- Added a `log_level` argument to `Parser`.
+- `Project.create_zip` copies stock samples as well now.
+- `Project.get_events` for getting just the events; they are not parsed.
+  Read [docs](https://pyflp.rtfd.io) for more info about this.
+- `Event` classes now have an `__eq__` and `__repr__` method.
 
 ### Fixed
 
-- Tests don't give module import errors
-- `Pattern` event parsing
-- Initialise `_count` to 0, everytime `Parser` is initialised
-- `Project.create_zip` now works as intended
-- Overhauled logging
-- A lot of potential bugs in `FLObject` subclasses
+- Tests don't give module import errors.
+- `Pattern` event parsing.
+- Initialise `_count` to 0, everytime `Parser` is initialised.
+- `Project.create_zip` now works as intended.
+- Overhauled logging.
+- A lot of potential bugs in `FLObject` subclasses.
 
 ### Known issues
 
-- `flpinfo` doesn't output correctly sometimes due to long strings
-- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known
+- `flpinfo` doesn't output correctly sometimes due to long strings.
+- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
-[2.0.0a0]: https://github.com/demberto/PyFLP/compare/1.1.1...2.0.0a0
-[1.1.1]: https://github.com/demberto/PyFLP/compare/1.1.0...1.1.1
+[2.0.0a0]: https://github.com/demberto/PyFLP/compare/v1.1.1...v2.0.0a0
+[1.1.1]: https://github.com/demberto/PyFLP/compare/1.1.0...v1.1.1
 [1.1.0]: https://github.com/demberto/PyFLP/compare/1.0.1...1.1.0
 [1.0.1]: https://github.com/demberto/PyFLP/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/demberto/PyFLP/compare/0.2.0...1.0.0

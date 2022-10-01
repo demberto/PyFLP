@@ -2,7 +2,7 @@
 ==========================================================================================
 
 Implementing a native plugin data parser can be easy. Below is a walkthrough
-for implementing a simple effect, `Fruity Balance <pyflp.plugin.FruityBalance>`_.
+for implementing a simple effect, :class:`Fruity Balance <pyflp.plugin.FruityBalance>`.
 
 .. note:: Prequisites
 

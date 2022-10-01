@@ -70,7 +70,12 @@ html_css_files = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
 ]  # https://sphinx-design.readthedocs.io/en/furo-theme/badges_buttons.html#fontawesome-icons
 sd_fontawesome_latex = True
-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}  # 🐍 doc links
+linkcheck_allowed_redirects = {
+    r"https://bit.ly/.*": r"https://raw.githubusercontent.com/demberto/PyFLP/master/docs/img/.*",
+    r"https://pyflp.rtfd.io.*": r"https://pyflp.readthedocs.io/en/latest/.*",
+    r"https://www.python.org/dev/peps/.*": r"https://peps.python.org/.*",
+}
 
 
 def badge_flstudio(app, what, name, obj, options, lines):

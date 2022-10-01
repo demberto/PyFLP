@@ -11,21 +11,21 @@ A **model** is an entity, or an object, programmatically speaking.
     expose an API programmatically.
 
     The FLP format has no such notion of "models" as it is entirely based on
-    the sequence of `events <./about-events>`_.
+    the sequence of :doc:`events <./about-events>`.
 
     PyFLP's modules are categorized to follow FL Studio' GUI hierarchy as well.
     Every module *generally* represents a **separate window** in the GUI.
 
-In PyFLP, a model is **composed** of several `descriptors <./about-descriptors>`_,
+In PyFLP, a model is **composed** of several :doc:`descriptors <./about-descriptors>`,
 properties and some additional helper methods, optionally. It *might* contain
 additional parsing logic for nested models and collections of models.
 
-A model's internal state is stored in `events <./about-events>`_ and its shared
-state is passed to it via keyword arguments. *For example*, many models depend
-on :attr:`pyflp.project.Project.version` to decide the parsing logic for
+A model's internal state is stored in :doc:`events <./about-events>` and its
+shared state is passed to it via keyword arguments. *For example*, many models
+depend on :attr:`pyflp.project.Project.version` to decide the parsing logic for
 certain properties. This creates a "dependancy" of the model to a "shared"
 property. Such "dependencies" are passed to the model in the form of keyword
-arguments and consumed by the `descriptors <./about-descriptors>`_.
+arguments and consumed by the :doc:`descriptors <./about-descriptors>`.
 
 A model **does NOT cache** its state in any way. This is done, mainly to:
 

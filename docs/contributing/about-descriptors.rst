@@ -19,13 +19,13 @@ internally.
           <https://realpython.com/python-descriptors/#why-use-python-descriptors>`_
           section.
 
-In PyFLP, descriptors are used to describe an attribute of a `model <./about-models>`_.
-Internally, they access the value of an `event <./about-events>`_ or one if its
+In PyFLP, descriptors are used to describe an attribute of a :doc:`model <./about-models>`.
+Internally, they access the value of an :doc:`event <./about-events>` or one if its
 keys.
 
 Some common descriptors like ``name`` 🔤, ``color`` 🎨 or ``icon`` 🖼 are used by
 multiple different types of models. The descriptors used for these can be
-different depending upon the internal representation inside `events <./about-events>`_.
+different depending upon the internal representation inside :doc:`events <./about-events>`.
 
 .. note::
 

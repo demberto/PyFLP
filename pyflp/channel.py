@@ -510,8 +510,6 @@ class Time(MultiEventModel, ModelReprMixin):
 class Reverb(SingleEventModel, ModelReprMixin):
     """Precalculated reverb used by :class:`Sampler`.
 
-    ![](https://bit.ly/3L9N4nj)
-
     *New in FL Studio v1.4.0*.
     """
 
