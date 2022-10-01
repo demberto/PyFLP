@@ -54,7 +54,7 @@ from .plugin import PluginID, get_event_by_internal_name
 from .project import VALID_PPQS, FileFormat, Project, ProjectID
 
 __all__ = ["parse", "save"]
-__version__ = "2.0.0a1"
+__version__ = "2.0.0a2"
 
 
 def parse(file: str | pathlib.Path) -> Project:
