@@ -17,4 +17,4 @@ recursive-include docs *.rst
 graft docs/img
 
 include tests/__init__.py
-recursive-include tests *.flp *.fst
+recursive-include tests *.flp *.fst *.fsc *.py
