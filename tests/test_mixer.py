@@ -83,18 +83,17 @@ def test_insert_stereo_separation(get_insert: InsertFixture):
     assert get_insert(r"100%-separated.fst").stereo_separation == -64
 
 
-# def test_insert_eq(get_insert: InsertFixture):
-#     for insert in inserts:
-#         if insert.name == "Post EQ":
-#             assert insert.eq.low.freq == 0
-#             assert insert.eq.low.gain == 1800
-#             assert insert.eq.low.reso == 0
-#             assert insert.eq.mid.freq == 33145
-#             assert insert.eq.mid.gain == 0
-#             assert insert.eq.mid.reso == 17500
-#             assert insert.eq.high.freq == 55825
-#             assert insert.eq.high.gain == -1800
-#             assert insert.eq.high.reso == 65536
+def test_insert_eq(get_insert: InsertFixture):
+    eq = get_insert("post-eq.fst").eq
+    assert eq.low.freq == 0
+    assert eq.low.gain == 1800
+    assert eq.low.reso == 0
+    assert eq.mid.freq == 33145
+    assert eq.mid.gain == 0
+    assert eq.mid.reso == 17500
+    assert eq.high.freq == 65536
+    assert eq.high.gain == -1800
+    assert eq.high.reso == 65536
 
 
 def test_mixer(mixer: Mixer):

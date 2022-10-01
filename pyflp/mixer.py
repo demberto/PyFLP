@@ -298,13 +298,12 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
         super().__init__()
         self._ids = ids
 
-    def __get__(self, instance: object, owner: object = None) -> InsertEQBand:
-        if not isinstance(instance, InsertEQ) or owner is None:
+    def __get__(self, instance: InsertEQ, owner: Any = None) -> InsertEQBand:
+        if owner is None:
             return NotImplemented
 
         items: _InsertEQBandKW = {}
-        for param in instance._kw["params"]:
-            id = param["id"]
+        for id, param in cast(_InsertItems, instance._kw["params"]).own.items():
             if id == self._ids.freq:
                 items["freq"] = param
             elif id == self._ids.gain:
@@ -324,13 +323,13 @@ class InsertEQ(ModelBase):
         :attr:`Insert.eq`
     """
 
-    def __init__(self, params: list[_MixerParamsItem]):
+    def __init__(self, params: _InsertItems):
         super().__init__(params=params)
 
     def __repr__(self):
-        low = f"{self.low.freq},{self.low.gain},{self.low.reso}"
-        mid = f"{self.mid.freq},{self.mid.gain},{self.mid.reso}"
-        high = f"{self.high.freq},{self.high.gain},{self.high.reso}"
+        low = f"freq={self.low.freq}, gain={self.low.gain}, reso={self.low.reso}"
+        mid = f"freq={self.mid.freq}, gain={self.mid.gain}, reso={self.mid.reso}"
+        high = f"freq={self.high.freq}, gain={self.high.gain}, reso={self.high.reso}"
         return f"InsertEQ (low={low}, mid={mid}, high={high})"
 
     def sizeof(self) -> int:
