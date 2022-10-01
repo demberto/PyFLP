@@ -39,7 +39,7 @@ omit = ["main.py"]
 exclude_lines = [
   "pragma: no cover",         # Have to re-enable the standard pragma
   "def __repr__",
-  "...",                      # Ellipsis operator used in protocols
+  "\\.\\.\\.",                # Ellipsis operator used in protocols
   "if owner is None:",        # Descriptor __get__() checks
   "@(abc\\.)?abstractmethod", # "@abc.abstractmethod" or "@abstractmethod"
 ]
@@ -49,6 +49,7 @@ ignore_errors = true
 profile = "black"
 
 [tool.pylint.design]
+max-ancestors = 10
 max-parents = 8
 
 [tool.pylint.format]

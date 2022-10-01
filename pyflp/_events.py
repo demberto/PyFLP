@@ -604,7 +604,7 @@ class ListEventBase(DataEventBase, Iterable[StructBase]):
         super().__init__(id, data)
         self.unparsed = False
 
-        if len(data) % self.STRUCT.SIZE:
+        if len(data) % self.STRUCT.SIZE:  # pragma: no cover
             self.unparsed = True
             warnings.warn(
                 f"Cannot parse event {id} as event "
@@ -613,13 +613,13 @@ class ListEventBase(DataEventBase, Iterable[StructBase]):
 
     @property
     def num_items(self):  # * __len__() is already used up
-        if self.unparsed:
+        if self.unparsed:  # pragma: no cover
             raise ListEventNotParsed
 
         return len(self._stream.getvalue()) // self.STRUCT.SIZE
 
     def __getitem__(self, index: int):
-        if self.unparsed:
+        if self.unparsed:  # pragma: no cover
             raise ListEventNotParsed
 
         if index > self.num_items:

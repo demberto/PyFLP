@@ -2,24 +2,30 @@ from __future__ import annotations
 
 from typing import Callable, Tuple
 
+import colour
 import pytest
 
-from pyflp.pattern import Note, Pattern, PatternID
+from pyflp.pattern import Note, Pattern, PatternID, Patterns
 
 from .conftest import ModelFixture
 
-# def test_patterns(patterns: Patterns):
-#     assert len(patterns) == 5
-#     assert patterns.current == patterns[5]
-#     assert patterns.play_cut_notes
-
-
-# def test_names(patterns: Patterns):
-#     assert set(pattern.name for pattern in patterns) == set(
-#         ("Default", "Colored", "MIDI", "Timemarkers", "Selected")
-#     )
-
 NotesFixture = Callable[[str], Tuple[Note, ...]]
+
+
+def test_patterns(patterns: Patterns):
+    assert len(patterns) == 5
+    assert patterns.current == patterns[5]
+    assert patterns.play_cut_notes
+
+
+def test_pattern_color(patterns: Patterns):
+    assert patterns[2].color == colour.Color("#00FF00")
+
+
+def test_pattern_names(patterns: Patterns):
+    assert set(pattern.name for pattern in patterns) == set(
+        ("Default", "Colored", "MIDI", "Timemarkers", "Selected")
+    )
 
 
 @pytest.fixture
