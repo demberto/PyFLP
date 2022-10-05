@@ -47,6 +47,12 @@ ignore_errors = true
 [tool.isort]
 profile = "black"
 
+[tool.mypy]
+python_version = "3.7"
+enable_incomplete_features = true
+ignore_missing_imports = true
+warn_no_return = false
+
 [tool.pylint.design]
 max-parents = 10
 

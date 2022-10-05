@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.0.0a3 - 2022-10-01
 
+### Added
+
+- 100% mypy tested *for all you mypy geeks*.
+
 ### Changed
 
 - All `StructBaseEvent` classes overhauled to use the `construct` library.
@@ -32,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Protocol subclassing of `EventBase` hierarchy.
 - Faulty `EventBase.__hash__`.
 - Python 3.11 support due to https://github.com/timrid/construct-typing/issues/15
+- Incomplete support for `Sequence` in model collections.
 
 [#46]: https://github.com/demberto/PyFLP/issues/46
 

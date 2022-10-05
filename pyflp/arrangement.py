@@ -26,9 +26,9 @@ else:
     from typing_extensions import Literal, SupportsIndex, TypedDict
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Iterable, Iterator, Sequence
+    from collections.abc import Iterable, Iterator
 else:
-    from typing import Iterable, Iterator, Sequence
+    from typing import Iterable, Iterator
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -457,7 +457,7 @@ class TimeSignature(MultiEventModel):
     beat = EventProp[int](ArrangementsID.TimeSigBeat)
 
 
-class Arrangements(MultiEventModel, Sequence[Arrangement]):
+class Arrangements(MultiEventModel):
     """Iterator over arrangements in the project and some related properties."""
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):

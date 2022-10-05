@@ -27,9 +27,9 @@ else:
     from typing_extensions import Literal, SupportsIndex
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Iterator
 else:
-    from typing import Sequence, Iterator
+    from typing import Iterator
 
 import colour
 import construct as c
@@ -1097,7 +1097,7 @@ class Automation(Channel):
     """
 
 
-class Layer(Channel, Sequence[Channel]):
+class Layer(Channel):
     """Represents a layer channel present in the channel rack.
 
     ![](https://bit.ly/3S2MLgf)
@@ -1264,7 +1264,7 @@ class Sampler(_SamplerInstrument):
     )
 
 
-class ChannelRack(MultiEventModel, Sequence[Channel]):
+class ChannelRack(MultiEventModel):
     """Represents the channel rack, contains all :class:`Channel` instances.
 
     ![](https://bit.ly/3RXR50h)

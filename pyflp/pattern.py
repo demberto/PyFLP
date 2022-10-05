@@ -27,9 +27,9 @@ else:
     from typing_extensions import SupportsIndex
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Iterable, Iterator, Sequence
+    from collections.abc import Iterable, Iterator
 else:
-    from typing import Sequence, Iterator, Iterable
+    from typing import Iterator, Iterable
 
 import colour
 import construct as c
@@ -282,7 +282,7 @@ class Pattern(MultiEventModel, Iterable[Note], SupportsIndex):
     """User given name of the pattern; None if not set."""
 
 
-class Patterns(MultiEventModel, Sequence[Pattern]):
+class Patterns(MultiEventModel):
     def __repr__(self):
         indexes = [pattern.__index__() for pattern in self]
         return f"{len(indexes)} Patterns {indexes!r}"

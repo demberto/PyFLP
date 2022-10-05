@@ -28,9 +28,9 @@ else:
     from typing_extensions import SupportsIndex, TypedDict
 
 if sys.version_info >= (3, 9):
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Iterator
 else:
-    from typing import Iterator, Sequence
+    from typing import Iterator
 
 if sys.version_info >= (3, 11):
     from typing import NotRequired, Unpack
@@ -437,7 +437,7 @@ class _InsertKW(TypedDict):
 # (by looking at Project.format) and use `MixerParameterEvent.items` to get
 # remaining data. Normally, the `Mixer` passes this information to the Inserts
 # (and Inserts to the `Slot`s directly).
-class Insert(MultiEventModel, Sequence[Slot], SupportsIndex):
+class Insert(MultiEventModel, SupportsIndex):
     """Represents a mixer track to which channel from the rack are routed to.
 
     ![](https://bit.ly/3LeGKuN)
@@ -605,7 +605,7 @@ class _MixerKW(TypedDict):
 
 # TODO FL Studio version in which slots were increased to 10
 # TODO A move() method to change the placement of Inserts; it's difficult!
-class Mixer(MultiEventModel, Sequence[Insert]):
+class Mixer(MultiEventModel):
     """Represents the mixer which contains :class:`Insert` instances.
 
     ![](https://bit.ly/3eOsblF)

@@ -57,6 +57,9 @@ PyFLP is a parser for FL Studio project files written in Python.
         <a href="https://codefactor.io/repository/github/demberto/PyFLP">
           <img alt="CodeFactor Grade" src="https://img.shields.io/codefactor/grade/github/demberto/PyFLP?logo=codefactor"/>
         </a>
+        <a href="http://mypy-lang.org/">
+          <img alt="Checked with mypy" src="http://www.mypy-lang.org/static/mypy_badge.svg">
+        </a>
         <a href="https://github.com/pre-commit/pre-commit">
           <img alt="pre-commit" src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&amp;logoColor=white"/>
         </a>
