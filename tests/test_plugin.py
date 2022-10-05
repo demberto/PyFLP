@@ -8,15 +8,11 @@ from pyflp.plugin import (
     AnyPlugin,
     FruityBalance,
     FruityFastDist,
-    FruityFastDistKind,
     FruitySend,
     FruitySoftClipper,
     FruityStereoEnhancer,
     PluginID,
     Soundgoodizer,
-    SoundgoodizerMode,
-    StereoEnhancerEffectPosition,
-    StereoEnhancerPhaseInversion,
     VSTPlugin,
 )
 
@@ -45,7 +41,7 @@ def test_fruity_fast_dist(plugin: PluginFixture[FruityFastDist]):
     fruity_fast_dist = plugin("fruity-fast-dist.fst", FruityFastDist)
     assert fruity_fast_dist.pre == 128
     assert fruity_fast_dist.threshold == 10
-    assert fruity_fast_dist.kind == FruityFastDistKind.A
+    assert fruity_fast_dist.kind == "A"
     assert fruity_fast_dist.mix == 128
     assert fruity_fast_dist.post == 128
 
@@ -67,9 +63,9 @@ def test_fruity_soft_clipper(plugin: PluginFixture[FruitySoftClipper]):
 def test_fruity_stereo_enhancer(plugin: PluginFixture[FruityStereoEnhancer]):
     fruity_stereo_enhancer = plugin("fruity-stereo-enhancer.fst", FruityStereoEnhancer)
     assert fruity_stereo_enhancer.stereo_separation == 0
-    assert fruity_stereo_enhancer.effect_position == StereoEnhancerEffectPosition.Post
+    assert fruity_stereo_enhancer.effect_position == "post"
     assert fruity_stereo_enhancer.phase_offset == 0
-    assert fruity_stereo_enhancer.phase_inversion == StereoEnhancerPhaseInversion.None_
+    assert fruity_stereo_enhancer.phase_inversion == "none"
     assert fruity_stereo_enhancer.pan == 0
     assert fruity_stereo_enhancer.volume == 256
 
@@ -77,7 +73,7 @@ def test_fruity_stereo_enhancer(plugin: PluginFixture[FruityStereoEnhancer]):
 def test_soundgoodizer(plugin: PluginFixture[Soundgoodizer]):
     soundgoodizer = plugin("soundgoodizer.fst", Soundgoodizer)
     assert soundgoodizer.amount == 600
-    assert soundgoodizer.mode == SoundgoodizerMode.A
+    assert soundgoodizer.mode == "A"
 
 
 def test_vst_plugin(plugin: PluginFixture[VSTPlugin]):

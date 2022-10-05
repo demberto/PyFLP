@@ -48,18 +48,6 @@ Effects
 .. autoclass:: Soundgoodizer
    :members:
 
-Enumerations
-------------
-
-.. autoclass:: FruityFastDistKind
-   :members:
-.. autoclass:: StereoEnhancerEffectPosition
-   :members:
-.. autoclass:: StereoEnhancerPhaseInversion
-   :members:
-.. autoclass:: SoundgoodizerMode
-   :members:
-
 Event IDs
 ---------
 

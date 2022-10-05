@@ -21,9 +21,10 @@ import warnings
 from typing import Any, ClassVar, Dict, Generic, TypeVar
 
 if sys.version_info >= (3, 8):
-    from typing import Protocol, runtime_checkable
+    from typing import Literal, Protocol, runtime_checkable
 else:
-    from typing_extensions import Protocol, runtime_checkable
+    from typing_extensions import Literal, Protocol, runtime_checkable
+
 import construct as c
 import construct_typed as ct
 
@@ -46,7 +47,6 @@ __all__ = [
     "BooBass",
     "FruityBalance",
     "FruityFastDist",
-    "FruityFastDistKind",
     "FruityNotebook2",
     "FruitySend",
     "FruitySoftClipper",
@@ -54,9 +54,6 @@ __all__ = [
     "PluginIOInfo",
     "Soundgoodizer",
     "VSTPlugin",
-    "StereoEnhancerEffectPosition",
-    "StereoEnhancerPhaseInversion",
-    "SoundgoodizerMode",
 ]
 
 
@@ -437,19 +434,11 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     """
 
 
-@enum.unique
-class FruityFastDistKind(enum.IntEnum):
-    """Used by :attr:`FruityFastDist.kind`."""
-
-    A = 0
-    B = 1
-
-
 class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3qT6Jil)"""  # noqa
 
     INTERNAL_NAME = "Fruity Fast Dist"
-    kind = _PluginDataProp[FruityFastDistKind]()
+    kind = _PluginDataProp[Literal["A", "B"]]()
     mix = _PluginDataProp[int]()
     """Linear. Defaults to maximum value.
 
@@ -567,31 +556,14 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
     """
 
 
-@enum.unique
-class StereoEnhancerEffectPosition(enum.IntEnum):
-    """Used by :attr:`FruityStereoEnhancer.effect_position`."""
-
-    Pre = 0
-    Post = 1
-
-
-@enum.unique
-class StereoEnhancerPhaseInversion(enum.IntEnum):
-    """Used by :attr:`FruityStereoEnhancer.phase_inversion`."""
-
-    None_ = 0
-    Left = 1
-    Right = 2
-
-
 class FruityStereoEnhancer(
     _PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin
 ):
     """![](https://bit.ly/3DoHvji)"""  # noqa
 
     INTERNAL_NAME = "Fruity Stereo Enhancer"
-    effect_position = _PluginDataProp[StereoEnhancerEffectPosition]()
-    """Defaults to :attr:`StereoEnhancerEffectPosition.Post`."""
+    effect_position = _PluginDataProp[Literal["pre", "post"]]()
+    """Defaults to ``post``."""
 
     pan = _PluginDataProp[int]()
     """Linear.
@@ -603,8 +575,8 @@ class FruityStereoEnhancer(
     | Default | 0     | Centred        |
     """
 
-    phase_inversion = _PluginDataProp[StereoEnhancerPhaseInversion]()
-    """Default to :attr:`~StereoEnhancerPhaseInversion.None_`."""
+    phase_inversion = _PluginDataProp[Literal["none", "left", "right"]]()
+    """Default to ``none``."""
 
     phase_offset = _PluginDataProp[int]()
     """Linear.
@@ -637,16 +609,6 @@ class FruityStereoEnhancer(
     """
 
 
-@enum.unique
-class SoundgoodizerMode(enum.IntEnum):
-    """Used by :attr:`Soundgoodizer.mode`."""
-
-    A = 0
-    B = 1
-    C = 2
-    D = 3
-
-
 class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3dip70y)"""  # noqa
 
@@ -659,8 +621,8 @@ class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     | 0   | 1000 | 600     |
     """
 
-    mode = _PluginDataProp[SoundgoodizerMode]()
-    """4 preset modes (A, B, C and D)."""
+    mode = _PluginDataProp[Literal["A", "B", "C", "D"]]()
+    """4 preset modes (A, B, C and D). Defaults to ``A``."""
 
 
 def get_event_by_internal_name(name: str) -> type[StructEventBase] | None:
