@@ -311,7 +311,7 @@ class PluginProp(RWProperty[AnyPlugin]):
             wrapper_ev = instance._events[PluginID.Wrapper][0]
             param_ev = instance._events[PluginID.Data][0]
         except (KeyError, IndexError):
-            return
+            return None
 
         for etype, ptype in self._types.items():
             if isinstance(param_ev, etype):

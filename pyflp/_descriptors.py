@@ -22,21 +22,16 @@ import sys
 from itertools import chain
 from typing import Any, TypeVar
 
-from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
-from ._models import ItemModel, ModelBase, MT_co, MultiEventModel, SingleEventModel
-from .exceptions import PropertyCannotBeSet
-
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
 else:
     from typing_extensions import Protocol, final, runtime_checkable
 
-if sys.version_info >= (3, 11):
-    from typing import Never
-else:
-    from typing_extensions import Never
-
 import construct_typed as ct
+
+from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
+from ._models import ItemModel, ModelBase, MT_co, MultiEventModel, SingleEventModel
+from .exceptions import PropertyCannotBeSet
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -67,8 +62,6 @@ class NamedPropMixin:
             self._prop = name
 
 
-# TODO An "adapter" class hierarchy, used by the getter/setters
-# to transform integers into more human-readable representations.
 class PropBase(abc.ABC, RWProperty[T]):
     def __init__(self, *ids: EventEnum, default: T | None = None):
         self._ids = ids
@@ -152,7 +145,7 @@ class FlagProp(PropBase[bool]):
         elif isinstance(ev_or_ins, (ItemModel, StructEventBase)):
             flags = ev_or_ins[self._prop]
         else:
-            return Never
+            raise NotImplementedError  # should not happen, basically
 
         if flags is not None:
             retbool = self._flag in self._flag_type(flags)

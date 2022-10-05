@@ -48,8 +48,7 @@ ignore_errors = true
 profile = "black"
 
 [tool.pylint.design]
-max-ancestors = 10
-max-parents = 8
+max-parents = 10
 
 [tool.pylint.format]
 max-module-lines = 1200

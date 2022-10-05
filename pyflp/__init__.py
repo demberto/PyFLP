@@ -112,7 +112,7 @@ def parse(file: str | pathlib.Path) -> Project:
         raise HeaderCorrupted("Data chunk size corrupted")
 
     plug_name = None
-    str_type = None
+    str_type: type[AsciiEvent] | type[UnicodeEvent] | None = None
     stream.seek(22)  # Back to start of events
     while stream.tell() < file_size:
         event_type: type[AnyEvent] | None = None

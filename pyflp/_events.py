@@ -66,16 +66,19 @@ FourByteBool: c.ExprAdapter[int, int, bool, int] = c.ExprAdapter(
 
 
 class StdEnum(ct.Adapter[int, int, ET, ET]):
-    def _encode(self, obj: ET, context: Any, path: Any):
+    def _encode(self, obj: ET, *_: Any):  # pylint: disable=no-self-use
         return obj.value
 
-    def _decode(self, obj: int, context: Any, path: Any) -> ET:
+    def _decode(self, obj: int, *_: Any) -> ET:
         return self.__orig_class__.__args__[0](obj)  # type: ignore
 
 
 # Resolves TypeError: unsupported operand type(s) for 'in': 'int' and 'EnumMeta'
 class EventEnumMeta(enum.EnumMeta):
-    def __contains__(self, id: int):
+    def __contains__(self, id: object):
+        if not isinstance(id, int):
+            return NotImplemented
+
         try:
             self(id)  # type: ignore
         except ValueError:
@@ -101,7 +104,7 @@ class EventEnum(int, enum.Enum, metaclass=EventEnumMeta):
         return obj
 
 
-class EventBase(Generic[T]):
+class EventBase(Generic[T]):  # pylint: disable=eq-without-hash
     """Generic ABC representing an event."""
 
     def __init__(self, id: int, data: bytes):

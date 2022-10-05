@@ -321,9 +321,9 @@ class Project(MultiEventModel):
         for idx, char in enumerate(value):
             c1 = ord(char) + 26 - idx
             c2 = ord(char) - 49 - idx
-            for char in c1, c2:
-                if 0 < char <= 127:
-                    licensee.append(char)
+            for cp in c1, c2:
+                if 0 < cp <= 127:
+                    licensee.append(cp)
                     break
         event.value = licensee.decode("ascii")
 
@@ -499,9 +499,9 @@ class Project(MultiEventModel):
             if value.build is not None:
                 parts.append(value.build)
         elif isinstance(value, str):
-            parts = tuple(int(part) for part in value.split("."))
+            parts = [int(part) for part in value.split(".")]
         else:
-            parts = value
+            parts = list(value)
 
         if len(parts) < 3 or len(parts) > 4:
             raise ExpectedValue("Expected format: major.minor.build.patch?")
