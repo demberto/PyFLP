@@ -164,12 +164,13 @@ def parse(file: str | pathlib.Path) -> Project:
     return Project(*events, channel_count=channel_count, format=file_format, ppq=ppq)
 
 
-def save(project: Project, file: str):
+def save(project: Project, file: pathlib.Path | str):
     """Save a parsed project back into a file.
 
     Args:
         project (Project): The object returned by `parse`.
-        file (str): The file in which the contents of `project` are serialised back.
+        file (pathlib.Path | str): The file in which the contents of `project`
+            are serialised back.
     """
     stream = io.BytesIO()
     stream.write(b"FLhd")  # 4

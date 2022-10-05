@@ -317,10 +317,10 @@ class VarintEventBase(EventBase[T]):
         while True:
             towrite = buflen & 0x7F
             buflen >>= 7
-            if buflen <= 0:
-                break
             towrite |= 0x80
             ret.append(towrite)
+            if buflen <= 0:
+                break
         return len(ret)
 
     @property

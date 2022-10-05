@@ -138,7 +138,7 @@ class TrackEvent(StructEventBase):
         "position_sync" / c.Optional(StdEnum[TrackSync](c.Int32ul)),  # 46
         "grouped" / c.Optional(c.Flag),  # 47
         "locked" / c.Optional(c.Flag),  # 48
-        "_u1" / c.Optional(c.Bytes(18)),  # 66
+        "_u1" / c.Optional(c.GreedyBytes),  # * 66 as of 20.9.1
     ).compile()
 
 

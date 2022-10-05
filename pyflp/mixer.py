@@ -142,9 +142,9 @@ class _MixerParamsID(ct.EnumBase):
 
 class InsertFlagsEvent(StructEventBase):
     STRUCT = c.Struct(
-        "_u1" / c.Optional(c.Bytes(4)),
-        "flags" / c.Optional(StdEnum[_InsertFlags](c.Int32ul)),
-        "_u2" / c.Optional(c.Bytes(4)),
+        "_u1" / c.Optional(c.Bytes(4)),  # 4
+        "flags" / c.Optional(StdEnum[_InsertFlags](c.Int32ul)),  # 8
+        "_u2" / c.Optional(c.Bytes(4)),  # 12
     ).compile()
 
 

@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `InsertEQ` was't working [#46].
 - Negative `FileFormat` weren't being read.
+- Incorrect event size calculation in `StructEventBase` [#72].
 
 ### Removed
 

@@ -224,7 +224,7 @@ class ParametersEvent(StructEventBase):
         "stretching.mode" / c.Optional(StdEnum[StretchMode](c.Int32sl)),  # 112
         "_u5" / c.Optional(c.Bytes(36)),  # 148
         "playback.start_offset" / c.Optional(c.Int32ul),  # 152
-        "_u6" / c.Optional(c.Bytes(6)),  # 158
+        "_u6" / c.Optional(c.GreedyBytes),  # * 168 as of 20.9.1
     ).compile()
 
 
