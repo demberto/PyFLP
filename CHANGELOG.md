@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   string literals.
 - Protocol subclassing of `EventBase` hierarchy.
 - Faulty `EventBase.__hash__`.
+- Python 3.11 support due to https://github.com/timrid/construct-typing/issues/15
 
 [#46]: https://github.com/demberto/PyFLP/issues/46
 
