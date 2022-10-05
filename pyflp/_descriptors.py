@@ -18,8 +18,8 @@
 from __future__ import annotations
 
 import abc
-import enum
 import sys
+from itertools import chain
 from typing import Any, TypeVar
 
 from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
@@ -35,6 +35,8 @@ if sys.version_info >= (3, 11):
     from typing import Never
 else:
     from typing_extensions import Never
+
+import construct_typed as ct
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -124,7 +126,7 @@ class FlagProp(PropBase[bool]):
 
     def __init__(
         self,
-        flag: enum.IntFlag,
+        flag: ct.FlagsEnumBase,
         *ids: EventEnum,
         prop: str = "flags",
         inverted: bool = False,
@@ -132,7 +134,7 @@ class FlagProp(PropBase[bool]):
     ):
         """
         Args:
-            flag (enum.IntFlag): The flag which is to be checked for.
+            flag (ct.FlagEnumBase): The flag which is to be checked for.
             id (EventEnum, optional): Event ID (required for MultiEventModel).
             prop (str, "flags"): The dict key which contains the flags in a `Struct`.
             inverted (bool, False): If this is true, property getter and setters
@@ -204,19 +206,17 @@ class NestedProp(ROProperty[MT_co]):
         self._ids = ids
         self._type = type
 
-    def __get__(self, instance: MultiEventModel, owner: Any = None) -> MT_co:
+    def __get__(self, ins: MultiEventModel, owner: Any = None) -> MT_co:
         if owner is None:
             return NotImplemented
 
-        events: list[AnyEvent] = []
-        for id in self._ids:
-            if id in instance._events:
-                events.extend(instance._events[id])
-        return self._type(*events)
+        return self._type(
+            *chain.from_iterable(v for k, v in ins._events.items() if k in self._ids)
+        )
 
 
 class StructProp(PropBase[T], NamedPropMixin):
-    """Properties obtained from a :class:`pyflp._events.StructBase`."""
+    """Properties obtained from a :class:`construct.Struct`."""
 
     def __init__(self, *ids: EventEnum, prop: str | None = None, **kwds: Any):
         super().__init__(*ids, **kwds)

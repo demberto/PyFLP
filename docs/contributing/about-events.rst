@@ -109,7 +109,6 @@ Below are the list of classes PyFLP has, grouped according the ID range.
 .. dropdown:: 192-255
 
     .. autoclass:: VarintEventBase
-    .. autoclass:: U64DataEvent
     .. autoclass:: StrEventBase
     .. autoclass:: AsciiEvent
     .. autoclass:: UnicodeEvent

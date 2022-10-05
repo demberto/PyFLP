@@ -18,22 +18,23 @@ from __future__ import annotations
 import enum
 from typing import cast
 
-from ._events import DATA, EventEnum, StructBase, StructEventBase
+import construct as c
+
+from ._events import DATA, EventEnum, StructEventBase
 from ._models import ModelReprMixin, SingleEventModel
 
 __all__ = ["RemoteController"]
 
 
-class _RemoteControllerStruct(StructBase):
-    PROPS = {
-        "_u1": 2,  # 2
-        "_u2": 1,  # 3
-        "_u3": 1,  # 4
-        "parameter_data": "H",  # 6
-        "destination_data": "h",  # 8
-        "_u4": 8,  # 16
-        "_u5": 4,  # 20
-    }
+_RemoteControllerStruct = c.Struct(
+    "_u1" / c.Optional(c.Bytes(2)),  # 2
+    "_u2" / c.Optional(c.Byte),  # 3
+    "_u3" / c.Optional(c.Byte),  # 4
+    "parameter_data" / c.Optional(c.Int16ul),  # 6
+    "destination_data" / c.Optional(c.Int16sl),  # 8
+    "_u4" / c.Optional(c.Bytes(8)),  # 16
+    "_u5" / c.Optional(c.Bytes(4)),  # 20
+).compile()
 
 
 class RemoteControllerEvent(StructEventBase):
@@ -54,7 +55,7 @@ class RemoteController(SingleEventModel, ModelReprMixin):
     @property
     def parameter(self) -> int | None:
         """The ID of the plugin parameter to which controller is linked to."""
-        value = cast(_RemoteControllerStruct, self._event)["parameter_data"]
+        value = cast(StructEventBase, self._event)["parameter_data"]
         if value is not None:
             return value & 0x7FFF
 
@@ -64,6 +65,6 @@ class RemoteController(SingleEventModel, ModelReprMixin):
 
         None when linked to a plugin parameter on an insert slot.
         """
-        value = cast(_RemoteControllerStruct, self._event)["parameter_data"]
+        value = cast(StructEventBase, self._event)["parameter_data"]
         if value is not None:
             return (value & 0x8000) > 0

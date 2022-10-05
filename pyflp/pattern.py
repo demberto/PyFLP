@@ -32,6 +32,8 @@ else:
     from typing import Sequence, Iterator, Iterable
 
 import colour
+import construct as c
+import construct_typed as ct
 
 from ._descriptors import EventProp, FlagProp, StructProp
 from ._events import (
@@ -45,7 +47,7 @@ from ._events import (
     EventEnum,
     I32Event,
     ListEventBase,
-    StructBase,
+    StdEnum,
     U16Event,
     U32Event,
 )
@@ -55,42 +57,39 @@ from .exceptions import ModelNotFound, NoModelsFound
 __all__ = ["Note", "Controller", "Pattern", "Patterns"]
 
 
-class _ContollerStruct(StructBase):
-    PROPS = {
-        "position": "I",  # 4
-        "_u1": 1,  # 5
-        "_u2": 1,  # 6
-        "channel": "B",  # 7
-        "_flags": "B",  # 8
-        "value": "f",  # 12
-    }
-
-
-class _NoteStruct(StructBase):
-    PROPS = {
-        "position": "I",  # 4
-        "flags": "H",  # 6
-        "rack_channel": "H",  # 8
-        "length": "I",  # 12
-        "key": "H",  # 14
-        "group": "H",  # 16
-        "fine_pitch": "B",  # 17
-        "_u1": 1,  # 18
-        "release": "B",  # 19
-        "midi_channel": "B",  # 20
-        "pan": "B",  # 21
-        "velocity": "B",  # 22
-        "mod_x": "B",  # 23
-        "mod_y": "B",  # 24
-    }
-
-
 class ControllerEvent(ListEventBase):
-    STRUCT = _ContollerStruct
+    STRUCT = c.Struct(
+        "position" / c.Int32ul,  # 4
+        "_u1" / c.Byte,  # 5
+        "_u2" / c.Byte,  # 6
+        "channel" / c.Int8ul,  # 7
+        "_flags" / c.Int8ul,  # 8
+        "value" / c.Float32l,  # 12
+    ).compile()
+
+
+@enum.unique
+class _NoteFlags(ct.FlagsEnumBase):
+    Slide = 1 << 3
 
 
 class NotesEvent(ListEventBase):
-    STRUCT = _NoteStruct
+    STRUCT = c.Struct(
+        "position" / c.Int32ul,  # 4
+        "flags" / StdEnum[_NoteFlags](c.Int16ul),  # 6
+        "rack_channel" / c.Int16ul,  # 8
+        "length" / c.Int32ul,  # 12
+        "key" / c.Int16ul,  # 14
+        "group" / c.Int16ul,  # 16
+        "fine_pitch" / c.Int8ul,  # 17
+        "_u1" / c.Byte,  # 18
+        "release" / c.Int8ul,  # 19
+        "midi_channel" / c.Int8ul,  # 20
+        "pan" / c.Int8ul,  # 21
+        "velocity" / c.Int8ul,  # 22
+        "mod_x" / c.Int8ul,  # 23
+        "mod_y" / c.Int8ul,  # 24
+    ).compile()
 
 
 class PatternsID(EventEnum):
@@ -118,12 +117,7 @@ class PatternID(EventEnum):
     Notes = (DATA + 16, NotesEvent)
 
 
-@enum.unique
-class _NoteFlags(enum.IntFlag):
-    Slide = 1 << 3
-
-
-class Note(ItemModel[_NoteStruct]):
+class Note(ItemModel):
     _NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
     def __repr__(self) -> str:
@@ -232,7 +226,7 @@ class Note(ItemModel[_NoteStruct]):
     """
 
 
-class Controller(ItemModel[_ContollerStruct]):
+class Controller(ItemModel):
     channel = StructProp[int]()
     """Corresponds to the containing channel's `Channel.IID`."""
 
@@ -253,9 +247,8 @@ class Pattern(MultiEventModel, Iterable[Note], SupportsIndex):
     def __iter__(self) -> Iterator[Note]:
         """MIDI notes contained inside the pattern."""
         if PatternID.Notes in self._events:
-            event = cast(NotesEvent, self._events[PatternID.Notes][0])
-            for item in event:
-                yield Note(cast(_NoteStruct, item))
+            for item in cast(NotesEvent, self._events[PatternID.Notes][0]):
+                yield Note(item)
 
     color = EventProp[colour.Color](PatternID.Color)
 
@@ -263,9 +256,8 @@ class Pattern(MultiEventModel, Iterable[Note], SupportsIndex):
     def controllers(self) -> Iterator[Controller]:
         """Parameter automations associated with this pattern (if any)."""
         if PatternID.Controllers in self._events:
-            event = cast(ControllerEvent, self._events[PatternID.Controllers])
-            for item in event:
-                yield Controller(cast(_ContollerStruct, item))
+            for item in cast(ControllerEvent, self._events[PatternID.Controllers][0]):
+                yield Controller(item)
 
     @property
     def index(self) -> int:

@@ -70,7 +70,10 @@ html_css_files = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
 ]  # https://sphinx-design.readthedocs.io/en/furo-theme/badges_buttons.html#fontawesome-icons
 sd_fontawesome_latex = True
-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}  # Py3 doc links
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "construct": ("https://construct.readthedocs.io/en/latest", None),
+}  # Put hyperlinks to docs of other projects
 linkcheck_allowed_redirects = {
     r"https://bit.ly/.*": r"https://raw.githubusercontent.com/demberto/PyFLP/master/docs/img/.*",
     r"https://pyflp.rtfd.io.*": r"https://pyflp.readthedocs.io/en/latest/.*",

@@ -36,6 +36,8 @@ else:
     from typing_extensions import Unpack
 
 import colour
+import construct as c
+import construct_typed as ct
 
 from ._descriptors import EventProp, KWProp, NestedProp, StructProp
 from ._events import (
@@ -46,8 +48,9 @@ from ._events import (
     AnyEvent,
     ColorEvent,
     EventEnum,
+    FourByteBool,
     ListEventBase,
-    StructBase,
+    StdEnum,
     StructEventBase,
     U8Event,
     U16Event,
@@ -72,49 +75,71 @@ __all__ = [
 ]
 
 
-class _PlaylistItemStruct(StructBase):
-    PROPS = {
-        "position": "I",  # 4
-        "pattern_base": "H",  # 6
-        "item_index": "H",  # 8
-        "length": "I",  # 12
-        "track_index": "H",  # 14
-        "group": "H",  # 16
-        "_u2": 2,  # 18
-        "item_flags": "H",  # 20
-        "_u4": 4,  # 24
-        "start_offset": "i",  # 28
-        "end_offset": "i",  # 32
-    }
-
-
-class _TrackStruct(StructBase):
-    PROPS = {
-        "index": "I",  # 4
-        "color": "i",  # 8
-        "icon": "i",  # 12
-        "enabled": "bool",  # 13
-        "height": "f",  # 17
-        "locked_height": "f",  # 21
-        "content_locked": "bool",  # 22
-        "motion": "I",  # 26
-        "press": "I",  # 30
-        "trigger_sync": "I",  # 34
-        "queued": "I",  # 38
-        "tolerant": "I",  # 42
-        "position_sync": "I",  # 46
-        "grouped": "bool",  # 47
-        "locked": "bool",  # 48
-        "_u18": 18,  # 66
-    }
-
-
 class PlaylistEvent(ListEventBase):
-    STRUCT = _PlaylistItemStruct
+    STRUCT = c.Struct(
+        "position" / c.Int32ul,  # 4
+        "pattern_base" / c.Int16ul,  # 6
+        "item_index" / c.Int16ul,  # 8
+        "length" / c.Int32ul,  # 12
+        "track_index" / c.Int16ul,  # 14
+        "group" / c.Int16ul,  # 16
+        "_u1" / c.Bytes(2),  # 18
+        "item_flags" / c.Int16ul,  # 20
+        "_u2" / c.Bytes(4),  # 24
+        "start_offset" / c.Int32sl,  # 28
+        "end_offset" / c.Int32sl,  # 32
+    ).compile()
+
+
+@enum.unique
+class TrackMotion(ct.EnumBase):
+    Stay = 0
+    OneShot = 1
+    MarchWrap = 2
+    MarchStay = 3
+    MarchStop = 4
+    Random = 5
+    ExclusiveRandom = 6
+
+
+@enum.unique
+class TrackPress(ct.EnumBase):
+    Retrigger = 0
+    HoldStop = 1
+    HoldMotion = 2
+    Latch = 3
+
+
+@enum.unique
+class TrackSync(ct.EnumBase):
+    Off = 0
+    QuarterBeat = 1
+    HalfBeat = 2
+    Beat = 3
+    TwoBeats = 4
+    FourBeats = 5
+    Auto = 6
 
 
 class TrackEvent(StructEventBase):
-    STRUCT = _TrackStruct
+    STRUCT = c.Struct(
+        "index" / c.Optional(c.Int32ul),  # 4
+        "color" / c.Optional(c.Int32ul),  # 8
+        "icon" / c.Optional(c.Int32ul),  # 12
+        "enabled" / c.Optional(c.Flag),  # 13
+        "height" / c.Optional(c.Float32l),  # 17
+        "locked_height" / c.Optional(c.Float32l),  # 21
+        "content_locked" / c.Optional(c.Flag),  # 22
+        "motion" / c.Optional(StdEnum[TrackMotion](c.Int32ul)),  # 26
+        "press" / c.Optional(StdEnum[TrackPress](c.Int32ul)),  # 30
+        "trigger_sync" / c.Optional(StdEnum[TrackSync](c.Int32ul)),  # 34
+        "queued" / c.Optional(FourByteBool),  # 38
+        "tolerant" / c.Optional(FourByteBool),  # 42
+        "position_sync" / c.Optional(StdEnum[TrackSync](c.Int32ul)),  # 46
+        "grouped" / c.Optional(c.Flag),  # 47
+        "locked" / c.Optional(c.Flag),  # 48
+        "_u1" / c.Optional(c.Bytes(18)),  # 66
+    ).compile()
 
 
 @enum.unique
@@ -147,37 +172,7 @@ class TrackID(EventEnum):
     Data = (DATA + 30, TrackEvent)
 
 
-@enum.unique
-class TrackMotion(enum.IntEnum):
-    Stay = 0
-    OneShot = 1
-    MarchWrap = 2
-    MarchStay = 3
-    MarchStop = 4
-    Random = 5
-    ExclusiveRandom = 6
-
-
-@enum.unique
-class TrackPress(enum.IntEnum):
-    Retrigger = 0
-    HoldStop = 1
-    HoldMotion = 2
-    Latch = 3
-
-
-@enum.unique
-class TrackSync(enum.IntEnum):
-    Off = 0
-    QuarterBeat = 1
-    HalfBeat = 2
-    Beat = 3
-    TwoBeats = 4
-    FourBeats = 5
-    Auto = 6
-
-
-class TimeMarkerType(enum.IntEnum):
+class TimeMarkerType(ct.EnumBase):
     Marker = 0
     """Normal text marker."""
 
@@ -185,7 +180,7 @@ class TimeMarkerType(enum.IntEnum):
     """Used for time signature markers."""
 
 
-class PlaylistItemBase(ItemModel[_PlaylistItemStruct]):
+class PlaylistItemBase(ItemModel):
     def __repr__(self):
         return "{} @ {} of length {} in group {}".format(
             type(self).__name__, self.position, self.length, self.group
@@ -280,7 +275,7 @@ class _TrackColorProp(StructProp[colour.Color]):
     def _get(self, ev_or_ins: Any):
         value = cast(Optional[int], super()._get(ev_or_ins))
         if value is not None:
-            return ColorEvent.decode(value.to_bytes(4, "little"))
+            return ColorEvent.decode(bytearray(value.to_bytes(4, "little")))
 
     def _set(self, ev_or_ins: Any, value: colour.Color):
         color_u32 = int.from_bytes(ColorEvent.encode(value), "little")
@@ -449,7 +444,7 @@ class Arrangement(MultiEventModel, SupportsIndex):
                 for item in pl_event:
                     idx = item["track_index"]
                     if max_idx - idx == count:
-                        items.append(PlaylistItemBase(cast(_PlaylistItemStruct, item)))
+                        items.append(PlaylistItemBase(item))
             yield Track(*events, items=items)
             count += 1
 

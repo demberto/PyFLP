@@ -58,7 +58,9 @@ class ListEventNotParsed(Error, AttributeError, IndexError):
 
 class UnexpectedType(Error, TypeError):
     def __init__(self, expected: type, got: type):
-        super().__init__(f"Expected a {expected} object; got a {got} object instead")
+        super().__init__(
+            f"Expected a {expected.__name__!r}; got a {got.__name__!r} instead"
+        )
 
 
 class PropertyCannotBeSet(Error, AttributeError):

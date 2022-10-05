@@ -32,6 +32,8 @@ else:
     from typing import Sequence, Iterator
 
 import colour
+import construct as c
+import construct_typed as ct
 
 from ._descriptors import EventProp, FlagProp, KWProp, NestedProp, StructProp
 from ._events import (
@@ -45,7 +47,7 @@ from ._events import (
     F32Event,
     I8Event,
     I32Event,
-    StructBase,
+    StdEnum,
     StructEventBase,
     U8Event,
     U16Event,
@@ -99,95 +101,163 @@ class ChannelNotFound(ModelNotFound, KeyError):
     pass
 
 
-class _DelayStruct(StructBase):
-    PROPS = dict.fromkeys(("feedback", "pan", "pitch_shift", "echoes", "time"), "i")
-
-
-class _EnvelopeLFOStruct(StructBase):  # 2.5.0+
-    PROPS = {
-        "flags": "i",  # 4
-        "envelope.enabled": "i",  # 8
-        "envelope.predelay": "i",  # 12
-        "envelope.attack": "i",  # 16
-        "envelope.hold": "i",  # 20
-        "envelope.decay": "i",  # 24
-        "envelope.sustain": "i",  # 28
-        "envelope.release": "i",  # 32
-        "envelope.amount": "i",  # 36
-        "lfo.predelay": "I",  # 40
-        "lfo.attack": "I",  # 44
-        "lfo.amount": "i",  # 48
-        "lfo.speed": "I",  # 52
-        "lfo.shape": "i",  # 56
-        "envelope.attack_tension": "i",  # 60
-        "envelope.decay_tension": "i",  # 64
-        "envelope.release_tension": "i",  # 68
-    }
-
-
-class _LevelAdjustsStruct(StructBase):
-    PROPS = {"pan": "I", "volume": "I", "_u4": 4, "mod_x": "I", "mod_y": "I"}
-
-
-class _LevelsStruct(StructBase):
-    PROPS = {"pan": "I", "volume": "I", "pitch_shift": "i", "_u12": 12}
-
-
-class _ParametersStruct(StructBase):
-    PROPS = {
-        "_u40": 40,  # 40
-        "arp.direction": "I",  # 44
-        "arp.range": "I",  # 48
-        "arp.chord": "I",  # 52
-        "arp.time": "f",  # 56
-        "arp.gate": "f",  # 60
-        "arp.slide": "bool",  # 61
-        "_u22": 22,  # 83
-        "content.declick_mode": "B",  # 84
-        "_u8": 8,  # 92
-        "arp.repeat": "I",  # 96 4.5.2+
-        "_u12": 12,  # 108
-        "stretching.mode": "i",  # 112
-        "_u38": 36,  # 148
-        "playback.start_offset": "I",  # 152
-        "_u6": 6,  # 158
-    }
-
-
-class _PolyphonyStruct(StructBase):
-    PROPS = {"max": "I", "slide": "I", "flags": "B"}
-
-
-class _TrackingStruct(StructBase):
-    PROPS = {"middle_value": "i", "pan": "i", "mod_x": "i", "mod_y": "i"}
-
-
 class DelayEvent(StructEventBase):
-    STRUCT = _DelayStruct
+    STRUCT = c.Struct(
+        "feedback" / c.Optional(c.Int32ul),
+        "pan" / c.Optional(c.Int32sl),
+        "pitch_shift" / c.Optional(c.Int32sl),
+        "echoes" / c.Optional(c.Int32ul),
+        "time" / c.Optional(c.Int32ul),
+    ).compile()
 
 
+@enum.unique
+class _EnvLFOFlags(ct.FlagsEnumBase):
+    EnvelopeTempoSync = 1 << 0
+    Unknown = 1 << 2  # Occurs for volume envlope only. Likely a bug in FL's serialiser
+    LFOTempoSync = 1 << 1
+    LFOPhaseRetrig = 1 << 5
+
+
+@enum.unique
+class LFOShape(ct.EnumBase):
+    """Used by :attr:`LFO.shape`."""
+
+    Sine = 0
+    Triangle = 1
+    Pulse = 2
+
+
+# FL Studio 2.5.0+
 class EnvelopeLFOEvent(StructEventBase):
-    STRUCT = _EnvelopeLFOStruct
+    STRUCT = c.Struct(
+        "flags" / c.Optional(StdEnum[_EnvLFOFlags](c.Int32sl)),  # 4
+        "envelope.enabled" / c.Optional(c.Int32sl),  # 8
+        "envelope.predelay" / c.Optional(c.Int32sl),  # 12
+        "envelope.attack" / c.Optional(c.Int32sl),  # 16
+        "envelope.hold" / c.Optional(c.Int32sl),  # 20
+        "envelope.decay" / c.Optional(c.Int32sl),  # 24
+        "envelope.sustain" / c.Optional(c.Int32sl),  # 28
+        "envelope.release" / c.Optional(c.Int32sl),  # 32
+        "envelope.amount" / c.Optional(c.Int32sl),  # 36
+        "lfo.predelay" / c.Optional(c.Int32ul),  # 40
+        "lfo.attack" / c.Optional(c.Int32ul),  # 44
+        "lfo.amount" / c.Optional(c.Int32sl),  # 48
+        "lfo.speed" / c.Optional(c.Int32ul),  # 52
+        "lfo.shape" / c.Optional(StdEnum[LFOShape](c.Int32sl)),  # 56
+        "envelope.attack_tension" / c.Optional(c.Int32sl),  # 60
+        "envelope.decay_tension" / c.Optional(c.Int32sl),  # 64
+        "envelope.release_tension" / c.Optional(c.Int32sl),  # 68
+    ).compile()
 
 
 class LevelAdjustsEvent(StructEventBase):
-    STRUCT = _LevelAdjustsStruct
+    STRUCT = c.Struct(
+        "pan" / c.Optional(c.Int32sl),  # 4
+        "volume" / c.Optional(c.Int32ul),  # 8
+        "_u1" / c.Optional(c.Int32ul),  # 12
+        "mod_x" / c.Optional(c.Int32sl),  # 16
+        "mod_y" / c.Optional(c.Int32sl),  # 20
+    ).compile()
 
 
 class LevelsEvent(StructEventBase):
-    STRUCT = _LevelsStruct
+    STRUCT = c.Struct(
+        "pan" / c.Optional(c.Int32sl),  # 4
+        "volume" / c.Optional(c.Int32ul),  # 8
+        "pitch_shift" / c.Optional(c.Int32sl),  # 12
+        "_u1" / c.Optional(c.Bytes(12)),  # 24
+    ).compile()
+
+
+@enum.unique
+class ArpDirection(ct.EnumBase):
+    """Used by :attr:`Arp.direction`."""
+
+    Off = 0
+    Up = 1
+    Down = 2
+    UpDownBounce = 3
+    UpDownSticky = 4
+    Random = 5
+
+
+@enum.unique
+class DeclickMode(ct.EnumBase):
+    OutOnly = 0
+    TransientNoBleeding = 1
+    Transient = 2
+    Generic = 3
+    Smooth = 4
+    Crossfade = 5
+
+
+@enum.unique
+class StretchMode(ct.EnumBase):
+    Stretch = -1
+    Resample = 0
+    E3Generic = 1
+    E3Mono = 2
+    SliceStretch = 3
+    SliceMap = 4
+    Auto = 5
+    E2Generic = 6
+    E2Transient = 7
+    E2Mono = 8
+    E2Speech = 9
 
 
 class ParametersEvent(StructEventBase):
-    STRUCT = _ParametersStruct
+    STRUCT = c.Struct(
+        "_u1" / c.Optional(c.Bytes(40)),  # 40
+        "arp.direction" / c.Optional(StdEnum[ArpDirection](c.Int32ul)),  # 44
+        "arp.range" / c.Optional(c.Int32ul),  # 48
+        "arp.chord" / c.Optional(c.Int32ul),  # 52
+        "arp.time" / c.Optional(c.Float32l),  # 56
+        "arp.gate" / c.Optional(c.Float32l),  # 60
+        "arp.slide" / c.Optional(c.Flag),  # 61
+        "_u2" / c.Optional(c.Bytes(22)),  # 83
+        "content.declick_mode" / c.Optional(StdEnum[DeclickMode](c.Int8ul)),  # 84
+        "_u3" / c.Optional(c.Bytes(8)),  # 92
+        "arp.repeat" / c.Optional(c.Int32ul),  # 96 4.5.2+
+        "_u4" / c.Optional(c.Bytes(12)),  # 108
+        "stretching.mode" / c.Optional(StdEnum[StretchMode](c.Int32sl)),  # 112
+        "_u5" / c.Optional(c.Bytes(36)),  # 148
+        "playback.start_offset" / c.Optional(c.Int32ul),  # 152
+        "_u6" / c.Optional(c.Bytes(6)),  # 158
+    ).compile()
+
+
+@enum.unique
+class _PolyphonyFlags(ct.FlagsEnumBase):
+    None_ = 0
+    Mono = 1 << 0
+    Porta = 1 << 1
+
+    # Unknown
+    U1 = 1 << 2
+    U2 = 1 << 3
+    U3 = 1 << 4
+    U4 = 1 << 5
+    U5 = 1 << 6
+    U6 = 1 << 7
 
 
 class PolyphonyEvent(StructEventBase):
-    STRUCT = _PolyphonyStruct
+    STRUCT = c.Struct(
+        "max" / c.Optional(c.Int32ul),  # 4
+        "slide" / c.Optional(c.Int32ul),  # 8
+        "flags" / c.Optional(StdEnum[_PolyphonyFlags](c.Byte)),  # 9
+    ).compile()
 
 
 class TrackingEvent(StructEventBase):
-    STRUCT = _TrackingStruct
+    STRUCT = c.Struct(
+        "middle_value" / c.Optional(c.Int32ul),  # 4
+        "pan" / c.Optional(c.Int32sl),  # 8
+        "mod_x" / c.Optional(c.Int32sl),  # 12
+        "mod_y" / c.Optional(c.Int32sl),  # 16
+    ).compile()
 
 
 @enum.unique
@@ -264,55 +334,7 @@ class RackID(EventEnum):
 
 
 @enum.unique
-class ArpDirection(enum.IntEnum):
-    """Used by :attr:`Arp.direction`."""
-
-    Off = 0
-    Up = 1
-    Down = 2
-    UpDownBounce = 3
-    UpDownSticky = 4
-    Random = 5
-
-
-@enum.unique
-class _EnvelopeFlags(enum.IntFlag):
-    TempoSync = 1 << 0
-    Unknown = 1 << 2  # Occurs for volume envlope only. Likely a bug in FL's serialiser
-
-
-@enum.unique
-class _LFOFlags(enum.IntFlag):
-    TempoSync = 1 << 1
-    PhaseRetrig = 1 << 5
-
-
-@enum.unique
-class LFOShape(enum.IntEnum):
-    """Used by :attr:`LFO.shape`."""
-
-    Sine = 0
-    Triangle = 1
-    Pulse = 2
-
-
-@enum.unique
-class _PolyphonyFlags(enum.IntFlag):
-    None_ = 0
-    Mono = 1 << 0
-    Porta = 1 << 1
-
-    # Unknown
-    U1 = 1 << 2
-    U2 = 1 << 3
-    U3 = 1 << 4
-    U4 = 1 << 5
-    U5 = 1 << 6
-    U6 = 1 << 7
-
-
-@enum.unique
-class ReverbType(enum.IntEnum):
+class ReverbType(ct.EnumBase):
     """Used by :attr:`Reverb.type`."""
 
     A = 0
@@ -324,7 +346,7 @@ class ReverbType(enum.IntEnum):
 # volume, pan and pich bend range of any channel other than automations. In
 # automations it is used for **Min** and **Max** knobs.
 @enum.unique
-class ChannelType(enum.IntEnum):  # cuz Type would be a super generic name
+class ChannelType(ct.EnumBase):  # cuz Type would be a super generic name
     """An internal marker used to indicate the type of a channel."""
 
     Sampler = 0
@@ -338,49 +360,24 @@ class ChannelType(enum.IntEnum):  # cuz Type would be a super generic name
     Automation = 5  # 5.0+
 
 
-class _FXFlags(enum.IntFlag):
+class _FXFlags(ct.FlagsEnumBase):
     FadeStereo = 1 << 0
     Reverse = 1 << 1
     Clip = 1 << 2
     SwapStereo = 1 << 8
 
 
-class _LayerFlags(enum.IntFlag):
+class _LayerFlags(ct.FlagsEnumBase):
     Random = 1 << 0
     Crossfade = 1 << 1
 
 
-class _SamplerFlags(enum.IntFlag):
+class _SamplerFlags(ct.FlagsEnumBase):
     Resample = 1 << 0
     LoadRegions = 1 << 1
     LoadSliceMarkers = 1 << 2
     UsesLoopPoints = 1 << 3
     KeepOnDisk = 1 << 8
-
-
-@enum.unique
-class StretchMode(enum.IntEnum):
-    Stretch = -1
-    Resample = 0
-    E3Generic = 1
-    E3Mono = 2
-    SliceStretch = 3
-    SliceMap = 4
-    Auto = 5
-    E2Generic = 6
-    E2Transient = 7
-    E2Mono = 8
-    E2Speech = 9
-
-
-@enum.unique
-class DeclickMode(enum.IntEnum):
-    OutOnly = 0
-    TransientNoBleeding = 1
-    Transient = 2
-    Generic = 3
-    Smooth = 4
-    Crossfade = 5
 
 
 class DisplayGroup(MultiEventModel, ModelReprMixin):
@@ -728,7 +725,7 @@ class Envelope(SingleEventModel, ModelReprMixin):
     | Default | 20000 | 31%            |
     """
 
-    synced = FlagProp(_EnvelopeFlags.TempoSync)
+    synced = FlagProp(_EnvLFOFlags.EnvelopeTempoSync)
     """Whether envelope is synced to tempo or not."""
 
     attack_tension = StructProp[int](prop="envelope.attack_tension")
@@ -818,10 +815,10 @@ class LFO(SingleEventModel, ModelReprMixin):
     | Default | 32950 | 50% (16 steps) |
     """
 
-    synced = FlagProp(_LFOFlags.TempoSync)
+    synced = FlagProp(_EnvLFOFlags.LFOTempoSync)
     """Whether LFO is synced with tempo."""
 
-    retrig = FlagProp(_LFOFlags.PhaseRetrig)
+    retrig = FlagProp(_EnvLFOFlags.LFOPhaseRetrig)
     """Whether LFO phase is in global / retriggered mode."""
 
     shape = StructProp[LFOShape](prop="lfo.shape")

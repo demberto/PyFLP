@@ -1,6 +1,6 @@
 # Package deps
-bytesioex
 colour
+construct-typing
 
 # Documentation deps
 furo

@@ -32,6 +32,9 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Unpack
 
+import construct as c
+import construct_typed as ct
+
 from ._descriptors import EventProp, KWProp
 from ._events import (
     DATA,
@@ -44,7 +47,6 @@ from ._events import (
     EventEnum,
     I16Event,
     I32Event,
-    StructBase,
     StructEventBase,
     U8Event,
     U32Event,
@@ -70,16 +72,12 @@ VALID_PPQS: Final = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
 __all__ = ["PanLaw", "Project", "FileFormat", "VALID_PPQS"]
 
 
-class _TimestampStruct(StructBase):
-    PROPS = {"created_on": "d", "time_spent": "d"}
-
-
 class TimestampEvent(StructEventBase):
-    STRUCT = _TimestampStruct
+    STRUCT = c.Struct("created_on" / c.Float64l, "time_spent" / c.Float64l).compile()
 
 
 @enum.unique
-class PanLaw(enum.IntEnum):
+class PanLaw(ct.EnumBase):
     """Used by :attr:`Project.pan_law`."""
 
     Circular = 0
@@ -90,7 +88,7 @@ class PanLaw(enum.IntEnum):
 class FileFormat(enum.IntEnum):
     """File formats used by FL Studio.
 
-    *New in FL Studio v2.5.0*: FST (FL Studio State) file format.
+    *New in FL Studio v2.5.0*: FST (FL Studio state) file format.
     """
 
     None_ = -1
@@ -306,11 +304,10 @@ class Project(MultiEventModel):
             for idx, char in enumerate(event.value):
                 c1 = ord(char) - 26 + idx
                 c2 = ord(char) + 49 + idx
-
-                if chr(c1).isalnum():
-                    licensee.append(c1)
-                elif chr(c2).isalnum():
-                    licensee.append(c2)
+                for num in c1, c2:
+                    if chr(num).isalnum():
+                        licensee.append(num)
+                        break
 
             return licensee.decode("ascii")
 
@@ -324,10 +321,9 @@ class Project(MultiEventModel):
         for idx, char in enumerate(value):
             c1 = ord(char) + 26 - idx
             c2 = ord(char) - 49 - idx
-
-            for c in c1, c2:
-                if 0 < c <= 127:
-                    licensee.append(c)
+            for char in c1, c2:
+                if 0 < char <= 127:
+                    licensee.append(char)
                     break
         event.value = licensee.decode("ascii")
 
@@ -346,13 +342,12 @@ class Project(MultiEventModel):
         for event in self._events_tuple:
             # * Cannot use self._collect_events to first gather these and add
             # * PluginID events later; as it breaks the order of occurence.
-            for enum_ in (MixerID, InsertID, SlotID):
-                if event.id in enum_:
-                    # TODO Find a more reliable to detect when inserts start.
-                    inserts_began = True
-                    events.append(event)
+            if event.id in (*MixerID, *InsertID, *SlotID):
+                # TODO Find a more reliable to detect when inserts start.
+                inserts_began = True
+                events.append(event)
 
-            if event.id in PluginID and inserts_began:
+            if inserts_began and event.id in PluginID:
                 events.append(event)
 
         return Mixer(*events, version=self.version)

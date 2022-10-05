@@ -9,9 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.0.0a3 - 2022-10-01
 
+### Changed
+
+- All `StructBaseEvent` classes overhauled to use the `construct` library.
+- `EventBase.__len__` is now `EventBase.size`, a property.
+- Shift all subclass event parsing to `PODEventBase`.
+- Replace all uses of `bytesioex` with equivalents from `construct`.
+- Struct definitions moved to `StructEventBase` itself.
+- Enums used in structs directly now inherit from `construct_typed.EnumBase`.
+
 ### Fixed
 
 - `InsertEQ` was't working [#46].
+- Negative `FileFormat` weren't being read.
+
+### Removed
+
+- `_StructMeta` (voodoo magic) and `StructBase` from `pyflp._events`.
+- `SoundgoodizerMode`, `FruityFastDistKind`, `StereoEnhancerInvertPosition`,
+  `StereoEnhancerEffectPosition` from `pyflp.plugin` in favour of equivalent
+  string literals.
+- Protocol subclassing of `EventBase` hierarchy.
+- Faulty `EventBase.__hash__`.
 
 [#46]: https://github.com/demberto/PyFLP/issues/46
 

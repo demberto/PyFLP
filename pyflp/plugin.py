@@ -17,12 +17,15 @@ from __future__ import annotations
 
 import enum
 import sys
-from typing import Any, ClassVar, Dict, Generic, TypeVar, cast
+import warnings
+from typing import Any, ClassVar, Dict, Generic, TypeVar
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
 else:
     from typing_extensions import Protocol, runtime_checkable
+import construct as c
+import construct_typed as ct
 
 from ._descriptors import FlagProp, RWProperty, StructProp
 from ._events import (
@@ -31,13 +34,11 @@ from ._events import (
     TEXT,
     AnyEvent,
     ColorEvent,
-    DataEventBase,
     EventEnum,
-    StructBase,
+    StdEnum,
     StructEventBase,
     T,
     U32Event,
-    U64DataEvent,
 )
 from ._models import ModelReprMixin, MultiEventModel, SingleEventModel
 
@@ -59,110 +60,104 @@ __all__ = [
 ]
 
 
-class _BooBassStruct(StructBase):
-    PROPS = dict.fromkeys(("_u1", "bass", "mid", "high"), "I")  # _u1 = [1, 0, 0, 0]
-
-
-class _FruityBalanceStruct(StructBase):
-    PROPS = {"pan": "I", "volume": "I"}
-
-
-class _FruityFastDistStruct(StructBase):
-    PROPS = dict.fromkeys(("pre", "threshold", "kind", "mix", "post"), "I")
-
-
-class _FruitySendStruct(StructBase):
-    PROPS = {"pan": "I", "dry": "I", "volume": "I", "send_to": "i"}
-
-
-class _FruitySoftClipperStruct(StructBase):
-    PROPS = {"threshold": "I", "post": "I"}
-
-
-class _FruityStereoEnhancerStruct(StructBase):
-    PROPS = dict.fromkeys(
-        (
-            "pan",
-            "volume",
-            "stereo_separation",
-            "phase_offset",
-            "effect_position",
-            "phase_inversion",
-        ),
-        "I",
-    )
-
-
-class _SoundgoodizerStruct(StructBase):
-    PROPS = dict.fromkeys(("_u1", "mode", "amount"), "I")
-
-
-class _WrapperStruct(StructBase):
-    PROPS = {
-        "_u16": 16,  # 16
-        "flags": "H",  # 18
-        "_u34": 34,  # 52
-    }
+@enum.unique
+class _WrapperFlags(ct.FlagsEnumBase):
+    Visible = 1 << 0
+    _Disabled = 1 << 1
+    Detached = 1 << 2
+    Maximized = 1 << 3
+    Generator = 1 << 4
+    SmartDisable = 1 << 5
+    ThreadedProcessing = 1 << 6
+    DemoMode = 1 << 7  # saved with a demo version
+    HideSettings = 1 << 8
+    Captionized = 1 << 9  # TODO find meaning
+    _DirectX = 1 << 16  # indicates the plugin is a DirectX plugin
+    _EditorSize = 2 << 16
 
 
 class BooBassEvent(StructEventBase):
-    STRUCT = _BooBassStruct
+    STRUCT = c.Struct(
+        "_u1" / c.Bytes(4),
+        "bass" / c.Int32ul,
+        "mid" / c.Int32ul,
+        "high" / c.Int32ul,
+    ).compile()
 
 
 class FruityBalanceEvent(StructEventBase):
-    STRUCT = _FruityBalanceStruct
+    STRUCT = c.Struct("pan" / c.Int32ul, "volume" / c.Int32ul).compile()
 
 
 class FruityFastDistEvent(StructEventBase):
-    STRUCT = _FruityFastDistStruct
+    STRUCT = c.Struct(
+        "pre" / c.Int32ul,
+        "threshold" / c.Int32ul,
+        "kind" / c.Enum(c.Int32ul, A=0, B=1),
+        "mix" / c.Int32ul,
+        "post" / c.Int32ul,
+    ).compile()
 
 
-class FruityNotebook2Event(DataEventBase):
-    def __init__(self, id: int, data: bytes) -> None:
-        super().__init__(id, data)
-        self._props: dict[str, Any] = {}
-        pages = self._props["pages"] = {}
-
-        self._stream.seek(4)
-        self._props["active_page"] = self._stream.read_I()
-        while True:
-            page_num = self._stream.read_i()
-            if page_num == -1:
-                break
-
-            num_chars = self._stream.read_v()
-            if num_chars is None:
-                break
-
-            num_bytes = num_chars * 2
-            raw = self._stream.read(num_bytes)
-            page = raw.decode("utf-16-le")
-            pages[page_num] = page
-        self._props["editable"] = self._stream.read_bool()
+class FruityNotebook2Event(StructEventBase):
+    STRUCT = c.Struct(
+        "_u1" / c.Bytes(4),
+        "active_page" / c.Int32ul,
+        "pages"
+        / c.GreedyRange(
+            c.Struct(
+                "index" / c.Int32sl,
+                c.StopIf(lambda ctx: ctx["index"] == -1),
+                "length" / c.VarInt,
+                "value" / c.PaddedString(lambda ctx: ctx["length"] * 2, "utf-16-le"),
+            ),
+        ),
+        "editable" / c.Flag,
+    )
 
 
 class FruitySendEvent(StructEventBase):
-    STRUCT = _FruitySendStruct
+    STRUCT = c.Struct(
+        "pan" / c.Int32sl,
+        "dry" / c.Int32ul,
+        "volume" / c.Int32ul,
+        "send_to" / c.Int32sl,
+    ).compile()
 
 
 class FruitySoftClipperEvent(StructEventBase):
-    STRUCT = _FruitySoftClipperStruct
+    STRUCT = c.Struct("threshold" / c.Int32ul, "post" / c.Int32ul).compile()
 
 
 class FruityStereoEnhancerEvent(StructEventBase):
-    STRUCT = _FruityStereoEnhancerStruct
+    STRUCT = c.Struct(
+        "pan" / c.Int32sl,
+        "volume" / c.Int32ul,
+        "stereo_separation" / c.Int32ul,
+        "phase_offset" / c.Int32ul,
+        "effect_position" / c.Enum(c.Int32ul, pre=0, post=1),
+        "phase_inversion" / c.Enum(c.Int32ul, none=0, left=1, right=2),
+    ).compile()
 
 
 class SoundgoodizerEvent(StructEventBase):
-    STRUCT = _SoundgoodizerStruct
+    STRUCT = c.Struct(
+        "_u1" / c.Bytes(4),
+        "mode" / c.Enum(c.Int32ul, A=0, B=1, C=2, D=3),
+        "amount" / c.Int32ul,
+    ).compile()
 
 
 class WrapperEvent(StructEventBase):
-    STRUCT = _WrapperStruct
+    STRUCT = c.Struct(
+        "_u1" / c.Bytes(16),  # 16
+        "flags" / StdEnum[_WrapperFlags](c.Int16ul),  # 18
+        "_u2" / c.Bytes(34),  # 52
+    ).compile()
 
 
 @enum.unique
-class _VSTPluginEventID(enum.IntEnum):
+class _VSTPluginEventID(ct.EnumBase):
     def __new__(cls, id: int, key: str | None = None):
         obj = int.__new__(cls, id)
         obj._value_ = id
@@ -184,65 +179,58 @@ class _VSTPluginEventID(enum.IntEnum):
     _57 = 57  # TODO, not present for Waveshells
 
 
-class _WrapperFlags(enum.IntFlag):
-    Visible = 1 << 0
-    _Disabled = 1 << 1
-    Detached = 1 << 2
-    Maximized = 1 << 3
-    Generator = 1 << 4
-    SmartDisable = 1 << 5
-    ThreadedProcessing = 1 << 6
-    DemoMode = 1 << 7  # saved with a demo version
-    HideSettings = 1 << 8
-    Captionized = 1 << 9  # TODO find meaning
-    _DirectX = 1 << 16  # indicates the plugin is a DirectX plugin
-    _EditorSize = 2 << 16
+class VSTPluginEvent(StructEventBase):
+    STRUCT = c.Struct(
+        "type" / c.Int32ul,  # * 8 or 10 for VSTs, but I am not forcing it
+        "events"
+        / c.GreedyRange(
+            c.Struct(
+                "id" / StdEnum[_VSTPluginEventID](c.Int32ul),
+                # TODO Using a c.Select or c.IfThenElse doesn't work here
+                # Check https://github.com/construct/construct/issues/993
+                "data" / c.Prefixed(c.Int64ul, c.GreedyBytes),
+            ),
+        ),
+    )
 
-
-class VSTPluginEvent(DataEventBase):
-    VST_MARKERS = (8, 10)
-
-    def __init__(self, id: int, data: bytes) -> None:
+    def __init__(self, id: int, data: bytearray):
+        if data[0] not in (8, 10):
+            warnings.warn(
+                f"VSTPluginEvent: Unknown marker {data[0]} detected ."
+                "Open an issue at https://github.com/demberto/PyFLP/issues "
+                "if you are seeing this!",
+                RuntimeWarning,
+                stacklevel=0,
+            )
         super().__init__(id, data)
-        self._events: list[U64DataEvent] = []
-        self._props: dict[str | int, Any] = {}
 
-        kind = self._props["kind"] = self._stream.read_I()
-        if kind in VSTPluginEvent.VST_MARKERS:
-            while self._stream.tell() < self._stream_len:
-                subid = cast(int, self._stream.read_I())
-                length = cast(int, self._stream.read_Q())
-                subdata = self._stream.read(length)
+    def __getitem__(self, key: str) -> str | bytes:
+        for event in self._struct["events"]:
+            if event["id"].key == key:
+                if self._is_ascii_event(event["id"]):
+                    return event["data"].decode("ascii")
+                return event["data"]
+        raise AttributeError(f"No event with key {key!r} found")
 
-                isascii = False
-                if subid in (
-                    _VSTPluginEventID.FourCC,
-                    _VSTPluginEventID.Name,
-                    _VSTPluginEventID.PluginPath,
-                    _VSTPluginEventID.Vendor,
-                ):
-                    isascii = True
-                subevent = U64DataEvent(subid, subdata, isascii)
-                subkey = getattr(_VSTPluginEventID(subid), "key") or subid
-                self._props[subkey] = subdata.decode("ascii") if isascii else subdata
-                self._events.append(subevent)
+    def __setitem__(self, key: str, value: str | bytes):
+        for event in self._struct["events"]:
+            if self._is_ascii_event(event["id"]) and isinstance(value, str):
+                try:
+                    value.encode("ascii")
+                except UnicodeEncodeError as exc:
+                    raise ValueError("Strings must have only ASCII data") from exc
 
-    def __getitem__(self, prop: str):
-        return self._props[prop]
+            if event["id"].key == key:
+                event["size"] = len(value)
+                event["data"] = value
 
-    def __setitem__(self, prop: str, value: Any):
-        self._props[prop] = value
+        # Errors if any, will be raised here itself, so its
+        # better not to override __bytes__ for this part
+        self._data = self.STRUCT.build(self._struct)
 
-    def __bytes__(self) -> bytes:
-        self._stream.seek(0)
-        for event in self._events:
-            try:
-                key = getattr(_VSTPluginEventID(event.id), "key")
-            except ValueError:
-                key = event.id
-            event.value = self._props[key]
-            self._stream.write(bytes(event))
-        return super().__bytes__()
+    @staticmethod
+    def _is_ascii_event(id: _VSTPluginEventID):
+        return not getattr(id, "key").isdecimal()
 
 
 @enum.unique
@@ -253,8 +241,8 @@ class PluginID(EventEnum):
     Icon = (DWORD + 27, U32Event)
     InternalName = TEXT + 9
     Name = TEXT + 11  #: 3.3.0+ for :class:`pyflp.mixer.Slot`.
-    # Plugin wrapper data, windows pos of plugin etc, currently
-    # selected plugin wrapper page; minimized, closed or not
+    # TODO Additional possible fields: Plugin wrapper data, window
+    # positions of plugin, currently selected plugin wrapper page, etc.
     Wrapper = (DATA + 4, WrapperEvent)
     # * The type of this event is decided during event collection
     Data = DATA + 5  #: 1.6.5+
@@ -334,7 +322,6 @@ class PluginProp(RWProperty[AnyPlugin]):
 
     def __set__(self, instance: MultiEventModel, value: AnyPlugin):
         if isinstance(value, _IPlugin):
-            # instance is Instrument | Slot
             setattr(instance, "internal_name", value.INTERNAL_NAME)
         events = value.events_asdict()
         instance._events[PluginID.Data] = events[PluginID.Data]

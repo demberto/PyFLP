@@ -80,7 +80,7 @@ how it helped you. I am more than glad to find how PyFLP is getting used.
 Help the tools that power **PyFLP**
 -----------------------------------
 
-- `BytesIOEx <https://github.com/demberto/BytesIOEx>`_ is a library I wrote to
-  ease the conversion of C's types into Python's types while reading an FLP.
 - `colour <https://github.com/vaab/colour>`_ powers the conversion of colors
   into powerful and easy Python objects.
+- `construct <https://github.com/construct/construct>`_ provides declarative
+  parsing capabilities.

@@ -19,32 +19,20 @@ import abc
 import collections
 import dataclasses
 from collections.abc import Hashable
-from typing import Any, DefaultDict, Generic, TypeVar
+from typing import Any, DefaultDict, TypeVar
 
-from ._events import AnyEvent, StructBase
+from ._events import AnyEvent
 
 
 class ModelBase(abc.ABC):
     def __init__(self, **kw: Any):
         self._kw = kw
 
-    @abc.abstractmethod
-    def sizeof(self) -> int:
-        """Total size of the events used by the model (in bytes).
 
-        !!! caution
-            Do not confuse this with the internal `__sizeof__` method, it is
-            not the same.
-        """
-
-
-ST = TypeVar("ST", bound=StructBase)
-
-
-class ItemModel(ModelBase, Generic[ST]):
+class ItemModel(ModelBase):
     """Base class for event-less models."""
 
-    def __init__(self, item: ST, **kw: Any):
+    def __init__(self, item: dict[str, Any], **kw: Any):
         self._item = item
         super().__init__(**kw)
 
@@ -53,9 +41,6 @@ class ItemModel(ModelBase, Generic[ST]):
 
     def __setitem__(self, prop: str, value: Any):
         self._item[prop] = value
-
-    def sizeof(self) -> int:
-        return self._item.SIZE
 
 
 class SingleEventModel(ModelBase, Hashable):
@@ -82,9 +67,6 @@ class SingleEventModel(ModelBase, Hashable):
             to calm type checkers from complaining about protected access.
         """
         return self._event
-
-    def sizeof(self) -> int:
-        return len(self._event)
 
 
 class MultiEventModel(ModelBase, Hashable):
@@ -115,9 +97,6 @@ class MultiEventModel(ModelBase, Hashable):
     def events_asdict(self):
         """Returns a dictionary of event ID to a list of events."""
         return self._events
-
-    def sizeof(self) -> int:
-        return sum(len(event) for event in self._events_tuple)
 
 
 class ModelReprMixin:

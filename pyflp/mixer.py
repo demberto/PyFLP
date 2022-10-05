@@ -20,7 +20,7 @@ import enum
 import sys
 import warnings
 from collections import defaultdict
-from typing import Any, DefaultDict, Dict, List, NamedTuple, cast
+from typing import Any, DefaultDict, List, NamedTuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import SupportsIndex, TypedDict
@@ -38,7 +38,8 @@ else:
     from typing_extensions import NotRequired, Unpack
 
 import colour
-from bytesioex import BytesIOEx
+import construct as c
+import construct_typed as ct
 
 from ._descriptors import (
     EventProp,
@@ -60,7 +61,7 @@ from ._events import (
     I16Event,
     I32Event,
     ListEventBase,
-    StructBase,
+    StdEnum,
     StructEventBase,
     T,
     U16Event,
@@ -99,34 +100,29 @@ __all__ = [
 ]
 
 
-class _InsertFlagsStruct(StructBase):
-    PROPS = {"_u1": "I", "flags": "I", "_u2": "I"}
-
-
-class _InsertRoutingStruct(StructBase):
-    PROPS = {"is_routed": "bool"}
-
-
-class _MixerParamsItem(StructBase):
-    PROPS = {
-        "_u4": 4,  # 4
-        "id": "B",  # 5
-        "_u1": 1,  # 6
-        "channel_data": "H",  # 8
-        "msg": "i",  # 12
-    }
-
-
-class InsertFlagsEvent(StructEventBase):
-    STRUCT = _InsertFlagsStruct
-
-
-class InsertRoutingEvent(ListEventBase):
-    STRUCT = _InsertRoutingStruct
+@enum.unique
+class _InsertFlags(ct.FlagsEnumBase):
+    None_ = 0
+    PolarityReversed = 1 << 0
+    SwapLeftRight = 1 << 1
+    EnableEffects = 1 << 2
+    Enabled = 1 << 3
+    DisableThreadedProcessing = 1 << 4
+    U5 = 1 << 5
+    DockMiddle = 1 << 6
+    DockRight = 1 << 7
+    U8 = 1 << 8
+    U9 = 1 << 9
+    SeparatorShown = 1 << 10
+    Locked = 1 << 11
+    Solo = 1 << 12
+    U13 = 1 << 13
+    U14 = 1 << 14
+    AudioTrack = 1 << 15  # Whether insert is linked to an audio track
 
 
 @enum.unique
-class _MixerParamsID(enum.IntEnum):
+class _MixerParamsID(ct.EnumBase):
     SlotEnabled = 0
     SlotMix = 1
     RouteVolStart = 64  # 64 - 191 are send level events
@@ -144,28 +140,45 @@ class _MixerParamsID(enum.IntEnum):
     HighQ = 226
 
 
-MixerParameterMapping = Dict[int, _MixerParamsItem]
+class InsertFlagsEvent(StructEventBase):
+    STRUCT = c.Struct(
+        "_u1" / c.Optional(c.Bytes(4)),
+        "flags" / c.Optional(StdEnum[_InsertFlags](c.Int32ul)),
+        "_u2" / c.Optional(c.Bytes(4)),
+    ).compile()
+
+
+class InsertRoutingEvent(ListEventBase):
+    STRUCT = c.Struct("is_routed" / c.Flag).compile()
 
 
 @dataclasses.dataclass
 class _InsertItems:
-    slots: DefaultDict[int, MixerParameterMapping] = dataclasses.field(
+    slots: DefaultDict[int, dict[int, dict[str, Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(dict)
     )
-    own: MixerParameterMapping = dataclasses.field(default_factory=dict)
+    own: dict[int, dict[str, Any]] = dataclasses.field(default_factory=dict)
 
 
-# TODO Refactor to keep it as DRY from StructEventBase
 class MixerParamsEvent(DataEventBase):
-    def __init__(self, id: int, data: bytes):
+    STRUCT = c.Struct(
+        "_u4" / c.Bytes(4),  # 4
+        "id" / StdEnum[_MixerParamsID](c.Byte),  # 5
+        "_u1" / c.Byte,  # 6
+        "channel_data" / c.Int16ul,  # 8
+        "msg" / c.Int32sl,  # 12
+    ).compile()
+    STRUCT_SIZE = STRUCT.sizeof()
+
+    def __init__(self, id: int, data: bytearray):
         super().__init__(id, data)
         self.items: DefaultDict[int, _InsertItems] = defaultdict(_InsertItems)
         self.unparsed = False
 
-        if not len(data) % _MixerParamsItem.SIZE:
-            for _ in range(len(data) // _MixerParamsItem.SIZE):
-                stream = BytesIOEx(self._stream.read(_MixerParamsItem.SIZE))
-                item = _MixerParamsItem(stream)
+        if not len(data) % self.STRUCT_SIZE:
+            for i in range(len(data) // self.STRUCT_SIZE):
+                offset = self.STRUCT_SIZE * i
+                item = self.STRUCT.parse(data[offset : offset + self.STRUCT_SIZE])
                 insert_idx = (item["channel_data"] >> 6) & 0x7F
                 slot_idx = item["channel_data"] & 0x3F
                 insert = self.items[insert_idx]
@@ -218,40 +231,19 @@ class InsertDock(enum.Enum):
     Right = enum.auto()
 
 
-@enum.unique
-class _InsertFlags(enum.IntFlag):
-    None_ = 0
-    PolarityReversed = 1 << 0
-    SwapLeftRight = 1 << 1
-    EnableEffects = 1 << 2
-    Enabled = 1 << 3
-    DisableThreadedProcessing = 1 << 4
-    U5 = 1 << 5
-    DockMiddle = 1 << 6
-    DockRight = 1 << 7
-    U8 = 1 << 8
-    U9 = 1 << 9
-    SeparatorShown = 1 << 10
-    Locked = 1 << 11
-    Solo = 1 << 12
-    U13 = 1 << 13
-    U14 = 1 << 14
-    AudioTrack = 1 << 15  # Whether insert is linked to an audio track
-
-
 class _InsertEQBandKW(TypedDict, total=False):
-    gain: _MixerParamsItem
-    freq: _MixerParamsItem
-    reso: _MixerParamsItem
+    gain: dict[str, Any]
+    freq: dict[str, Any]
+    reso: dict[str, Any]
 
 
 class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
-    def __get__(self, instance: ModelBase, owner: Any = None) -> int | None:
-        if not isinstance(instance, InsertEQBand) or owner is None:
+    def __get__(self, instance: InsertEQBand, owner: Any = None) -> int | None:
+        if owner is None:
             return NotImplemented
         return instance._kw[self._prop]["msg"]
 
-    def __set__(self, instance: ModelBase, value: int):
+    def __set__(self, instance: InsertEQBand, value: int):
         instance._kw[self._prop]["msg"] = value
 
 
@@ -262,8 +254,9 @@ class InsertEQBand(ModelBase):
     def __repr__(self):
         return f"InsertEQ band (gain={self.gain}, freq={self.freq}, q={self.reso})"
 
-    def sizeof(self) -> int:
-        return _MixerParamsItem.SIZE * len(self._kw)
+    @property
+    def size(self) -> int:
+        return MixerParamsEvent.STRUCT_SIZE * len(self._kw)
 
     gain = _InsertEQBandProp()
     """
@@ -332,8 +325,9 @@ class InsertEQ(ModelBase):
         high = f"freq={self.high.freq}, gain={self.high.gain}, reso={self.high.reso}"
         return f"InsertEQ (low={low}, mid={mid}, high={high})"
 
-    def sizeof(self) -> int:
-        return _MixerParamsItem.SIZE * self._kw["param"]
+    @property
+    def size(self) -> int:
+        return MixerParamsEvent.STRUCT_SIZE * self._kw["param"]
 
     low = _InsertEQProp(
         _InsertEQPropArgs(
@@ -383,7 +377,7 @@ class Slot(MultiEventModel, SupportsIndex):
     ![](https://bit.ly/3RUDtTu)
     """
 
-    def __init__(self, *events: AnyEvent, params: list[_MixerParamsItem] | None = None):
+    def __init__(self, *events: AnyEvent, params: list[dict[str, Any]] | None = None):
         super().__init__(*events, params=params or [])
 
     def __repr__(self) -> str:

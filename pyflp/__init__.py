@@ -29,10 +29,11 @@ Full docs are available at https://pyflp.rtfd.io.
 
 from __future__ import annotations
 
+import io
 import os
 import pathlib
 
-from bytesioex import BytesIOEx
+import construct as c
 
 from ._events import (
     DATA,
@@ -75,34 +76,33 @@ def parse(file: str | pathlib.Path) -> Project:
         Project: The parsed object.
     """
     with open(file, "rb") as flp:
-        stream = BytesIOEx(flp.read())
+        stream = io.BytesIO(flp.read())
 
     events: list[AnyEvent] = []
 
     if stream.read(4) != b"FLhd":  # 4
         raise HeaderCorrupted("Unexpected header chunk magic; expected 'FLhd'")
 
-    if stream.read_I() != 6:  # 8
+    if c.Int32ul.parse_stream(stream) != 6:  # 8
         raise HeaderCorrupted("Unexpected header chunk size; expected 6")
 
-    format = stream.read_H()  # 10
     try:
-        format = FileFormat(format)
+        file_format = FileFormat(c.Int16sl.parse_stream(stream))  # 10
     except ValueError as exc:
         raise HeaderCorrupted("Unsupported project file format") from exc
 
-    channel_count = stream.read_H()  # 12
+    channel_count = c.Int16ul.parse_stream(stream)  # 12
     if channel_count is None:  # pragma: no cover
         raise HeaderCorrupted("Channel count couldn't be read")
 
-    ppq = stream.read_H()  # 14
+    ppq = c.Int16ul.parse_stream(stream)  # 14
     if ppq not in VALID_PPQS:
         raise HeaderCorrupted("Invalid PPQ")
 
     if stream.read(4) != b"FLdt":  # 18
         raise HeaderCorrupted("Unexpected data chunk magic; expected 'FLdt'")
 
-    events_size = stream.read_I()  # 22
+    events_size = c.Int32ul.parse_stream(stream)  # 22
     if events_size is None:  # pragma: no cover
         raise HeaderCorrupted("Data chunk size couldn't be read")
 
@@ -114,11 +114,9 @@ def parse(file: str | pathlib.Path) -> Project:
     plug_name = None
     str_type = None
     stream.seek(22)  # Back to start of events
-    while True:
+    while stream.tell() < file_size:
         event_type: type[AnyEvent] | None = None
-        id = stream.read_B()
-        if id is None:
-            break
+        id = c.Int8ul.parse_stream(stream)
 
         if id < WORD:
             value = stream.read(1)
@@ -127,7 +125,8 @@ def parse(file: str | pathlib.Path) -> Project:
         elif id < TEXT:
             value = stream.read(4)
         else:
-            value = stream.read(stream.read_v())
+            size = c.VarInt.parse_stream(stream)
+            value = stream.read(size)
 
         if id == ProjectID.FLVersion:
             parts = value.decode("ascii").rstrip("\0").split(".")
@@ -162,7 +161,7 @@ def parse(file: str | pathlib.Path) -> Project:
 
         events.append(event_type(id, value))
 
-    return Project(*events, channel_count=channel_count, format=format, ppq=ppq)
+    return Project(*events, channel_count=channel_count, format=file_format, ppq=ppq)
 
 
 def save(project: Project, file: str):
@@ -172,22 +171,22 @@ def save(project: Project, file: str):
         project (Project): The object returned by `parse`.
         file (str): The file in which the contents of `project` are serialised back.
     """
-    stream = BytesIOEx()
+    stream = io.BytesIO()
     stream.write(b"FLhd")  # 4
-    stream.write_I(6)  # 8
-    stream.write_h(project.format)  # 10
-    stream.write_H(project.channel_count)  # 12
-    stream.write_H(project.ppq)  # 14
+    c.Int32ul.build_stream(6, stream)  # 8
+    c.Int16sl.build_stream(project.format, stream)  # 10
+    c.Int16ul.build_stream(project.channel_count, stream)  # 12
+    c.Int16ul.build_stream(project.ppq, stream)  # 14
     stream.write(b"FLdt")  # 18
     stream.seek(4, 1)  # leave space for total event size
 
     events_size = 0
     for event in project.events_astuple():
-        events_size += len(event)
+        events_size += event.size
         stream.write(bytes(event))
 
     stream.seek(18)
-    stream.write_I(events_size)
+    c.Int32ul.build_stream(events_size, stream)
 
     with open(file, "wb") as flp:
         flp.write(stream.getvalue())
