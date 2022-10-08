@@ -411,15 +411,20 @@ class StructEventBase(DataEventBase):
     def __init__(self, id: int, data: bytes):
         super().__init__(id, data)
         self._struct = self.STRUCT.parse(data)
-        # if self._struct._io.tell() < len(data):  # pragma: no cover
-        #     warnings.warn(
-        #         f"Event {id} not parsed entirely; found {len(data)} bytes",
-        #         RuntimeWarning,
-        #         stacklevel=0,
-        #     )
 
     def __bytes__(self):
-        self._data = self.STRUCT.build(self._struct)
+        new_data = self.STRUCT.build(self._struct)
+        if len(new_data) != len(self._data):
+            warnings.warn(
+                "{} built a stream of incorrect size {}; expected {}.".format(
+                    type(self.STRUCT).__name__, len(new_data), len(self._data)
+                ),
+                BytesWarning,
+                stacklevel=0,
+            )
+        # Effectively, overwrite new data over old one to ensure the stream
+        # size remains unmodified
+        self._data = new_data + self._data[len(new_data) :]
         return super().__bytes__()
 
     def __contains__(self, prop: str):

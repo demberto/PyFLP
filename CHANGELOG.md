@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable -->
 
-## 2.0.0a3 - 2022-10-01
+## 2.0.0a3 - 2022-10-08
 
 ### Added
 
-- 100% mypy tested *for all you mypy geeks*.
+- 100% mypy tested *for all you mypy geeks*. It makes me play cat-and-mouse.
+- `Automation` points and LFO, via [#29].
 
 ### Changed
 
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace all uses of `bytesioex` with equivalents from `construct`.
 - Struct definitions moved to `StructEventBase` itself.
 - Enums used in structs directly now inherit from `construct_typed.EnumBase`.
+- `LFO` renamed to `SamplerLFO` to be distinguishable from `AutomationLFO`.
 
 ### Fixed
 
@@ -39,9 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python 3.11 support due to https://github.com/timrid/construct-typing/issues/15
 - Incomplete support for `Sequence` in model collections.
 
+[#29]: https://github.com/demberto/PyFLP/issues/29
 [#46]: https://github.com/demberto/PyFLP/issues/46
+[#72]: https://github.com/demberto/PyFLP/issues/72
 
-## 2.0.0a2 - 2022-10-01
+## [2.0.0a2] - 2022-10-01
 
 ### Added
 
@@ -91,7 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#68]: https://github.com/demberto/PyFLP/issues/68
 [#69]: https://github.com/demberto/PyFLP/issues/69
 
-## 2.0.0a1 - 2022-09-21
+## [2.0.0a1] - 2022-09-21
 
 ### Added
 
@@ -434,6 +438,8 @@ Same as in 0.1.1
 - `flpinfo` doesn't output correctly sometimes due to long strings.
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
+[2.0.0a2]: https://github.com/demberto/PyFLP/compare/v2.0.0a1...v2.0.0a2
+[2.0.0a1]: https://github.com/demberto/PyFLP/compare/v2.0.0a0...v2.0.0a1
 [2.0.0a0]: https://github.com/demberto/PyFLP/compare/v1.1.1...v2.0.0a0
 [1.1.1]: https://github.com/demberto/PyFLP/compare/1.1.0...v1.1.1
 [1.1.0]: https://github.com/demberto/PyFLP/compare/1.0.1...1.1.0

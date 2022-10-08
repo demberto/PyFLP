@@ -7,6 +7,7 @@ import colour
 import pytest
 
 from pyflp.channel import (
+    Automation,
     Channel,
     ChannelRack,
     DeclickMode,
@@ -19,6 +20,7 @@ from pyflp.channel import (
 
 from .conftest import ModelFixture
 
+AutomationFixture = Callable[[str], Automation]
 ChannelFixture = Callable[[str], Channel]
 InstrumentFixture = Callable[[str], Instrument]
 LayerFixture = Callable[[str], Layer]
@@ -29,6 +31,14 @@ SamplerFixture = Callable[[str], Sampler]
 def load_channel(get_model: ModelFixture):
     def wrapper(preset: str, type: type[Channel] = Channel):
         return get_model(f"channels/{preset}", type)
+
+    return wrapper
+
+
+@pytest.fixture
+def load_automation(load_channel: ModelFixture):
+    def wrapper(preset: str):
+        return load_channel(preset, Automation)
 
     return wrapper
 
@@ -63,6 +73,16 @@ def test_channels(rack: ChannelRack):
     assert rack.height == 646
     assert [group.name for group in rack.groups] == ["Audio", "Generators", "Unsorted"]
     assert not rack.swing
+
+
+def test_automation_lfo(load_automation: AutomationFixture):
+    lfo = load_automation("automation-lfo.fst").lfo
+    assert lfo.amount == 64
+
+
+def test_automation_points(load_automation: AutomationFixture):
+    points = [point for point in load_automation("automation-points.fst")]
+    assert [int(p.position or 0) for p in points] == [0, 8, 8, 16, 24, 32]
 
 
 def test_channel_color(load_channel: ChannelFixture):

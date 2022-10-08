@@ -54,7 +54,7 @@ from ._events import (
     U16TupleEvent,
     U32Event,
 )
-from ._models import ModelReprMixin, MultiEventModel, SingleEventModel
+from ._models import ItemModel, ModelReprMixin, MultiEventModel, SingleEventModel
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
@@ -69,6 +69,7 @@ from .plugin import (
 __all__ = [
     "ArpDirection",
     "Automation",
+    "AutomationPoint",
     "Channel",
     "Instrument",
     "Layer",
@@ -81,7 +82,7 @@ __all__ = [
     "Reverb",
     "Delay",
     "Envelope",
-    "LFO",
+    "SamplerLFO",
     "Tracking",
     "Keyboard",
     "LevelAdjusts",
@@ -99,6 +100,46 @@ LFOName = EnvelopeName
 
 class ChannelNotFound(ModelNotFound, KeyError):
     pass
+
+
+class AutomationEvent(StructEventBase):
+    @staticmethod
+    def _get_position(stream: c.StreamType, index: int):
+        cur = stream.tell()
+        position = 0.0
+        for i in range(index + 1):
+            stream.seek(21 + (i * 24))
+            position += c.Float64l.parse_stream(stream)
+        stream.seek(cur)
+        return position
+
+    STRUCT = c.Struct(
+        "_u1" / c.Bytes(4),  # 4  # ? Always 1
+        "lfo.amount" / c.Int32sl,
+        "_u2" / c.Bytes(1),  # 9
+        "_u3" / c.Bytes(2),  # 11
+        "_u4" / c.Bytes(2),  # 13  # ? Always 0
+        "_u5" / c.Bytes(4),  # 17
+        "points"
+        / c.PrefixedArray(
+            c.Int32ul,  # 21
+            c.Struct(
+                "_offset" / c.Float64l * "Change in X-axis w.r.t last point",
+                "position"  # TODO Implement a setter
+                / c.IfThenElse(
+                    lambda ctx: ctx._index > 0,
+                    c.Computed(
+                        lambda ctx: AutomationEvent._get_position(ctx._io, ctx._index)
+                    ),
+                    c.Computed(lambda ctx: ctx["_offset"]),
+                ),
+                "value" / c.Float64l,
+                "tension" / c.Float32l,
+                "_u1" / c.Bytes(4),  # Linked to tension
+            ),  # 24 per struct
+        ),
+        "_u6" / c.GreedyBytes,  # TODO Upto a whooping 112 bytes
+    )
 
 
 class DelayEvent(StructEventBase):
@@ -281,19 +322,19 @@ class ChannelID(EventEnum):
     Preamp = (WORD + 10, U16Event)  #: 1.2.12+
     FadeOut = (WORD + 11, U16Event)  #: 1.7.6+
     FadeIn = (WORD + 12, U16Event)
-    # DotNote = WORD + 13
-    # DotPitch = WORD + 14
-    # DotMix = WORD + 15
+    # _DotNote = WORD + 13
+    # _DotPitch = WORD + 14
+    # _DotMix = WORD + 15
     Resonance = (WORD + 19, U16Event)
     # _LoopBar = WORD + 20
     StereoDelay = (WORD + 21, U16Event)  #: 1.3.56+
     Pogo = (WORD + 22, U16Event)
-    # DotReso = WORD + 23
-    # DotCutOff = WORD + 24
-    # ShiftDelay = WORD + 25
-    # Dot = WORD + 27
-    # DotRel = WORD + 32
-    # DotShift = WORD + 28
+    # _DotReso = WORD + 23
+    # _DotCutOff = WORD + 24
+    # _ShiftDelay = WORD + 25
+    # _Dot = WORD + 27
+    # _DotRel = WORD + 32
+    # _DotShift = WORD + 28
     Children = (WORD + 30, U16Event)  #: 3.4.0+
     Swing = (WORD + 33, U16Event)
     # Echo = DWORD + 2
@@ -317,8 +358,10 @@ class ChannelID(EventEnum):
     Levels = (DATA + 11, LevelsEvent)
     # _Filter = DATA + 12
     Polyphony = (DATA + 13, PolyphonyEvent)
+    # _LegacyAutomation = DATA + 15
     Tracking = (DATA + 20, TrackingEvent)
     LevelAdjusts = (DATA + 21, LevelAdjustsEvent)
+    Automation = (DATA + 26, AutomationEvent)
 
 
 @enum.unique
@@ -630,7 +673,8 @@ class FX(MultiEventModel, ModelReprMixin):
     """Whether sample is reversed or not."""
 
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
-    """
+    """Linear. Bipolar.
+
     | Min | Max  | Default |
     |-----|------|---------|
     | 0   | 4096 | 2048    |
@@ -765,7 +809,7 @@ class Envelope(SingleEventModel, ModelReprMixin):
     """
 
 
-class LFO(SingleEventModel, ModelReprMixin):
+class SamplerLFO(SingleEventModel, ModelReprMixin):
     """A basic LFO for certain :class:`Sampler` parameters.
 
     ![](https://bit.ly/3RG5Jtw)
@@ -841,7 +885,7 @@ class Polyphony(SingleEventModel, ModelReprMixin):
     """Max number of voices."""
 
     slide = StructProp[int]()
-    """Portamento time.
+    """Portamento time. Nonlinear.
 
     | Type    | Value | Representation  |
     |---------|-------|-----------------|
@@ -881,7 +925,7 @@ class Tracking(SingleEventModel, ModelReprMixin):
     """
 
     pan = StructProp[int]()
-    """Bipolar.
+    """Linear. Bipolar.
 
     | Min  | Max | Default |
     |------|-----|---------|
@@ -961,6 +1005,32 @@ class Content(MultiEventModel, ModelReprMixin):
     resample = FlagProp(_SamplerFlags.Resample, ChannelID.SamplerFlags)
 
 
+class AutomationLFO(MultiEventModel, ModelReprMixin):
+    amount = StructProp[int](ChannelID.Automation, prop="lfo.amount")
+    """Linear. Bipolar.
+
+    | Type    | Value      | Representation |
+    |---------|------------|----------------|
+    | Min     | -128       | -100%          |
+    | Max     | 128        | 100%           |
+    | Default | 64 or 0    | 50% or 0%      |
+    """
+
+
+class AutomationPoint(ItemModel, ModelReprMixin):
+    position = StructProp[int](readonly=True)
+    """PPQ dependant. Position on X-axis.
+
+    This property cannot be set as of yet.
+    """
+
+    tension = StructProp[float]()
+    """A value in the range of 0 to 1.0."""
+
+    value = StructProp[float]()
+    """Position on Y-axis in the range of 0 to 1.0."""
+
+
 class Channel(MultiEventModel, SupportsIndex):
     """Represents a channel in the channel rack."""
 
@@ -1016,7 +1086,8 @@ class Channel(MultiEventModel, SupportsIndex):
 
     @property
     def pan(self) -> int | None:
-        """
+        """Linear. Bipolar.
+
         | Min | Max   | Default |
         |-----|-------|---------|
         | 0   | 12800 | 6400    |
@@ -1046,7 +1117,8 @@ class Channel(MultiEventModel, SupportsIndex):
 
     @property
     def volume(self) -> int | None:
-        """
+        """Nonlinear.
+
         | Min | Max   | Default |
         |-----|-------|---------|
         | 0   | 12800 | 10000   |
@@ -1093,8 +1165,29 @@ class Channel(MultiEventModel, SupportsIndex):
 class Automation(Channel):
     """Represents an automation clip present in the channel rack.
 
+    Iterate over to get the :attr:`points`.
+
+    >>> for point in automation:
+    ...     repr(point)
+    AutomationPoint(position=..., value=..., tension=...), ...
+
     ![](https://bit.ly/3RXQhIN)
     """
+
+    def __getitem__(self, index: int) -> AutomationPoint:
+        for i, p in enumerate(self):
+            if i == index:
+                return p
+        raise ModelNotFound(index)
+
+    def __iter__(self) -> Iterator[AutomationPoint]:
+        """Iterator over the automation points inside the automation clip."""
+        if ChannelID.Automation in self._events:
+            event = cast(AutomationEvent, self._events[ChannelID.Automation][0])
+            for point in event["points"]:
+                yield AutomationPoint(point)
+
+    lfo = NestedProp(AutomationLFO, ChannelID.Automation)  # TODO Add image
 
 
 class Layer(Channel):
@@ -1209,16 +1302,16 @@ class Sampler(_SamplerInstrument):
     )
 
     @property
-    def lfos(self) -> dict[LFOName, LFO] | None:
+    def lfos(self) -> dict[LFOName, SamplerLFO] | None:
         """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch."""
         events = self._events.get(ChannelID.EnvelopeLFO)
         if events is not None:
-            lfos = [LFO(e) for e in events]
+            lfos = [SamplerLFO(e) for e in events]
             return dict(zip(LFOName.__args__, lfos))  # type: ignore
 
     @property
     def pitch_shift(self) -> int | None:
-        """-4800 to +4800 cents.
+        """-4800 to +4800 (cents).
 
         Raises:
             PropertyCannotBeSet: When a `ChannelID.Levels` event is not found.
@@ -1243,7 +1336,7 @@ class Sampler(_SamplerInstrument):
     def sample_path(self) -> pathlib.Path | None:
         """Absolute path of a sample file on the disk.
 
-        Contains the string `%FLStudioFactoryData%` for stock samples.
+        Contains the string ``%FLStudioFactoryData%`` for stock samples.
         """
         events = self._events.get(ChannelID.SamplePath)
         if events is not None:
@@ -1338,6 +1431,7 @@ class ChannelRack(MultiEventModel):
             if isinstance(channel, Automation):
                 yield channel
 
+    # TODO Find out what this meant
     fit_to_steps = EventProp[int](RackID._FitToSteps)
 
     @property

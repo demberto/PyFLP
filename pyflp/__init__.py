@@ -58,22 +58,19 @@ __all__ = ["parse", "save"]
 __version__ = "2.0.0a2"
 
 
-def parse(file: str | pathlib.Path) -> Project:
+def parse(file: pathlib.Path | str) -> Project:
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
     # pylint: disable=too-complex
-    """Parse an FL Studio project file.
+    """Parses an FL Studio project file and returns a parsed :class:`Project`.
 
     Args:
-        file (str | pathlib.Path): Path to the FLP.
+        file (pathlib.Path | str): Path to the FLP.
 
     Raises:
         HeaderCorrupted: When an invalid value is found in the file header.
         VersionNotDetected: A correct string type couldn't be determined.
-
-    Returns:
-        Project: The parsed object.
     """
     with open(file, "rb") as flp:
         stream = io.BytesIO(flp.read())
@@ -167,10 +164,13 @@ def parse(file: str | pathlib.Path) -> Project:
 def save(project: Project, file: pathlib.Path | str):
     """Save a parsed project back into a file.
 
+    Caution:
+        Always have a backup ready, just in case 😉
+
     Args:
-        project (Project): The object returned by `parse`.
-        file (pathlib.Path | str): The file in which the contents of `project`
-            are serialised back.
+        project (Project): The object returned by :meth:`parse`.
+        file (pathlib.Path | str): The file in which the contents of
+            :attr:`project` are serialised back.
     """
     stream = io.BytesIO()
     stream.write(b"FLhd")  # 4

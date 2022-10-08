@@ -28,6 +28,10 @@ These implement functionality used by :class:`Channel` or its subclasses.
 
 .. autoclass:: Arp
    :members:
+.. autoclass:: AutomationLFO
+   :members:
+.. autoclass:: AutomationPoint
+   :members:
 .. autoclass:: Content
    :members:
 .. autoclass:: Delay
@@ -40,7 +44,7 @@ These implement functionality used by :class:`Channel` or its subclasses.
    :members:
 .. autoclass:: LevelAdjusts
    :members:
-.. autoclass:: LFO
+.. autoclass:: SamplerLFO
    :members:
 .. autoclass:: Polyphony
    :members:

@@ -62,9 +62,12 @@ class NamedPropMixin:
 
 
 class PropBase(abc.ABC, RWProperty[T]):
-    def __init__(self, *ids: EventEnum, default: T | None = None):
+    def __init__(
+        self, *ids: EventEnum, default: T | None = None, readonly: bool = False
+    ):
         self._ids = ids
         self._default = default
+        self._readonly = readonly
 
     def _get_event(self, instance: ModelBase) -> Any:
         if isinstance(instance, ItemModel):
@@ -105,12 +108,13 @@ class PropBase(abc.ABC, RWProperty[T]):
 
     @final
     def __set__(self, instance: ModelBase, value: T):
+        if self._readonly:
+            raise PropertyCannotBeSet(*self._ids)
+
         event = self._get_event(instance)
         if event is not None:
             self._set(event, value)
-        elif self._ids:
-            raise PropertyCannotBeSet(*self._ids)
-        raise PropertyCannotBeSet
+        raise PropertyCannotBeSet(*self._ids)
 
 
 class FlagProp(PropBase[bool]):
