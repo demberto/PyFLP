@@ -28,7 +28,7 @@ IGNORED_BITLY = ["3RDM1yn"]
 project = "PyFLP"
 author = "demberto"
 copyright = f"2022, {author}"
-release = "2.0.0a2"  # DON'T TOUCH! Auto-updated by tbump
+release = "2.0.0a3"  # DON'T TOUCH! Auto-updated by tbump
 extensions = [
     "hoverxref.extension",
     "m2r2",  # Markdown to reStructuredText conversion
