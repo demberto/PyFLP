@@ -1,6 +1,7 @@
 # PyFLP
 
-PyFLP is a parser for FL Studio project files written in Python.
+PyFLP is an unofficial parser for [FL Studio](https://www.image-line.com/fl-studio/)
+project and preset files written in Python.
 
 <!-- SHIELDS -->
 <!-- markdownlint-disable -->
@@ -87,36 +88,122 @@ PyFLP is a parser for FL Studio project files written in Python.
 </table>
 <!-- markdownlint-restore -->
 
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+From a very general point-of-view, this is the state of what is currently
+implemented.
+
+<!-- FEATURE TABLE -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <th>Group</th>
+    <th>Feature</th>
+    <th>Implementation</th>
+  </tr>
+  <tr>
+    <td rowspan="3"><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html">Arrangements</a></td>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#playlist">🎼 Playlist</a></td>
+    <td>🚧 Work in progress</td>
+  </tr>
+  <tr>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#timemarker">🚩 Timemarkers</a></td>
+    <td>✅ Implemented</td>
+  </tr>
+  <tr>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#track">Tracks</a></td>
+    <td>✅ Implemented</td>
+  </tr>
+  <tr>
+    <td rowspan="4"><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html">Channel Rack</a></td>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Automation">📈 Automations</a></td>
+    <td>📌 Currently WIP</td>
+  </tr>
+  <tr>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Instrument">🎹 Instruments</a></td>
+    <td>✅ Implemented</td>
+  </tr>
+  <tr>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Layer">Layer</a></td>
+    <td>✅ Implemented</td>
+  </tr>
+  <tr>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Sampler">📁 Sampler</a></td>
+    <td>🚀 Almost there</td>
+  </tr>
+  <tr>
+    <td rowspan="2"><a href="https://pyflp.readthedocs.io/en/latest/reference/mixer.html">Mixer</a></td>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/mixer.html#pyflp.mixer.Insert">🎚️ Inserts</a></td>
+    <td>✅ Implemented</td>
+  </tr>
+    <tr>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/mixer.html#pyflp.mixer.Slot">🎰 Effect slots</a></td>
+    <td>✅ Implemented</td>
+  </tr>
+  <tr>
+    <td rowspan="3"><a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html">Patterns</a></td>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html#pyflp.pattern.Controller">🎛 Controllers</a></td>
+    <td>🚧 Work in progress</td>
+  </tr>
+    <tr>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html#pyflp.pattern.Note">🎵 Notes</a></td>
+    <td>✅ Implemented</td>
+  </tr>
+  <tr>
+    <td>🚩 Timemarkers</td>
+    <td>⏰ Planned</td>
+  </tr>
+  <tr>
+    <td rowspan="2"><a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html">Plugins</a></td>
+    <td>Native</td>
+    <td>7
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#effects">effects</a>,
+      1 <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#generators">synth</a></td>
+  </tr>
+  <tr>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#pyflp.plugin.VSTPlugin">3rd party</a></td>
+    <td>VST 2/3, Waveshells</td>
+  </tr>
+  <tr>
+    <td rowspan="2"><a href="https://pyflp.readthedocs.io/en/latest/reference/project.html">Misc</a></td>
+    <td colspan="2">ℹ Song information and project settings</td>
+  </tr>
+</table>
+<!-- markdownlint-restore -->
 
 ## ⏬ Installation
 
-**Python 3.7+** required:
+**Python 3.7+** required (CPython is tested, alternate implementations like PyPy
+might work but are currently untested):
 
 ```console
 python -m pip install -U --pre pyflp
 ```
 
-[Alternate ways to install](https://pyflp.rtfd.io/).
+*The pre-release version is more stable and supported than the current
+stable version. Please prefer to use it over the legacy 1.x versions.*
 
 ## ▶ Usage
 
-Load a project file:
+[Load](https://pyflp.readthedocs.io/en/latest/reference.html#pyflp.parse) a project file:
 
 ```py
 import pyflp
 project = pyflp.parse("/path/to/parse.flp")
 ```
 
-Save the project:
+[Save](https://pyflp.readthedocs.io/en/latest/reference.html#pyflp.save) the project:
 
 ```py
 pyflp.save(project, "/path/to/save.flp")
 ```
 
-Check the [user guide](https://pyflp.rtfd.io/en/latest/user-guide.html)
+> The format used by FL Studio - the "FLP format" is essentially undocumented.
+> Every new version of FL Studio brings a change in the format and might break
+> PyFLP. It is advised to do a backup of your projects before doing any changes.
+> After you are done with them, it is recommended to open the modified project
+> in FL Studio one to ensure that it works as intended.
+
+PyFLP provides a low-level events-based API and a high-level API. Generally,
+you should only need the high level API though.
 
 ## 🙏 Acknowledgements
 
@@ -124,6 +211,10 @@ Check the [user guide](https://pyflp.rtfd.io/en/latest/user-guide.html)
 - FLPEdit (repo deleted by [author](https://github.com/roadcrewworker))
 
 ## ✨ Contributors
+
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
@@ -139,22 +230,23 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     </tr>
   </tbody>
 </table>
-
 <!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
-
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors] specification. Contributions of
 any kind are welcome!
 
-Please see the [contributor's guide][contributors-guide] for more information
-about contributing.
+Please see the [contributor's guide](https://pyflp.readthedocs.io/en/latest/contributing.html)
+for more information about contributing.
+
+## 📧 Contact
+
+You can contact me either via [issues](https://github.com/demberto/PyFLP/issues)
+and [discussions](https://github.com/demberto/PyFLP/discussions) or through
+email via ``demberto(at)proton(dot)me``.
 
 ## © License
 
-The code in this project has been licensed under the [GNU Public License v3][gpl3].
-
-<!-- LINKS -->
-[contributors-guide]: https://pyflp.readthedocs.io/en/latest/contributing.html
-[gpl3]: https://www.gnu.org/licenses/gpl-3.0.en.html
+The code in this project has been licensed under the
+[GNU Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html).

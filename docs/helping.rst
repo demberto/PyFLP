@@ -12,13 +12,13 @@ to grow and improve, you can do the following things:
 ⭐ Star **PyFLP** on Github
 ----------------------------
 
-.. image:: /img/user-guide/star-repo-dark.gif
+.. image:: /img/helping/star-repo-dark.gif
    :align: center
    :class: only-dark
    :target: https://github.com/demberto/PyFLP
    :alt: ⭐ How to star PyFLP?
 
-.. image:: /img/user-guide/star-repo-light.gif
+.. image:: /img/helping/star-repo-light.gif
    :align: center
    :class: only-light
    :target: https://github.com/demberto/PyFLP
@@ -30,13 +30,13 @@ You can "star" the repo if you have a Github account. It is analogous to
 👀 Watch **PyFLP** on Github
 -----------------------------
 
-.. image:: /img/user-guide/watch-repo-dark.gif
+.. image:: /img/helping/watch-repo-dark.gif
    :align: center
    :class: only-dark
    :target: https://github.com/demberto/PyFLP
    :alt: 👀 How to watch PyFLP?
 
-.. image:: /img/user-guide/watch-repo-light.gif
+.. image:: /img/helping/watch-repo-light.gif
    :align: center
    :class: only-light
    :target: https://github.com/demberto/PyFLP
@@ -48,13 +48,13 @@ all changes taking places in PyFLP right in your 📨 email.
 🐞 Reporting bugs
 ------------------
 
-.. image:: /img/user-guide/open-issue-dark.png
+.. image:: /img/helping/open-issue-dark.png
    :align: center
    :class: only-dark
    :target: https://github.com/demberto/PyFLP
    :alt: 🐞 How to open an issue?
 
-.. image:: /img/user-guide/open-issue-light.png
+.. image:: /img/helping/open-issue-light.png
    :align: center
    :class: only-light
    :target: https://github.com/demberto/PyFLP
@@ -80,7 +80,5 @@ how it helped you. I am more than glad to find how PyFLP is getting used.
 Help the tools that power **PyFLP**
 -----------------------------------
 
-- `colour <https://github.com/vaab/colour>`_ powers the conversion of colors
-  into powerful and easy Python objects.
-- `construct <https://github.com/construct/construct>`_ provides declarative
-  parsing capabilities.
+- `colour <https://github.com/vaab/colour>`_
+- `construct <https://github.com/construct/construct>`_

@@ -1,5 +1,5 @@
-\ :material-sharp:`extension;1.2em;sd-pb-1` Walkthrough: Implementing a plugin data parser
-==========================================================================================
+🚶‍♂️ Walkthrough: Implementing a plugin data parser
+==================================================
 
 Implementing a native plugin data parser can be easy. Below is a walkthrough
 for implementing a simple effect, :class:`Fruity Balance <pyflp.plugin.FruityBalance>`.
@@ -12,7 +12,7 @@ for implementing a simple effect, :class:`Fruity Balance <pyflp.plugin.FruityBal
 
 1. Note the parameters exposed by the plugin
 
-.. image:: /img/contributing/implementing-a-plugin/1-parameters.png
+.. image:: /img/dev/plugin/1-parameters.png
    :align: center
    :alt: Fruity Balance paramerers
 
@@ -23,7 +23,7 @@ followed by **Volume**.
 
 Create an empty new FLP, add a **Fruity Balance** to one of the insert slots.
 
-.. image:: /img/contributing/implementing-a-plugin/2-load-plugin.png
+.. image:: /img/dev/plugin/2-load-plugin.png
    :align: center
    :alt: Fruity Balance in an insert slot
 
@@ -67,7 +67,7 @@ knob takes **4 bytes**.
 
 Now compare it with the **positions** of the knobs in Fruity Balance.
 
-.. image:: /img/contributing/implementing-a-plugin/3-observe-knob-positions.png
+.. image:: /img/dev/plugin/3-observe-knob-positions.png
    :align: center
    :alt: Observe knob positions
 
@@ -94,7 +94,7 @@ find out the minimum and maximums of each knob.
 
    One very important place for finding out the extremes is the hint panel.
 
-   .. image:: /img/contributing/implementing-a-plugin/4-hint-panel.png
+   .. image:: /img/dev/plugin/4-hint-panel.png
       :align: center
       :alt: FL Studio hint panel
 

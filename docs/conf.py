@@ -1,5 +1,7 @@
 # type: ignore
 
+"""Sphinx configuration script."""
+
 from __future__ import annotations
 
 import enum
@@ -24,19 +26,20 @@ GHUC_PREFIX = "https://raw.githubusercontent.com/demberto/PyFLP/master/docs/"
 IGNORED_BITLY = ["3RDM1yn"]
 
 project = "PyFLP"
-copyright = "2022, demberto"
 author = "demberto"
-release = "2.0.0a2"  # Auto-updated by tbump
+copyright = f"2022, {author}"
+release = "2.0.0a2"  # DON'T TOUCH! Auto-updated by tbump
 extensions = [
     "hoverxref.extension",
     "m2r2",  # Markdown to reStructuredText conversion
     "sphinx_copybutton",  # Copy button for code blocks
     "sphinx_design",  # Grids, cards, icons and tabs
     "sphinxcontrib.spelling",  # Catch spelling mistakes
+    "sphinxcontrib.svgbob",  # ASCII diagrams -> SVG
     "sphinx.ext.autodoc",  # Sphinx secret sauce
     "sphinx.ext.autosummary",  # Summary of contents table
     "sphinx.ext.coverage",  # Find what I missed to autodoc
-    "sphinx.ext.duration",
+    "sphinx.ext.duration",  # Time required to build docs
     "sphinx.ext.intersphinx",  # Automatic links to Python docs
     "sphinx.ext.napoleon",  # Google-style docstrings
     "sphinx.ext.todo",  # Items I need to document
@@ -57,18 +60,18 @@ autodoc_default_options = {
     "no-value": True,  # Don't show a default value (for descriptors mainly)
 }
 needs_sphinx = "5.0"
-hoverxref_auto_ref = True
+hoverxref_auto_ref = True  # Convert all :ref: roles to hoverxrefs
 napoleon_preprocess_types = True
 napoleon_attr_annotations = True
-html_permalinks_icon = "<span>#</span>"
-github_username = author
-github_repository = project
+html_permalinks_icon = "<span>#</span>"  # Get rid of the weird paragraph icon
+github_username = author  # sphinx_toolbox.github config
+github_repository = project  # sphinx_toolbox.github config
 autodoc_show_sourcelink = True  # sphinx_toolbox.more_autodoc.sourcelink
 todo_include_todos = True  # Include .. todo:: directives in output
 todo_emit_warnings = True  # Emit warnings about it as well, so I don't forget
 html_css_files = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
-]  # https://sphinx-design.readthedocs.io/en/furo-theme/badges_buttons.html#fontawesome-icons
+]  # https://sphinx-design.rtfd.io/en/furo-theme/badges_buttons.html#fontawesome-icons
 sd_fontawesome_latex = True
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
@@ -78,6 +81,7 @@ linkcheck_allowed_redirects = {
     r"https://bit.ly/.*": r"https://raw.githubusercontent.com/demberto/PyFLP/master/docs/img/.*",
     r"https://pyflp.rtfd.io.*": r"https://pyflp.readthedocs.io/en/latest/.*",
     r"https://www.python.org/dev/peps/.*": r"https://peps.python.org/.*",
+    r"https://github.com/demberto/PyFLP/files/.*": r"https://objects.githubusercontent.com/.*",
 }
 
 
@@ -171,6 +175,7 @@ def show_model_dunders(app, what, name, obj, skip, options):
 
 
 def setup(app):
+    """Connects all callbacks to their event handlers."""
     app.connect("autodoc-process-docstring", badge_flstudio)
     app.connect("autodoc-process-docstring", autodoc_markdown)
     app.connect("autodoc-process-signature", add_annotations)

@@ -14,11 +14,11 @@ be challenging for a first time user to know where to find the data they need.
 :fas:`eye;sd-text-info` Visual hints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: /img/user-guide/images-dark.png
+.. image:: /img/features/images-dark.png
    :align: center
    :class: only-dark
 
-.. image:: /img/user-guide/images-light.png
+.. image:: /img/features/images-light.png
    :align: center
    :class: only-light
 
@@ -28,11 +28,11 @@ from FL Studio's interface.
 :fas:`table;sd-text-info` Minimums, maximums and defaults
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: /img/user-guide/tables-dark.png
+.. image:: /img/features/tables-dark.png
    :align: center
    :class: only-dark
 
-.. image:: /img/user-guide/tables-light.png
+.. image:: /img/features/tables-light.png
    :align: center
    :class: only-light
 
@@ -60,8 +60,8 @@ shown me that they rarely change.
 PyFLP is fully tested with `pyright <https://github.com/microsoft/pyright>`_,
 a static type checker built right into VS Code.
 
-:fas:`umbrella;sd-text-primary` 80%+ code coverage
+:fas:`umbrella;sd-text-primary` 85%+ code coverage
 --------------------------------------------------
 
-PyFLP boasts a total of more than 80+ combined code coverage across supported
+PyFLP boasts a total of more than 85+ combined code coverage across supported
 Python versions. Higher the coverage ⬆, lesser the amount of bugs 🐞
