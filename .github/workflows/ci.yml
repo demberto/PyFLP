@@ -58,7 +58,7 @@ jobs:
         uses: codecov/codecov-action@v3
   publish:
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref_name, 'v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

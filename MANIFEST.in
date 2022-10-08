@@ -6,7 +6,6 @@ include requirements.txt
 include tox.ini
 include pyflp/py.typed
 
-graft .github
 recursive-include .vscode *.json
 
 include docs/conf.py
@@ -16,5 +15,4 @@ include docs/requirements.txt
 recursive-include docs *.rst
 graft docs/img
 
-include tests/__init__.py
 recursive-include tests *.flp *.fst *.fsc *.py
