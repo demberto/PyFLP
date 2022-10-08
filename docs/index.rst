@@ -6,7 +6,7 @@ Navigation
 .. toctree::
    :maxdepth: 2
 
-   user-guide
+   handbook
    reference
    features
    architecture
