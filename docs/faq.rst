@@ -21,8 +21,8 @@ Pretty much. I have organised PyFLP's code to be pretty self explanatory.
 If you are completely new to the terminology used by PyFLP, you should also
 open up FL Studio's documentation open besides the `reference <./reference>`_.
 
-If you find something isn't yet implemented, open an issue or, a `PR <./contributing>`_
-if you have implemented something.
+If you find something isn't yet implemented, open an issue or, a
+:doc:`PR <./contributing>`_ if you have implemented something.
 
 ➕➖ Why is there no functionality to **add** / **remove** items from collections?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
