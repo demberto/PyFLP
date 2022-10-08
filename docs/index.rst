@@ -12,6 +12,7 @@ Navigation
    architecture
    contributing
    dev
+   faq
    helping
    changelog
 
