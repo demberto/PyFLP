@@ -33,7 +33,6 @@ else:
 
 import colour
 import construct as c
-import construct_typed as ct
 
 from ._descriptors import EventProp, FlagProp, StructProp
 from ._events import (
@@ -69,7 +68,7 @@ class ControllerEvent(ListEventBase):
 
 
 @enum.unique
-class _NoteFlags(ct.FlagsEnumBase):
+class _NoteFlags(enum.IntFlag):
     Slide = 1 << 3
 
 

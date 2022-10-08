@@ -172,7 +172,7 @@ class TrackID(EventEnum):
     Data = (DATA + 30, TrackEvent)
 
 
-class TimeMarkerType(ct.EnumBase):
+class TimeMarkerType(enum.IntEnum):
     Marker = 0
     """Normal text marker."""
 

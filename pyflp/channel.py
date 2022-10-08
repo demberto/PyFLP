@@ -112,7 +112,7 @@ class DelayEvent(StructEventBase):
 
 
 @enum.unique
-class _EnvLFOFlags(ct.FlagsEnumBase):
+class _EnvLFOFlags(enum.IntFlag):
     EnvelopeTempoSync = 1 << 0
     Unknown = 1 << 2  # Occurs for volume envlope only. Likely a bug in FL's serialiser
     LFOTempoSync = 1 << 1
@@ -229,7 +229,7 @@ class ParametersEvent(StructEventBase):
 
 
 @enum.unique
-class _PolyphonyFlags(ct.FlagsEnumBase):
+class _PolyphonyFlags(enum.IntFlag):
     None_ = 0
     Mono = 1 << 0
     Porta = 1 << 1
@@ -334,7 +334,7 @@ class RackID(EventEnum):
 
 
 @enum.unique
-class ReverbType(ct.EnumBase):
+class ReverbType(enum.IntEnum):
     """Used by :attr:`Reverb.type`."""
 
     A = 0
@@ -360,19 +360,19 @@ class ChannelType(ct.EnumBase):  # cuz Type would be a super generic name
     Automation = 5  # 5.0+
 
 
-class _FXFlags(ct.FlagsEnumBase):
+class _FXFlags(enum.IntFlag):
     FadeStereo = 1 << 0
     Reverse = 1 << 1
     Clip = 1 << 2
     SwapStereo = 1 << 8
 
 
-class _LayerFlags(ct.FlagsEnumBase):
+class _LayerFlags(enum.IntFlag):
     Random = 1 << 0
     Crossfade = 1 << 1
 
 
-class _SamplerFlags(ct.FlagsEnumBase):
+class _SamplerFlags(enum.IntFlag):
     Resample = 1 << 0
     LoadRegions = 1 << 1
     LoadSliceMarkers = 1 << 2

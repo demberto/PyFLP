@@ -101,7 +101,7 @@ __all__ = [
 
 
 @enum.unique
-class _InsertFlags(ct.FlagsEnumBase):
+class _InsertFlags(enum.IntFlag):
     None_ = 0
     PolarityReversed = 1 << 0
     SwapLeftRight = 1 << 1
@@ -281,9 +281,9 @@ class InsertEQBand(ModelBase):
 
 
 class _InsertEQPropArgs(NamedTuple):
-    freq: _MixerParamsID
-    gain: _MixerParamsID
-    reso: _MixerParamsID
+    freq: int
+    gain: int
+    reso: int
 
 
 class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
@@ -352,7 +352,7 @@ class InsertEQ(ModelBase):
 
 
 class _MixerParamProp(RWProperty[T]):
-    def __init__(self, id: _MixerParamsID):  # pylint: disable=super-init-not-called
+    def __init__(self, id: int):  # pylint: disable=super-init-not-called
         self._id = id
 
     def __get__(self, instance: Insert, owner: object = None) -> T | None:
@@ -368,7 +368,7 @@ class _MixerParamProp(RWProperty[T]):
             if id == self._id:
                 item["msg"] = value
         else:
-            raise PropertyCannotBeSet(self._id)
+            raise PropertyCannotBeSet(self._id)  # type: ignore
 
 
 class Slot(MultiEventModel, SupportsIndex):

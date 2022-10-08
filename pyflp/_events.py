@@ -58,7 +58,7 @@ NEW_TEXT_IDS: Final = (
 )
 
 T = TypeVar("T")
-ET = TypeVar("ET", bound=Union[ct.EnumBase, ct.FlagsEnumBase])
+ET = TypeVar("ET", bound=Union[ct.EnumBase, enum.IntFlag])
 T_co = TypeVar("T_co", covariant=True)
 FourByteBool: c.ExprAdapter[int, int, bool, int] = c.ExprAdapter(
     c.Int32ul, lambda obj_, *_: bool(obj_), lambda obj_, *_: int(obj_)  # type: ignore

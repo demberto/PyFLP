@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import abc
+import enum
 import sys
 from itertools import chain
 from typing import Any, TypeVar
@@ -26,8 +27,6 @@ if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
 else:
     from typing_extensions import Protocol, final, runtime_checkable
-
-import construct_typed as ct
 
 from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
 from ._models import ItemModel, ModelBase, MT_co, MultiEventModel, SingleEventModel
@@ -119,7 +118,7 @@ class FlagProp(PropBase[bool]):
 
     def __init__(
         self,
-        flag: ct.FlagsEnumBase,
+        flag: enum.IntFlag,
         *ids: EventEnum,
         prop: str = "flags",
         inverted: bool = False,

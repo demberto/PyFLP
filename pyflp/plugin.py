@@ -58,7 +58,7 @@ __all__ = [
 
 
 @enum.unique
-class _WrapperFlags(ct.FlagsEnumBase):
+class _WrapperFlags(enum.IntFlag):
     Visible = 1 << 0
     _Disabled = 1 << 1
     Detached = 1 << 2
