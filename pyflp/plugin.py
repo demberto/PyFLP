@@ -36,6 +36,7 @@ from ._events import (
     AnyEvent,
     ColorEvent,
     EventEnum,
+    FourByteBool,
     StdEnum,
     StructEventBase,
     T,
@@ -84,6 +85,10 @@ class BooBassEvent(StructEventBase):
 
 class FruityBalanceEvent(StructEventBase):
     STRUCT = c.Struct("pan" / c.Int32ul, "volume" / c.Int32ul).compile()
+
+
+class FruityCenterEvent(StructEventBase):
+    STRUCT = c.Struct("_u1" / c.Bytes(4), "enabled" / FourByteBool).compile()
 
 
 class FruityFastDistEvent(StructEventBase):
@@ -431,6 +436,17 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     | Min     | 0     | -INFdB / 0.00  |
     | Max     | 320   | 5.6dB / 1.90   |
     | Default | 256   | 0.0dB / 1.00   |
+    """
+
+
+class FruityCenter(_PluginBase[FruityCenterEvent], _IPlugin, ModelReprMixin):
+    # TODO Image link
+
+    INTERNAL_NAME = "Fruity Center"
+    enabled = _PluginDataProp[bool]()
+    """Removes DC offset if True; effectively behaving like a bypass button.
+
+    Labelled as **Status** for some reason in the UI.
     """
 
 

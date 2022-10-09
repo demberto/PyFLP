@@ -35,6 +35,8 @@ Effects
 
 .. autoclass:: FruityBalance
    :members:
+.. autoclass:: FruityCenter
+   :members:
 .. autoclass:: FruityFastDist
    :members:
 .. autoclass:: FruityNotebook2

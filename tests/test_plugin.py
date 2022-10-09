@@ -7,6 +7,7 @@ import pytest
 from pyflp.plugin import (
     AnyPlugin,
     FruityBalance,
+    FruityCenter,
     FruityFastDist,
     FruitySend,
     FruitySoftClipper,
@@ -35,6 +36,11 @@ def test_fruity_balance(plugin: PluginFixture[FruityBalance]):
     fruity_balance = plugin("fruity-balance.fst", FruityBalance)
     assert fruity_balance.volume == 256
     assert fruity_balance.pan == 0
+
+
+def test_fruity_center(plugin: PluginFixture[FruityCenter]):
+    fruity_center = plugin("fruity-center.fst", FruityCenter)
+    assert not fruity_center.enabled
 
 
 def test_fruity_fast_dist(plugin: PluginFixture[FruityFastDist]):

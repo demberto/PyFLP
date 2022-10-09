@@ -67,6 +67,8 @@ from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
     FruityBalance,
     FruityBalanceEvent,
+    FruityCenter,
+    FruityCenterEvent,
     FruityFastDist,
     FruityFastDistEvent,
     FruityNotebook2,
@@ -408,6 +410,7 @@ class Slot(MultiEventModel):
         {
             VSTPluginEvent: VSTPlugin,
             FruityBalanceEvent: FruityBalance,
+            FruityCenterEvent: FruityCenter,
             FruityFastDistEvent: FruityFastDist,
             FruityNotebook2Event: FruityNotebook2,
             FruitySendEvent: FruitySend,

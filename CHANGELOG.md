@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - PyPy 3.7+ support [#77].
 - Slicing for ModelBase collections [#31].
+- Fruity Center parser [#42].
 
 ### Changed
 
@@ -30,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Models are no longer hashable as events were made unhashable previously.
 
 [#31]: https://github.com/demberto/PyFLP/issues/31
+[#42]: https://github.com/demberto/PyFLP/discussions/42
 [#50]: https://github.com/demberto/PyFLP/issues/50
 [#77]: https://github.com/demberto/PyFLP/issues/77
 [PEP544]: https://peps.python.org/pep-0544

@@ -263,7 +263,7 @@ implemented.
     </td>
     <td>
       Native -
-      7 <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#effects">effects</a>,
+      8 <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#effects">effects</a>,
       1 <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#generators">synth</a>
     </td>
     <td>
