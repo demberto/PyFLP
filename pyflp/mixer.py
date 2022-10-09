@@ -20,17 +20,12 @@ import enum
 import sys
 import warnings
 from collections import defaultdict
-from typing import Any, DefaultDict, List, NamedTuple, cast
+from typing import Any, DefaultDict, Iterator, List, NamedTuple, cast
 
 if sys.version_info >= (3, 8):
-    from typing import SupportsIndex, TypedDict
+    from typing import TypedDict
 else:
-    from typing_extensions import SupportsIndex, TypedDict
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Iterator
-else:
-    from typing import Iterator
+    from typing_extensions import TypedDict
 
 if sys.version_info >= (3, 11):
     from typing import NotRequired, Unpack
@@ -66,7 +61,7 @@ from ._events import (
     T,
     U16Event,
 )
-from ._models import FLVersion, ModelBase, MultiEventModel
+from ._models import FLVersion, ModelBase, ModelCollection, MultiEventModel, getslice
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
@@ -371,7 +366,7 @@ class _MixerParamProp(RWProperty[T]):
             raise PropertyCannotBeSet(self._id)  # type: ignore
 
 
-class Slot(MultiEventModel, SupportsIndex):
+class Slot(MultiEventModel):
     """Represents an effect slot in an `Insert` / mixer channel.
 
     ![](https://bit.ly/3RUDtTu)
@@ -428,7 +423,7 @@ class Slot(MultiEventModel, SupportsIndex):
 
 
 class _InsertKW(TypedDict):
-    index: SupportsIndex
+    index: int
     max_slots: int
     params: NotRequired[_InsertItems]
 
@@ -437,7 +432,7 @@ class _InsertKW(TypedDict):
 # (by looking at Project.format) and use `MixerParameterEvent.items` to get
 # remaining data. Normally, the `Mixer` passes this information to the Inserts
 # (and Inserts to the `Slot`s directly).
-class Insert(MultiEventModel, SupportsIndex):
+class Insert(MultiEventModel, ModelCollection[Slot]):
     """Represents a mixer track to which channel from the rack are routed to.
 
     ![](https://bit.ly/3LeGKuN)
@@ -448,10 +443,9 @@ class Insert(MultiEventModel, SupportsIndex):
 
     # TODO Add number of used slots
     def __repr__(self):
-        if self.name is None:
-            return f"Unnamed insert #{self.__index__()}"
-        return f"Insert {self.name!r} #{self.__index__()}"
+        return f"Insert (name={self.name!r}, index={self.__index__()})"
 
+    @getslice
     def __getitem__(self, i: int | str):
         """Returns an effect slot of the specified index or name.
 
@@ -469,6 +463,7 @@ class Insert(MultiEventModel, SupportsIndex):
         raise ModelNotFound(i)
 
     def __index__(self) -> int:
+        """-1 for "current" insert, 0 for master and upto :attr:`Mixer.max_inserts`."""
         return self._kw["index"]
 
     def __iter__(self) -> Iterator[Slot]:
@@ -605,7 +600,7 @@ class _MixerKW(TypedDict):
 
 # TODO FL Studio version in which slots were increased to 10
 # TODO A move() method to change the placement of Inserts; it's difficult!
-class Mixer(MultiEventModel):
+class Mixer(MultiEventModel, ModelCollection[Insert]):
     """Represents the mixer which contains :class:`Insert` instances.
 
     ![](https://bit.ly/3eOsblF)
@@ -627,13 +622,14 @@ class Mixer(MultiEventModel):
         super().__init__(*events, **kw)
 
     # Inserts don't store their index internally.
-    def __getitem__(self, i: int | str):
+    @getslice
+    def __getitem__(self, i: int | str | slice):
         """Returns an insert with the specified index or name.
 
         Args:
-            i (int | str): An index between 0 to :attr:`Mixer.max_inserts`
-                resembling the one shown by FL Studio in its interface or the
-                name of the insert. Use 0 for master and -1 for "current" insert.
+            i (int | str | slice): An index between 0 to :attr:`Mixer.max_inserts`
+                resembling the one shown by FL Studio or the name of the insert.
+                Use 0 for master and -1 for "current" insert.
 
         Raises:
             ModelNotFound: An :class:`Insert` with the specifcied name or index

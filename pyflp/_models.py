@@ -18,8 +18,14 @@ from __future__ import annotations
 import abc
 import collections
 import dataclasses
-from collections.abc import Hashable
-from typing import Any, DefaultDict, TypeVar
+import functools
+import sys
+from typing import Any, Callable, DefaultDict, Iterable, Sequence, TypeVar, overload
+
+if sys.version_info >= (3, 8):
+    from typing import Protocol, runtime_checkable
+else:
+    from typing_extensions import Protocol, runtime_checkable
 
 from ._events import AnyEvent
 
@@ -93,24 +99,63 @@ class MultiEventModel(ModelBase):
         return self._events
 
 
+MT_co = TypeVar("MT_co", bound=ModelBase, covariant=True)
+SEMT_co = TypeVar("SEMT_co", bound=SingleEventModel, covariant=True)
+
+
+@runtime_checkable
+class ModelCollection(Iterable[MT_co], Protocol[MT_co]):
+    @overload
+    def __getitem__(self, i: int) -> MT_co:
+        ...
+
+    @overload
+    def __getitem__(self, i: str) -> MT_co:
+        ...
+
+    @overload
+    def __getitem__(self, i: slice) -> Sequence[MT_co]:
+        ...
+
+
+def getslice(func: Callable[[Any, Any], MT_co]):
+    """Wraps a :meth:`ModelCollection.__getitem__` to return a sequence if required."""
+
+    @overload
+    def wrapper(self: Any, i: int) -> MT_co:
+        ...
+
+    @overload
+    def wrapper(self: Any, i: str) -> MT_co:
+        ...
+
+    @overload
+    def wrapper(self: Any, i: slice) -> Sequence[MT_co]:
+        ...
+
+    @functools.wraps(func)
+    def wrapper(self: Any, i: Any) -> MT_co | Sequence[MT_co]:
+        if isinstance(i, slice):
+            return [
+                model
+                for model in self
+                if getattr(model, "__index__")() in range(i.start, i.stop)
+            ]
+        return func(self, i)
+
+    return wrapper
+
+
 class ModelReprMixin:
     """I am too lazy to make one `__repr__()` for every model."""
 
     def __repr__(self):
         mapping: dict[str, Any] = {}
-        cls = type(self)
-        # pylint: disable-next=bad-builtin
-        for var in filter(lambda var: not var.startswith("_"), vars(cls)):
-            # ! cannot import ROProperty due to circular import
-            if hasattr(getattr(cls, var), "__get__"):
-                mapping[var] = getattr(self, var, None)
+        for var in [var for var in vars(self) if not var.startswith("_")]:
+            mapping[var] = getattr(self, var, None)
 
         params = ", ".join([f"{k}={v!r}" for k, v in mapping.items()])
-        return f"{cls.__name__} ({params})"
-
-
-MT_co = TypeVar("MT_co", bound=ModelBase, covariant=True)
-SEMT_co = TypeVar("SEMT_co", bound=SingleEventModel, covariant=True)
+        return f"{type(self).__name__} ({params})"
 
 
 @dataclasses.dataclass(frozen=True, order=True)

@@ -18,17 +18,12 @@ from __future__ import annotations
 import collections
 import enum
 import sys
-from typing import Any, DefaultDict, List, Optional, cast
+from typing import Any, DefaultDict, Iterator, Optional, cast
 
 if sys.version_info >= (3, 8):
-    from typing import Literal, SupportsIndex, TypedDict
+    from typing import Literal, TypedDict
 else:
-    from typing_extensions import Literal, SupportsIndex, TypedDict
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Iterable, Iterator
-else:
-    from typing import Iterable, Iterator
+    from typing_extensions import Literal, TypedDict
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -56,7 +51,7 @@ from ._events import (
     U16Event,
     U32Event,
 )
-from ._models import FLVersion, ItemModel, MultiEventModel
+from ._models import FLVersion, ItemModel, ModelCollection, MultiEventModel, getslice
 from .channel import Channel
 from .exceptions import ModelNotFound, NoModelsFound
 from .pattern import Pattern
@@ -267,10 +262,6 @@ class TimeMarker(MultiEventModel):
             return TimeMarkerType.Marker
 
 
-class _TrackKW(TypedDict):
-    items: list[PlaylistItemBase]
-
-
 class _TrackColorProp(StructProp[colour.Color]):
     def _get(self, ev_or_ins: Any):
         value = cast(Optional[int], super()._get(ev_or_ins))
@@ -282,7 +273,11 @@ class _TrackColorProp(StructProp[colour.Color]):
         super()._set(ev_or_ins, color_u32)  # type: ignore
 
 
-class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
+class _TrackKW(TypedDict):
+    items: list[PlaylistItemBase]
+
+
+class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
     """Represents a track in an arrangement on which playlist items are arranged.
 
     ![](https://bit.ly/3de6R8y)
@@ -291,29 +286,22 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     def __init__(self, *events: AnyEvent, **kw: Unpack[_TrackKW]):
         super().__init__(*events, **kw)
 
+    def __getitem__(self, index: int | slice | str):
+        return self._kw["items"][index]
+
     def __index__(self) -> int:
-        """An integer in the range of 1 to :attr:`~Arrangements.max_tracks`."""
-        return self.index or NotImplemented
+        """An integer in the range of 1 to :attr:`Arrangements.max_tracks`."""
+        return cast(TrackEvent, self._events[TrackID.Data][0])["index"]
 
-    def __getitem__(self, index: SupportsIndex):
-        return self.items[index]
-
-    def __iter__(self):
+    def __iter__(self) -> Iterator[PlaylistItemBase]:
         """An iterator over :attr:`items`."""
-        return iter(self.items)
+        yield from self._kw["items"]
+
+    def __len__(self) -> int:
+        return len(self._kw["items"])
 
     def __repr__(self):
-        flags: list[str] = []
-        for attr in ("enabled", "grouped", "locked"):
-            if getattr(self, attr, False):
-                flags.append(attr)
-        if "enabled" not in flags:
-            flags.insert(0, "disabled")
-
-        suffix = f"#{self.index} - {len(self.items)} items ({', '.join(flags)})"
-        if self.name is None:
-            return f"Unnamed track {suffix}"
-        return f"Track {self.name!r} {suffix}"
+        return f"Track (name={self.name}, index={self.__index__()}, {len(self)} items)"
 
     color = _TrackColorProp(TrackID.Data)
     """Defaults to #485156 (dark slate gray).
@@ -324,7 +312,7 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     """
 
     content_locked = StructProp[bool](TrackID.Data)
-    """Defaults to `False`."""
+    """Defaults to :ref:`False`."""
 
     # TODO Add link to GIF from docs once Bitly quota is available again.
     enabled = StructProp[bool](TrackID.Data)
@@ -343,10 +331,6 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
 
     icon = StructProp[int](TrackID.Data)
     """Returns 0 if not set, else an internal icon ID."""
-
-    index = StructProp[int](TrackID.Data)
-    items = KWProp[List[PlaylistItemBase]]()
-    """Playlist items present on the track."""
 
     # TODO Add link to GIF from docs once Bitly quota is available again.
     locked = StructProp[bool](TrackID.Data)
@@ -372,14 +356,14 @@ class Track(MultiEventModel, Iterable[PlaylistItemBase], SupportsIndex):
     """Defaults to :attr:`TrackSync.FourBeats`."""
 
     queued = StructProp[bool](TrackID.Data)
-    """Defaults to `False`."""
+    """Defaults to :ref:`False`."""
 
 
 class _ArrangementKW(TypedDict):
     version: FLVersion
 
 
-class Arrangement(MultiEventModel, SupportsIndex):
+class Arrangement(MultiEventModel):
     """Contains the timemarkers and tracks in an arrangement.
 
     ![](https://bit.ly/3B6is1z)
@@ -449,26 +433,44 @@ class Arrangement(MultiEventModel, SupportsIndex):
             count += 1
 
 
+# TODO Find whether time is set to signature or division mode.
 class TimeSignature(MultiEventModel):
     def __repr__(self) -> str:
         return f"Global time signature: {self.num}/{self.beat}"
 
     num = EventProp[int](ArrangementsID.TimeSigNum)
+    """Beats per bar in time division & numerator in time signature mode.
+
+    | Min | Max | Default |
+    |-----|-----|---------|
+    | 1   | 16  | 4       |
+    """
+
     beat = EventProp[int](ArrangementsID.TimeSigBeat)
+    """Steps per beat in time division & denominator in time signature mode.
+
+    In time signature mode it can be 2, 4, 8 or 16 but in time division mode:
+
+    | Min | Max | Default |
+    |-----|-----|---------|
+    | 1   | 16  | 4       |
+    """
 
 
-class Arrangements(MultiEventModel):
+class Arrangements(MultiEventModel, ModelCollection[Arrangement]):
     """Iterator over arrangements in the project and some related properties."""
 
     def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
         super().__init__(*events, **kw)
 
-    def __getitem__(self, i: int | str) -> Arrangement:
+    @getslice
+    def __getitem__(self, i: int | str | slice):
         """Returns an arrangement based either on its index or name.
 
         Args:
-            i (int | str): The index of the arrangement in which they occur or
-                :attr:`Arrangement.name` of the arrangement to lookup for.
+            i (int | str | slice): The index of the arrangement in which they
+                occur or :attr:`Arrangement.name` of the arrangement to lookup
+                for or a slice of indexes.
 
         Raises:
             ModelNotFound: An :class:`Arrangement` with the specifed name or

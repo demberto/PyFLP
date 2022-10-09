@@ -17,19 +17,8 @@ from __future__ import annotations
 
 import collections
 import enum
-import sys
 import warnings
-from typing import DefaultDict, cast
-
-if sys.version_info >= (3, 8):
-    from typing import SupportsIndex
-else:
-    from typing_extensions import SupportsIndex
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Iterable, Iterator
-else:
-    from typing import Iterator, Iterable
+from typing import DefaultDict, Iterator, cast
 
 import colour
 import construct as c
@@ -58,7 +47,7 @@ __all__ = ["Note", "Controller", "Pattern", "Patterns"]
 
 class ControllerEvent(ListEventBase):
     STRUCT = c.Struct(
-        "position" / c.Int32ul,  # 4
+        "position" / c.Int32ul,  # 4, can be delta as well!
         "_u1" / c.Byte,  # 5
         "_u2" / c.Byte,  # 6
         "channel" / c.Int8ul,  # 7
@@ -235,21 +224,38 @@ class Controller(ItemModel):
 
 # As of the latest version of FL, note and controller events are stored before
 # all channel events (if they exist). The rest is stored later on as it occurs.
-class Pattern(MultiEventModel, Iterable[Note], SupportsIndex):
-    def __repr__(self):
-        num_notes = len(tuple(self))
-        return f"Pattern (index={self.index}, name={self.name}, {num_notes} notes)"
+class Pattern(MultiEventModel):
+    """Represents a MIDI pattern.
+
+    Iterate over it to get the notes contained inside it:
+
+    >>> repr([note for note in pattern])
+    [Note "C5" @ 192 of length 96 for channel #2, ...]
+    """
 
     def __index__(self):
         return self.index
 
     def __iter__(self) -> Iterator[Note]:
-        """MIDI notes contained inside the pattern."""
+        """MIDI notes contained inside the pattern.
+
+        FL Studio uses its own custom format to represent notes internally.
+        However by using the :class:`Note` properties with a MIDI parsing
+        library for example, you can export them to MIDI.
+        """
         if PatternID.Notes in self._events:
             for item in cast(NotesEvent, self._events[PatternID.Notes][0]):
                 yield Note(item)
 
+    def __repr__(self):
+        num_notes = len(cast(NotesEvent, self._events[PatternID.Notes][0]))
+        return f"Pattern (index={self.index}, name={self.name}, {num_notes} notes)"
+
     color = EventProp[colour.Color](PatternID.Color)
+    """Returns a colour if one is set while saving the project file, else None.
+
+    Defaults to #485156 in FL Studio.
+    """
 
     @property
     def controllers(self) -> Iterator[Controller]:
@@ -260,7 +266,12 @@ class Pattern(MultiEventModel, Iterable[Note], SupportsIndex):
 
     @property
     def index(self) -> int:
-        """Internal index of the pattern starting from 1."""
+        """Internal index of the pattern starting from 1.
+
+        Caution:
+            Changing this will not solve any collisions thay may occur due to
+            2 patterns that might end up having the same index.
+        """
         return self._events[PatternID.New][0].value
 
     @index.setter

@@ -12,11 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - PyPy 3.7+ support [#77].
+- Slicing for ModelBase collections [#31].
+
+### Changed
+
+- Simplified some `__repr__` strings.
+
 ### Removed
 
+- `Track.index` in favour of the redundant `Track.__index__`.
+- `Track.items`. Iterate over a track, to get them now.
+- Subclassing of protocol classes keeping [PEP544] in mind [#50].
 - Models are no longer hashable as events were made unhashable previously.
 
+[#31]: https://github.com/demberto/PyFLP/issues/31
+[#50]: https://github.com/demberto/PyFLP/issues/50
 [#77]: https://github.com/demberto/PyFLP/issues/77
+[PEP544]: https://peps.python.org/pep-0544
 
 ## [2.0.0a3] - 2022-10-08
 

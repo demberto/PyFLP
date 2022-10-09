@@ -19,17 +19,12 @@ import collections
 import enum
 import pathlib
 import sys
-from typing import DefaultDict, List, Tuple, cast
+from typing import DefaultDict, Iterator, List, Tuple, cast
 
 if sys.version_info >= (3, 8):
-    from typing import Literal, SupportsIndex
+    from typing import Literal
 else:
-    from typing_extensions import Literal, SupportsIndex
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Iterator
-else:
-    from typing import Iterator
+    from typing_extensions import Literal
 
 import colour
 import construct as c
@@ -54,7 +49,14 @@ from ._events import (
     U16TupleEvent,
     U32Event,
 )
-from ._models import ItemModel, ModelReprMixin, MultiEventModel, SingleEventModel
+from ._models import (
+    ItemModel,
+    ModelCollection,
+    ModelReprMixin,
+    MultiEventModel,
+    SingleEventModel,
+    getslice,
+)
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
@@ -1031,13 +1033,11 @@ class AutomationPoint(ItemModel, ModelReprMixin):
     """Position on Y-axis in the range of 0 to 1.0."""
 
 
-class Channel(MultiEventModel, SupportsIndex):
+class Channel(MultiEventModel):
     """Represents a channel in the channel rack."""
 
     def __repr__(self):
-        if self.display_name is None:
-            return f"Unnamed {type(self).__name__.lower()} #{self.iid}"
-        return f"{type(self).__name__} {self.display_name!r} #{self.iid}"
+        return f"{type(self).__name__} (name={self.display_name!r}, iid={self.iid})"
 
     def __index__(self):
         return cast(int, self.iid)
@@ -1162,23 +1162,23 @@ class Channel(MultiEventModel, SupportsIndex):
         return self.name or self.internal_name
 
 
-class Automation(Channel):
+class Automation(Channel, ModelCollection[AutomationPoint]):
     """Represents an automation clip present in the channel rack.
 
-    Iterate over to get the :attr:`points`.
+    Iterate to get the :attr:`points` inside the clip.
 
-    >>> for point in automation:
-    ...     repr(point)
-    AutomationPoint(position=..., value=..., tension=...), ...
+    >>> repr([point for point in automation])
+    AutomationPoint(position=0.0, value=1.0, tension=0.5), ...
 
     ![](https://bit.ly/3RXQhIN)
     """
 
-    def __getitem__(self, index: int) -> AutomationPoint:
-        for i, p in enumerate(self):
-            if i == index:
+    @getslice
+    def __getitem__(self, i: int | slice) -> AutomationPoint:
+        for idx, p in enumerate(self):
+            if idx == i:
                 return p
-        raise ModelNotFound(index)
+        raise ModelNotFound(i)
 
     def __iter__(self) -> Iterator[AutomationPoint]:
         """Iterator over the automation points inside the automation clip."""
@@ -1190,7 +1190,7 @@ class Automation(Channel):
     lfo = NestedProp(AutomationLFO, ChannelID.Automation)  # TODO Add image
 
 
-class Layer(Channel):
+class Layer(Channel, ModelCollection[Channel]):
     """Represents a layer channel present in the channel rack.
 
     ![](https://bit.ly/3S2MLgf)
@@ -1198,21 +1198,21 @@ class Layer(Channel):
     *New in FL Studio v3.4.0*.
     """
 
-    def __getitem__(self, index: str | SupportsIndex):
-        """Returns a child channel with an IID / index of :attr:`~Channel.iid`.
+    @getslice
+    def __getitem__(self, i: int | str | slice):
+        """Returns a child :class:`Channel` with an IID of :attr:`Channel.iid`.
 
         Args:
-            index (str | SupportsIndex): An IID or a zero based index of the child
-                channel.
+            i (int | str | slice): IID or 0-based index of the child(ren).
 
         Raises:
-            ChannelNotFound: A child channel with the specific index or IID
-                couldn't be found. This exception derives from `KeyError` as well.
+            ChannelNotFound: Child(ren) with the specific index or IID couldn't
+                be found. This exception derives from ``KeyError`` as well.
         """
-        for idx, child in enumerate(self):
-            if index in (idx, child.iid):
+        for child in self:
+            if i == child.iid:
                 return child
-        raise ChannelNotFound(index)
+        raise ChannelNotFound(i)
 
     def __iter__(self) -> Iterator[Channel]:
         if ChannelID.Children in self._events:
@@ -1267,7 +1267,7 @@ class Sampler(_SamplerInstrument):
     """
 
     def __repr__(self):
-        return f"{super().__repr__()} has {repr(self.sample_path) or 'Empty'}"
+        return f"{super().__repr__()[:-1]}, sample_path={self.sample_path!r})"
 
     au_sample_rate = EventProp[int](ChannelID.AUSampleRate)
     """AU-format sample specific."""
@@ -1357,7 +1357,7 @@ class Sampler(_SamplerInstrument):
     )
 
 
-class ChannelRack(MultiEventModel):
+class ChannelRack(MultiEventModel, ModelCollection[Channel]):
     """Represents the channel rack, contains all :class:`Channel` instances.
 
     ![](https://bit.ly/3RXR50h)
@@ -1366,12 +1366,13 @@ class ChannelRack(MultiEventModel):
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
 
-    def __getitem__(self, i: str | int):
+    @getslice
+    def __getitem__(self, i: str | int | slice):
         """Gets a channel from the rack based on its IID or name.
 
         Args:
-            i (str | int): Compared with :attr:`Channel.iid` if a string or the
-                :attr:`Channel.display_name`.
+            i (str | int | slice): Compared with :attr:`Channel.iid` if an int
+                or slice or with the :attr:`Channel.display_name`.
 
         Raises:
             ChannelNotFound: A channel with the specified IID or name isn't found.
@@ -1381,7 +1382,7 @@ class ChannelRack(MultiEventModel):
                 return ch
         raise ChannelNotFound(i)
 
-    def __iter__(self):  # pylint: disable=too-complex
+    def __iter__(self) -> Iterator[Channel]:  # pylint: disable=too-complex
         ch_dict: dict[int, Channel] = {}
         events: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
         cur_ch_events = []

@@ -88,14 +88,12 @@ def test_track_items(tracks: tuple[Track, ...]):
             num_items = 16
         if track.name == "MIDI":
             num_items = 4
-            assert [i.position for i in track.items] == [
-                p * 384 for p in range(num_items)
-            ]
+            assert [i.position for i in track] == [p * 384 for p in range(num_items)]
         elif track.name in ("Cut pattern", "Automation"):
             num_items = 1
 
-        assert len(track.items) == num_items
-        assert [i.group for i in track.items] == [0] * num_items
+        assert len(track) == num_items
+        assert [i.group for i in track] == [0] * num_items
 
 
 def test_track_locked(tracks: tuple[Track, ...]):

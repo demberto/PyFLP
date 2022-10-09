@@ -23,17 +23,12 @@ import abc
 import enum
 import sys
 import warnings
-from typing import Any, ClassVar, Generic, Tuple, TypeVar, Union
+from typing import Any, ClassVar, Generic, Iterator, Tuple, TypeVar, Union
 
 if sys.version_info >= (3, 8):
     from typing import Final
 else:
     from typing_extensions import Final
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Iterator
-else:
-    from typing import Iterator
 
 import colour
 import construct as c
