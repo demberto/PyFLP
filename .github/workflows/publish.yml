@@ -1,0 +1,42 @@
+name: publish
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.x"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine check-manifest
+      - name: Check MANIFEST.in
+        run: check-manifest
+      - name: Build package
+        run: python -m build
+      - name: Twine check
+        run: twine check dist/*
+      - name: Get changelog for release
+        id: changelog
+        uses: mindsers/changelog-reader-action@v2
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/*"
+          body: ${{ steps.changelog.outputs.changes }}
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

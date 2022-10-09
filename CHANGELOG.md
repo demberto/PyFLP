@@ -438,6 +438,7 @@ Same as in 0.1.1
 - `flpinfo` doesn't output correctly sometimes due to long strings.
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
+[2.0.0a3]: https://github.com/demberto/PyFLP/compare/v2.0.0a2...v2.0.0a3
 [2.0.0a2]: https://github.com/demberto/PyFLP/compare/v2.0.0a1...v2.0.0a2
 [2.0.0a1]: https://github.com/demberto/PyFLP/compare/v2.0.0a0...v2.0.0a1
 [2.0.0a0]: https://github.com/demberto/PyFLP/compare/v1.1.1...v2.0.0a0
