@@ -43,7 +43,7 @@ class ItemModel(ModelBase):
         self._item[prop] = value
 
 
-class SingleEventModel(ModelBase, Hashable):
+class SingleEventModel(ModelBase):
     """Base class for models whose properties are derived from a single event."""
 
     def __init__(self, event: AnyEvent, **kw: Any):
@@ -56,9 +56,6 @@ class SingleEventModel(ModelBase, Hashable):
 
         return o.event() == self.event()
 
-    def __hash__(self) -> int:
-        return hash(self.event())
-
     def event(self) -> AnyEvent:
         """Returns the underlying event used by the model.
 
@@ -69,7 +66,7 @@ class SingleEventModel(ModelBase, Hashable):
         return self._event
 
 
-class MultiEventModel(ModelBase, Hashable):
+class MultiEventModel(ModelBase):
     def __init__(self, *events: AnyEvent, **kw: Any):
         super().__init__(**kw)
         self._events: dict[int, list[AnyEvent]] = {}
@@ -86,9 +83,6 @@ class MultiEventModel(ModelBase, Hashable):
             raise TypeError(f"Cannot compare {type(o)!r} with {type(self)!r}")
 
         return o.events_astuple() == self.events_astuple()
-
-    def __hash__(self) -> int:
-        return hash(self.events_astuple())
 
     def events_astuple(self):
         """Returns a tuple of events used by the model in their original order."""

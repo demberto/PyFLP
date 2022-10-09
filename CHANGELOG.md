@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - PyPy 3.7+ support [#77].
+### Removed
+
+- Models are no longer hashable as events were made unhashable previously.
 
 [#77]: https://github.com/demberto/PyFLP/issues/77
 
