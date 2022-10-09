@@ -157,7 +157,7 @@ class PODEventBase(EventBase[T]):
         return c.Byte.build(self.id) + self._data
 
     def __repr__(self):
-        return f"<{type(self).__name__!r} id={self.id!r}, value={self.value}>"
+        return f"{type(self).__name__!r} (id={self.id!r}, value={self.value})"
 
     @property
     def size(self):
@@ -350,7 +350,7 @@ class StrEventBase(VarintEventBase[str]):
         super().__init__(id, data)
 
     def __repr__(self):
-        return f"<{type(self).__name__} id={self.id!r}, string={self.value!r}>"
+        return f"{type(self).__name__} (id={self.id!r}, string={self.value!r})"
 
 
 class AsciiEvent(StrEventBase):
@@ -391,7 +391,7 @@ class DataEventBase(VarintEventBase[bytes]):
         super().__init__(id, data)
 
     def __repr__(self):
-        return f"<{type(self).__name__} id={self.id!r}, size={len(self._data)}>"
+        return f"{type(self).__name__} (id={self.id!r}, size={len(self._data)})"
 
 
 class StructEventBase(DataEventBase):

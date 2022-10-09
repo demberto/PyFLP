@@ -376,10 +376,7 @@ class Slot(MultiEventModel):
         super().__init__(*events, params=params or [])
 
     def __repr__(self) -> str:
-        repr = "Unnamed slot" if self.name is None else f"Slot {self.name!r}"
-        if self.plugin is None:
-            return f"Empty {repr.lower()}"
-        return f"{repr} ({self.plugin.INTERNAL_NAME})"  # type: ignore
+        return f"Slot (name={self.name}, index={self.index}, plugin={self.plugin!r})"
 
     def __index__(self) -> int:
         if SlotID.Index not in self._events:

@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Simplified some `__repr__` strings.
 
+### Fixed
+
+- `ModelReprMixin`.
+
 ### Removed
 
 - `Track.index` in favour of the redundant `Track.__index__`.

@@ -109,7 +109,7 @@ class Note(ItemModel):
     _NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
     def __repr__(self) -> str:
-        return "Note {} @ {} of length {} for channel #{}".format(
+        return "Note (key={}, position={}, length={}, channel={})".format(
             self.key, self.position, self.length, self.rack_channel
         )
 
@@ -230,7 +230,7 @@ class Pattern(MultiEventModel):
     Iterate over it to get the notes contained inside it:
 
     >>> repr([note for note in pattern])
-    [Note "C5" @ 192 of length 96 for channel #2, ...]
+    [Note (key="C5", position=192, length=96, channel=2), ...]
     """
 
     def __index__(self):

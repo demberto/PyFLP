@@ -151,7 +151,7 @@ class ModelReprMixin:
 
     def __repr__(self):
         mapping: dict[str, Any] = {}
-        for var in [var for var in vars(self) if not var.startswith("_")]:
+        for var in [var for var in vars(type(self)) if not var.startswith("_")]:
             mapping[var] = getattr(self, var, None)
 
         params = ", ".join([f"{k}={v!r}" for k, v in mapping.items()])

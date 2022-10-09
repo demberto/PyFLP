@@ -158,7 +158,7 @@ class Project(MultiEventModel):
         super().__init__(*events, **kw)
 
     def __repr__(self) -> str:
-        return f"FL Studio {str(self.version)} {self.format.name}"
+        return f"FL Studio {str(self.version)} {self.format.name.lower()}"
 
     def _collect_events(self, *enums: type[EventEnum]):
         for event in self._events_tuple:
