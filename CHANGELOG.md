@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable -->
 
-## 2.0.0a3 - 2022-10-08
+## 2.0.0a4 - Unreleased
+
+### Added
+
+- PyPy 3.7+ support [#77].
+
+[#77]: https://github.com/demberto/PyFLP/issues/77
+
+## [2.0.0a3] - 2022-10-08
 
 ### Added
 

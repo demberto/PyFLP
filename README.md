@@ -97,82 +97,218 @@ implemented.
   <tr>
     <th>Group</th>
     <th>Feature</th>
-    <th>Implementation</th>
+    <th>Issues</th>
   </tr>
   <tr>
-    <td rowspan="3"><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html">Arrangements</a></td>
+    <td rowspan="3">
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html">Arrangements</a><br/><br/>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aarrangement-general">
+        <img alt="arrangement-general issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/arrangement-general?label=open&style=flat-square"/>
+      </a>
+    </td>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#playlist">🎼 Playlist</a></td>
-    <td>🚧 Work in progress</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aarrangement-playlist">
+        <img alt="open arrangement-playlist issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/arrangement-playlist?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Aarrangement-playlist">
+        <img alt="closed arrangement-playlist issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/arrangement-playlist?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#timemarker">🚩 Timemarkers</a></td>
-    <td>✅ Implemented</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aarrangement-timemarker">
+        <img alt="open arrangement-timemarker issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/arrangement-timemarker?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Aarrangement-timemarker">
+        <img alt="closed arrangement-timemarker issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/arrangement-timemarker?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#track">Tracks</a></td>
-    <td>✅ Implemented</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aarrangement-track">
+        <img alt="open arrangement-track issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/arrangement-track?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Aarrangement-track">
+        <img alt="closed arrangement-track issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/arrangement-track?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
-    <td rowspan="4"><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html">Channel Rack</a></td>
+    <td rowspan="4">
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html">Channel Rack</a><br/>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Achannel-general">
+        <img alt="open channel-general issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/channel-general?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Achannel-general">
+        <img alt="closed channel-general issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/channel-general?label=closed&style=flat-square"/>
+      </a>
+    </td>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Automation">📈 Automations</a></td>
-    <td>📌 Currently WIP</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%channel-automation">
+        <img alt="open channel-automation issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/channel-automation?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Achannel-automation">
+        <img alt="closed channel-automation issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/channel-automation?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Instrument">🎹 Instruments</a></td>
-    <td>✅ Implemented</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Achannel-instrument">
+        <img alt="channel-instrument issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/channel-instrument?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Achannel-instrument">
+        <img alt="closed channel-instrument issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/channel-instrument?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Layer">Layer</a></td>
-    <td>✅ Implemented</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Achannel-layer">
+        <img alt="open channel-layer issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/channel-layer?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Achannel-layer">
+        <img alt="closed channel-layer issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/channel-layer?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Sampler">📁 Sampler</a></td>
-    <td>🚀 Almost there</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Achannel-sampler">
+        <img alt="open channel-sampler issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/channel-sampler?label=open&style=flat-square">
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Achannel-sampler">
+        <img alt="closed channel-sampler issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/channel-sampler?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
-    <td rowspan="2"><a href="https://pyflp.readthedocs.io/en/latest/reference/mixer.html">Mixer</a></td>
+    <td rowspan="2">
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/mixer.html">Mixer</a><br/>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Amixer-general">
+        <img alt="open mixer-general issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/mixer-general?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Amixer-general">
+        <img alt="closed mixer-general issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/mixer-general?label=closed&style=flat-square"/>
+      </a>
+    </td>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/mixer.html#pyflp.mixer.Insert">🎚️ Inserts</a></td>
-    <td>✅ Implemented</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Amixer-insert">
+        <img alt="open mixer-insert issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/mixer-insert?label=open&style=flat-square">
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Amixer-insert">
+        <img alt="closed mixer-insert issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/mixer-insert?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
     <tr>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/mixer.html#pyflp.mixer.Slot">🎰 Effect slots</a></td>
-    <td>✅ Implemented</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Amixer-slot">
+        <img alt="open mixer-slot issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/mixer-slot?label=open&style=flat-square">
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Amixer-slot">
+        <img alt="closed mixer-slot issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/mixer-slot?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
-    <td rowspan="3"><a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html">Patterns</a></td>
+    <td rowspan="3">
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html">Patterns</a><br/>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Apattern-general">
+        <img alt="open pattern-general issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/pattern-general?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Apattern-general">
+        <img alt="closed pattern-general issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/pattern-general?label=closed&style=flat-square"/>
+      </a>
+    </td>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html#pyflp.pattern.Controller">🎛 Controllers</a></td>
-    <td>🚧 Work in progress</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Apattern-controller">
+        <img alt="open pattern-controller issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/pattern-controller?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Apattern-controller">
+        <img alt="closed pattern-controller issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/pattern-controller?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
     <tr>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html#pyflp.pattern.Note">🎵 Notes</a></td>
-    <td>✅ Implemented</td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Apattern-note">
+        <img alt="open pattern-note issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/pattern-note?label=open&style=flat-square">
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Apattern-note">
+        <img alt="closed pattern-note issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/pattern-note?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
     <td>🚩 Timemarkers</td>
     <td>⏰ Planned</td>
   </tr>
   <tr>
-    <td rowspan="2"><a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html">Plugins</a></td>
-    <td>Native</td>
-    <td>7
-      <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#effects">effects</a>,
-      1 <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#generators">synth</a></td>
+    <td rowspan="2">
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html">Plugins</a>
+    </td>
+    <td>
+      Native -
+      7 <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#effects">effects</a>,
+      1 <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#generators">synth</a>
+    </td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aplugin-native">
+        <img alt="open plugin-native issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/plugin-native?label=open&style=flat-square">
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Aplugin-native">
+        <img alt="closed plugin-native issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/plugin-native?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
-    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#pyflp.plugin.VSTPlugin">3rd party</a></td>
-    <td>VST 2/3, Waveshells</td>
+    <td>
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#pyflp.plugin.VSTPlugin">© 3rd party</a>
+      - VST 2/3
+    </td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aplugin-3rdparty">
+        <img alt="plugin-3rdparty issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/plugin-3rdparty?label=open&style=flat-square">
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Aplugin-3rdparty">
+        <img alt="closed plugin-3rdparty issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/plugin-3rdparty?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
-    <td rowspan="2"><a href="https://pyflp.readthedocs.io/en/latest/reference/project.html">Misc</a></td>
-    <td colspan="2">ℹ Song information and project settings</td>
+    <td rowspan="2" colspan="2">
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/project.html">Misc</a>
+      - Song metadata and project settings
+    </td>
+    <td colspan="2">
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aproject-general">
+        <img alt="open project-general issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/project-general?label=open&style=flat-square">
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Aproject-general">
+        <img alt="closed project-general issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/project-general?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
 </table>
 <!-- markdownlint-restore -->
 
 ## ⏬ Installation
 
-**Python 3.7+** required (CPython is tested, alternate implementations like PyPy
-might work but are currently untested):
+**Python 3.7+** required (CPython and PyPy are supported):
 
 ```console
 python -m pip install -U --pre pyflp
@@ -196,9 +332,7 @@ project = pyflp.parse("/path/to/parse.flp")
 pyflp.save(project, "/path/to/save.flp")
 ```
 
-> The format used by FL Studio - the "FLP format" is essentially undocumented.
-> Every new version of FL Studio brings a change in the format and might break
-> PyFLP. It is advised to do a backup of your projects before doing any changes.
+> It is advised to do a backup of your projects before doing any changes.
 > After you are done with them, it is recommended to open the modified project
 > in FL Studio one to ensure that it works as intended.
 
@@ -213,7 +347,7 @@ you should only need the high level API though.
 ## ✨ Contributors
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)
+![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
