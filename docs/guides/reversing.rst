@@ -7,7 +7,7 @@ Reversing FLP format
 
 One could use a hex editor, but its too tedious. I have a simpler solution:
 
-.. figure:: /img/dev/reversing/flpedit.png
+.. figure:: /img/guides/reversing/flpedit.png
    :alt: A test FLP opened in FLPEdit
 
    **FLPEdit**, an event view for FLP (and related formats) files.

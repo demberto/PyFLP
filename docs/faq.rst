@@ -22,7 +22,7 @@ If you are completely new to the terminology used by PyFLP, you should also
 open up FL Studio's documentation open besides the `reference <./reference>`_.
 
 If you find something isn't yet implemented, open an issue or, a
-:doc:`PR <./contributing>`_ if you have implemented something.
+:doc:`PR <./contributing>` if you have implemented something.
 
 ➕➖ Why is there no functionality to **add** / **remove** items from collections?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,11 +45,9 @@ which hasn't changed a lot since FL Studio first introduced it.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Please check the :doc:`contributor's guide <./contributing>` if you are new to
-PyFLP.
+PyFLP. Check the :doc:`architecture` to understand the internals.
 
-Check the :doc:`architecture <./architecture>` to understand the internals.
-
-Also check out the :doc:`dev tutorials <./dev>`.
+Also check out the :doc:`developer guides <./guides>`.
 
 🧵 Is PyFLP thread safe?
 ^^^^^^^^^^^^^^^^^^^^^^^^^

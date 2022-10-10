@@ -1,5 +1,5 @@
 🚶‍♂️ Walkthrough: Implementing a plugin data parser
-==================================================
+====================================================
 
 Implementing a native plugin data parser can be easy. Below is a walkthrough
 for implementing a simple effect, :class:`Fruity Balance <pyflp.plugin.FruityBalance>`.
@@ -12,7 +12,7 @@ for implementing a simple effect, :class:`Fruity Balance <pyflp.plugin.FruityBal
 
 1. Note the parameters exposed by the plugin
 
-.. image:: /img/dev/plugin/1-parameters.png
+.. image:: /img/guides/plugin/1-parameters.png
    :align: center
    :alt: Fruity Balance paramerers
 
@@ -23,7 +23,7 @@ followed by **Volume**.
 
 Create an empty new FLP, add a **Fruity Balance** to one of the insert slots.
 
-.. image:: /img/dev/plugin/2-load-plugin.png
+.. image:: /img/guides/plugin/2-load-plugin.png
    :align: center
    :alt: Fruity Balance in an insert slot
 
@@ -67,7 +67,7 @@ knob takes **4 bytes**.
 
 Now compare it with the **positions** of the knobs in Fruity Balance.
 
-.. image:: /img/dev/plugin/3-observe-knob-positions.png
+.. image:: /img/guides/plugin/3-observe-knob-positions.png
    :align: center
    :alt: Observe knob positions
 
@@ -94,19 +94,81 @@ find out the minimum and maximums of each knob.
 
    One very important place for finding out the extremes is the hint panel.
 
-   .. image:: /img/dev/plugin/4-hint-panel.png
+   .. image:: /img/guides/plugin/4-hint-panel.png
       :align: center
       :alt: FL Studio hint panel
 
 6. Writing the plugin code
 
-.. todo:: Explain properly
+ℹ All plugins are implemented in the :mod:`pyflp.plugin` module.
 
-Have a look at the existing implementation:
+.. note::
 
-.. raw:: html
+   Take care to follow the naming conventions as shown below.
 
-   <script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fdemberto%2FPyFLP%2Fblob%2F77ddbf8d7f8bbddf864d0031015ddeafea3df593%2Fpyflp%2Fplugin.py%23L66-L67&style=github-dark-dimmed&type=code&showBorder=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
-   <script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fdemberto%2FPyFLP%2Fblob%2F77ddbf8d7f8bbddf864d0031015ddeafea3df593%2Fpyflp%2Fplugin.py%23L112-L113&style=github-dark-dimmed&type=code&showBorder=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
-   <script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fdemberto%2FPyFLP%2Fblob%2F77ddbf8d7f8bbddf864d0031015ddeafea3df593%2Fpyflp%2Fmixer.py%23L383-L395&style=github-dark-dimmed&type=code&showBorder=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
-   <script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fdemberto%2FPyFLP%2Fblob%2F77ddbf8d7f8bbddf864d0031015ddeafea3df593%2Fpyflp%2Fplugin.py%23L428-L450&style=github-dark-dimmed&type=code&showBorder=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
+Begin with writing the code for the plugin :ref:`event <architecture-event>`:
+
+.. code-block:: python
+
+   class FruityBalanceEvent(StructEventBase):
+       STRUCT = c.Struct("pan" / c.Int32ul, "volume" / c.Int32ul).compile()
+
+.. note:: What is ``c.Struct``?
+
+   PyFLP uses the :mod:`construct` library to define and binary structures.
+   Its a fairly simple to understand declarative binary parser creator.
+
+   .. tip::
+
+      Call :meth:`construct.Struct.compile()` to get a faster version of the
+      "Struct". Check <https://construct.readthedocs.io/en/latest/compilation.html>
+      for more information.
+
+Now create a :ref:`model <architecture-model>` for the event we just created
+in the same module:
+
+.. code-block:: python
+
+   class FruityBalance(_PluginBase[FruityBalanceEvent]):
+       pan = _PluginDataProp[int]()
+       volume = _PluginDataProp[int]()
+
+You don't need to worry about ``_PluginBase`` and ``_PluginDataProp``. They are
+implementation-level details, you don't *generally* need to worry about.
+
+Derive our newly create ``FruityBalance`` from ``_IPlugin`` and implement it:
+
+.. important::
+
+   Don't forget to do this. Otherwise the event will not be parsed.
+
+.. code-block:: python
+   :emphasize-lines: 1, 2
+
+   class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin):
+       INTERNAL_NAME = "Fruity Balance"
+       pan = _PluginDataProp[int]()
+       volume = _PluginDataProp[int]()
+
+.. note::
+
+   Use :doc:`FLPEdit <./reversing>` to find out ``INTERNAL_NAME`` of a plugin.
+
+🎉 And that's basically it. The implementation is complete! Now all we need to
+do is glue ``FruityBalanceEvent`` and ``FruityBalance`` to the effect slot's
+:attr:`pyflp.mixer.Slot.plugin` attribute.
+
+7. Glue the implementation to :class:`pyflp.mixer.Slot`:
+
+Import our newly created classes in :mod:`pyflp.mixer` and add an entry to
+:attr:`pyflp.mixer.Slot.plugin` like so:
+
+.. code-block:: python
+   :emphasize-lines: 3
+
+   plugin = PluginProp(
+        {
+            FruityBalanceEvent: FruityBalance,
+            ...
+        }
+    )

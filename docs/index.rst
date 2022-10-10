@@ -5,13 +5,14 @@ Navigation
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
 
    handbook
    reference
    features
    architecture
    contributing
-   dev
+   guides
    faq
    helping
    changelog

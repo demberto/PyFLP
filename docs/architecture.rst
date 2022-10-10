@@ -33,6 +33,8 @@ the FLP format and how the GUI hierarchies relate to their underlying events.
 
 ⬇ The sections below are ordered from low-level to high-level concepts.
 
+.. _architecture-event:
+
 Understanding events
 --------------------
 
@@ -52,7 +54,7 @@ That being said, all the data except:
 is stored in a structure called an **Event**.
 
 ❔ What is an **Event**?
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note:: C terminology
 
@@ -91,14 +93,14 @@ Events are the first stage of parsing in PyFLP. The :meth:`pyflp.parse` method
 gathers all events by reading an FLP file as a binary stream.
 
 Representation
---------------
+^^^^^^^^^^^^^^
 
 An event ID is represented in an ``EventEnum`` subclass.
 
 .. autoclass:: EventEnumMeta
 .. autoclass:: EventEnum
 
-These enums are documented throughout the :doc:`reference <../reference>`.
+These enums are documented throughout the :doc:`reference`.
 
 For each of the range above, I have created a number of classes to match the
 exact type of ``data`` indicated by its usage. What I mean by this statement
@@ -187,15 +189,17 @@ applied by the ID range itself.
         saving this valuable event ID space as well ❕
 
 Fast forward many versions later, FL still uses this weird mixture of fixed and
-variable size events to represent what I call a :doc:`model <./architecture>`.
+variable size events to represent what I call a :ref:`model <architecture-model>`.
 
 .. todo::
 
    Explain different types of "custom structures" (:class:`DataEventBase`
    subclasses).
 
-\ :fas:`cubes` Understanding models
------------------------------------
+.. _architecture-model:
+
+📦 Understanding models
+------------------------
 
 A **model** is an entity, or an object, programmatically speaking.
 
@@ -209,16 +213,16 @@ A **model** is an entity, or an object, programmatically speaking.
     PyFLP's modules are categorized to follow FL Studio' GUI hierarchy as well.
     Every module *generally* represents a **separate window** in the GUI.
 
-In PyFLP, a model is **composed** of several :doc:`descriptors <./architecture>`,
+In PyFLP, a model is **composed** of several :ref:`descriptors <architecture-descriptor>`,
 properties and some additional helper methods, optionally. It *might* contain
 additional parsing logic for nested models and collections of models.
 
-A model's internal state is stored in :doc:`events <./architecture>` and its
+A model's internal state is stored in :ref:`events <architecture-event>` and its
 shared state is passed to it via keyword arguments. *For example*, many models
 depend on :attr:`pyflp.project.Project.version` to decide the parsing logic for
 certain properties. This creates a "dependancy" of the model to a "shared"
 property. Such "dependencies" are passed to the model in the form of keyword
-arguments and consumed by the :doc:`descriptors <./architecture>`.
+arguments and consumed by the :ref:`descriptors <architecture-descriptor>`.
 
 A model **does NOT cache** its state in any way. This is done, mainly to:
 
@@ -248,18 +252,19 @@ Reference
    :show-inheritance:
    :members:
 
+.. _architecture-descriptor:
+
 \ :fas:`bars-staggered` Understanding descriptors
 -------------------------------------------------
 
 .. automodule:: pyflp._descriptors
    :show-inheritance:
 
-A "descriptor" provides low-level managed attribute access, according to Python
-docs. *(slightly rephrased for my convenience)*. Its what ``@property`` uses
-internally.
+A "descriptor" provides low-level managed attribute access, according to
+Python docs. *(slightly rephrased for my convenience)*.
 
-    Descriptors are one of the main reasons why PyFLP has been possible with
-    very little code duplication while providing a clean Pythonic interface.
+    IMO, it allows separation of attribute logic from the class implementation
+    itself and this saves a huge amount of repretitive error-prone code.
 
     .. note:: More about descriptors in Python
 
@@ -269,12 +274,18 @@ internally.
           <https://realpython.com/python-descriptors/#why-use-python-descriptors>`_
           section.
 
-In PyFLP, descriptors are used to describe an attribute of a :doc:`model <./architecture>`.
-Internally, they access the value of an :doc:`event <./architecture>` or one if its keys.
+In PyFLP, descriptors are used for attributes of a :ref:`model <architecture-model>`.
+Internally, they access the value of an :ref:`event <architecture-event>` or
+one if its keys for :class:`StructEventBase`. They can be called *stateless*
+because they never cache the value which they fetch and directly dump back into
+the event when their setter is invoked.
 
 Some common descriptors like ``name`` 🔤, ``color`` 🎨 or ``icon`` 🖼 are used by
 multiple different types of models. The descriptors used for these can be
-different depending upon the internal representation inside :doc:`events <./architecture>`.
+different depending upon the internal representation inside :ref:`events <architecture-event>`.
+
+Despite all this, they are normal attributes from a type-checker's POV 👁 when
+accessed from an instance.
 
 .. note::
 

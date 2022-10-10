@@ -89,7 +89,7 @@ project and preset files written in Python.
 <!-- markdownlint-restore -->
 
 From a very general point-of-view, this is the state of what is currently
-implemented.
+implemented. Click on a link to go to the documentation for that feature.
 
 <!-- FEATURE TABLE -->
 <!-- markdownlint-disable -->
@@ -101,9 +101,12 @@ implemented.
   </tr>
   <tr>
     <td rowspan="3">
-      <a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html">Arrangements</a><br/><br/>
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html">Arrangements</a><br/>
       <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aarrangement-general">
-        <img alt="arrangement-general issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/arrangement-general?label=open&style=flat-square"/>
+        <img alt="open arrangement-general issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/arrangement-general?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Aarrangement-general">
+        <img alt="closed arrangement-general issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/arrangement-general?label=closed&style=flat-square"/>
       </a>
     </td>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#playlist">🎼 Playlist</a></td>
@@ -128,7 +131,7 @@ implemented.
     </td>
   </tr>
   <tr>
-    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#track">Tracks</a></td>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#track">🎞️ Tracks</a></td>
     <td>
       <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aarrangement-track">
         <img alt="open arrangement-track issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/arrangement-track?label=open&style=flat-square"/>
@@ -170,7 +173,7 @@ implemented.
     </td>
   </tr>
   <tr>
-    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Layer">Layer</a></td>
+    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/channels.html#pyflp.channel.Layer">📚 Layer</a></td>
     <td>
       <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Achannel-layer">
         <img alt="open channel-layer issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/channel-layer?label=open&style=flat-square"/>
@@ -277,8 +280,7 @@ implemented.
   </tr>
   <tr>
     <td>
-      <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#pyflp.plugin.VSTPlugin">© 3rd party</a>
-      - VST 2/3
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/plugins.html#pyflp.plugin.VSTPlugin">VST 2/3</a>
     </td>
     <td>
       <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aplugin-3rdparty">
@@ -291,8 +293,8 @@ implemented.
   </tr>
   <tr>
     <td rowspan="2" colspan="2">
-      <a href="https://pyflp.readthedocs.io/en/latest/reference/project.html">Misc</a>
-      - Song metadata and project settings
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/project.html">Project</a>
+      - Settings and song metadata
     </td>
     <td colspan="2">
       <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aproject-general">
@@ -310,7 +312,7 @@ implemented.
 
 **Python 3.7+** required (CPython and PyPy are supported):
 
-```console
+```bat
 python -m pip install -U --pre pyflp
 ```
 
@@ -326,6 +328,9 @@ import pyflp
 project = pyflp.parse("/path/to/parse.flp")
 ```
 
+> If you get any sort of errors or warnings while doing this, please open an
+> [issue](https://github.com/demberto/PyFLP/issues).
+
 [Save](https://pyflp.readthedocs.io/en/latest/reference.html#pyflp.save) the project:
 
 ```py
@@ -333,11 +338,11 @@ pyflp.save(project, "/path/to/save.flp")
 ```
 
 > It is advised to do a backup of your projects before doing any changes.
-> After you are done with them, it is recommended to open the modified project
-> in FL Studio one to ensure that it works as intended.
+> It is also recommended to open the modified project in FL Studio to ensure
+> that it works as intended.
 
-PyFLP provides a low-level events-based API and a high-level API. Generally,
-you should only need the high level API though.
+Check the [reference](https://pyflp.rtfd.io/en/latest/reference.html) for a
+complete list of useable features.
 
 ## 🙏 Acknowledgements
 
