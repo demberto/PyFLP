@@ -1,26 +1,18 @@
-name: Bug Report
-description: File a bug report
-title: "🐞 "
-labels: ["bug"]
+name: Feature request
+description: ✨ I want a new feature
+title: "✨ "
+labels: ["enhancement"]
 body:
   - type: textarea
     id: description
     attributes:
-      label: Describe the issue
-      description: A clear and a concise description of what happened.
+      label: Describe the feature
     validations:
       required: true
   - type: input
     id: version
     attributes:
       label: What version of PyFLP are you using?
-    validations:
-      required: true
-  - type: textarea
-    id: code
-    attributes:
-      label: What code caused this issue?
-      render: python3
     validations:
       required: true
   - type: textarea
