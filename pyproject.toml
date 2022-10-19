@@ -22,10 +22,15 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
   "Topic :: Multimedia",
   "Topic :: Software Development :: Libraries :: Python Modules",
-  "Typing :: Typed"
+  "Typing :: Typed",
 ]
 license = { text = "GPL-3.0" }
-dependencies = ["colour>=0.1.5", "construct-typing>=0.5.2", "typing_extensions>=4.4.0"]
+dependencies = [
+  "colour>=0.1.5",
+  "construct-typing>=0.5.2",
+  "sortedcontainers>=2.4.0",
+  "typing_extensions>=4.4.0",
+]
 dynamic = ["version"]
 
 [project.urls]

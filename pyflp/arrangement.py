@@ -15,10 +15,9 @@
 
 from __future__ import annotations
 
-import collections
 import enum
 import sys
-from typing import Any, DefaultDict, Iterator, Optional, cast
+from typing import Any, Iterator, Optional, cast
 
 if sys.version_info >= (3, 8):
     from typing import Literal, TypedDict
@@ -43,6 +42,7 @@ from ._events import (
     AnyEvent,
     ColorEvent,
     EventEnum,
+    EventTree,
     FourByteBool,
     ListEventBase,
     StdEnum,
@@ -51,7 +51,7 @@ from ._events import (
     U16Event,
     U32Event,
 )
-from ._models import FLVersion, ItemModel, ModelCollection, MultiEventModel, getslice
+from ._models import EventModel, FLVersion, ItemModel, ModelCollection, supports_slice
 from .channel import Channel
 from .exceptions import ModelNotFound, NoModelsFound
 from .pattern import Pattern
@@ -221,7 +221,7 @@ class PatternPlaylistItem(PlaylistItemBase):
     pattern = KWProp[Pattern]()
 
 
-class TimeMarker(MultiEventModel):
+class TimeMarker(EventModel):
     """A marker in the timeline of an :class:`Arrangement`."""
 
     def __repr__(self):
@@ -241,9 +241,8 @@ class TimeMarker(MultiEventModel):
 
     @property
     def position(self) -> int | None:
-        events = self._events.get(TimeMarkerID.Position)
-        if events is not None:
-            event = events[0]
+        if TimeMarkerID.Position in self.events:
+            event = self.events.first(TimeMarkerID.Position)
             if event.value < TimeMarkerType.Signature:
                 return event.value
             return event.value - TimeMarkerType.Signature
@@ -254,9 +253,8 @@ class TimeMarker(MultiEventModel):
 
         [![](https://bit.ly/3RDM1yn)]()
         """
-        events = self._events.get(TimeMarkerID.Position)
-        if events is not None:
-            event = events[0]
+        if TimeMarkerID.Position in self.events:
+            event = self.events.first(TimeMarkerID.Position)
             if event.value >= TimeMarkerType.Signature:
                 return TimeMarkerType.Signature
             return TimeMarkerType.Marker
@@ -277,21 +275,23 @@ class _TrackKW(TypedDict):
     items: list[PlaylistItemBase]
 
 
-class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
+class Track(EventModel, ModelCollection[PlaylistItemBase]):
     """Represents a track in an arrangement on which playlist items are arranged.
 
     ![](https://bit.ly/3de6R8y)
     """
 
-    def __init__(self, *events: AnyEvent, **kw: Unpack[_TrackKW]):
-        super().__init__(*events, **kw)
+    def __init__(self, events: EventTree, **kw: Unpack[_TrackKW]):
+        super().__init__(events, **kw)
 
     def __getitem__(self, index: int | slice | str):
+        if isinstance(index, str):
+            return NotImplemented
         return self._kw["items"][index]
 
     def __index__(self) -> int:
         """An integer in the range of 1 to :attr:`Arrangements.max_tracks`."""
-        return cast(TrackEvent, self._events[TrackID.Data][0])["index"]
+        return cast(TrackEvent, self.events.first(TrackID.Data))["index"]
 
     def __iter__(self) -> Iterator[PlaylistItemBase]:
         """An iterator over :attr:`items`."""
@@ -363,7 +363,7 @@ class _ArrangementKW(TypedDict):
     version: FLVersion
 
 
-class Arrangement(MultiEventModel):
+class Arrangement(EventModel):
     """Contains the timemarkers and tracks in an arrangement.
 
     ![](https://bit.ly/3B6is1z)
@@ -371,8 +371,8 @@ class Arrangement(MultiEventModel):
     *New in FL Studio v12.9.1*: Support for multiple arrangements.
     """
 
-    def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
-        super().__init__(*events, **kw)
+    def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]):
+        super().__init__(events, **kw)
 
     def __repr__(self):
         timemarkers = f"{len(tuple(self.timemarkers))} timemarkers"
@@ -384,34 +384,14 @@ class Arrangement(MultiEventModel):
 
     def __index__(self) -> int:
         """A 1-based index."""
-        return self._events[ArrangementID.New][0].value
+        return self.events.first(ArrangementID.New).value
 
     name = EventProp[str](ArrangementID.Name)
     """Name of the arrangement; defaults to **Arrangement**."""
 
-    def _collect_events(self, enum_: type[EventEnum]):
-        counter: list[int] = []
-        ins_events: list[list[AnyEvent]] = []
-        for id, events in self._events.items():
-            if id in enum_:
-                counter.append(len(events))
-                ins_events.append(events)
-
-        ins_dict: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
-        for i in range(max(counter, default=0)):
-            for sublist in ins_events:
-                try:
-                    event = sublist[i]
-                except IndexError:
-                    pass
-                else:
-                    ins_dict[i].append(event)
-        return ins_dict.values()
-
     @property
     def timemarkers(self) -> Iterator[TimeMarker]:
-        for events in self._collect_events(TimeMarkerID):
-            yield TimeMarker(*events)
+        yield from (TimeMarker(ed) for ed in self.events.group(*TimeMarkerID))
 
     @property
     def tracks(self) -> Iterator[Track]:
@@ -419,22 +399,22 @@ class Arrangement(MultiEventModel):
         pl_event = None
         max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
 
-        if ArrangementID.Playlist in self._events:
-            pl_event = cast(PlaylistEvent, self._events[ArrangementID.Playlist][0])
+        if ArrangementID.Playlist in self.events:
+            pl_event = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
 
-        for events in self._collect_events(TrackID):
+        for ed in self.events.group(*TrackID):
             items: list[PlaylistItemBase] = []
             if pl_event is not None:
                 for item in pl_event:
                     idx = item["track_index"]
                     if max_idx - idx == count:
                         items.append(PlaylistItemBase(item))
-            yield Track(*events, items=items)
+            yield Track(ed, items=items)
             count += 1
 
 
 # TODO Find whether time is set to signature or division mode.
-class TimeSignature(MultiEventModel):
+class TimeSignature(EventModel):
     def __repr__(self) -> str:
         return f"Global time signature: {self.num}/{self.beat}"
 
@@ -457,13 +437,13 @@ class TimeSignature(MultiEventModel):
     """
 
 
-class Arrangements(MultiEventModel, ModelCollection[Arrangement]):
+class Arrangements(EventModel, ModelCollection[Arrangement]):
     """Iterator over arrangements in the project and some related properties."""
 
-    def __init__(self, *events: AnyEvent, **kw: Unpack[_ArrangementKW]):
-        super().__init__(*events, **kw)
+    def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]):
+        super().__init__(events, **kw)
 
-    @getslice
+    @supports_slice
     def __getitem__(self, i: int | str | slice):
         """Returns an arrangement based either on its index or name.
 
@@ -493,18 +473,21 @@ class Arrangements(MultiEventModel, ModelCollection[Arrangement]):
         Raises:
             NoModelsFound: When no arrangements are found.
         """
-        arrs_evs: list[list[AnyEvent]] = [[] for _ in range(len(self))]
-        idx = 0
-        for event in self._events_tuple:
-            if event.id == ArrangementID.New:
-                idx = event.value
+        arrnew_occured = False
 
-            for enum_ in (ArrangementID, TimeMarkerID, TrackID):
-                if event.id in enum_:
-                    arrs_evs[idx].append(event)
+        def select(e: AnyEvent):
+            nonlocal arrnew_occured
+            if e.id == ArrangementID.New:
+                if arrnew_occured:
+                    return False
+                arrnew_occured = True
 
-        for arr_evs in arrs_evs:
-            yield Arrangement(*arr_evs, version=self._kw["version"])
+            if e.id in (*ArrangementID, *TimeMarkerID, *TrackID):
+                return True
+
+        for ed in self.events.subdicts(select, len(self)):
+            yield Arrangement(ed, version=self._kw["version"])
+            arrnew_occured = False  # Reset for next arrangement
 
     def __len__(self):
         """The number of arrangements present in the project.
@@ -512,9 +495,9 @@ class Arrangements(MultiEventModel, ModelCollection[Arrangement]):
         Raises:
             NoModelsFound: When no arrangements are found.
         """
-        if ArrangementID.New not in self._events:
+        if ArrangementID.New not in self.events:
             raise NoModelsFound
-        return len(self._events[ArrangementID.New])
+        return self.events.count(ArrangementID.New)
 
     def __repr__(self):
         return f"{len(self)} arrangements"
@@ -527,8 +510,8 @@ class Arrangements(MultiEventModel, ModelCollection[Arrangement]):
             ModelNotFound: When the underlying event value points to an
                 invalid arrangement index.
         """
-        if ArrangementsID.Current in self._events:
-            event = self._events[ArrangementsID.Current][0]
+        if ArrangementsID.Current in self.events:
+            event = self.events.first(ArrangementsID.Current)
             index = event.value
             try:
                 return list(self)[index]

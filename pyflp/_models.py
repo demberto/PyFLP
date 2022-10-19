@@ -16,22 +16,21 @@
 from __future__ import annotations
 
 import abc
-import collections
 import dataclasses
 import functools
 import sys
-from typing import Any, Callable, DefaultDict, Iterable, Sequence, TypeVar, overload
+from typing import Any, Callable, Iterable, Sequence, TypeVar, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
 else:
     from typing_extensions import Protocol, runtime_checkable
 
-from ._events import AnyEvent
+from ._events import EventTree
 
 
 class ModelBase(abc.ABC):
-    def __init__(self, **kw: Any):
+    def __init__(self, *args: Any, **kw: Any):
         self._kw = kw
 
 
@@ -49,58 +48,20 @@ class ItemModel(ModelBase):
         self._item[prop] = value
 
 
-class SingleEventModel(ModelBase):
-    """Base class for models whose properties are derived from a single event."""
-
-    def __init__(self, event: AnyEvent, **kw: Any):
+class EventModel(ModelBase):
+    def __init__(self, events: EventTree, **kw: Any):
         super().__init__(**kw)
-        self._event = event
+        self.events = events
 
     def __eq__(self, o: object):
         if not isinstance(o, type(self)):
             raise TypeError(f"Cannot compare {type(o)!r} with {type(self)!r}")
 
-        return o.event() == self.event()
-
-    def event(self) -> AnyEvent:
-        """Returns the underlying event used by the model.
-
-        Tip:
-            You almost never need to use this method and it is only provided
-            to calm type checkers from complaining about protected access.
-        """
-        return self._event
-
-
-class MultiEventModel(ModelBase):
-    def __init__(self, *events: AnyEvent, **kw: Any):
-        super().__init__(**kw)
-        self._events: dict[int, list[AnyEvent]] = {}
-        self._events_tuple = events
-        tmp: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
-
-        for event in events:
-            if event is not None:
-                tmp[event.id].append(event)
-        self._events.update(tmp)
-
-    def __eq__(self, o: object):
-        if not isinstance(o, type(self)):
-            raise TypeError(f"Cannot compare {type(o)!r} with {type(self)!r}")
-
-        return o.events_astuple() == self.events_astuple()
-
-    def events_astuple(self):
-        """Returns a tuple of events used by the model in their original order."""
-        return self._events_tuple
-
-    def events_asdict(self):
-        """Returns a dictionary of event ID to a list of events."""
-        return self._events
+        return o.events == self.events
 
 
 MT_co = TypeVar("MT_co", bound=ModelBase, covariant=True)
-SEMT_co = TypeVar("SEMT_co", bound=SingleEventModel, covariant=True)
+EMT_co = TypeVar("EMT_co", bound=EventModel, covariant=True)
 
 
 @runtime_checkable
@@ -118,7 +79,7 @@ class ModelCollection(Iterable[MT_co], Protocol[MT_co]):
         ...
 
 
-def getslice(func: Callable[[Any, Any], MT_co]):
+def supports_slice(func: Callable[[Any, Any], MT_co]):
     """Wraps a :meth:`ModelCollection.__getitem__` to return a sequence if required."""
 
     @overload

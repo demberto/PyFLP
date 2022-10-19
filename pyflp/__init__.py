@@ -44,6 +44,7 @@ from ._events import (
     AnyEvent,
     AsciiEvent,
     EventEnum,
+    EventTree,
     U8Event,
     U16Event,
     U32Event,
@@ -66,7 +67,7 @@ def parse(file: pathlib.Path | str) -> Project:
     """Parses an FL Studio project file and returns a parsed :class:`Project`.
 
     Args:
-        file (pathlib.Path | str): Path to the FLP.
+        file: Path to the FLP.
 
     Raises:
         HeaderCorrupted: When an invalid value is found in the file header.
@@ -75,7 +76,7 @@ def parse(file: pathlib.Path | str) -> Project:
     with open(file, "rb") as flp:
         stream = io.BytesIO(flp.read())
 
-    events: list[AnyEvent] = []
+    events = EventTree()
 
     if stream.read(4) != b"FLhd":  # 4
         raise HeaderCorrupted("Unexpected header chunk magic; expected 'FLhd'")
@@ -113,7 +114,7 @@ def parse(file: pathlib.Path | str) -> Project:
     stream.seek(22)  # Back to start of events
     while stream.tell() < file_size:
         event_type: type[AnyEvent] | None = None
-        id = c.Int8ul.parse_stream(stream)
+        id = EventEnum(c.Int8ul.parse_stream(stream))
 
         if id < WORD:
             value = stream.read(1)
@@ -132,9 +133,9 @@ def parse(file: pathlib.Path | str) -> Project:
             else:
                 str_type = AsciiEvent
 
-        for enum_type in EventEnum.__subclasses__():
-            if id in enum_type:
-                event_type = getattr(enum_type(id), "type")
+        for enum_ in EventEnum.__subclasses__():
+            if id in enum_:
+                event_type = getattr(enum_(id), "type")
                 break
 
         if event_type is None:
@@ -144,7 +145,7 @@ def parse(file: pathlib.Path | str) -> Project:
                 event_type = U16Event
             elif id < TEXT:
                 event_type = U32Event
-            elif id < DATA or id in NEW_TEXT_IDS:
+            elif id < DATA or id.value in NEW_TEXT_IDS:
                 if str_type is None:  # pragma: no cover
                     raise VersionNotDetected  # ! This should never happen
                 event_type = str_type
@@ -158,7 +159,7 @@ def parse(file: pathlib.Path | str) -> Project:
 
         events.append(event_type(id, value))
 
-    return Project(*events, channel_count=channel_count, format=file_format, ppq=ppq)
+    return Project(events, channel_count=channel_count, format=file_format, ppq=ppq)
 
 
 def save(project: Project, file: pathlib.Path | str):
@@ -168,9 +169,8 @@ def save(project: Project, file: pathlib.Path | str):
         Always have a backup ready, just in case 😉
 
     Args:
-        project (Project): The object returned by :meth:`parse`.
-        file (pathlib.Path | str): The file in which the contents of
-            :attr:`project` are serialised back.
+        project: The object returned by :meth:`parse`.
+        file: The file in which the contents of :attr:`project` are serialised back.
     """
     stream = io.BytesIO()
     stream.write(b"FLhd")  # 4
@@ -181,8 +181,11 @@ def save(project: Project, file: pathlib.Path | str):
     stream.write(b"FLdt")  # 18
     stream.seek(4, 1)  # leave space for total event size
 
-    events_size = 0
-    for event in project.events_astuple():
+    first_event = project.events.pop(ProjectID.FLVersion)
+    events_size = first_event.size
+    stream.write(bytes(first_event))
+
+    for event in project.events.all():
         events_size += event.size
         stream.write(bytes(event))
 

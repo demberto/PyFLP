@@ -9,15 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.0.0a4 - Unreleased
 
+The way models were passed events has changed. I designed a new data structure
+called ``EventTree`` (check ``pyflp._events``) to allow the insertion and
+deletion of events like a list while preserving the speed of a dict lookups.
+
+Sounds *awfully* like ``multidict`` except that it doesn't allow mutable views.
+``EventTree`` knows its parents and any attempt to insert or delete an event
+from it will also affect its parents *and vice-versa*. Took quite some to do.
+
+``EventTree`` will allow for insertion / removal of events when corresponding
+descriptor setters / deleters (yet to implement) are invoked. This can allow
+for wonderful things like creating new channels, moving inserts etc.
+
 ### Added
 
+- A multidict with mutable dict view ``EventTree``.
 - PyPy 3.7+ support [#77].
 - Slicing for ModelBase collections [#31].
 - Fruity Center parser [#42].
+- Dependency on ``sortedcontainers`` library for ``EventTree``.
 
 ### Changed
 
 - Simplified some `__repr__` strings.
+- Event IDs are all `EventEnum` members (better repr-strings).
+- PyFLP is guaranteed to be not thread-safe.
 
 ### Fixed
 

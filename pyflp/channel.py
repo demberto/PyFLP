@@ -15,10 +15,10 @@
 
 from __future__ import annotations
 
-import collections
 import enum
 import pathlib
 import sys
+from collections import defaultdict
 from typing import DefaultDict, Iterator, List, Tuple, cast
 
 if sys.version_info >= (3, 8):
@@ -36,9 +36,9 @@ from ._events import (
     DWORD,
     TEXT,
     WORD,
-    AnyEvent,
     BoolEvent,
     EventEnum,
+    EventTree,
     F32Event,
     I8Event,
     I32Event,
@@ -50,23 +50,15 @@ from ._events import (
     U32Event,
 )
 from ._models import (
+    EventModel,
     ItemModel,
     ModelCollection,
     ModelReprMixin,
-    MultiEventModel,
-    SingleEventModel,
-    getslice,
+    supports_slice,
 )
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .plugin import (
-    BooBass,
-    BooBassEvent,
-    PluginID,
-    PluginProp,
-    VSTPlugin,
-    VSTPluginEvent,
-)
+from .plugin import BooBass, PluginID, PluginProp, VSTPlugin
 
 __all__ = [
     "ArpDirection",
@@ -425,7 +417,7 @@ class _SamplerFlags(enum.IntFlag):
     KeepOnDisk = 1 << 8
 
 
-class DisplayGroup(MultiEventModel, ModelReprMixin):
+class DisplayGroup(EventModel, ModelReprMixin):
     def __repr__(self):
         if self.name is None:
             return "Unnamed display group"
@@ -434,7 +426,7 @@ class DisplayGroup(MultiEventModel, ModelReprMixin):
     name = EventProp[str](DisplayGroupID.Name)
 
 
-class Arp(SingleEventModel, ModelReprMixin):
+class Arp(EventModel, ModelReprMixin):
     """Used by :class:`Sampler`: and :class:`Instrument`.
 
     ![](https://bit.ly/3Lbk7Yi)
@@ -463,7 +455,7 @@ class Arp(SingleEventModel, ModelReprMixin):
     """Delay between two successive notes played."""
 
 
-class Delay(SingleEventModel, ModelReprMixin):
+class Delay(EventModel, ModelReprMixin):
     """Echo delay / fat mode section.
 
     Used by :class:`Sampler` and :class:`Instrument`.
@@ -523,7 +515,7 @@ class Delay(SingleEventModel, ModelReprMixin):
     """
 
 
-class LevelAdjusts(SingleEventModel, ModelReprMixin):
+class LevelAdjusts(EventModel, ModelReprMixin):
     """Used by :class:`Layer`, :class:`Instrument` and :class:`Sampler`.
 
     ![](https://bit.ly/3xkKeGn)
@@ -537,7 +529,7 @@ class LevelAdjusts(SingleEventModel, ModelReprMixin):
     volume = StructProp[int]()
 
 
-class Time(MultiEventModel, ModelReprMixin):
+class Time(EventModel, ModelReprMixin):
     """Used by :class:`Sampler` and :class:`Instrument`.
 
     ![](https://bit.ly/3xjxUGG)
@@ -549,7 +541,7 @@ class Time(MultiEventModel, ModelReprMixin):
     # is_full_porta: bool
 
 
-class Reverb(SingleEventModel, ModelReprMixin):
+class Reverb(EventModel, ModelReprMixin):
     """Precalculated reverb used by :class:`Sampler`.
 
     *New in FL Studio v1.4.0*.
@@ -557,15 +549,16 @@ class Reverb(SingleEventModel, ModelReprMixin):
 
     @property
     def type(self) -> ReverbType | None:
-        if self._event:
-            return ReverbType.B if self._event.value >= ReverbType.B else ReverbType.A
+        if ChannelID.Reverb in self.events:
+            event = self.events.first(ChannelID.Reverb)
+            return ReverbType.B if event.value >= ReverbType.B else ReverbType.A
 
     @type.setter
     def type(self, value: ReverbType):
         if self.mix is None:
             raise PropertyCannotBeSet(ChannelID.Reverb)
 
-        self._event.value = value.value + self.mix
+        self.events.first(ChannelID.Reverb).value = value.value + self.mix
 
     @property
     def mix(self) -> int | None:
@@ -575,18 +568,18 @@ class Reverb(SingleEventModel, ModelReprMixin):
         |-----|-----|
         | 0   | 256 |
         """
-        if self._event:
-            return self._event.value - self.type
+        if ChannelID.Reverb in self.events:
+            return self.events.first(ChannelID.Reverb).value - self.type
 
     @mix.setter
     def mix(self, value: int):
-        if self._event is None:
+        if ChannelID.Reverb not in self.events:
             raise PropertyCannotBeSet(ChannelID.Reverb)
 
-        self._event.value += value
+        self.events.first(ChannelID.Reverb).value += value
 
 
-class FX(MultiEventModel, ModelReprMixin):
+class FX(EventModel, ModelReprMixin):
     """Pre-calculated effects used by :class:`Sampler`.
 
     ![](https://bit.ly/3U3Ys8l)
@@ -688,7 +681,7 @@ class FX(MultiEventModel, ModelReprMixin):
     """Whether left and right channels are swapped or not."""
 
 
-class Envelope(SingleEventModel, ModelReprMixin):
+class Envelope(EventModel, ModelReprMixin):
     """A PAHDSR envelope for various :class:`Sampler` paramters.
 
     ![](https://bit.ly/3d9WCCh)
@@ -811,7 +804,7 @@ class Envelope(SingleEventModel, ModelReprMixin):
     """
 
 
-class SamplerLFO(SingleEventModel, ModelReprMixin):
+class SamplerLFO(EventModel, ModelReprMixin):
     """A basic LFO for certain :class:`Sampler` parameters.
 
     ![](https://bit.ly/3RG5Jtw)
@@ -871,7 +864,7 @@ class SamplerLFO(SingleEventModel, ModelReprMixin):
     """Sine, triangle or pulse. Default: Sine."""
 
 
-class Polyphony(SingleEventModel, ModelReprMixin):
+class Polyphony(EventModel, ModelReprMixin):
     """Used by :class:`Sampler` and :class:`Instrument`.
 
     ![](https://bit.ly/3DlvWcl)
@@ -899,7 +892,7 @@ class Polyphony(SingleEventModel, ModelReprMixin):
     """
 
 
-class Tracking(SingleEventModel, ModelReprMixin):
+class Tracking(EventModel, ModelReprMixin):
     """Used by :class:`Sampler` and :class:`Instrument`.
 
     ![](https://bit.ly/3DmveM8)
@@ -935,7 +928,7 @@ class Tracking(SingleEventModel, ModelReprMixin):
     """
 
 
-class Keyboard(MultiEventModel, ModelReprMixin):
+class Keyboard(EventModel, ModelReprMixin):
     """Used by :class:`Sampler` and :class:`Instrument`.
 
     ![](https://bit.ly/3qwIK8r)
@@ -962,7 +955,7 @@ class Keyboard(MultiEventModel, ModelReprMixin):
     # note_range: tuple[int] - Should be a 2-short or 2-byte tuple
 
 
-class Playback(MultiEventModel, ModelReprMixin):
+class Playback(EventModel, ModelReprMixin):
     """Used by :class:`Sampler`.
 
     ![](https://bit.ly/3xjSypY)
@@ -981,7 +974,7 @@ class Playback(MultiEventModel, ModelReprMixin):
     use_loop_points = FlagProp(_SamplerFlags.UsesLoopPoints, ChannelID.SamplerFlags)
 
 
-class TimeStretching(MultiEventModel, ModelReprMixin):
+class TimeStretching(EventModel, ModelReprMixin):
     """Used by :class:`Sampler`.
 
     ![](https://bit.ly/3eIAjnG)
@@ -995,7 +988,7 @@ class TimeStretching(MultiEventModel, ModelReprMixin):
     time = EventProp[float](ChannelID.StretchTime)
 
 
-class Content(MultiEventModel, ModelReprMixin):
+class Content(EventModel, ModelReprMixin):
     """Used by :class:`Sampler`."""
 
     declick_mode = StructProp[DeclickMode](
@@ -1007,7 +1000,7 @@ class Content(MultiEventModel, ModelReprMixin):
     resample = FlagProp(_SamplerFlags.Resample, ChannelID.SamplerFlags)
 
 
-class AutomationLFO(MultiEventModel, ModelReprMixin):
+class AutomationLFO(EventModel, ModelReprMixin):
     amount = StructProp[int](ChannelID.Automation, prop="lfo.amount")
     """Linear. Bipolar.
 
@@ -1033,7 +1026,7 @@ class AutomationPoint(ItemModel, ModelReprMixin):
     """Position on Y-axis in the range of 0 to 1.0."""
 
 
-class Channel(MultiEventModel):
+class Channel(EventModel):
     """Represents a channel in the channel rack."""
 
     def __repr__(self):
@@ -1092,28 +1085,25 @@ class Channel(MultiEventModel):
         |-----|-------|---------|
         | 0   | 12800 | 6400    |
         """  # noqa
-        if ChannelID.Levels in self._events:
-            return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pan"]
+        if ChannelID.Levels in self.events:
+            return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pan"]
 
         for id in (ChannelID._PanWord, ChannelID._PanByte):
-            events = self._events.get(id)
-            if events is not None:
-                return events[0].value
+            if id in self.events:
+                return self.events.first(id).value
 
     @pan.setter
     def pan(self, value: int) -> None:
         if self.pan is None:
-            raise AttributeError
+            raise PropertyCannotBeSet
 
-        events = self._events.get(ChannelID.Levels)
-        if events is not None:
-            cast(LevelsEvent, events[0])["pan"] = value
+        if ChannelID.Levels in self.events:
+            cast(LevelsEvent, self.events.first(ChannelID.Levels))["pan"] = value
             return
 
         for id in (ChannelID._PanWord, ChannelID._PanByte):
-            events = self._events.get(id)
-            if events is not None:
-                events[0].value = value
+            if id in self.events:
+                self.events.first(id).value = value
 
     @property
     def volume(self) -> int | None:
@@ -1123,27 +1113,25 @@ class Channel(MultiEventModel):
         |-----|-------|---------|
         | 0   | 12800 | 10000   |
         """  # noqa
-        if ChannelID.Levels in self._events:
-            return cast(LevelsEvent, self._events[ChannelID.Levels][0])["volume"]
+        if ChannelID.Levels in self.events:
+            return cast(LevelsEvent, self.events.first(ChannelID.Levels))["volume"]
 
         for id in (ChannelID._VolWord, ChannelID._VolByte):
-            events = self._events.get(id)
-            if events is not None:
-                return events[0].value
+            if id in self.events:
+                return self.events.first(id).value
 
     @volume.setter
     def volume(self, value: int) -> None:
         if self.volume is None:
-            raise AttributeError
+            raise PropertyCannotBeSet
 
-        events = self._events.get(ChannelID.Levels)
-        if events is not None:
-            cast(LevelsEvent, events[0])["volume"] = value
+        if ChannelID.Levels in self.events:
+            cast(LevelsEvent, self.events.first(ChannelID.Levels))["volume"] = value
+            return
 
         for id in (ChannelID._VolWord, ChannelID._VolByte):
-            events = self._events.get(id)
-            if events is not None:
-                events[0].value = value
+            if id in self.events:
+                self.events.first(id).value = value
 
     # If the channel is not zipped, underlying event is not stored.
     @property
@@ -1152,8 +1140,8 @@ class Channel(MultiEventModel):
 
         ![](https://bit.ly/3S2imib)
         """
-        if ChannelID.Zipped in self._events:
-            return self._events[ChannelID.Zipped][0].value
+        if ChannelID.Zipped in self.events:
+            return self.events.first(ChannelID.Zipped).value
         return False
 
     @property
@@ -1173,7 +1161,7 @@ class Automation(Channel, ModelCollection[AutomationPoint]):
     ![](https://bit.ly/3RXQhIN)
     """
 
-    @getslice
+    @supports_slice
     def __getitem__(self, i: int | slice) -> AutomationPoint:
         for idx, p in enumerate(self):
             if idx == i:
@@ -1182,8 +1170,8 @@ class Automation(Channel, ModelCollection[AutomationPoint]):
 
     def __iter__(self) -> Iterator[AutomationPoint]:
         """Iterator over the automation points inside the automation clip."""
-        if ChannelID.Automation in self._events:
-            event = cast(AutomationEvent, self._events[ChannelID.Automation][0])
+        if ChannelID.Automation in self.events:
+            event = cast(AutomationEvent, self.events.first(ChannelID.Automation))
             for point in event["points"]:
                 yield AutomationPoint(point)
 
@@ -1198,7 +1186,7 @@ class Layer(Channel, ModelCollection[Channel]):
     *New in FL Studio v3.4.0*.
     """
 
-    @getslice
+    @supports_slice
     def __getitem__(self, i: int | str | slice):
         """Returns a child :class:`Channel` with an IID of :attr:`Channel.iid`.
 
@@ -1215,16 +1203,19 @@ class Layer(Channel, ModelCollection[Channel]):
         raise ChannelNotFound(i)
 
     def __iter__(self) -> Iterator[Channel]:
-        if ChannelID.Children in self._events:
-            for event in self._events[ChannelID.Children]:
+        if ChannelID.Children in self.events:
+            for event in self.events[ChannelID.Children]:
                 yield self._kw["channels"][event.value]
 
     def __len__(self):
         """Returns the number of channels whose parent this layer is."""
-        return len(self._events.get(ChannelID.Children, []))
+        try:
+            return self.events.count(ChannelID.Children)
+        except KeyError:
+            return 0
 
     def __repr__(self):
-        return f"{super().__repr__()} ({len(self) or 'no'} children)"
+        return f"{super().__repr__()} ({len(self)} children)"
 
     crossfade = FlagProp(_LayerFlags.Crossfade, ChannelID.LayerFlags)
     random = FlagProp(_LayerFlags.Random, ChannelID.LayerFlags)
@@ -1246,16 +1237,15 @@ class _SamplerInstrument(Channel):
     @property
     def tracking(self) -> dict[str, Tracking] | None:
         """A :class:`Tracking` each for Volume & Keyboard."""
-        events = self._events.get(ChannelID.Tracking)
-        if events is not None:
-            tracking = [Tracking(e) for e in events]
+        if ChannelID.Tracking in self.events:
+            tracking = [Tracking(e) for e in self.events.separate(ChannelID.Tracking)]
             return dict(zip(("volume", "keyboard"), tracking))
 
 
 class Instrument(_SamplerInstrument):
     """Represents a native or a 3rd party plugin loaded in a channel."""
 
-    plugin = PluginProp({VSTPluginEvent: VSTPlugin, BooBassEvent: BooBass})
+    plugin = PluginProp(VSTPlugin, BooBass)
     """The plugin loaded into the channel."""
 
 
@@ -1281,10 +1271,9 @@ class Sampler(_SamplerInstrument):
     @property
     def envelopes(self) -> dict[EnvelopeName, Envelope] | None:
         """An :class:`Envelope` each for Volume, Panning, Mod X, Mod Y and Pitch."""
-        events = self._events.get(ChannelID.EnvelopeLFO)
-        if events is not None:
-            envelopes = [Envelope(e) for e in events]
-            return dict(zip(EnvelopeName.__args__, envelopes))  # type: ignore
+        if ChannelID.EnvelopeLFO in self.events:
+            envs = [Envelope(e) for e in self.events.separate(ChannelID.EnvelopeLFO)]
+            return dict(zip(EnvelopeName.__args__, envs))  # type: ignore
 
     fx = NestedProp(
         FX,
@@ -1304,9 +1293,8 @@ class Sampler(_SamplerInstrument):
     @property
     def lfos(self) -> dict[LFOName, SamplerLFO] | None:
         """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch."""
-        events = self._events.get(ChannelID.EnvelopeLFO)
-        if events is not None:
-            lfos = [SamplerLFO(e) for e in events]
+        if ChannelID.EnvelopeLFO in self.events:
+            lfos = [SamplerLFO(e) for e in self.events.separate(ChannelID.EnvelopeLFO)]
             return dict(zip(LFOName.__args__, lfos))  # type: ignore
 
     @property
@@ -1316,13 +1304,13 @@ class Sampler(_SamplerInstrument):
         Raises:
             PropertyCannotBeSet: When a `ChannelID.Levels` event is not found.
         """
-        if ChannelID.Levels in self._events:
-            return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pitch_shift"]
+        if ChannelID.Levels in self.events:
+            return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pitch_shift"]
 
     @pitch_shift.setter
     def pitch_shift(self, value: int):
         try:
-            event = self._events[ChannelID.Levels][0]
+            event = self.events.first(ChannelID.Levels)
         except KeyError as exc:
             raise PropertyCannotBeSet(ChannelID.Levels) from exc
         else:
@@ -1338,9 +1326,8 @@ class Sampler(_SamplerInstrument):
 
         Contains the string ``%FLStudioFactoryData%`` for stock samples.
         """
-        events = self._events.get(ChannelID.SamplePath)
-        if events is not None:
-            return pathlib.Path(events[0].value)
+        if ChannelID.SamplePath in self.events:
+            return pathlib.Path(self.events.first(ChannelID.SamplePath).value)
 
     @sample_path.setter
     def sample_path(self, value: pathlib.Path):
@@ -1348,7 +1335,7 @@ class Sampler(_SamplerInstrument):
             raise PropertyCannotBeSet(ChannelID.SamplePath)
 
         path = "" if str(value) == "." else str(value)
-        self._events[ChannelID.SamplePath][0].value = path
+        self.events.first(ChannelID.SamplePath).value = path
 
     stretching = NestedProp(
         TimeStretching,
@@ -1357,7 +1344,7 @@ class Sampler(_SamplerInstrument):
     )
 
 
-class ChannelRack(MultiEventModel, ModelCollection[Channel]):
+class ChannelRack(EventModel, ModelCollection[Channel]):
     """Represents the channel rack, contains all :class:`Channel` instances.
 
     ![](https://bit.ly/3RXR50h)
@@ -1366,7 +1353,7 @@ class ChannelRack(MultiEventModel, ModelCollection[Channel]):
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
 
-    @getslice
+    @supports_slice
     def __getitem__(self, i: str | int | slice):
         """Gets a channel from the rack based on its IID or name.
 
@@ -1382,12 +1369,16 @@ class ChannelRack(MultiEventModel, ModelCollection[Channel]):
                 return ch
         raise ChannelNotFound(i)
 
+    # TODO Needs serious refactoring, *pylint is right*
     def __iter__(self) -> Iterator[Channel]:  # pylint: disable=too-complex
         ch_dict: dict[int, Channel] = {}
-        events: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
-        cur_ch_events = []
-        for event in self._events_tuple:
+        events: DefaultDict[int, EventTree] = defaultdict(
+            lambda: EventTree(self.events)
+        )
+        cur_ch_events = EventTree(self.events)
+        for event in self.events.all():
             if event.id == ChannelID.New:
+                # Create a new key in events and set it to it
                 cur_ch_events = events[event.value]
 
             if event.id not in RackID:
@@ -1395,7 +1386,7 @@ class ChannelRack(MultiEventModel, ModelCollection[Channel]):
 
         for iid, ch_events in events.items():
             ct = Channel  # In case an older version doesn't have ChannelID.Type
-            for event in ch_events:
+            for event in ch_events.all():
                 if event.id == ChannelID.Type:
                     if event.value == ChannelType.Automation:
                         ct = Automation
@@ -1413,7 +1404,7 @@ class ChannelRack(MultiEventModel, ModelCollection[Channel]):
                     ct = Sampler  # see #40
 
             if ct is not None:
-                cur_ch = ch_dict[iid] = ct(*ch_events, channels=ch_dict)
+                cur_ch = ch_dict[iid] = ct(ch_events, channels=ch_dict)
                 yield cur_ch
 
     def __len__(self):
@@ -1422,45 +1413,36 @@ class ChannelRack(MultiEventModel, ModelCollection[Channel]):
         Raises:
             NoModelsFound: No channels could be found in the project.
         """
-        if ChannelID.New not in self._events:
+        if ChannelID.New not in self.events:
             raise NoModelsFound
-        return len(self._events[ChannelID.New])
+        return self.events.count(ChannelID.New)
 
     @property
     def automations(self) -> Iterator[Automation]:
-        for channel in self:
-            if isinstance(channel, Automation):
-                yield channel
+        yield from (ch for ch in self if isinstance(ch, Automation))
 
     # TODO Find out what this meant
     fit_to_steps = EventProp[int](RackID._FitToSteps)
 
     @property
     def groups(self) -> Iterator[DisplayGroup]:
-        if DisplayGroupID.Name in self._events:
-            for event in self._events[DisplayGroupID.Name]:
-                yield DisplayGroup(event)
+        for ed in self.events.separate(DisplayGroupID.Name):
+            yield DisplayGroup(ed)
 
     height = EventProp[int](RackID.WindowHeight)
     """Window height of the channel rack in the interface (in pixels)."""
 
     @property
     def instruments(self) -> Iterator[Instrument]:
-        for channel in self:
-            if isinstance(channel, Instrument):
-                yield channel
+        yield from (ch for ch in self if isinstance(ch, Instrument))
 
     @property
     def layers(self) -> Iterator[Layer]:
-        for channel in self:
-            if isinstance(channel, Layer):
-                yield channel
+        yield from (ch for ch in self if isinstance(ch, Layer))
 
     @property
     def samplers(self) -> Iterator[Sampler]:
-        for channel in self:
-            if isinstance(channel, Sampler):
-                yield channel
+        yield from (ch for ch in self if isinstance(ch, Sampler))
 
     swing = EventProp[int](RackID.Swing)
     """Global channel swing mix. Linear. Defaults to minimum value.

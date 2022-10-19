@@ -21,7 +21,7 @@ from typing import cast
 import construct as c
 
 from ._events import DATA, EventEnum, StructEventBase
-from ._models import ModelReprMixin, SingleEventModel
+from ._models import EventModel, ModelReprMixin
 
 __all__ = ["RemoteController"]
 
@@ -46,7 +46,7 @@ class ControllerID(EventEnum):
     Remote = (DATA + 19, RemoteControllerEvent)
 
 
-class RemoteController(SingleEventModel, ModelReprMixin):
+class RemoteController(EventModel, ModelReprMixin):
     """![](https://bit.ly/3S0i4Zf)
 
     *New in FL Studio v3.3.0*.
@@ -55,7 +55,7 @@ class RemoteController(SingleEventModel, ModelReprMixin):
     @property
     def parameter(self) -> int | None:
         """The ID of the plugin parameter to which controller is linked to."""
-        value = cast(StructEventBase, self._event)["parameter_data"]
+        value = cast(StructEventBase, self.events.only())["parameter_data"]
         if value is not None:
             return value & 0x7FFF
 
@@ -65,6 +65,6 @@ class RemoteController(SingleEventModel, ModelReprMixin):
 
         None when linked to a plugin parameter on an insert slot.
         """
-        value = cast(StructEventBase, self._event)["parameter_data"]
+        value = cast(StructEventBase, self.events.only())["parameter_data"]
         if value is not None:
             return (value & 0x8000) > 0

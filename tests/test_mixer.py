@@ -23,9 +23,9 @@ def get_insert(get_model: ModelFixture):
         # insert. Pass these to Insert's constructor. This mimics Mixer's normal
         # behaviour, however that depends on InsertID.Output as a marker to indicate
         # the end of an Insert, which surprisingly isn't a part of presets.
-        params = cast(MixerParamsEvent, mixer.events_asdict().pop(MixerID.Params)[0])
+        params = cast(MixerParamsEvent, mixer.events.first(MixerID.Params))
         items = tuple(params.items.values())[0]
-        return Insert(*mixer.events_astuple(), index=0, max_slots=10, params=items)
+        return Insert(mixer.events, index=0, max_slots=10, params=items)
 
     return wrapper
 
@@ -43,15 +43,11 @@ def test_insert_color(get_insert: InsertFixture):
 
 
 def test_insert_dock(inserts: tuple[Insert, ...]):
+    sends = (101, 102, 103, 104)
     for insert in inserts:
         if insert.name in ("Docked left", "Master"):
             assert insert.dock == InsertDock.Left
-        # fmt: off
-        elif (
-            insert.name == "Docked right" or
-            insert.__index__() in (101, 102, 103, 104)
-        ):
-            # fmt: on
+        elif insert.name == "Docked right" or insert.__index__() in sends:
             assert insert.dock == InsertDock.Right
         else:
             assert insert.dock == InsertDock.Middle

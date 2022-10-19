@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import pathlib
 import sys
 from typing import TypeVar
@@ -61,8 +60,7 @@ def get_model():
     def wrapper(suffix: str, type: type[ModelBase], *only: EventEnum):
         parsed = pyflp.parse(pathlib.Path(__file__).parent / "assets" / suffix)
         if only:
-            events = [v for k, v in parsed.events_asdict().items() if k in only]
-            return type(*itertools.chain.from_iterable(events))
-        return type(*parsed.events_astuple())
+            return type(parsed.events.subdict(lambda e: e.id in only))
+        return type(parsed.events)
 
     return wrapper

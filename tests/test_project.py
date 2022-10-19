@@ -57,12 +57,12 @@ def test_project(project: Project):
         project.tempo = 999.0
 
     with pytest.raises(ExpectedValue, match="major.minor.build.patch?"):
-        project.version = "2.2"
+        project.version = "2.2"  # type: ignore
 
 
 def test_null_check(project: Project, tmp_path: pathlib.Path):
     pyflp.save(project, tmp_path / "null_check.flp")
     b1 = open(pathlib.Path(__file__).parent / "assets" / "FL 20.8.4.flp", "rb").read()
     b2 = open(tmp_path / "null_check.flp", "rb").read()
-    result = b1 == b2  # ! Don't compare 2 bytes object in pytest EVER
+    result = b1 == b2  # ! Don't compare 2 big bytes objects in pytest EVER
     assert result
