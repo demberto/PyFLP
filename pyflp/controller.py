@@ -50,7 +50,7 @@ class RemoteController(SingleEventModel, ModelReprMixin):
     """![](https://bit.ly/3S0i4Zf)
 
     *New in FL Studio v3.3.0*.
-    """  # noqa
+    """
 
     @property
     def parameter(self) -> int | None:

@@ -15,10 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Slicing for ModelBase collections [#31].
 - Fruity Center parser [#42].
 - Remaining and some new images for docstrings [#47].
+- GUI locations of descriptors (w.r.t. FL 20.8.4) [#80].
 
 ### Changed
 
 - Simplified some `__repr__` strings.
+- Moved up `Sampler.cut_group` to `_SamplerInstrument`.
 
 ### Fixed
 
@@ -30,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Track.items`. Iterate over a track, to get them now.
 - Subclassing of protocol classes keeping [PEP544] in mind [#50].
 - Models are no longer hashable as events were made unhashable previously.
+- Commented out currently unimplemented `Channel.controllers`.
 
 [#31]: https://github.com/demberto/PyFLP/issues/31
 [#42]: https://github.com/demberto/PyFLP/discussions/42

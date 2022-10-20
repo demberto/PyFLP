@@ -19,7 +19,7 @@ import collections
 import enum
 import pathlib
 import sys
-from typing import DefaultDict, Iterator, List, Tuple, cast
+from typing import DefaultDict, Iterator, Tuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -57,7 +57,6 @@ from ._models import (
     SingleEventModel,
     getslice,
 )
-from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
     BooBass,
@@ -1071,7 +1070,7 @@ class Channel(MultiEventModel):
     Values below 20 for any color component (R, G or B) are ignored by FL.
     """
 
-    controllers = KWProp[List[RemoteController]]()
+    # TODO controllers = KWProp[List[RemoteController]]()
     internal_name = EventProp[str](PluginID.InternalName)
     """Internal name of the channel.
 
@@ -1098,6 +1097,8 @@ class Channel(MultiEventModel):
 
     iid = EventProp[int](ChannelID.New)
     keyboard = NestedProp(Keyboard, ChannelID.FineTune, ChannelID.RootNote)
+    """Located at the bottom of :menuselection:`Miscellaneous functions (page)`."""
+
     locked = EventProp[bool](ChannelID.IsLocked)
     """![](https://bit.ly/3BOBc7j)"""
 
@@ -1256,25 +1257,49 @@ class Layer(Channel, ModelCollection[Channel]):
         return f"{super().__repr__()} ({len(self) or 'no'} children)"
 
     crossfade = FlagProp(_LayerFlags.Crossfade, ChannelID.LayerFlags)
+    """:menuselection:`Miscellaneous functions --> Layering`"""
+
     random = FlagProp(_LayerFlags.Random, ChannelID.LayerFlags)
+    """:menuselection:`Miscellaneous functions --> Layering`"""
 
 
 class _SamplerInstrument(Channel):
     arp = NestedProp(Arp, ChannelID.Parameters)
+    """:menuselection:`Miscellaneous functions -> Arpeggiator`"""
+
+    cut_group = EventProp[Tuple[int, int]](ChannelID.CutGroup)
+    """Cut group in the form of (Cut self, cut by).
+
+    :menuselection:`Miscellaneous functions --> Group`
+
+    Hint:
+        To cut itself when retriggered, set the same value for both.
+    """
+
     delay = NestedProp(Delay, ChannelID.Delay)
+    """:menuselection:`Miscellaneous functions -> Echo delay / fat mode`"""
+
     insert = EventProp[int](ChannelID.RoutedTo)
-    """The index of the :class:`Insert` the channel is routed to according to FL
+    """The index of the :class:`Insert` the channel is routed to according to FL.
 
     "Current" insert = -1, Master = 0 and so on... till :attr:`Mixer.max_inserts`.
     """
 
     level_adjusts = NestedProp(LevelAdjusts, ChannelID.LevelAdjusts)
+    """:menuselection:`Miscellaneous functions -> Level adjustments`"""
+
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
+    """:menuselection:`Miscellaneous functions -> Polyphony`"""
+
     time = NestedProp(Time, ChannelID.Swing)
+    """:menuselection:`Miscellaneous functions -> Time`"""
 
     @property
     def tracking(self) -> dict[str, Tracking] | None:
-        """A :class:`Tracking` each for Volume & Keyboard."""
+        """A :class:`Tracking` each for Volume & Keyboard.
+
+        :menuselection:`Miscellaneous functions -> Tracking`
+        """
         events = self._events.get(ChannelID.Tracking)
         if events is not None:
             tracking = [Tracking(e) for e in events]
@@ -1302,14 +1327,16 @@ class Sampler(_SamplerInstrument):
     """AU-format sample specific."""
 
     content = NestedProp(Content, ChannelID.SamplerFlags, ChannelID.Parameters)
-    cut_group = EventProp[Tuple[int, int]](ChannelID.CutGroup)
-    """Cut group in the form of (Cut self, cut by)."""
+    """:menuselection:`Sample settings --> Content`"""
 
     # FL's interface doesn't have an envelope for panning, but still stores
     # the default values in event data.
     @property
     def envelopes(self) -> dict[EnvelopeName, Envelope] | None:
-        """An :class:`Envelope` each for Volume, Panning, Mod X, Mod Y and Pitch."""
+        """An :class:`Envelope` each for Volume, Panning, Mod X, Mod Y and Pitch.
+
+        :menuselection:`Envelope / instruement settings`
+        """
         events = self._events.get(ChannelID.EnvelopeLFO)
         if events is not None:
             envelopes = [Envelope(e) for e in events]
@@ -1329,10 +1356,14 @@ class Sampler(_SamplerInstrument):
         ChannelID.StereoDelay,
         ChannelID.FXFlags,
     )
+    """:menuselection:`Sample settings (page) --> Precomputed effects`"""
 
     @property
     def lfos(self) -> dict[LFOName, SamplerLFO] | None:
-        """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch."""
+        """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch.
+
+        :menuselection:`Envelope / instruement settings (page)`
+        """
         events = self._events.get(ChannelID.EnvelopeLFO)
         if events is not None:
             lfos = [SamplerLFO(e) for e in events]
@@ -1360,10 +1391,13 @@ class Sampler(_SamplerInstrument):
     playback = NestedProp(
         Playback, ChannelID.SamplerFlags, ChannelID.PingPongLoop, ChannelID.Parameters
     )
+    """:menuselection:`Sample settings (page) --> Playback`"""
 
     @property
     def sample_path(self) -> pathlib.Path | None:
         """Absolute path of a sample file on the disk.
+
+        :menuselection:`Sample settings (page) --> File`
 
         Contains the string ``%FLStudioFactoryData%`` for stock samples.
         """
@@ -1384,6 +1418,7 @@ class Sampler(_SamplerInstrument):
         ChannelID.StretchTime,
         ChannelID.Parameters,
     )
+    """:menuselection:`Sample settings (page) --> Time stretching`"""
 
 
 class ChannelRack(MultiEventModel, ModelCollection[Channel]):

@@ -311,13 +311,15 @@ class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
 
     ![](https://bit.ly/3yVGGuW)
 
+    :guilabel:`Change color`
+
     Note:
         Unlike :attr:`Channel.color` and :attr:`Insert.color`, values below ``20`` for
         any color component (i.e red, green or blue) are NOT ignored by FL Studio.
     """
 
     content_locked = StructProp[bool](TrackID.Data)
-    """Defaults to ``False``."""
+    """:guilabel:`Lock to content`, defaults to ``False``."""
 
     enabled = StructProp[bool](TrackID.Data)
     """![](https://bit.ly/3eGd91O)"""
@@ -326,10 +328,12 @@ class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
     """Whether grouped with the track above (index - 1) or not.
 
     ![](https://bit.ly/3yXO5tM)
+
+    :guilabel:`&Group with above track`
     """
 
     height = StructProp[float](TrackID.Data)  # TODO #35
-    """Track height in FL's interface. Linear.
+    """Track height in FL's interface. Linear. :guilabel:`&Size`.
 
     | Type    | Value | Percentage |
     |---------|-------|------------|
@@ -339,9 +343,11 @@ class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
     """
 
     icon = StructProp[int](TrackID.Data)
-    """Returns 0 if not set, else an internal icon ID.
+    """Returns ``0`` if not set, else an internal icon ID.
 
     ![](https://bit.ly/3gln8Kc)
+
+    :guilabel:`Change icon`
     """
 
     locked = StructProp[bool](TrackID.Data)
@@ -352,25 +358,25 @@ class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
 
     locked_height = StructProp[float](TrackID.Data)  # TODO #35
     motion = StructProp[TrackMotion](TrackID.Data)
-    """Defaults to :attr:`TrackMotion.Stay`."""
+    """:guilabel:`&Performance settings`, defaults to :attr:`TrackMotion.Stay`."""
 
     name = EventProp[str](TrackID.Name)
     """Returns a string or ``None`` if not set."""
 
     position_sync = StructProp[TrackSync](TrackID.Data)
-    """Defaults to :attr:`TrackSync.Off`."""
+    """:guilabel:`&Performance settings`, defaults to :attr:`TrackSync.Off`."""
 
     press = StructProp[TrackPress](TrackID.Data)
-    """Defaults to :attr:`TrackPress.Retrigger`."""
+    """:guilabel:`&Performance settings`, defaults to :attr:`TrackPress.Retrigger`."""
 
     tolerant = StructProp[bool](TrackID.Data)
-    """Defaults to ``True``."""
+    """:guilabel:`&Performance settings`, defaults to ``True``."""
 
     trigger_sync = StructProp[TrackSync](TrackID.Data)
-    """Defaults to :attr:`TrackSync.FourBeats`."""
+    """:guilabel:`&Performance settings`, defaults to :attr:`TrackSync.FourBeats`."""
 
     queued = StructProp[bool](TrackID.Data)
-    """Defaults to ``False``."""
+    """:guilabel:`&Performance settings`, defaults to ``False``."""
 
 
 class _ArrangementKW(TypedDict):
@@ -561,4 +567,7 @@ class Arrangements(MultiEventModel, ModelCollection[Arrangement]):
     time_signature = NestedProp(
         TimeSignature, ArrangementsID.TimeSigNum, ArrangementsID.TimeSigBeat
     )
-    """Project time signature (also used by playlist)."""
+    """Project time signature (also used by playlist).
+
+    :menuselection:`Options --> &Project general settings --> Time settings`
+    """

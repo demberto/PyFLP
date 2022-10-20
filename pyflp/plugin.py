@@ -592,7 +592,7 @@ class FruityStereoEnhancer(
     """
 
     phase_inversion = _PluginDataProp[Literal["none", "left", "right"]]()
-    """Default to ``none``."""
+    """Default to ``None``."""
 
     phase_offset = _PluginDataProp[int]()
     """Linear.

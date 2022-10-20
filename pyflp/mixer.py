@@ -502,6 +502,8 @@ class Insert(MultiEventModel, ModelCollection[Slot]):
     def dock(self) -> InsertDock | None:
         """The position (left, middle or right) where insert is docked in mixer.
 
+        :menuselection:`Insert --> Layout --> Dock to`
+
         ![](https://bit.ly/3eLum9D)
         """
         events = self._events.get(InsertID.Flags)
@@ -579,7 +581,10 @@ class Insert(MultiEventModel, ModelCollection[Slot]):
                 yield item["msg"]
 
     separator_shown = FlagProp(_InsertFlags.SeparatorShown, InsertID.Flags)
-    """Whether separator is shown before the insert."""
+    """Whether separator is shown before the insert.
+
+    :menuselection:`Insert --> Group --> Separator`
+    """
 
     stereo_separation = _MixerParamProp[int](_MixerParamsID.StereoSeparation)
     """Linear.

@@ -231,7 +231,7 @@ class Pattern(MultiEventModel):
 
     Iterate over it to get the notes contained inside it:
 
-    >>> repr([note for note in pattern])
+    >>> [note for pattern in project.patterns for note in pattern]
     [Note (key="C5", position=192, length=96, channel=2), ...]
     """
 
@@ -350,6 +350,9 @@ class Patterns(MultiEventModel):
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)
     """Whether truncated notes of patterns placed in the playlist should be played.
+
+    Located at :menuselection:`Options -> &Project general settings --> Advanced`
+    under the name :guilabel:`Play truncated notes in clips`.
 
     *Changed in FL Studio v12.3 beta 3*: Enabled by default.
     """
