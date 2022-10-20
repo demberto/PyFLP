@@ -82,8 +82,19 @@ Enumerations
    :members:
 .. autoclass:: ReverbType
    :members:
-.. autoclass:: StretchMode
-   :members:
+
+.. grid::
+
+   .. grid-item::
+
+      .. autoclass:: StretchMode
+         :members:
+
+   .. grid-item::
+      :child-align: center
+      :columns: auto
+
+      .. image:: /img/channel/stretch-mode.png
 
 Event IDs
 ---------

@@ -185,6 +185,8 @@ class Project(EventModel):
     artists = EventProp[str](ProjectID.Artists)
     """Authors / artists info. to be embedded in exported WAV & MP3.
 
+    :menuselection:`Options --> &Project info --> Author`
+
     *New in FL Studio v5.0.*
     """
 
@@ -224,6 +226,8 @@ class Project(EventModel):
     comments = EventProp[str](ProjectID.Comments, ProjectID._RTFComments)
     """Comments / project description / summary.
 
+    :menuselection:`Options --> &Project info --> Comments`
+
     Caution:
         Very old versions of FL used to store comments in RTF (Rich Text Format).
         PyFLP makes no efforts to parse that and stores it like a normal string
@@ -233,7 +237,10 @@ class Project(EventModel):
     # Stored as a duration in days since the Delphi epoch (30 Dec, 1899).
     @property
     def created_on(self) -> datetime.datetime | None:
-        """The local date and time on which this project was created."""
+        """The local date and time on which this project was created.
+
+        Located at the bottom of :menuselection:`Options --> &Project info` page.
+        """
         if ProjectID.Timestamp in self.events:
             event = cast(TimestampEvent, self.events.first(ProjectID.Timestamp))
             return _DELPHI_EPOCH + datetime.timedelta(days=event["created_on"])
@@ -244,6 +251,8 @@ class Project(EventModel):
     @property
     def data_path(self) -> pathlib.Path | None:
         """The absolute path used by FL to store all your renders.
+
+        :menuselection:`Options --> &Project general settings --> Data folder`
 
         *New in FL Studio v9.0.0.*
         """
@@ -263,6 +272,8 @@ class Project(EventModel):
 
     genre = EventProp[str](ProjectID.Genre)
     """Genre of the song to be embedded in exported WAV & MP3.
+
+    :menuselection:`Options --> &Project info --> Genre`
 
     *New in FL Studio v5.0*.
     """
@@ -352,11 +363,18 @@ class Project(EventModel):
         )
 
     pan_law = EventProp[PanLaw](ProjectID.PanLaw)
-    """Whether a circular or a triangular pan law is used for the project."""
+    """Whether a circular or a triangular pan law is used for the project.
+
+    :menuselection:`Options -> &Project general settings -> Advanced -> Panning law`
+    """
 
     @property
     def ppq(self) -> int:
         """Pulses per quarter.
+
+        ![](https://bit.ly/3F0UrMT)
+
+        :menuselection:`Options --> &Project general settings --> Timebase (PPQ)`.
 
         Note:
             All types of lengths, positions and offsets internally use the PPQ
@@ -373,7 +391,7 @@ class Project(EventModel):
         Raises:
             ExpectedValue: When a value not in `VALID_PPQS` is tried to be set.
 
-        *Changed in FL Studio v2.1.1*: Defaults to 96.
+        *Changed in FL Studio v2.1.1*: Defaults to ``96``.
         """
         return self._kw["ppq"]
 
@@ -386,27 +404,35 @@ class Project(EventModel):
     show_info = EventProp[bool](ProjectID.ShowInfo)
     """Whether to show a banner while the project is loading inside FL Studio.
 
+    :menuselection:`Options --> &Project info --> Show info on opening`
+
     The banner shows the :attr:`title`, :attr:`artists`, :attr:`genre`,
     :attr:`comments` and :attr:`url`.
     """
 
     title = EventProp[str](ProjectID.Title)
-    """Name of the song / project."""
+    """Name of the song / project.
+
+    :menuselection:`Options --> &Project info --> Title`
+    """
 
     # Stored internally as the actual BPM * 1000 as an integer.
     @property
     def tempo(self) -> int | float | None:
         """Tempo at the current position of the playhead (in BPM).
 
+        ![](https://bit.ly/3MKdAEO)
+
         Raises:
-            UnexpectedType: When a fine-tuned tempo (float) isn't supported.
-                Use an `int` (coarse tempo) value.
+            UnexpectedType: When a fine-tuned tempo (``float``) isn't
+                supported. Use an ``int`` (coarse tempo) value.
             PropertyCannotBeSet: If underlying event isn't found.
             ValueError: When a tempo outside the allowed range is set.
 
-        * *Changed in FL Studio v1.4.2*: Max tempo increased to 999 (int).
+        * *Changed in FL Studio v1.4.2*: Max tempo increased to ``999`` (int).
         * *New in FL Studio v3.4.0*: Fine tuned tempo (a float).
-        * *Changed in FL Studio v11*: Max tempo limited to 522.000.
+        * *Changed in FL Studio v11*: Max tempo limited to ``522.000``.
+            Probably when tempo automations
         """
         if ProjectID.Tempo in self.events:
             return self.events.first(ProjectID.Tempo).value / 1000
@@ -449,13 +475,16 @@ class Project(EventModel):
     def time_spent(self) -> datetime.timedelta | None:
         """Time spent on the project since its creation.
 
-        Technically, since the last reset via FL's interface.
+        ![](https://bit.ly/3TsBzdM)
+
+        Located at the bottom of :menuselection:`Options --> &Project info` page.
         """
         if ProjectID.Timestamp in self.events:
             event = cast(TimestampEvent, self.events.first(ProjectID.Timestamp))
             return datetime.timedelta(days=event["time_spent"])
 
     url = EventProp[str](ProjectID.Url)
+    """:menuselection:`Options --> &Project info --> Web link`."""
 
     # Internally represented as a string with a format of
     # `major.minor.patch.build?` *where `build` is optional, since older
@@ -467,6 +496,10 @@ class Project(EventModel):
     @property
     def version(self) -> FLVersion:
         """The version of FL Studio which was used to save the file.
+
+        ![](https://bit.ly/3TD3BU0)
+
+        Located at the top of :menuselection:`Help --> &About` page.
 
         Caution:
             Changing this to a lower version will not make a file load magically

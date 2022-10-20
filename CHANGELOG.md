@@ -28,12 +28,15 @@ for wonderful things like creating new channels, moving inserts etc.
 - Slicing for ModelBase collections [#31].
 - Fruity Center parser [#42].
 - Dependency on ``sortedcontainers`` library for ``EventTree``.
+- Remaining and some new images for docstrings [#47].
+- GUI locations of descriptors (w.r.t. FL 20.8.4) [#80].
 
 ### Changed
 
 - Simplified some `__repr__` strings.
 - Event IDs are all `EventEnum` members (better repr-strings).
 - PyFLP is guaranteed to be not thread-safe.
+- Moved up `Sampler.cut_group` to `_SamplerInstrument`.
 
 ### Fixed
 
@@ -45,9 +48,11 @@ for wonderful things like creating new channels, moving inserts etc.
 - `Track.items`. Iterate over a track, to get them now.
 - Subclassing of protocol classes keeping [PEP544] in mind [#50].
 - Models are no longer hashable as events were made unhashable previously.
+- Commented out currently unimplemented `Channel.controllers`.
 
 [#31]: https://github.com/demberto/PyFLP/issues/31
 [#42]: https://github.com/demberto/PyFLP/discussions/42
+[#47]: https://github.com/demberto/PyFLP/issues/47
 [#50]: https://github.com/demberto/PyFLP/issues/50
 [#77]: https://github.com/demberto/PyFLP/issues/77
 [PEP544]: https://peps.python.org/pep-0544

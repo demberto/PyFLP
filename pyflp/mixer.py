@@ -381,7 +381,7 @@ class Slot(EventModel):
     """'Fruity Wrapper' for VST/AU plugins or factory name for native plugins."""
 
     enabled = _MixerParamProp[bool](_MixerParamsID.SlotEnabled)
-    """![](https://bit.ly/3dqDzUA)"""
+    """![](https://bit.ly/3eN4Ile)"""
 
     icon = EventProp[int](PluginID.Icon)
     index = EventProp[int](SlotID.Index)
@@ -476,15 +476,20 @@ class Insert(EventModel, ModelCollection[Slot]):
     """Whether the left and right channels are swapped."""
 
     color = EventProp[colour.Color](InsertID.Color)
-    """*New in FL Studio v4.0*.
+    """Defaults to #636C71 (granite gray) in FL Studio.
 
-    Defaults to #636C71 (granite gray).
-    Values below 20 for any color component (R, G or B) are ignored by FL.
+    ![](https://bit.ly/3yVKXPc)
+
+    Values below 20 for any color component (R, G, B) are ignored by FL.
+
+    *New in FL Studio v4.0*.
     """
 
     @property
     def dock(self) -> InsertDock | None:
         """The position (left, middle or right) where insert is docked in mixer.
+
+        :menuselection:`Insert --> Layout --> Dock to`
 
         ![](https://bit.ly/3eLum9D)
         """
@@ -513,6 +518,11 @@ class Insert(EventModel, ModelCollection[Slot]):
         return InsertEQ(self._kw["params"])
 
     icon = EventProp[int](InsertID.Icon)
+    """Internal ID of the icon shown beside ``name``.
+
+    ![](https://bit.ly/3Slr6jc)
+    """
+
     input = EventProp[int](InsertID.Input)
     """![](https://bit.ly/3RO0ckC)"""
 
@@ -558,7 +568,10 @@ class Insert(EventModel, ModelCollection[Slot]):
                 yield item["msg"]
 
     separator_shown = FlagProp(_InsertFlags.SeparatorShown, InsertID.Flags)
-    """Whether separator is shown before the insert."""
+    """Whether separator is shown before the insert.
+
+    :menuselection:`Insert --> Group --> Separator`
+    """
 
     stereo_separation = _MixerParamProp[int](_MixerParamsID.StereoSeparation)
     """Linear.

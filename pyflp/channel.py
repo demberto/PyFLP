@@ -19,7 +19,7 @@ import enum
 import pathlib
 import sys
 from collections import defaultdict
-from typing import DefaultDict, Iterator, List, Tuple, cast
+from typing import DefaultDict, Iterator, Tuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -56,7 +56,6 @@ from ._models import (
     ModelReprMixin,
     supports_slice,
 )
-from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import BooBass, PluginID, PluginProp, VSTPlugin
 
@@ -645,15 +644,8 @@ class FX(EventModel, ModelReprMixin):
     | 0   | 512 | 256     |
     """
 
-    ringmod = EventProp[Tuple[int, int]](ChannelID.RingMod)
-    """Ring modulation returned as a tuple of `(mix, frequency)`.
-
-    Limits for both:
-
-    | Min | Max | Default |
-    |-----|-----|---------|
-    | 0   | 256 | 128     |
-    """
+    # remove_dc = StructProp[bool](ChannelID.Parameters, prop="fx.remove_dc")
+    # """*New in FL Studio v2.5.0*."""
 
     resonance = EventProp[int](ChannelID.Resonance)
     """Filter Mod Y. Defaults to minimum value.
@@ -666,6 +658,16 @@ class FX(EventModel, ModelReprMixin):
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
     reverse = FlagProp(_FXFlags.Reverse, ChannelID.FXFlags)
     """Whether sample is reversed or not."""
+
+    ringmod = EventProp[Tuple[int, int]](ChannelID.RingMod)
+    """Ring modulation returned as a tuple of `(mix, frequency)`.
+
+    Limits for both:
+
+    | Min | Max | Default |
+    |-----|-----|---------|
+    | 0   | 256 | 128     |
+    """
 
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
     """Linear. Bipolar.
@@ -989,15 +991,33 @@ class TimeStretching(EventModel, ModelReprMixin):
 
 
 class Content(EventModel, ModelReprMixin):
-    """Used by :class:`Sampler`."""
+    """Used by :class:`Sampler`.
+
+    ![](https://bit.ly/3TCXFKI)
+    """
 
     declick_mode = StructProp[DeclickMode](
         ChannelID.Parameters, prop="content.declick_mode"
     )
+    """Defaults to ``DeclickMode.OutOnly``."""
+
     keep_on_disk = FlagProp(_SamplerFlags.KeepOnDisk, ChannelID.SamplerFlags)
+    """Whether a sample is streamed from disk or kept in RAM, defaults to ``False``.
+
+    *New in FL Studio v2.5.0*.
+    """
+
     load_regions = FlagProp(_SamplerFlags.LoadRegions, ChannelID.SamplerFlags)
+    """Load regions found in the sample, if any, defaults to ``True``."""
+
     load_slices = FlagProp(_SamplerFlags.LoadSliceMarkers, ChannelID.SamplerFlags)
+    """Defaults to ``False``."""
+
     resample = FlagProp(_SamplerFlags.Resample, ChannelID.SamplerFlags)
+    """Defaults to ``False``.
+
+    *New in FL Studio v2.5.0*.
+    """
 
 
 class AutomationLFO(EventModel, ModelReprMixin):
@@ -1038,10 +1058,12 @@ class Channel(EventModel):
     color = EventProp[colour.Color](PluginID.Color)
     """Defaults to #5C656A (granite gray).
 
+    ![](https://bit.ly/3SllDsG)
+
     Values below 20 for any color component (R, G or B) are ignored by FL.
     """
 
-    controllers = KWProp[List[RemoteController]]()
+    # TODO controllers = KWProp[List[RemoteController]]()
     internal_name = EventProp[str](PluginID.InternalName)
     """Internal name of the channel.
 
@@ -1054,14 +1076,22 @@ class Channel(EventModel):
         :attr:`name`
     """
 
-    # TODO Add link to GIF from docs once Bitly quota is available again.
     enabled = EventProp[bool](ChannelID.IsEnabled)
+    """![](https://bit.ly/3sbN8KU)"""
+
     group = KWProp[DisplayGroup]()
     """Display group / filter under which this channel is grouped."""
 
     icon = EventProp[int](PluginID.Icon)
+    """Internal ID of the icon shown beside the ``display_name``.
+
+    ![](https://bit.ly/3zjK2sf)
+    """
+
     iid = EventProp[int](ChannelID.New)
     keyboard = NestedProp(Keyboard, ChannelID.FineTune, ChannelID.RootNote)
+    """Located at the bottom of :menuselection:`Miscellaneous functions (page)`."""
+
     locked = EventProp[bool](ChannelID.IsLocked)
     """![](https://bit.ly/3BOBc7j)"""
 
@@ -1084,7 +1114,7 @@ class Channel(EventModel):
         | Min | Max   | Default |
         |-----|-------|---------|
         | 0   | 12800 | 6400    |
-        """  # noqa
+        """
         if ChannelID.Levels in self.events:
             return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pan"]
 
@@ -1112,7 +1142,7 @@ class Channel(EventModel):
         | Min | Max   | Default |
         |-----|-------|---------|
         | 0   | 12800 | 10000   |
-        """  # noqa
+        """
         if ChannelID.Levels in self.events:
             return cast(LevelsEvent, self.events.first(ChannelID.Levels))["volume"]
 
@@ -1136,7 +1166,7 @@ class Channel(EventModel):
     # If the channel is not zipped, underlying event is not stored.
     @property
     def zipped(self) -> bool:
-        """Whether the channel is in zipped state.
+        """Whether the channel is zipped / minimized.
 
         ![](https://bit.ly/3S2imib)
         """
@@ -1155,8 +1185,8 @@ class Automation(Channel, ModelCollection[AutomationPoint]):
 
     Iterate to get the :attr:`points` inside the clip.
 
-    >>> repr([point for point in automation])
-    AutomationPoint(position=0.0, value=1.0, tension=0.5), ...
+        >>> repr([point for point in automation])
+        AutomationPoint(position=0.0, value=1.0, tension=0.5), ...
 
     ![](https://bit.ly/3RXQhIN)
     """
@@ -1218,25 +1248,49 @@ class Layer(Channel, ModelCollection[Channel]):
         return f"{super().__repr__()} ({len(self)} children)"
 
     crossfade = FlagProp(_LayerFlags.Crossfade, ChannelID.LayerFlags)
+    """:menuselection:`Miscellaneous functions --> Layering`"""
+
     random = FlagProp(_LayerFlags.Random, ChannelID.LayerFlags)
+    """:menuselection:`Miscellaneous functions --> Layering`"""
 
 
 class _SamplerInstrument(Channel):
     arp = NestedProp(Arp, ChannelID.Parameters)
+    """:menuselection:`Miscellaneous functions -> Arpeggiator`"""
+
+    cut_group = EventProp[Tuple[int, int]](ChannelID.CutGroup)
+    """Cut group in the form of (Cut self, cut by).
+
+    :menuselection:`Miscellaneous functions --> Group`
+
+    Hint:
+        To cut itself when retriggered, set the same value for both.
+    """
+
     delay = NestedProp(Delay, ChannelID.Delay)
+    """:menuselection:`Miscellaneous functions -> Echo delay / fat mode`"""
+
     insert = EventProp[int](ChannelID.RoutedTo)
-    """The index of the :class:`Insert` the channel is routed to according to FL
+    """The index of the :class:`Insert` the channel is routed to according to FL.
 
     "Current" insert = -1, Master = 0 and so on... till :attr:`Mixer.max_inserts`.
     """
 
     level_adjusts = NestedProp(LevelAdjusts, ChannelID.LevelAdjusts)
+    """:menuselection:`Miscellaneous functions -> Level adjustments`"""
+
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
+    """:menuselection:`Miscellaneous functions -> Polyphony`"""
+
     time = NestedProp(Time, ChannelID.Swing)
+    """:menuselection:`Miscellaneous functions -> Time`"""
 
     @property
     def tracking(self) -> dict[str, Tracking] | None:
-        """A :class:`Tracking` each for Volume & Keyboard."""
+        """A :class:`Tracking` each for Volume & Keyboard.
+
+        :menuselection:`Miscellaneous functions -> Tracking`
+        """
         if ChannelID.Tracking in self.events:
             tracking = [Tracking(e) for e in self.events.separate(ChannelID.Tracking)]
             return dict(zip(("volume", "keyboard"), tracking))
@@ -1263,14 +1317,16 @@ class Sampler(_SamplerInstrument):
     """AU-format sample specific."""
 
     content = NestedProp(Content, ChannelID.SamplerFlags, ChannelID.Parameters)
-    cut_group = EventProp[Tuple[int, int]](ChannelID.CutGroup)
-    """Cut group in the form of (Cut self, cut by)."""
+    """:menuselection:`Sample settings --> Content`"""
 
     # FL's interface doesn't have an envelope for panning, but still stores
     # the default values in event data.
     @property
     def envelopes(self) -> dict[EnvelopeName, Envelope] | None:
-        """An :class:`Envelope` each for Volume, Panning, Mod X, Mod Y and Pitch."""
+        """An :class:`Envelope` each for Volume, Panning, Mod X, Mod Y and Pitch.
+
+        :menuselection:`Envelope / instruement settings`
+        """
         if ChannelID.EnvelopeLFO in self.events:
             envs = [Envelope(e) for e in self.events.separate(ChannelID.EnvelopeLFO)]
             return dict(zip(EnvelopeName.__args__, envs))  # type: ignore
@@ -1289,10 +1345,14 @@ class Sampler(_SamplerInstrument):
         ChannelID.StereoDelay,
         ChannelID.FXFlags,
     )
+    """:menuselection:`Sample settings (page) --> Precomputed effects`"""
 
     @property
     def lfos(self) -> dict[LFOName, SamplerLFO] | None:
-        """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch."""
+        """An :class:`LFO` each for Volume, Panning, Mod X, Mod Y and Pitch.
+
+        :menuselection:`Envelope / instruement settings (page)`
+        """
         if ChannelID.EnvelopeLFO in self.events:
             lfos = [SamplerLFO(e) for e in self.events.separate(ChannelID.EnvelopeLFO)]
             return dict(zip(LFOName.__args__, lfos))  # type: ignore
@@ -1319,10 +1379,13 @@ class Sampler(_SamplerInstrument):
     playback = NestedProp(
         Playback, ChannelID.SamplerFlags, ChannelID.PingPongLoop, ChannelID.Parameters
     )
+    """:menuselection:`Sample settings (page) --> Playback`"""
 
     @property
     def sample_path(self) -> pathlib.Path | None:
         """Absolute path of a sample file on the disk.
+
+        :menuselection:`Sample settings (page) --> File`
 
         Contains the string ``%FLStudioFactoryData%`` for stock samples.
         """
@@ -1342,6 +1405,7 @@ class Sampler(_SamplerInstrument):
         ChannelID.StretchTime,
         ChannelID.Parameters,
     )
+    """:menuselection:`Sample settings (page) --> Time stretching`"""
 
 
 class ChannelRack(EventModel, ModelCollection[Channel]):

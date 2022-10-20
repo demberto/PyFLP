@@ -384,7 +384,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
 
 
 class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3Bk3aGK)"""  # noqa
+    """![](https://bit.ly/3Bk3aGK)"""
 
     INTERNAL_NAME = "BooBass"
     bass = _PluginDataProp[int]()
@@ -413,7 +413,7 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
 
 
 class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3RWItqU)"""  # noqa
+    """![](https://bit.ly/3RWItqU)"""
 
     INTERNAL_NAME = "Fruity Balance"
     pan = _PluginDataProp[int]()
@@ -438,7 +438,7 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
 
 
 class FruityCenter(_PluginBase[FruityCenterEvent], _IPlugin, ModelReprMixin):
-    # TODO Image link
+    """![](https://bit.ly/3TA9IIv)"""
 
     INTERNAL_NAME = "Fruity Center"
     enabled = _PluginDataProp[bool]()
@@ -449,7 +449,7 @@ class FruityCenter(_PluginBase[FruityCenterEvent], _IPlugin, ModelReprMixin):
 
 
 class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3qT6Jil)"""  # noqa
+    """![](https://bit.ly/3qT6Jil)"""
 
     INTERNAL_NAME = "Fruity Fast Dist"
     kind = _PluginDataProp[Literal["A", "B"]]()
@@ -492,7 +492,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
 
 
 class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3RHa4g5)"""  # noqa
+    """![](https://bit.ly/3RHa4g5)"""
 
     INTERNAL_NAME = "Fruity NoteBook 2"
     active_page = _PluginDataProp[int]()
@@ -509,7 +509,7 @@ class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixi
 
 
 class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3DqjvMu)"""  # noqa
+    """![](https://bit.ly/3DqjvMu)"""
 
     INTERNAL_NAME = "Fruity Send"
     dry = _PluginDataProp[int]()
@@ -546,7 +546,7 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
 
 
 class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3BCWfJX)"""  # noqa
+    """![](https://bit.ly/3BCWfJX)"""
 
     INTERNAL_NAME = "Fruity Soft Clipper"
     post = _PluginDataProp[int]()
@@ -573,7 +573,7 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
 class FruityStereoEnhancer(
     _PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin
 ):
-    """![](https://bit.ly/3DoHvji)"""  # noqa
+    """![](https://bit.ly/3DoHvji)"""
 
     INTERNAL_NAME = "Fruity Stereo Enhancer"
     effect_position = _PluginDataProp[Literal["pre", "post"]]()
@@ -590,7 +590,7 @@ class FruityStereoEnhancer(
     """
 
     phase_inversion = _PluginDataProp[Literal["none", "left", "right"]]()
-    """Default to ``none``."""
+    """Default to ``None``."""
 
     phase_offset = _PluginDataProp[int]()
     """Linear.
@@ -624,7 +624,7 @@ class FruityStereoEnhancer(
 
 
 class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
-    """![](https://bit.ly/3dip70y)"""  # noqa
+    """![](https://bit.ly/3dip70y)"""
 
     INTERNAL_NAME = "Soundgoodizer"
     amount = _PluginDataProp[int]()
