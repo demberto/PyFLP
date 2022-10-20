@@ -364,6 +364,8 @@ class Project(MultiEventModel):
     def ppq(self) -> int:
         """Pulses per quarter.
 
+        ![](https://bit.ly/3F0UrMT)
+
         Note:
             All types of lengths, positions and offsets internally use the PPQ
             as a multiplying factor.
@@ -379,7 +381,7 @@ class Project(MultiEventModel):
         Raises:
             ExpectedValue: When a value not in `VALID_PPQS` is tried to be set.
 
-        *Changed in FL Studio v2.1.1*: Defaults to 96.
+        *Changed in FL Studio v2.1.1*: Defaults to ``96``.
         """
         return self._kw["ppq"]
 
@@ -404,15 +406,18 @@ class Project(MultiEventModel):
     def tempo(self) -> int | float | None:
         """Tempo at the current position of the playhead (in BPM).
 
+        ![](https://bit.ly/3MKdAEO)
+
         Raises:
-            UnexpectedType: When a fine-tuned tempo (float) isn't supported.
-                Use an `int` (coarse tempo) value.
+            UnexpectedType: When a fine-tuned tempo (``float``) isn't
+                supported. Use an ``int`` (coarse tempo) value.
             PropertyCannotBeSet: If underlying event isn't found.
             ValueError: When a tempo outside the allowed range is set.
 
-        * *Changed in FL Studio v1.4.2*: Max tempo increased to 999 (int).
+        * *Changed in FL Studio v1.4.2*: Max tempo increased to ``999`` (int).
         * *New in FL Studio v3.4.0*: Fine tuned tempo (a float).
-        * *Changed in FL Studio v11*: Max tempo limited to 522.000.
+        * *Changed in FL Studio v11*: Max tempo limited to ``522.000``.
+            Probably when tempo automations
         """
         if ProjectID.Tempo in self._events:
             return self._events[ProjectID.Tempo][0].value / 1000
@@ -457,7 +462,8 @@ class Project(MultiEventModel):
     def time_spent(self) -> datetime.timedelta | None:
         """Time spent on the project since its creation.
 
-        Technically, since the last reset via FL's interface.
+        ![](https://bit.ly/3TsBzdM)
+
         """
         if ProjectID.Timestamp in self._events:
             event = cast(TimestampEvent, self._events[ProjectID.Timestamp][0])
@@ -475,6 +481,8 @@ class Project(MultiEventModel):
     @property
     def version(self) -> FLVersion:
         """The version of FL Studio which was used to save the file.
+
+        ![](https://bit.ly/3TD3BU0)
 
         Caution:
             Changing this to a lower version will not make a file load magically

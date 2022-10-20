@@ -652,15 +652,8 @@ class FX(MultiEventModel, ModelReprMixin):
     | 0   | 512 | 256     |
     """
 
-    ringmod = EventProp[Tuple[int, int]](ChannelID.RingMod)
-    """Ring modulation returned as a tuple of `(mix, frequency)`.
-
-    Limits for both:
-
-    | Min | Max | Default |
-    |-----|-----|---------|
-    | 0   | 256 | 128     |
-    """
+    # remove_dc = StructProp[bool](ChannelID.Parameters, prop="fx.remove_dc")
+    # """*New in FL Studio v2.5.0*."""
 
     resonance = EventProp[int](ChannelID.Resonance)
     """Filter Mod Y. Defaults to minimum value.
@@ -673,6 +666,16 @@ class FX(MultiEventModel, ModelReprMixin):
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
     reverse = FlagProp(_FXFlags.Reverse, ChannelID.FXFlags)
     """Whether sample is reversed or not."""
+
+    ringmod = EventProp[Tuple[int, int]](ChannelID.RingMod)
+    """Ring modulation returned as a tuple of `(mix, frequency)`.
+
+    Limits for both:
+
+    | Min | Max | Default |
+    |-----|-----|---------|
+    | 0   | 256 | 128     |
+    """
 
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
     """Linear. Bipolar.
@@ -996,15 +999,33 @@ class TimeStretching(MultiEventModel, ModelReprMixin):
 
 
 class Content(MultiEventModel, ModelReprMixin):
-    """Used by :class:`Sampler`."""
+    """Used by :class:`Sampler`.
+
+    ![](https://bit.ly/3TCXFKI)
+    """
 
     declick_mode = StructProp[DeclickMode](
         ChannelID.Parameters, prop="content.declick_mode"
     )
+    """Defaults to ``DeclickMode.OutOnly``."""
+
     keep_on_disk = FlagProp(_SamplerFlags.KeepOnDisk, ChannelID.SamplerFlags)
+    """Whether a sample is streamed from disk or kept in RAM, defaults to ``False``.
+
+    *New in FL Studio v2.5.0*.
+    """
+
     load_regions = FlagProp(_SamplerFlags.LoadRegions, ChannelID.SamplerFlags)
+    """Load regions found in the sample, if any, defaults to ``True``."""
+
     load_slices = FlagProp(_SamplerFlags.LoadSliceMarkers, ChannelID.SamplerFlags)
+    """Defaults to ``False``."""
+
     resample = FlagProp(_SamplerFlags.Resample, ChannelID.SamplerFlags)
+    """Defaults to ``False``.
+
+    *New in FL Studio v2.5.0*.
+    """
 
 
 class AutomationLFO(MultiEventModel, ModelReprMixin):
@@ -1045,6 +1066,8 @@ class Channel(MultiEventModel):
     color = EventProp[colour.Color](PluginID.Color)
     """Defaults to #5C656A (granite gray).
 
+    ![](https://bit.ly/3SllDsG)
+
     Values below 20 for any color component (R, G or B) are ignored by FL.
     """
 
@@ -1061,12 +1084,18 @@ class Channel(MultiEventModel):
         :attr:`name`
     """
 
-    # TODO Add link to GIF from docs once Bitly quota is available again.
     enabled = EventProp[bool](ChannelID.IsEnabled)
+    """![](https://bit.ly/3sbN8KU)"""
+
     group = KWProp[DisplayGroup]()
     """Display group / filter under which this channel is grouped."""
 
     icon = EventProp[int](PluginID.Icon)
+    """Internal ID of the icon shown beside the ``display_name``.
+
+    ![](https://bit.ly/3zjK2sf)
+    """
+
     iid = EventProp[int](ChannelID.New)
     keyboard = NestedProp(Keyboard, ChannelID.FineTune, ChannelID.RootNote)
     locked = EventProp[bool](ChannelID.IsLocked)
@@ -1091,7 +1120,7 @@ class Channel(MultiEventModel):
         | Min | Max   | Default |
         |-----|-------|---------|
         | 0   | 12800 | 6400    |
-        """  # noqa
+        """
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["pan"]
 
@@ -1122,7 +1151,7 @@ class Channel(MultiEventModel):
         | Min | Max   | Default |
         |-----|-------|---------|
         | 0   | 12800 | 10000   |
-        """  # noqa
+        """
         if ChannelID.Levels in self._events:
             return cast(LevelsEvent, self._events[ChannelID.Levels][0])["volume"]
 
@@ -1148,7 +1177,7 @@ class Channel(MultiEventModel):
     # If the channel is not zipped, underlying event is not stored.
     @property
     def zipped(self) -> bool:
-        """Whether the channel is in zipped state.
+        """Whether the channel is zipped / minimized.
 
         ![](https://bit.ly/3S2imib)
         """
@@ -1167,8 +1196,8 @@ class Automation(Channel, ModelCollection[AutomationPoint]):
 
     Iterate to get the :attr:`points` inside the clip.
 
-    >>> repr([point for point in automation])
-    AutomationPoint(position=0.0, value=1.0, tension=0.5), ...
+        >>> repr([point for point in automation])
+        AutomationPoint(position=0.0, value=1.0, tension=0.5), ...
 
     ![](https://bit.ly/3RXQhIN)
     """

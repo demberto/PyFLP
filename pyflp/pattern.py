@@ -125,9 +125,11 @@ class Note(ItemModel):
     *New in FL Studio v3.3.0*.
     """
 
-    # TODO #47
     group = StructProp[int]()
-    """A number shared by notes in the same group or 0 if ungrouped."""
+    """A number shared by notes in the same group or ``0`` if ungrouped.
+
+    ![](https://bit.ly/3TgjFva)
+    """
 
     @property
     def key(self) -> str:
@@ -239,9 +241,10 @@ class Pattern(MultiEventModel):
     def __iter__(self) -> Iterator[Note]:
         """MIDI notes contained inside the pattern.
 
-        FL Studio uses its own custom format to represent notes internally.
-        However by using the :class:`Note` properties with a MIDI parsing
-        library for example, you can export them to MIDI.
+        Note:
+            FL Studio uses its own custom format to represent notes internally.
+            However by using the :class:`Note` properties with a MIDI parsing
+            library for example, you can export them to MIDI.
         """
         if PatternID.Notes in self._events:
             for item in cast(NotesEvent, self._events[PatternID.Notes][0]):
@@ -252,7 +255,9 @@ class Pattern(MultiEventModel):
         return f"Pattern (index={self.index}, name={self.name}, {num_notes} notes)"
 
     color = EventProp[colour.Color](PatternID.Color)
-    """Returns a colour if one is set while saving the project file, else None.
+    """Returns a colour if one is set while saving the project file, else ``None``.
+
+    ![](https://bit.ly/3eNeSSW)
 
     Defaults to #485156 in FL Studio.
     """
@@ -286,7 +291,10 @@ class Pattern(MultiEventModel):
     """
 
     looped = EventProp[bool](PatternID.Looped, default=False)
-    """Whether a pattern is in loop mode."""
+    """Whether a pattern is in live loop mode.
+
+    *New in FL Studio v2.5.0*.
+    """
 
     name = EventProp[str](PatternID.Name)
     """User given name of the pattern; None if not set."""

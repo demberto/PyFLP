@@ -222,7 +222,10 @@ class PatternPlaylistItem(PlaylistItemBase):
 
 
 class TimeMarker(MultiEventModel):
-    """A marker in the timeline of an :class:`Arrangement`."""
+    """A marker in the timeline of an :class:`Arrangement`.
+
+    ![](https://bit.ly/3gltKbt)
+    """
 
     def __repr__(self):
         if self.type == TimeMarkerType.Marker:
@@ -306,20 +309,26 @@ class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
     color = _TrackColorProp(TrackID.Data)
     """Defaults to #485156 (dark slate gray).
 
+    ![](https://bit.ly/3yVGGuW)
+
     Note:
-        Unlike :attr:`Channel.color` and :attr:`Insert.color`, values
-        below 20 for any color component are NOT ignored by FL Studio.
+        Unlike :attr:`Channel.color` and :attr:`Insert.color`, values below ``20`` for
+        any color component (i.e red, green or blue) are NOT ignored by FL Studio.
     """
 
     content_locked = StructProp[bool](TrackID.Data)
-    """Defaults to :ref:`False`."""
+    """Defaults to ``False``."""
 
-    # TODO Add link to GIF from docs once Bitly quota is available again.
     enabled = StructProp[bool](TrackID.Data)
-    grouped = StructProp[bool](TrackID.Data)
-    """Whether grouped with the track above (index - 1) or not."""
+    """![](https://bit.ly/3eGd91O)"""
 
-    height = StructProp[float](TrackID.Data)
+    grouped = StructProp[bool](TrackID.Data)
+    """Whether grouped with the track above (index - 1) or not.
+
+    ![](https://bit.ly/3yXO5tM)
+    """
+
+    height = StructProp[float](TrackID.Data)  # TODO #35
     """Track height in FL's interface. Linear.
 
     | Type    | Value | Percentage |
@@ -330,18 +339,23 @@ class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
     """
 
     icon = StructProp[int](TrackID.Data)
-    """Returns 0 if not set, else an internal icon ID."""
+    """Returns 0 if not set, else an internal icon ID.
 
-    # TODO Add link to GIF from docs once Bitly quota is available again.
+    ![](https://bit.ly/3gln8Kc)
+    """
+
     locked = StructProp[bool](TrackID.Data)
-    """Whether the tracked is in a locked state."""
+    """Whether the tracked is in a locked state.
 
-    locked_height = StructProp[float](TrackID.Data)
+    ![](https://bit.ly/3VFG6eP)
+    """
+
+    locked_height = StructProp[float](TrackID.Data)  # TODO #35
     motion = StructProp[TrackMotion](TrackID.Data)
     """Defaults to :attr:`TrackMotion.Stay`."""
 
     name = EventProp[str](TrackID.Name)
-    """Returns `None` if not set."""
+    """Returns a string or ``None`` if not set."""
 
     position_sync = StructProp[TrackSync](TrackID.Data)
     """Defaults to :attr:`TrackSync.Off`."""
@@ -350,13 +364,13 @@ class Track(MultiEventModel, ModelCollection[PlaylistItemBase]):
     """Defaults to :attr:`TrackPress.Retrigger`."""
 
     tolerant = StructProp[bool](TrackID.Data)
-    """Defaults to `True`."""
+    """Defaults to ``True``."""
 
     trigger_sync = StructProp[TrackSync](TrackID.Data)
     """Defaults to :attr:`TrackSync.FourBeats`."""
 
     queued = StructProp[bool](TrackID.Data)
-    """Defaults to :ref:`False`."""
+    """Defaults to ``False``."""
 
 
 class _ArrangementKW(TypedDict):
@@ -375,12 +389,12 @@ class Arrangement(MultiEventModel):
         super().__init__(*events, **kw)
 
     def __repr__(self):
-        timemarkers = f"{len(tuple(self.timemarkers))} timemarkers"
-        tracks = f"{len(tuple(self.tracks))} tracks"
-        suffix = f"#{self.__index__()} {timemarkers} and {tracks}"
-        if self.name:
-            return f"Arrangement {self.name!r} {suffix}"
-        return f"Unnamed arrangement {suffix}"
+        return "Arrangement (index={}, name={}, {} timemarkers, {} tracks)".format(
+            self.__index__(),
+            repr(self.name),
+            len(tuple(self.timemarkers)),
+            len(tuple(self.tracks)),
+        )
 
     def __index__(self) -> int:
         """A 1-based index."""
@@ -435,6 +449,8 @@ class Arrangement(MultiEventModel):
 
 # TODO Find whether time is set to signature or division mode.
 class TimeSignature(MultiEventModel):
+    """![](https://bit.ly/3EYiMmy)"""
+
     def __repr__(self) -> str:
         return f"Global time signature: {self.num}/{self.beat}"
 
@@ -488,7 +504,7 @@ class Arrangements(MultiEventModel, ModelCollection[Arrangement]):
     # event in initial versions of FL20, making them harder to group.
     # TODO This logic might not work on older versions of FL.
     def __iter__(self) -> Iterator[Arrangement]:
-        """Provides an iterator over :class:`Arrangement` found in the project.
+        """Yields :class:`Arrangement` found in the project.
 
         Raises:
             NoModelsFound: When no arrangements are found.
