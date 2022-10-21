@@ -757,7 +757,7 @@ class EventTree:
             chilren and passing parent to a child are best done here.
         """
         el: list[IndexedEvent] = []
-        for ie in chain.from_iterable(self.dct.values()):
+        for ie in sorted(chain.from_iterable(self.dct.values())):
             if select(ie.e):
                 el.append(ie)
         return EventTree(self, el)

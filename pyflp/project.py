@@ -169,15 +169,16 @@ class Project(EventModel):
         def select(e: AnyEvent):
             nonlocal arrnew_occured
 
+            if e.id == ArrangementID.New:
+                arrnew_occured = True
+
             # * Prevents accidentally passing on Pattern's timemarkers
             # TODO This logic will still be incorrect if arrangement's
             # timemarkers occur before ArrangementID.New event.
-            if e.id in TimeMarkerID and not arrnew_occured:
-                return None
+            if e.id in TimeMarkerID and arrnew_occured:
+                return True
 
-            if e.id in (*ArrangementID, *ArrangementsID, *TrackID, *TimeMarkerID):
-                if e.id == ArrangementID.New:
-                    arrnew_occured = True
+            if e.id in (*ArrangementID, *ArrangementsID, *TrackID):
                 return True
 
         return Arrangements(self.events.subdict(select), version=self.version)
