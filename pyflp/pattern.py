@@ -251,8 +251,12 @@ class Pattern(MultiEventModel):
                 yield Note(item)
 
     def __repr__(self):
-        num_notes = len(cast(NotesEvent, self._events[PatternID.Notes][0]))
-        return f"Pattern (index={self.index}, name={self.name}, {num_notes} notes)"
+        num_notes = (
+            len(cast(NotesEvent, self._events[PatternID.Notes][0]))
+            if PatternID.Notes in self._events
+            else 0
+        )
+        return f"Pattern (index={self.index}, name={self.name!r}, {num_notes} notes)"
 
     color = EventProp[colour.Color](PatternID.Color)
     """Returns a colour if one is set while saving the project file, else ``None``.
