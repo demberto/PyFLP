@@ -187,10 +187,8 @@ def save(project: Project, file: pathlib.Path | str):
     stream.write(b"FLdt")  # 18
     stream.seek(4, 1)  # leave space for total event size
 
-    first_event = project.events.pop(ProjectID.FLVersion)
-    events_size = first_event.size
-    stream.write(bytes(first_event))
-
+    project.events.insert(0, project.events.pop(ProjectID.FLVersion))
+    events_size = 0
     for event in project.events.all():
         events_size += event.size
         stream.write(bytes(event))
