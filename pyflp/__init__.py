@@ -45,6 +45,7 @@ from ._events import (
     AsciiEvent,
     EventEnum,
     EventTree,
+    IndexedEvent,
     U8Event,
     U16Event,
     U32Event,
@@ -76,7 +77,7 @@ def parse(file: pathlib.Path | str) -> Project:
     with open(file, "rb") as flp:
         stream = io.BytesIO(flp.read())
 
-    events = EventTree()
+    events: list[AnyEvent] = []
 
     if stream.read(4) != b"FLhd":  # 4
         raise HeaderCorrupted("Unexpected header chunk magic; expected 'FLhd'")
@@ -114,7 +115,7 @@ def parse(file: pathlib.Path | str) -> Project:
     stream.seek(22)  # Back to start of events
     while stream.tell() < file_size:
         event_type: type[AnyEvent] | None = None
-        id = EventEnum(c.Int8ul.parse_stream(stream))
+        id = EventEnum(int.from_bytes(stream.read(1), "little"))
 
         if id < WORD:
             value = stream.read(1)
@@ -159,7 +160,12 @@ def parse(file: pathlib.Path | str) -> Project:
 
         events.append(event_type(id, value))
 
-    return Project(events, channel_count=channel_count, format=file_format, ppq=ppq)
+    return Project(
+        EventTree(init=(IndexedEvent(r, e) for r, e in enumerate(events))),
+        channel_count=channel_count,
+        format=file_format,
+        ppq=ppq,
+    )
 
 
 def save(project: Project, file: pathlib.Path | str):
