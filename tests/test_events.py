@@ -25,6 +25,7 @@ def test_invalid_chunk_size():
 def test_event_tree():
     root = EventTree()
     child = EventTree(root)
+    assert child in root.children
     event = U8Event(EventEnum(0), b"\x01")
     child.append(event)
     assert root.first(EventEnum(0)) == event

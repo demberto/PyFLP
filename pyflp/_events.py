@@ -566,17 +566,19 @@ class EventTree:
         init: Iterable[IndexedEvent] | None = None,
     ):
         """Create a new dictionary with an optional :attr:`parent`."""
-        self.parent = parent
+        self.children: list[EventTree] = []
         self.dct: DefaultDict[EventEnum, list[IndexedEvent]] = defaultdict(SortedList)
         if init:
             for ie in init:
                 self.dct[ie.e.id].add(ie)  # type: ignore
 
-        ancestor = parent
-        while ancestor is not None and ancestor.parent is not None:
-            ancestor = ancestor.parent
-        self.root = ancestor or self
-        self.children: list[EventTree] = []
+        self.parent = parent
+        if parent is not None:
+            parent.children.append(self)
+
+        while parent is not None and parent.parent is not None:
+            parent = parent.parent
+        self.root = parent or self
 
     def __contains__(self, id: EventEnum):
         """Whether the key :attr:`id` exists in the dictionary."""
@@ -694,10 +696,10 @@ class EventTree:
 
             [EventTree([Event(A, 1), Event(B, 1)]), EventTree([Event(A, 2)])]
         """
-        yield from (
-            EventTree(self, [ie for ie in iel if ie])  # filter out None values
-            for iel in zip_longest(*(self.dct[id] for id in ids))  # unpack magic
-        )
+        for iel in zip_longest(*(self.dct[id] for id in ids)):  # unpack magic
+            obj = EventTree(self, [ie for ie in iel if ie])  # filter out None values
+            self.children.append(obj)
+            yield obj
 
     # TODO! First event's rootidx gets pushed to last
     def insert(self, pos: int, ev: AnyEvent):
@@ -747,7 +749,10 @@ class EventTree:
 
     def separate(self, id: EventEnum) -> Iterator[EventTree]:
         """Yields a separate ``EventTree`` for every event with matching ``id``."""
-        yield from (EventTree(self, [ie]) for ie in self.dct[id])
+        for ie in self.dct[id]:
+            obj = EventTree(self, [ie])
+            self.children.append(obj)
+            yield obj
 
     def subdict(self, select: Callable[[AnyEvent], bool | None]) -> EventTree:
         """Returns a mutable view containing events for which ``select`` was True.
@@ -760,7 +765,9 @@ class EventTree:
         for ie in sorted(chain.from_iterable(self.dct.values())):
             if select(ie.e):
                 el.append(ie)
-        return EventTree(self, el)
+        obj = EventTree(self, el)
+        self.children.append(obj)
+        return obj
 
     def subdicts(
         self, select: Callable[[AnyEvent], bool | None], repeat: int
@@ -781,7 +788,9 @@ class EventTree:
 
             result = select(ie.e)
             if result is False:
-                yield EventTree(self, el)
+                obj = EventTree(self, el)
+                self.children.append(obj)
+                yield obj
                 el = [ie]  # Don't skip current event
                 repeat -= 1
             elif result is not None:
