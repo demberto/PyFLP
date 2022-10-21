@@ -634,7 +634,7 @@ class EventTree:
         """Recursively performs :attr:`action` on self and all parents."""
         action(self)
         ancestor = self.parent
-        while ancestor is not None and ancestor.parent is not None:
+        while ancestor is not None:
             action(ancestor)
             ancestor = ancestor.parent
 
