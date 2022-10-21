@@ -507,9 +507,13 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             if e.id in (*ArrangementID, *TimeMarkerID, *TrackID):
                 return True
 
-        for ed in self.events.subdicts(select, len(self)):
-            yield Arrangement(ed, version=self._kw["version"])
-            arrnew_occured = False  # Reset for next arrangement
+            if e.id == ArrangementsID.Current:
+                return False  # Yield out last arrangement
+
+        yield from (
+            Arrangement(ed, version=self._kw["version"])
+            for ed in self.events.subdicts(select, len(self))
+        )
 
     def __len__(self):
         """The number of arrangements present in the project.
