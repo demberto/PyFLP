@@ -53,6 +53,7 @@ from ._events import (
     ColorEvent,
     DataEventBase,
     EventEnum,
+    EventTree,
     I16Event,
     I32Event,
     ListEventBase,
@@ -61,30 +62,21 @@ from ._events import (
     T,
     U16Event,
 )
-from ._models import FLVersion, ModelBase, ModelCollection, MultiEventModel, getslice
+from ._models import EventModel, FLVersion, ModelBase, ModelCollection, supports_slice
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
     FruityBalance,
-    FruityBalanceEvent,
     FruityCenter,
-    FruityCenterEvent,
     FruityFastDist,
-    FruityFastDistEvent,
     FruityNotebook2,
-    FruityNotebook2Event,
     FruitySend,
-    FruitySendEvent,
     FruitySoftClipper,
-    FruitySoftClipperEvent,
     FruityStereoEnhancer,
-    FruityStereoEnhancerEvent,
     PluginID,
     PluginProp,
     Soundgoodizer,
-    SoundgoodizerEvent,
     VSTPlugin,
-    VSTPluginEvent,
 )
 
 __all__ = [
@@ -167,7 +159,7 @@ class MixerParamsEvent(DataEventBase):
     ).compile()
     STRUCT_SIZE = STRUCT.sizeof()
 
-    def __init__(self, id: int, data: bytearray):
+    def __init__(self, id: Any, data: bytearray):
         super().__init__(id, data)
         self.items: DefaultDict[int, _InsertItems] = defaultdict(_InsertItems)
         self.unparsed = False
@@ -368,22 +360,20 @@ class _MixerParamProp(RWProperty[T]):
             raise PropertyCannotBeSet(self._id)  # type: ignore
 
 
-class Slot(MultiEventModel):
+class Slot(EventModel):
     """Represents an effect slot in an `Insert` / mixer channel.
 
     ![](https://bit.ly/3RUDtTu)
     """
 
-    def __init__(self, *events: AnyEvent, params: list[dict[str, Any]] | None = None):
-        super().__init__(*events, params=params or [])
+    def __init__(self, events: EventTree, params: list[dict[str, Any]] | None = None):
+        super().__init__(events, params=params or [])
 
     def __repr__(self) -> str:
         return f"Slot (name={self.name}, index={self.index}, plugin={self.plugin!r})"
 
     def __index__(self) -> int:
-        if SlotID.Index not in self._events:
-            return NotImplemented
-        return self._events[SlotID.Index][0].value
+        return self.events.first(SlotID.Index).value
 
     color = EventProp[colour.Color](PluginID.Color)
     controllers = KWProp[List[RemoteController]]()  # TODO
@@ -407,17 +397,15 @@ class Slot(MultiEventModel):
 
     name = EventProp[str](PluginID.Name)
     plugin = PluginProp(
-        {
-            VSTPluginEvent: VSTPlugin,
-            FruityBalanceEvent: FruityBalance,
-            FruityCenterEvent: FruityCenter,
-            FruityFastDistEvent: FruityFastDist,
-            FruityNotebook2Event: FruityNotebook2,
-            FruitySendEvent: FruitySend,
-            FruitySoftClipperEvent: FruitySoftClipper,
-            FruityStereoEnhancerEvent: FruityStereoEnhancer,
-            SoundgoodizerEvent: Soundgoodizer,
-        }
+        VSTPlugin,
+        FruityBalance,
+        FruityCenter,
+        FruityFastDist,
+        FruityNotebook2,
+        FruitySend,
+        FruitySoftClipper,
+        FruityStereoEnhancer,
+        Soundgoodizer,
     )
     """The effect loaded into the slot."""
 
@@ -432,20 +420,20 @@ class _InsertKW(TypedDict):
 # (by looking at Project.format) and use `MixerParameterEvent.items` to get
 # remaining data. Normally, the `Mixer` passes this information to the Inserts
 # (and Inserts to the `Slot`s directly).
-class Insert(MultiEventModel, ModelCollection[Slot]):
+class Insert(EventModel, ModelCollection[Slot]):
     """Represents a mixer track to which channel from the rack are routed to.
 
     ![](https://bit.ly/3LeGKuN)
     """
 
-    def __init__(self, *events: AnyEvent, **kw: Unpack[_InsertKW]):
-        super().__init__(*events, **kw)
+    def __init__(self, events: EventTree, **kw: Unpack[_InsertKW]):
+        super().__init__(events, **kw)
 
     # TODO Add number of used slots
     def __repr__(self):
         return f"Insert (name={self.name!r}, index={self.__index__()})"
 
-    @getslice
+    @supports_slice
     def __getitem__(self, i: int | str):
         """Returns an effect slot of the specified index or name.
 
@@ -468,19 +456,18 @@ class Insert(MultiEventModel, ModelCollection[Slot]):
 
     def __iter__(self) -> Iterator[Slot]:
         """Iterator over the effect empty and used slots."""
-        for i in range(self._kw["max_slots"] + 1):
-            events: list[AnyEvent] = []
-
-            for id, subevents in self._events.items():
-                if id in (*SlotID, *PluginID) and i < len(subevents):
-                    events.append(subevents[i])
-
-            yield Slot(*events, params=self._kw["params"][i])
+        index = 0
+        for ed in self.events.subdicts(
+            lambda e: e.id in (*SlotID, *PluginID), self._kw["max_slots"]
+        ):
+            yield Slot(ed, params=self._kw["params"][index])
+            index += 1
 
     def __len__(self):
-        if SlotID.Index in self._events:
-            return len(self._events[SlotID.Index])
-        return len(list(self))
+        try:
+            return self.events.count(SlotID.Index)
+        except KeyError:
+            return len(list(self))
 
     bypassed = FlagProp(_InsertFlags.EnableEffects, InsertID.Flags, inverted=True)
     """Whether all slots are bypassed."""
@@ -506,7 +493,7 @@ class Insert(MultiEventModel, ModelCollection[Slot]):
 
         ![](https://bit.ly/3eLum9D)
         """
-        events = self._events.get(InsertID.Flags)
+        events = self.events.get(InsertID.Flags)
         if events is not None:
             event = cast(InsertFlagsEvent, events[0])
             flags = _InsertFlags(event["flags"])
@@ -575,7 +562,7 @@ class Insert(MultiEventModel, ModelCollection[Slot]):
 
         *New in FL Studio v4.0*.
         """
-        items = iter(cast(InsertRoutingEvent, self._events[InsertID.Routing][0]))
+        items = iter(cast(InsertRoutingEvent, self.events.first(InsertID.Routing)))
         for id, item in cast(_InsertItems, self._kw["params"]).own.items():
             if id >= _MixerParamsID.RouteVolStart and next(items)["is_routed"]:
                 yield item["msg"]
@@ -613,7 +600,7 @@ class _MixerKW(TypedDict):
 
 # TODO FL Studio version in which slots were increased to 10
 # TODO A move() method to change the placement of Inserts; it's difficult!
-class Mixer(MultiEventModel, ModelCollection[Insert]):
+class Mixer(EventModel, ModelCollection[Insert]):
     """Represents the mixer which contains :class:`Insert` instances.
 
     ![](https://bit.ly/3eOsblF)
@@ -631,11 +618,11 @@ class Mixer(MultiEventModel, ModelCollection[Insert]):
 
     _MAX_SLOTS = {(1, 6, 5): 4, (3, 0, 0): 8}
 
-    def __init__(self, *events: AnyEvent, **kw: Unpack[_MixerKW]):
-        super().__init__(*events, **kw)
+    def __init__(self, events: EventTree, **kw: Unpack[_MixerKW]):
+        super().__init__(events, **kw)
 
     # Inserts don't store their index internally.
-    @getslice
+    @supports_slice
     def __getitem__(self, i: int | str | slice):
         """Returns an insert with the specified index or name.
 
@@ -654,31 +641,24 @@ class Mixer(MultiEventModel, ModelCollection[Insert]):
         raise ModelNotFound(i)
 
     def __iter__(self) -> Iterator[Insert]:
-        index = 0
-        events: list[AnyEvent] = []
+        def select(e: AnyEvent):
+            if e.id == InsertID.Output:
+                return False
+
+            if e.id in (*InsertID, *PluginID, *SlotID):
+                return True
+
         params: dict[int, _InsertItems] = {}
+        if MixerID.Params in self.events:
+            params = cast(MixerParamsEvent, self.events.first(MixerID.Params)).items
 
-        if MixerID.Params in self._events:
-            params = cast(MixerParamsEvent, self._events[MixerID.Params][0]).items
-
-        for event in self._events_tuple:
-            if event.id in (*InsertID, *PluginID, *SlotID):
-                events.append(event)
-
-            if event.id == InsertID.Output:
-                try:
-                    items = params[index]
-                except IndexError:
-                    yield Insert(*events, index=index, max_slots=self.max_slots)
-                else:
-                    yield Insert(
-                        *events,
-                        index=index,
-                        max_slots=self.max_slots,
-                        params=items,
-                    )
-                events = []
-                index += 1
+        for i, ed in enumerate(self.events.subdicts(select, self.max_inserts)):
+            if i in params:
+                yield Insert(
+                    ed, index=i - 1, max_slots=self.max_slots, params=params[i]
+                )
+            else:
+                yield Insert(ed, index=i - 1, max_slots=self.max_slots)
 
     def __len__(self):
         """Returns the number of inserts present in the project.
@@ -686,9 +666,9 @@ class Mixer(MultiEventModel, ModelCollection[Insert]):
         Raises:
             NoModelsFound: No inserts could be found.
         """
-        if InsertID.Flags not in self._events:
+        if InsertID.Flags not in self.events:
             raise NoModelsFound
-        return len(self._events[InsertID.Flags])
+        return self.events.count(InsertID.Flags)
 
     def __repr__(self):
         return f"Mixer: {len(self)} inserts"

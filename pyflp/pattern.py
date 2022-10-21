@@ -15,9 +15,10 @@
 
 from __future__ import annotations
 
-import collections
 import enum
 import warnings
+from collections import defaultdict
+from itertools import chain
 from typing import DefaultDict, Iterator, cast
 
 import colour
@@ -29,17 +30,18 @@ from ._events import (
     DWORD,
     TEXT,
     WORD,
-    AnyEvent,
     BoolEvent,
     ColorEvent,
     EventEnum,
+    EventTree,
     I32Event,
+    IndexedEvent,
     ListEventBase,
     StdEnum,
     U16Event,
     U32Event,
 )
-from ._models import ItemModel, MultiEventModel
+from ._models import EventModel, ItemModel
 from .exceptions import ModelNotFound, NoModelsFound
 
 __all__ = ["Note", "Controller", "Pattern", "Patterns"]
@@ -226,7 +228,7 @@ class Controller(ItemModel):
 
 # As of the latest version of FL, note and controller events are stored before
 # all channel events (if they exist). The rest is stored later on as it occurs.
-class Pattern(MultiEventModel):
+class Pattern(EventModel):
     """Represents a MIDI pattern.
 
     Iterate over it to get the notes contained inside it:
@@ -246,12 +248,12 @@ class Pattern(MultiEventModel):
             However by using the :class:`Note` properties with a MIDI parsing
             library for example, you can export them to MIDI.
         """
-        if PatternID.Notes in self._events:
-            for item in cast(NotesEvent, self._events[PatternID.Notes][0]):
-                yield Note(item)
+        if PatternID.Notes in self.events:
+            event = cast(NotesEvent, self.events.first(PatternID.Notes))
+            yield from (Note(item) for item in event)
 
     def __repr__(self):
-        num_notes = len(cast(NotesEvent, self._events[PatternID.Notes][0]))
+        num_notes = len(cast(NotesEvent, self.events.first(PatternID.Notes)))
         return f"Pattern (index={self.index}, name={self.name}, {num_notes} notes)"
 
     color = EventProp[colour.Color](PatternID.Color)
@@ -265,9 +267,9 @@ class Pattern(MultiEventModel):
     @property
     def controllers(self) -> Iterator[Controller]:
         """Parameter automations associated with this pattern (if any)."""
-        if PatternID.Controllers in self._events:
-            for item in cast(ControllerEvent, self._events[PatternID.Controllers][0]):
-                yield Controller(item)
+        if PatternID.Controllers in self.events:
+            event = cast(ControllerEvent, self.events.first(PatternID.Controllers))
+            yield from (Controller(item) for item in event)
 
     @property
     def index(self) -> int:
@@ -277,11 +279,11 @@ class Pattern(MultiEventModel):
             Changing this will not solve any collisions thay may occur due to
             2 patterns that might end up having the same index.
         """
-        return self._events[PatternID.New][0].value
+        return self.events.first(PatternID.New).value
 
     @index.setter
     def index(self, value: int):
-        for event in self._events[PatternID.New]:
+        for event in self.events[PatternID.New]:
             event.value = value
 
     length = EventProp[int](PatternID.Length)
@@ -300,7 +302,7 @@ class Pattern(MultiEventModel):
     """User given name of the pattern; None if not set."""
 
 
-class Patterns(MultiEventModel):
+class Patterns(EventModel):
     def __repr__(self):
         indexes = [pattern.__index__() for pattern in self]
         return f"{len(indexes)} Patterns {indexes!r}"
@@ -327,16 +329,17 @@ class Patterns(MultiEventModel):
     def __iter__(self) -> Iterator[Pattern]:
         """An iterator over the patterns found in the project."""
         cur_pat_id = 0
-        events_dict: DefaultDict[int, list[AnyEvent]] = collections.defaultdict(list)
+        tmp_dict: DefaultDict[int, list[IndexedEvent]] = defaultdict(list)
 
-        for event in self._events_tuple:
-            if event.id in PatternID:
-                if event.id == PatternID.New:
-                    cur_pat_id = event.value
-                events_dict[cur_pat_id].append(event)
+        for ie in sorted(chain.from_iterable(self.events.dct.values())):
+            if ie.e.id == PatternID.New:
+                cur_pat_id = ie.e.value
 
-        for events in events_dict.values():
-            yield Pattern(*events)
+            if ie.e.id in PatternID:
+                tmp_dict[cur_pat_id].append(ie)
+
+        for events in tmp_dict.values():
+            yield Pattern(EventTree(self.events, events))
 
     def __len__(self):
         """Returns the number of patterns found in the project.
@@ -344,9 +347,9 @@ class Patterns(MultiEventModel):
         Raises:
             NoModelsFound: No patterns were found.
         """
-        if PatternID.New not in self._events:
+        if PatternID.New not in self.events:
             raise NoModelsFound
-        return len({event.value for event in self._events[PatternID.New]})
+        return len({event.value for event in self.events[PatternID.New]})
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)
     """Whether truncated notes of patterns placed in the playlist should be played.
@@ -360,8 +363,8 @@ class Patterns(MultiEventModel):
     @property
     def current(self) -> Pattern | None:
         """Returns the currently selected pattern."""
-        if PatternsID.CurrentlySelected in self._events:
-            index = self._events[PatternsID.CurrentlySelected][0].value
+        if PatternsID.CurrentlySelected in self.events:
+            index = self.events.first(PatternsID.CurrentlySelected).value
             for pattern in self:
                 if pattern.index == index:
                     return pattern

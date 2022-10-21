@@ -82,3 +82,4 @@ Help the tools that power **PyFLP**
 
 - `colour <https://github.com/vaab/colour>`_
 - `construct <https://github.com/construct/construct>`_
+- `sortedcontainers <https://github.com/grantjenks/python-sortedcontainers>`_

@@ -45,13 +45,14 @@ from ._events import (
     AsciiEvent,
     BoolEvent,
     EventEnum,
+    EventTree,
     I16Event,
     I32Event,
     StructEventBase,
     U8Event,
     U32Event,
 )
-from ._models import FLVersion, MultiEventModel
+from ._models import EventModel, FLVersion
 from .arrangement import (
     ArrangementID,
     Arrangements,
@@ -151,41 +152,36 @@ class _ProjectKW(TypedDict):
     format: FileFormat
 
 
-class Project(MultiEventModel):
+class Project(EventModel):
     """Represents an FL Studio project."""
 
-    def __init__(self, *events: AnyEvent, **kw: Unpack[_ProjectKW]):
-        super().__init__(*events, **kw)
+    def __init__(self, events: EventTree, **kw: Unpack[_ProjectKW]):
+        super().__init__(events, **kw)
 
     def __repr__(self) -> str:
         return f"FL Studio {str(self.version)} {self.format.name.lower()}"
-
-    def _collect_events(self, *enums: type[EventEnum]):
-        for event in self._events_tuple:
-            for enum_ in enums:
-                if event.id in enum_:
-                    yield event
-                    break
 
     @property
     def arrangements(self) -> Arrangements:
         """Provides an iterator over arrangements and other related properties."""
         arrnew_occured = False
-        filtered_events: list[AnyEvent] = []
-        for event in self._collect_events(
-            ArrangementID, ArrangementsID, TrackID, TimeMarkerID
-        ):
-            if event.id == ArrangementID.New:
+
+        def select(e: AnyEvent):
+            nonlocal arrnew_occured
+
+            if e.id == ArrangementID.New:
                 arrnew_occured = True
 
             # * Prevents accidentally passing on Pattern's timemarkers
             # TODO This logic will still be incorrect if arrangement's
             # timemarkers occur before ArrangementID.New event.
-            elif event.id in TimeMarkerID and not arrnew_occured:
-                continue
-            filtered_events.append(event)
+            if e.id in TimeMarkerID and arrnew_occured:
+                return True
 
-        return Arrangements(*filtered_events, version=self.version)
+            if e.id in (*ArrangementID, *ArrangementsID, *TrackID):
+                return True
+
+        return Arrangements(self.events.subdict(select), version=self.version)
 
     artists = EventProp[str](ProjectID.Artists)
     """Authors / artists info. to be embedded in exported WAV & MP3.
@@ -215,21 +211,18 @@ class Project(MultiEventModel):
     @property
     def channels(self) -> ChannelRack:
         """Provides an iterator over channels and channel rack properties."""
-        events: list[AnyEvent] = []
 
-        if RackID.WindowHeight in self._events:
-            events.append(self._events[RackID.WindowHeight][0])
+        def select(e: AnyEvent):
+            if e.id == InsertID.Flags:
+                return False
 
-        for event in self._events_tuple:
-            if event.id == InsertID.Flags:
-                break
+            if e.id in (*ChannelID, *DisplayGroupID, *PluginID, *RackID):
+                return True
 
-            for enum_ in (ChannelID, DisplayGroupID, PluginID, RackID):
-                if event.id in enum_:
-                    events.append(event)
-                    break
-
-        return ChannelRack(*events, channel_count=self.channel_count)
+        return ChannelRack(
+            self.events.subdict(select),
+            channel_count=self.channel_count,
+        )
 
     comments = EventProp[str](ProjectID.Comments, ProjectID._RTFComments)
     """Comments / project description / summary.
@@ -249,8 +242,8 @@ class Project(MultiEventModel):
 
         Located at the bottom of :menuselection:`Options --> &Project info` page.
         """
-        if ProjectID.Timestamp in self._events:
-            event = cast(TimestampEvent, self._events[ProjectID.Timestamp][0])
+        if ProjectID.Timestamp in self.events:
+            event = cast(TimestampEvent, self.events.first(ProjectID.Timestamp))
             return _DELPHI_EPOCH + datetime.timedelta(days=event["created_on"])
 
     format = KWProp[FileFormat]()
@@ -264,20 +257,19 @@ class Project(MultiEventModel):
 
         *New in FL Studio v9.0.0.*
         """
-        if ProjectID.DataPath in self._events:
-            event = self._events[ProjectID.DataPath][0]
-            return pathlib.Path(event.value)
+        if ProjectID.DataPath in self.events:
+            return pathlib.Path(self.events.first(ProjectID.DataPath).value)
 
     @data_path.setter
     def data_path(self, value: str | pathlib.Path):
-        if ProjectID.DataPath not in self._events:
+        if ProjectID.DataPath not in self.events:
             raise PropertyCannotBeSet(ProjectID.DataPath)
 
         if isinstance(value, pathlib.Path):
             value = str(value)
 
         path = "" if value == "." else value
-        self._events[ProjectID.DataPath][0].value = path
+        self.events.first(ProjectID.DataPath).value = path
 
     genre = EventProp[str](ProjectID.Genre)
     """Genre of the song to be embedded in exported WAV & MP3.
@@ -308,9 +300,8 @@ class Project(MultiEventModel):
 
         *New in FL Studio v1.3.9*.
         """
-        events = self._events.get(ProjectID.Licensee)
-        if events is not None:
-            event = events[0]
+        if ProjectID.Licensee in self.events:
+            event = self.events.first(ProjectID.Licensee)
             licensee = bytearray()
             for idx, char in enumerate(event.value):
                 c1 = ord(char) - 26 + idx
@@ -324,10 +315,13 @@ class Project(MultiEventModel):
 
     @licensee.setter
     def licensee(self, value: str):
-        if ProjectID.Licensee not in self._events:
+        if self.version < FLVersion(1, 3, 9):
+            pass
+
+        if ProjectID.Licensee not in self.events:
             raise PropertyCannotBeSet(ProjectID.Licensee)
 
-        event = self._events[ProjectID.Licensee][0]
+        event = self.events.first(ProjectID.Licensee)
         licensee = bytearray()
         for idx, char in enumerate(value):
             c1 = ord(char) + 26 - idx
@@ -348,25 +342,26 @@ class Project(MultiEventModel):
     @property
     def mixer(self) -> Mixer:
         """Provides an iterator over inserts and other mixer related properties."""
-        events: list[AnyEvent] = []
         inserts_began = False
-        for event in self._events_tuple:
-            # * Cannot use self._collect_events to first gather these and add
-            # * PluginID events later; as it breaks the order of occurence.
-            if event.id in (*MixerID, *InsertID, *SlotID):
+
+        def select(e: AnyEvent):
+            nonlocal inserts_began
+            if e.id in (*MixerID, *InsertID, *SlotID):
                 # TODO Find a more reliable to detect when inserts start.
                 inserts_began = True
-                events.append(event)
+                return True
 
-            if inserts_began and event.id in PluginID:
-                events.append(event)
+            if inserts_began and e.id in PluginID:
+                return True
 
-        return Mixer(*events, version=self.version)
+        return Mixer(self.events.subdict(select), version=self.version)
 
     @property
     def patterns(self) -> Patterns:
-        """Provides an iterator over patterns and other related properties."""
-        return Patterns(*self._collect_events(PatternsID, PatternID))
+        """Returns a collection of patterns and other related properties."""
+        return Patterns(
+            self.events.subdict(lambda e: e.id in (*PatternID, *PatternsID))
+        )
 
     pan_law = EventProp[PanLaw](ProjectID.PanLaw)
     """Whether a circular or a triangular pan law is used for the project.
@@ -440,14 +435,14 @@ class Project(MultiEventModel):
         * *Changed in FL Studio v11*: Max tempo limited to ``522.000``.
             Probably when tempo automations
         """
-        if ProjectID.Tempo in self._events:
-            return self._events[ProjectID.Tempo][0].value / 1000
+        if ProjectID.Tempo in self.events:
+            return self.events.first(ProjectID.Tempo).value / 1000
 
         tempo = None
-        if ProjectID._TempoCoarse in self._events:
-            tempo = self._events[ProjectID._TempoCoarse][0].value
-        if ProjectID._TempoFine in self._events:
-            tempo += self._events[ProjectID._TempoFine][0].value / 1000
+        if ProjectID._TempoCoarse in self.events:
+            tempo = self.events.first(ProjectID._TempoCoarse).value
+        if ProjectID._TempoFine in self.events:
+            tempo += self.events.first(ProjectID._TempoFine).value / 1000
         return tempo
 
     @tempo.setter
@@ -458,9 +453,7 @@ class Project(MultiEventModel):
             )
 
         max_tempo = (
-            999.000
-            if self.version >= FLVersion(1, 4, 2) and self.version < FLVersion(11)
-            else 522.000
+            999.0 if FLVersion(1, 4, 2) <= self.version < FLVersion(11) else 522.0
         )
 
         if isinstance(value, float) and self.version < FLVersion(3, 4, 0):
@@ -469,15 +462,15 @@ class Project(MultiEventModel):
         if float(value) > max_tempo or float(value) < MIN_TEMPO:
             raise ValueError(f"Invalid tempo {value}; expected {MIN_TEMPO}-{max_tempo}")
 
-        if ProjectID.Tempo in self._events:
-            self._events[ProjectID.Tempo][0].value = int(value * 1000)
+        if ProjectID.Tempo in self.events:
+            self.events.first(ProjectID.Tempo).value = int(value * 1000)
 
-        if ProjectID._TempoFine in self._events:
+        if ProjectID._TempoFine in self.events:
             tempo_fine = int((value - math.floor(value)) * 1000)
-            self._events[ProjectID._TempoFine][0].value = tempo_fine
+            self.events.first(ProjectID._TempoFine).value = tempo_fine
 
-        if ProjectID._TempoCoarse in self._events:
-            self._events[ProjectID._TempoCoarse][0].value = math.floor(value)
+        if ProjectID._TempoCoarse in self.events:
+            self.events.first(ProjectID._TempoCoarse).value = math.floor(value)
 
     @property
     def time_spent(self) -> datetime.timedelta | None:
@@ -487,8 +480,8 @@ class Project(MultiEventModel):
 
         Located at the bottom of :menuselection:`Options --> &Project info` page.
         """
-        if ProjectID.Timestamp in self._events:
-            event = cast(TimestampEvent, self._events[ProjectID.Timestamp][0])
+        if ProjectID.Timestamp in self.events:
+            event = cast(TimestampEvent, self.events.first(ProjectID.Timestamp))
             return datetime.timedelta(days=event["time_spent"])
 
     url = EventProp[str](ProjectID.Url)
@@ -518,13 +511,12 @@ class Project(MultiEventModel):
                 it indicates possible corruption.
             ExpectedValue: When a string with an invalid format is tried to be set.
         """
-        events = self._events[ProjectID.FLVersion]
-        event = cast(AsciiEvent, events[0])
+        event = cast(AsciiEvent, self.events.first(ProjectID.FLVersion))
         return FLVersion(*tuple(int(part) for part in event.value.split(".")))
 
     @version.setter
     def version(self, value: FLVersion | str | tuple[int, ...]):
-        if ProjectID.FLVersion not in self._events:
+        if ProjectID.FLVersion not in self.events:
             raise PropertyCannotBeSet(ProjectID.FLVersion)
 
         if isinstance(value, FLVersion):
@@ -540,6 +532,6 @@ class Project(MultiEventModel):
             raise ExpectedValue("Expected format: major.minor.build.patch?")
 
         version = ".".join(str(part) for part in parts)
-        self._events[ProjectID.FLVersion][0].value = version
-        if len(parts) == 4 and ProjectID.FLBuild in self._events:
-            self._events[ProjectID.FLBuild][0].value = parts[3]
+        self.events.first(ProjectID.FLVersion).value = version
+        if len(parts) == 4 and ProjectID.FLBuild in self.events:
+            self.events.first(ProjectID.FLBuild).value = parts[3]
