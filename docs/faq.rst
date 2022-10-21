@@ -52,5 +52,5 @@ Also check out the :doc:`developer guides <./guides>`.
 🧵 Is PyFLP thread safe?
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Yes. Absolutely. *Although I have not tested it*, no funky stuff is done with
-static variables or globals.
+**No.** PyFLP uses ``sortedcontainers``, an awesome library which unfortunately
+`isn't thread-safe <https://github.com/grantjenks/python-sortedcontainers/issues/105>`_.

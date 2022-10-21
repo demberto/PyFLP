@@ -21,9 +21,9 @@ import warnings
 from typing import Any, ClassVar, Dict, Generic, TypeVar
 
 if sys.version_info >= (3, 8):
-    from typing import Literal, Protocol, runtime_checkable
+    from typing import Literal, Protocol, get_args, runtime_checkable
 else:
-    from typing_extensions import Literal, Protocol, runtime_checkable
+    from typing_extensions import get_args, Literal, Protocol, runtime_checkable
 
 import construct as c
 import construct_typed as ct
@@ -36,13 +36,14 @@ from ._events import (
     AnyEvent,
     ColorEvent,
     EventEnum,
+    EventTree,
     FourByteBool,
     StdEnum,
     StructEventBase,
     T,
     U32Event,
 )
-from ._models import ModelReprMixin, MultiEventModel, SingleEventModel
+from ._models import EventModel, ModelReprMixin
 
 __all__ = [
     "BooBass",
@@ -195,7 +196,7 @@ class VSTPluginEvent(StructEventBase):
         ),
     )
 
-    def __init__(self, id: int, data: bytearray):
+    def __init__(self, id: Any, data: bytearray):
         if data[0] not in (8, 10):
             warnings.warn(
                 f"VSTPluginEvent: Unknown marker {data[0]} detected ."
@@ -264,9 +265,9 @@ class _WrapperProp(FlagProp):
         super().__init__(flag, PluginID.Wrapper, **kw)
 
 
-class _PluginBase(MultiEventModel, Generic[_PE_co]):
-    def __init__(self, *events: WrapperEvent | _PE_co, **kw: Any):
-        super().__init__(*events, **kw)
+class _PluginBase(EventModel, Generic[_PE_co]):
+    def __init__(self, events: EventTree, **kw: Any):
+        super().__init__(events, **kw)
 
     compact = _WrapperProp(_WrapperFlags.HideSettings)
     """Whether plugin page toolbar is hidden or not.
@@ -305,29 +306,26 @@ AnyPlugin = _PluginBase[AnyEvent]  # TODO alias to _IPlugin + _PluginBase (both)
 
 
 class PluginProp(RWProperty[AnyPlugin]):
-    def __init__(self, types: dict[type[AnyEvent], type[AnyPlugin]]) -> None:
+    def __init__(self, *types: type[AnyPlugin]) -> None:
         self._types = types
 
-    def __get__(self, instance: MultiEventModel, owner: Any = None) -> AnyPlugin | None:
+    def __get__(self, ins: EventModel, owner: Any = None) -> AnyPlugin | None:
         if owner is None:
             return NotImplemented
 
-        try:
-            wrapper_ev = instance._events[PluginID.Wrapper][0]
-            param_ev = instance._events[PluginID.Data][0]
-        except (KeyError, IndexError):
-            return None
+        for ptype in self._types:
+            if isinstance(ins.events.first(PluginID.Data), get_args(ptype)[0]):
+                return ptype(
+                    ins.events.subdict(
+                        lambda e: e.id in (PluginID.Wrapper, PluginID.Data)
+                    )
+                )
 
-        for etype, ptype in self._types.items():
-            if isinstance(param_ev, etype):
-                return ptype(param_ev, wrapper_ev)
-
-    def __set__(self, instance: MultiEventModel, value: AnyPlugin):
+    def __set__(self, instance: EventModel, value: AnyPlugin):
         if isinstance(value, _IPlugin):
             setattr(instance, "internal_name", value.INTERNAL_NAME)
-        events = value.events_asdict()
-        instance._events[PluginID.Data] = events[PluginID.Data]
-        instance._events[PluginID.Wrapper] = events[PluginID.Wrapper]
+        instance.events[PluginID.Data] = value.events[PluginID.Data]
+        instance.events[PluginID.Wrapper] = value.events[PluginID.Wrapper]
 
 
 class _PluginDataProp(StructProp[T]):
@@ -335,7 +333,7 @@ class _PluginDataProp(StructProp[T]):
         super().__init__(PluginID.Data, prop=prop)
 
 
-class PluginIOInfo(SingleEventModel):
+class PluginIOInfo(EventModel):
     mixer_offset = StructProp[int]()
     flags = StructProp[int]()
 

@@ -20,8 +20,7 @@ from __future__ import annotations
 import abc
 import enum
 import sys
-from itertools import chain
-from typing import Any, TypeVar
+from typing import Any, TypeVar, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
@@ -29,7 +28,7 @@ else:
     from typing_extensions import Protocol, final, runtime_checkable
 
 from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
-from ._models import ItemModel, ModelBase, MT_co, MultiEventModel, SingleEventModel
+from ._models import EMT_co, EventModel, ItemModel, ModelBase
 from .exceptions import PropertyCannotBeSet
 
 T = TypeVar("T")
@@ -69,19 +68,25 @@ class PropBase(abc.ABC, RWProperty[T]):
         self._default = default
         self._readonly = readonly
 
-    def _get_event(self, instance: ModelBase) -> Any:
+    @overload
+    def _get_event(self, instance: ItemModel) -> ItemModel:
+        ...
+
+    @overload
+    def _get_event(self, instance: EventModel) -> AnyEvent | None:
+        ...
+
+    def _get_event(self, instance: ModelBase):
         if isinstance(instance, ItemModel):
-            return instance  # type: ignore
+            return instance
 
-        if isinstance(instance, SingleEventModel):
-            return instance.event()
+        if isinstance(instance, EventModel):
+            if not self._ids:
+                return tuple(instance.events.all())[0]
 
-        if isinstance(instance, MultiEventModel) and self._ids:
             for id in self._ids:
-                try:
-                    return instance.events_asdict()[id][0]
-                except (KeyError, IndexError):
-                    pass
+                if id in instance.events:
+                    return instance.events.first(id)
 
     @property
     def default(self) -> T | None:  # Configure version based defaults here
@@ -96,7 +101,7 @@ class PropBase(abc.ABC, RWProperty[T]):
         ...
 
     @final
-    def __get__(self, instance: ModelBase, owner: Any = None) -> T | None:
+    def __get__(self, instance: Any, owner: Any = None) -> T | None:
         if owner is None:
             return NotImplemented
 
@@ -107,7 +112,7 @@ class PropBase(abc.ABC, RWProperty[T]):
         return self.default
 
     @final
-    def __set__(self, instance: ModelBase, value: T):
+    def __set__(self, instance: Any, value: T):
         if self._readonly:
             raise PropertyCannotBeSet(*self._ids)
 
@@ -130,11 +135,11 @@ class FlagProp(PropBase[bool]):
     ):
         """
         Args:
-            flag (ct.FlagEnumBase): The flag which is to be checked for.
-            id (EventEnum, optional): Event ID (required for MultiEventModel).
-            prop (str, "flags"): The dict key which contains the flags in a `Struct`.
-            inverted (bool, False): If this is true, property getter and setters
-                invert the value to be set / returned.
+            flag: The flag which is to be checked for.
+            id: Event ID (required for MultiEventModel).
+            prop: The dict key which contains the flags in a `Struct`.
+            inverted: If this is true, property getter and setters
+                      invert the value to be set / returned.
         """
         self._flag = flag
         self._flag_type = type(flag)
@@ -197,18 +202,16 @@ class EventProp(PropBase[T]):
         ev_or_ins.value = value
 
 
-class NestedProp(ROProperty[MT_co]):
-    def __init__(self, type: type[MT_co], *ids: EventEnum):
+class NestedProp(ROProperty[EMT_co]):
+    def __init__(self, type: type[EMT_co], *ids: EventEnum):
         self._ids = ids
         self._type = type
 
-    def __get__(self, ins: MultiEventModel, owner: Any = None) -> MT_co:
+    def __get__(self, ins: EventModel, owner: Any = None) -> EMT_co:
         if owner is None:
             return NotImplemented
 
-        return self._type(
-            *chain.from_iterable(v for k, v in ins._events.items() if k in self._ids)
-        )
+        return self._type(ins.events.subdict(lambda e: e.id in self._ids))
 
 
 class StructProp(PropBase[T], NamedPropMixin):
