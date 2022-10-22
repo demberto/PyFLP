@@ -85,6 +85,7 @@ class StdEnum(ct.Adapter[int, int, ET, ET]):
 
 
 class _EventEnumMeta(enum.EnumMeta):
+    # pylint: disable=bad-mcs-method-argument
     def __contains__(self, obj: object) -> bool:
         """Whether ``obj`` is one of the integer values of enum members.
 
@@ -442,6 +443,8 @@ class StructEventBase(DataEventBase):
         self._struct = self.STRUCT.parse(data)
 
     def __bytes__(self):
+        # pylint: disable=access-member-before-definition
+        # pylint: disable=attribute-defined-outside-init
         new_data = self.STRUCT.build(self._struct)
         if len(new_data) != len(self._data):
             warnings.warn(
@@ -513,7 +516,7 @@ class ListEventBase(DataEventBase):
 
         start = self.STRUCT.sizeof() * index
         count = self.STRUCT.sizeof()
-        self._data = (
+        self._data = (  # pylint: disable=attribute-defined-outside-init
             self._data[:start] + self.STRUCT.build(item) + self._data[start + count :]
         )
 
@@ -718,7 +721,7 @@ class EventTree:
             yield obj
 
     # TODO! First event's rootidx gets pushed to last
-    def insert(self, pos: int, ev: AnyEvent):
+    def insert(self, pos: int, e: AnyEvent):
         """Inserts :attr:`ev` at :attr:`pos` in this and all parent trees."""
         rootidx = cast(int, self.indexes[pos]) if len(self) else 0
 
@@ -728,7 +731,7 @@ class EventTree:
             if ie.r >= rootidx:
                 ie.r += 1
 
-        self._recursive(lambda ed: ed.dct[ev.id].add(IndexedEvent(rootidx, ev)))  # type: ignore # noqa
+        self._recursive(lambda ed: ed.dct[e.id].add(IndexedEvent(rootidx, e)))  # type: ignore # noqa
 
     def items(self) -> Iterator[tuple[EventEnum, Iterator[AnyEvent]]]:
         yield from ((id, self[id]) for id in self)
@@ -748,9 +751,9 @@ class EventTree:
         self._recursive(lambda ed: ed.dct[id].remove(ie))
 
         # Remove keys with empty lists
-        for id in tuple(self.dct.keys()):
-            if not self.dct[id]:
-                del self.dct[id]
+        for k in tuple(self.dct.keys()):
+            if not self.dct[k]:
+                del self.dct[k]
 
         # Shift all root indexes of events after rootidx by -1.
         # Not really required but ensure consistency of the indexes
@@ -803,7 +806,7 @@ class EventTree:
                 return
 
             result = select(ie.e)
-            if result is False:
+            if result is False:  # pylint: disable=compare-to-zero
                 obj = EventTree(self, el)
                 self.children.append(obj)
                 yield obj

@@ -1439,6 +1439,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
             iid = et.first(ChannelID.New).value
             typ = et.first(ChannelID.Type).value
 
+            # pylint: disable=redefined-outer-name
             ct = Channel  # prevent type error and logic failure below
             if typ == ChannelType.Automation:
                 ct = Automation

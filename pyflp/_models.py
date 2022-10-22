@@ -30,7 +30,7 @@ from ._events import EventTree
 
 
 class ModelBase(abc.ABC):
-    def __init__(self, *args: Any, **kw: Any):
+    def __init__(self, *args: Any, **kw: Any):  # pylint: disable=unused-argument
         self._kw = kw
 
 
@@ -65,7 +65,9 @@ EMT_co = TypeVar("EMT_co", bound=EventModel, covariant=True)
 
 
 @runtime_checkable
-class ModelCollection(Iterable[MT_co], Protocol[MT_co]):
+class ModelCollection(  # pylint: disable=abstract-method
+    Iterable[MT_co], Protocol[MT_co]
+):
     @overload
     def __getitem__(self, i: int) -> MT_co:
         ...

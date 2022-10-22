@@ -66,11 +66,8 @@ warn_no_return = false
 [tool.pylint.design]
 max-parents = 10
 
-[tool.pylint.format]
-max-module-lines = 1200
-
 [tool.pylint.main]
-fail-under = 9
+fail-under = 9.5
 jobs = 0            # Parallel execution
 py-version = [3, 7] # ! Somehow this doesn't seem to work
 
@@ -78,17 +75,21 @@ py-version = [3, 7] # ! Somehow this doesn't seem to work
 disable = [
   "docstring-first-line-empty",
   "empty-comment",
-  "inherit-non-class",              # https://github.com/PyCQA/pylint/issues/3505#issuecomment-1246655178
+  "eq-without-hash",
+  "inherit-non-class",                            # https://github.com/PyCQA/pylint/issues/3505#issuecomment-1246655178
   "inconsistent-return-statements",
   "invalid-name",
+  "line-too-long",                                # Black does this better
   "no-member",
-  "redefined-builtin",              # Really a non issue in small scopes
   "missing-class-docstring",
   "missing-function-docstring",
-  "too-few-public-methods",         # Useless; PyFLP exploits descriptors
-  "useless-parent-delegation",      # This is bugged; an empty __init__ with a docstring doesn't call super()
+  "redefined-builtin",                            # Really a non issue in small scopes
+  "too-few-public-methods",                       # Useless; PyFLP exploits descriptors
+  "too-many-lines",
+  "useless-parent-delegation",                    # This is bugged; an empty __init__ with a docstring doesn't call super()
+  "using-final-decorator-in-unsupported-version",
   "while-used",
-  "wrong-import-position",          # isort is smart enough
+  "wrong-import-position",                        # isort is smart enough
 ]
 
 [tool.pyright]

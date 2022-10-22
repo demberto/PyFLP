@@ -156,8 +156,7 @@ class Note(ItemModel):
                 if value.startswith(name):
                     octave = int(value.replace(name, "", 1))
                     self["key"] = octave * 12 + i
-            else:
-                raise ValueError(f"Invalid key name: {value}")
+            raise ValueError(f"Invalid key name: {value}")
 
     length = StructProp[int]()
     """Returns 0 for notes punched in through step sequencer."""

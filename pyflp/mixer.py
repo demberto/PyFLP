@@ -356,8 +356,7 @@ class _MixerParamProp(RWProperty[T]):
         for id, item in cast(_InsertItems, instance._kw["params"]).own.items():
             if id == self._id:
                 item["msg"] = value
-        else:
-            raise PropertyCannotBeSet(self._id)  # type: ignore
+        raise PropertyCannotBeSet(self._id)  # type: ignore
 
 
 class Slot(EventModel):
@@ -564,8 +563,14 @@ class Insert(EventModel, ModelCollection[Slot]):
         """
         items = iter(cast(InsertRoutingEvent, self.events.first(InsertID.Routing)))
         for id, item in cast(_InsertItems, self._kw["params"]).own.items():
-            if id >= _MixerParamsID.RouteVolStart and next(items)["is_routed"]:
-                yield item["msg"]
+            if id >= _MixerParamsID.RouteVolStart:
+                try:
+                    cond = next(items)["is_routed"]
+                except StopIteration:
+                    continue
+                else:
+                    if cond:
+                        yield item["msg"]
 
     separator_shown = FlagProp(_InsertFlags.SeparatorShown, InsertID.Flags)
     """Whether separator is shown before the insert.

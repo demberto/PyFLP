@@ -189,7 +189,7 @@ class VSTPluginEvent(StructEventBase):
         / c.GreedyRange(
             c.Struct(
                 "id" / StdEnum[_VSTPluginEventID](c.Int32ul),
-                # TODO Using a c.Select or c.IfThenElse doesn't work here
+                # ! Using a c.Select or c.IfThenElse doesn't work here
                 # Check https://github.com/construct/construct/issues/993
                 "data" / c.Prefixed(c.Int64ul, c.GreedyBytes),
             ),

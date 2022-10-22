@@ -119,11 +119,11 @@ class FileFormat(enum.IntEnum):
     InsertState = 0x40
     """Insert and all its slots. Stored as FST."""
 
-    _ProbablyPatcher = 0x50  # TODO Patcher presets are stored as `PluginState`.
+    _ProbablyPatcher = 0x50  # * Patcher presets are stored as `PluginState`.
 
 
 class ProjectID(EventEnum):
-    LoopActive = (9, BoolEvent)  # TODO Is this for patterns or arrangements?
+    LoopActive = (9, BoolEvent)
     ShowInfo = (10, BoolEvent)
     _Volume = (12, U8Event)
     PanLaw = (23, U8Event)
