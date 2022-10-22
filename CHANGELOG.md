@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD024 -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -5,9 +7,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-<!-- markdownlint-disable -->
-
-## 2.0.0a4 - Unreleased
+## 2.0.0a4 - 2022-10-22
 
 The way models were passed events has changed. I designed a new data structure
 called ``EventTree`` (check ``pyflp._events``) to allow the insertion and
@@ -89,7 +89,7 @@ for wonderful things like creating new channels, moving inserts etc.
   string literals.
 - Protocol subclassing of `EventBase` hierarchy.
 - Faulty `EventBase.__hash__`.
-- Python 3.11 support due to https://github.com/timrid/construct-typing/issues/15
+- Python 3.11 support due to <https://github.com/timrid/construct-typing/issues/15>
 - Incomplete support for `Sequence` in model collections.
 
 [#29]: https://github.com/demberto/PyFLP/issues/29
@@ -212,6 +212,7 @@ for wonderful things like creating new channels, moving inserts etc.
 PyFLP has been rewritten ✨
 
 Highlights:
+
 1. Richer events: Variable data events now parse their structure themselves.
    Fixed size events are categorized closely to the data they represent.
 2. Lazy evaluation: Properties are evaluated as lazily as possible to prevent
@@ -334,9 +335,11 @@ have been fixed as well, while Python 3.6 support has been deprecated.
 ### Added
 
 - `__repr__()` for all `_FLObject` subclasses.
-- `Channel.color`, `Insert.color` and `Pattern.color` now return `colour.Color`. This is implemented by `ColorEvent` (_which subclasses `DWordEvent`_).
+- `Channel.color`, `Insert.color` and `Pattern.color` now return `colour.Color`.
+  This is implemented by `ColorEvent` (*which subclasses `DWordEvent`*).
 - New event implementations for `ChannelFX.EventID` (`Cutoff`, `Fadein`, `Fadeout` and more).
-- New event implementations for `Channel.EventID` (`ChannelTracking`, `ChannelLevels`, `ChannelLevelOffsets`, `ChannelPolyphony` and more).
+- New event implementations for `Channel.EventID` (`ChannelTracking`,
+  `ChannelLevels`, `ChannelLevelOffsets`, `ChannelPolyphony` and more).
 - `Channel.cut_group` implementing `Channel.EventID.CutSelfCutBy`.
 - Remote controllers (`RemoteController`). Accessible from `Project.controllers`.
 - Saving for `VSTPlugin`.
@@ -345,7 +348,7 @@ have been fixed as well, while Python 3.6 support has been deprecated.
 - `Parser.__build_event_store()` uses inner methods now to parse different kind of events; very helpful for the new `DataEvents`.
 - Added support for pattern controller events (`PatternController`, `PatternControllerEvent` who implement `PatternEventID.Controllers`).
 - Many attribute docstrings now include minimum, maximum and default values. **These limits are enforced by setters**.
-- Added `.editorconfig`, _using CRLF line endings btw_.
+- Added `.editorconfig`, *using CRLF line endings btw*.
 - Added `test_parser.py` and `test_events.py`.
 - `Parser.parse_zip` now accepts a `bytes` object for `zip_file` parameter.
 - `Misc.registered` for `Misc.EventID.Registered`.
@@ -376,16 +379,18 @@ have been fixed as well, while Python 3.6 support has been deprecated.
 
 ### Removed
 
-- Any and all sort of logging, not useful anymore. Haven't seen any 3rd party python library ever using it. Used `warnings` wherever necessary.
+- Any and all sort of logging, not useful anymore. Haven't seen any 3rd party
+  Python library ever using it. Used `warnings` wherever necessary.
 - `mypy`. Its useless tbh, I will use types as I see fit.
-- Setters for all properties containing `_FLObject` (or any sort of a collection of them), _e.g. Arrangement.tracks_.
+- Setters for all properties containing `_FLObject` (or any sort of a collection of them), *e.g. Arrangement.tracks*.
 
 ## [0.2.0]
 
 ### **Highlights**
 
 - **PyFLP has passed the null test for a full project of mine (FL 20.7.2) 🥳**.
-- This library uses code from [FLParser](https://github.com/monadgroup/FLParser), a GPL license project, PyFLP is now under GPL.
+- This library uses code from [FLParser](https://github.com/monadgroup/FLParser),
+  a GPL license project, PyFLP is now under GPL.
 - API reference documentation is complete now.
 - Few new events implemented for `Channel`.
 - Refactored `FLObject` and `Plugin`.
@@ -406,12 +411,13 @@ have been fixed as well, while Python 3.6 support has been deprecated.
 
 - Can definitely say, all naming inconsistencies have been fixed.
 - Fixed `TimeMarker` assign to `Arrangement` logic in `Parser`.
-- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, caused due to double dumping of same events.
+- Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, caused due to
+  double dumping of same events.
 - Empty pattern events, `PatternEvent.Name` and `PatternEvent.Color` don't get saved.
 
 ---
 
-**❗ These versions below don't work due to naming inconsistencies 😅, you will not find them 👇**
+❗ These versions below don't work due to naming inconsistencies 😅, you will not find them 👇
 
 ## [0.1.2]
 
