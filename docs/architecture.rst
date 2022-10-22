@@ -97,7 +97,7 @@ Representation
 
 An event ID is represented in an ``EventEnum`` subclass.
 
-.. autoclass:: EventEnumMeta
+.. autoclass:: _EventEnumMeta
 .. autoclass:: EventEnum
 
 These enums are documented throughout the :doc:`reference`.
