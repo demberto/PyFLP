@@ -1,5 +1,5 @@
 furo
-m2r2==0.3.2  # https://github.com/CrossNox/m2r2/issues/55
+m2r2==0.3.3  # https://github.com/CrossNox/m2r2/issues/55
 sphinx
 sphinx-copybutton
 sphinx-design
