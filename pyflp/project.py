@@ -181,7 +181,12 @@ class Project(EventModel):
             if e.id in (*ArrangementID, *ArrangementsID, *TrackID):
                 return True
 
-        return Arrangements(self.events.subdict(select), version=self.version)
+        return Arrangements(
+            self.events.subdict(select),
+            channels=self.channels,
+            patterns=self.patterns,
+            version=self.version,
+        )
 
     artists = EventProp[str](ProjectID.Artists)
     """Authors / artists info. to be embedded in exported WAV & MP3.
@@ -390,7 +395,7 @@ class Project(EventModel):
             beyond PyFLP's scope to properly recalculate the timings.
 
         Raises:
-            ExpectedValue: When a value not in `VALID_PPQS` is tried to be set.
+            ExpectedValue: When a value not in ``VALID_PPQS`` is tried to be set.
 
         *Changed in FL Studio v2.1.1*: Defaults to ``96``.
         """

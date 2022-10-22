@@ -7,7 +7,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.0.0a4 - 2022-10-22
+## 2.0.0a5 - Unreleased
+
+### Added
+
+- Implementation for ``Channel`` and ``Pattern`` playlist items [#84].
+
+### Changed
+
+- ``PlaylistItemBase.offsets`` now returns start and end offsets.
+
+### Removed
+
+- ``PlaylistItemBase.start_offset`` and ``PlaylistItemBase.end_offset``.
+
+[#84]: https://github.com/demberto/PyFLP/issues/84
+
+## [2.0.0a4] - 2022-10-22
 
 The way models were passed events has changed. I designed a new data structure
 called ``EventTree`` (check ``pyflp._events``) to allow the insertion and
@@ -495,6 +511,7 @@ Same as in 0.1.1
 - `flpinfo` doesn't output correctly sometimes due to long strings.
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
+[2.0.0a4]: https://github.com/demberto/PyFLP/compare/v2.0.0a3...v2.0.0a4
 [2.0.0a3]: https://github.com/demberto/PyFLP/compare/v2.0.0a2...v2.0.0a3
 [2.0.0a2]: https://github.com/demberto/PyFLP/compare/v2.0.0a1...v2.0.0a2
 [2.0.0a1]: https://github.com/demberto/PyFLP/compare/v2.0.0a0...v2.0.0a1

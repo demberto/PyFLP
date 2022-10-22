@@ -598,7 +598,7 @@ class EventTree:
 
     def __getitem__(self, id: EventEnum) -> Iterator[AnyEvent]:
         """Yields events with matching :attr:`id`."""
-        return (ie.e for ie in (ie for ie in self.dct[id]))
+        return (ie.e for ie in self.dct[id])
 
     def __iadd__(self, *events: AnyEvent) -> None:
         """Analogous to :meth:`list.extend`."""
@@ -675,6 +675,22 @@ class EventTree:
         if id not in self.dct:
             raise KeyError(id)
         return len(self.dct[id])
+
+    def divide(self, separator: EventEnum, *ids: EventEnum) -> Iterator[EventTree]:
+        """Yields subtrees containing events separated by ``separator`` infinitely."""
+        el: list[IndexedEvent] = []
+        start = False
+        for ie in sorted(chain.from_iterable(self.dct.values())):
+            if ie.e.id in ids:
+                el.append(ie)
+
+            if ie.e.id == separator:
+                if start:
+                    yield EventTree(self, el)
+                    el = []
+                    start = False
+                start = True
+        return EventTree(self, el)  # Yield the last one
 
     def first(self, id: EventEnum) -> AnyEvent:
         if id not in self.dct:

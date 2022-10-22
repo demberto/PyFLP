@@ -8,6 +8,8 @@ import pytest
 from pyflp.arrangement import (
     Arrangement,
     Arrangements,
+    ChannelPLItem,
+    PatternPlaylistItem,
     Track,
     TrackMotion,
     TrackPress,
@@ -86,8 +88,12 @@ def test_track_items(tracks: tuple[Track, ...]):
         num_items = 0
         if track.name == "Audio track":
             num_items = 16
-        if track.name == "MIDI":
+            assert set(type(i) for i in track) == set((ChannelPLItem,))
+            assert set(i.channel.iid for i in track) == set((11,))  # type: ignore
+        elif track.name == "MIDI":
             num_items = 4
+            assert set(type(i) for i in track) == set((PatternPlaylistItem,))
+            assert set(i.pattern.index for i in track) == set((3,))  # type: ignore
             assert [i.position for i in track] == [p * 384 for p in range(num_items)]
         elif track.name in ("Cut pattern", "Automation"):
             num_items = 1

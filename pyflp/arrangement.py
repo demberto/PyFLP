@@ -33,7 +33,7 @@ import colour
 import construct as c
 import construct_typed as ct
 
-from ._descriptors import EventProp, KWProp, NestedProp, StructProp
+from ._descriptors import EventProp, NestedProp, StructProp
 from ._events import (
     DATA,
     DWORD,
@@ -51,10 +51,17 @@ from ._events import (
     U16Event,
     U32Event,
 )
-from ._models import EventModel, FLVersion, ItemModel, ModelCollection, supports_slice
-from .channel import Channel
+from ._models import (
+    EventModel,
+    FLVersion,
+    ItemModel,
+    ModelCollection,
+    ModelReprMixin,
+    supports_slice,
+)
+from .channel import Channel, ChannelRack
 from .exceptions import ModelNotFound, NoModelsFound
-from .pattern import Pattern
+from .pattern import Pattern, Patterns
 
 __all__ = [
     "Arrangements",
@@ -65,7 +72,7 @@ __all__ = [
     "TrackMotion",
     "TrackPress",
     "TrackSync",
-    "ChannelPlaylistItem",
+    "ChannelPLItem",
     "PatternPlaylistItem",
 ]
 
@@ -73,10 +80,10 @@ __all__ = [
 class PlaylistEvent(ListEventBase):
     STRUCT = c.Struct(
         "position" / c.Int32ul,  # 4
-        "pattern_base" / c.Int16ul,  # 6
+        "pattern_base" / c.Int16ul * "Always 20480",  # 6
         "item_index" / c.Int16ul,  # 8
         "length" / c.Int32ul,  # 12
-        "track_index" / c.Int16ul,  # 14
+        "track_index" / c.Int16ul * "Stored reversed i.e. Track 1 would be 499",  # 14
         "group" / c.Int16ul,  # 16
         "_u1" / c.Bytes(2),  # 18
         "item_flags" / c.Int16ul,  # 20
@@ -175,13 +182,7 @@ class TimeMarkerType(enum.IntEnum):
     """Used for time signature markers."""
 
 
-class PlaylistItemBase(ItemModel):
-    def __repr__(self):
-        return "{} @ {} of length {} in group {}".format(
-            type(self).__name__, self.position, self.length, self.group
-        )
-
-    end_offset = StructProp[int]()
+class PlaylistItemBase(ItemModel, ModelReprMixin):
     group = StructProp[int]()
     """Returns 0 for no group, else a group number for clips in the same group."""
 
@@ -189,36 +190,51 @@ class PlaylistItemBase(ItemModel):
     muted = StructProp[bool]()
     """Whether muted / disabled in the playlist. *New in FL Studio v9.0.0*."""
 
+    @property
+    def offsets(self) -> tuple[int, int]:
+        """Returns a ``(start, end)`` offset tuple.
+
+        An offset is the distance from the item's actual start or end.
+        """
+        return (self["start_offset"], self["end_offset"])
+
+    @offsets.setter
+    def offsets(self, value: tuple[int, int]):
+        self["start_offset"], self["end_offset"] = value
+
     position = StructProp[int]()
-    start_offset = StructProp[int]()
 
 
-class ChannelPlaylistItem(PlaylistItemBase):
+class ChannelPLItem(PlaylistItemBase, ModelReprMixin):
     """An audio clip or automation on the playlist of an arrangement.
 
     *New in FL Studio v2.0.1*.
     """
 
-    def __repr__(self):
-        if self.channel is None:
-            return super().__repr__()
-        return f"{super().__repr__()} for channel #{self.channel.iid}"
+    @property
+    def channel(self) -> Channel:
+        return self._kw["channel"]
 
-    channel = KWProp[Channel]()
+    @channel.setter
+    def channel(self, channel: Channel):
+        self._kw["channel"] = channel
+        self["item_index"] = channel.iid
 
 
-class PatternPlaylistItem(PlaylistItemBase):
+class PatternPlaylistItem(PlaylistItemBase, ModelReprMixin):
     """A pattern block or clip on the playlist of an arrangement.
 
     *New in FL Studio v7.0.0*.
     """
 
-    def __repr__(self):
-        if self.pattern is None:
-            return super().__repr__()
-        return f"{super().__repr__()} for pattern #{self.pattern!r}"
+    @property
+    def pattern(self) -> Pattern | None:
+        return self._kw["pattern"]
 
-    pattern = KWProp[Pattern]()
+    @pattern.setter
+    def pattern(self, pattern: Pattern):
+        self._kw["pattern"] = pattern
+        self["item_index"] = pattern.index + self["pattern_base"]
 
 
 class TimeMarker(EventModel):
@@ -380,6 +396,8 @@ class Track(EventModel, ModelCollection[PlaylistItemBase]):
 
 
 class _ArrangementKW(TypedDict):
+    channels: ChannelRack
+    patterns: Patterns
     version: FLVersion
 
 
@@ -415,22 +433,26 @@ class Arrangement(EventModel):
 
     @property
     def tracks(self) -> Iterator[Track]:
-        count = 0
         pl_event = None
         max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
 
         if ArrangementID.Playlist in self.events:
             pl_event = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
 
-        for ed in self.events.group(*TrackID):
+        for track_idx, ed in enumerate(self.events.group(*TrackID)):
             items: list[PlaylistItemBase] = []
-            if pl_event is not None:
-                for item in pl_event:
-                    idx = item["track_index"]
-                    if max_idx - idx == count:
-                        items.append(PlaylistItemBase(item))
+            for item in pl_event or []:
+                idx = item["track_index"]
+                if max_idx - idx == track_idx:
+                    if item["item_index"] <= item["pattern_base"]:
+                        channel_iid = item["item_index"]
+                        channel = self._kw["channels"][channel_iid]
+                        items.append(ChannelPLItem(item, channel=channel))
+                    else:
+                        pattern_num = item["item_index"] - item["pattern_base"]
+                        pattern = self._kw["patterns"][pattern_num]
+                        items.append(PatternPlaylistItem(item, pattern=pattern))
             yield Track(ed, items=items)
-            count += 1
 
 
 # TODO Find whether time is set to signature or division mode.
@@ -511,7 +533,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
                 return False  # Yield out last arrangement
 
         yield from (
-            Arrangement(ed, version=self._kw["version"])
+            Arrangement(ed, **self._kw)
             for ed in self.events.subdicts(select, len(self))
         )
 

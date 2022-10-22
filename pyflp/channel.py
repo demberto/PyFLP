@@ -18,8 +18,7 @@ from __future__ import annotations
 import enum
 import pathlib
 import sys
-from collections import defaultdict
-from typing import DefaultDict, Iterator, Tuple, cast
+from typing import Iterator, Tuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -38,7 +37,6 @@ from ._events import (
     WORD,
     BoolEvent,
     EventEnum,
-    EventTree,
     F32Event,
     I8Event,
     I32Event,
@@ -1433,42 +1431,31 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
                 return ch
         raise ChannelNotFound(i)
 
-    # TODO Needs serious refactoring, *pylint is right*
-    def __iter__(self) -> Iterator[Channel]:  # pylint: disable=too-complex
+    def __iter__(self) -> Iterator[Channel]:
+        """Yields all the channels found in the project."""
         ch_dict: dict[int, Channel] = {}
-        events: DefaultDict[int, EventTree] = defaultdict(
-            lambda: EventTree(self.events)
-        )
-        cur_ch_events = EventTree(self.events)
-        for event in self.events.all():
-            if event.id == ChannelID.New:
-                # Create a new key in events and set it to it
-                cur_ch_events = events[event.value]
 
-            if event.id not in RackID:
-                cur_ch_events.append(event)
+        for et in self.events.divide(ChannelID.New, *ChannelID):
+            iid = et.first(ChannelID.New).value
+            typ = et.first(ChannelID.Type).value
 
-        for iid, ch_events in events.items():
-            ct = Channel  # In case an older version doesn't have ChannelID.Type
-            for event in ch_events.all():
-                if event.id == ChannelID.Type:
-                    if event.value == ChannelType.Automation:
-                        ct = Automation
-                    elif event.value == ChannelType.Layer:
-                        ct = Layer
-                    elif event.value == ChannelType.Sampler:
-                        ct = Sampler
-                    elif event.value in (ChannelType.Instrument, ChannelType.Native):
-                        ct = Instrument
-                elif (
-                    event.id == ChannelID.SamplePath
-                    or (event.id == PluginID.InternalName and not event.value)
-                    and ct == Instrument
-                ):
-                    ct = Sampler  # see #40
+            ct = Channel  # prevent type error and logic failure below
+            if typ == ChannelType.Automation:
+                ct = Automation
+            elif typ == ChannelType.Layer:
+                ct = Layer
+            elif typ == ChannelType.Sampler:
+                ct = Sampler
+            elif typ in (ChannelType.Instrument, ChannelType.Native):
+                ct = Instrument
 
-            if ct is not None:
-                cur_ch = ch_dict[iid] = ct(ch_events, channels=ch_dict)
+            # Audio clips are stored as Instrument until a sample is loaded in them
+            if all(id in et for id in (ChannelID.SamplePath, PluginID.InternalName)):
+                if not et.first(PluginID.InternalName).value and ct == Instrument:
+                    ct = Sampler
+
+            if ct is not None and iid is not None:
+                cur_ch = ch_dict[iid] = ct(et, channels=ch_dict)
                 yield cur_ch
 
     def __len__(self):
@@ -1483,6 +1470,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
 
     @property
     def automations(self) -> Iterator[Automation]:
+        """Yields automation clips in the project."""
         yield from (ch for ch in self if isinstance(ch, Automation))
 
     # TODO Find out what this meant
@@ -1498,14 +1486,17 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
 
     @property
     def instruments(self) -> Iterator[Instrument]:
+        """Yields native and 3rd-party synth channels in the project."""
         yield from (ch for ch in self if isinstance(ch, Instrument))
 
     @property
     def layers(self) -> Iterator[Layer]:
+        """Yields ``Layer`` channels in the project."""
         yield from (ch for ch in self if isinstance(ch, Layer))
 
     @property
     def samplers(self) -> Iterator[Sampler]:
+        """Yields samplers and audio clips in the project."""
         yield from (ch for ch in self if isinstance(ch, Sampler))
 
     swing = EventProp[int](RackID.Swing)
