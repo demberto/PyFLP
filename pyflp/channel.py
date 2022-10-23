@@ -241,23 +241,37 @@ class StretchMode(ct.EnumBase):
 
 class ParametersEvent(StructEventBase):
     STRUCT = c.Struct(
-        "_u1" / c.Optional(c.Bytes(40)),  # 40
+        "_u1" / c.Optional(c.Bytes(9)),  # 9
+        "fx.remove_dc" / c.Optional(c.Flag),  # 10
+        "_u2" / c.Optional(c.Bytes(30)),  # 40
         "arp.direction" / c.Optional(StdEnum[ArpDirection](c.Int32ul)),  # 44
         "arp.range" / c.Optional(c.Int32ul),  # 48
         "arp.chord" / c.Optional(c.Int32ul),  # 52
         "arp.time" / c.Optional(c.Float32l),  # 56
         "arp.gate" / c.Optional(c.Float32l),  # 60
         "arp.slide" / c.Optional(c.Flag),  # 61
-        "_u2" / c.Optional(c.Bytes(22)),  # 83
+        "_u3" / c.Optional(c.Bytes(19)),  # 80
+        "fx.normalize" / c.Optional(c.Flag),  # 81
+        "fx.inverted" / c.Optional(c.Flag),  # 82
+        "_u4" / c.Optional(c.Bytes(1)),  # 83
         "content.declick_mode" / c.Optional(StdEnum[DeclickMode](c.Int8ul)),  # 84
-        "_u3" / c.Optional(c.Bytes(8)),  # 92
-        "arp.repeat" / c.Optional(c.Int32ul),  # 96 4.5.2+
-        "_u4" / c.Optional(c.Bytes(12)),  # 108
+        "fx.crossfade" / c.Optional(c.Int16ul),  # 86
+        "_u5" / c.Optional(c.Bytes(2)),  # 88
+        "fx.trim" / c.Optional(c.Int16ul),  # 90
+        "_u6" / c.Optional(c.Bytes(2)),  # 92
+        "arp.repeat" / c.Optional(c.Int32ul),  # 96; FL 4.5.2+
+        "_u7" / c.Optional(c.Bytes(12)),  # 108
         "stretching.mode" / c.Optional(StdEnum[StretchMode](c.Int32sl)),  # 112
-        "_u5" / c.Optional(c.Bytes(36)),  # 148
+        "_u8" / c.Optional(c.Bytes(21)),  # 133
+        "fx.start" / c.Optional(c.Int16ul),  # 135
+        "_u9" / c.Optional(c.Bytes(6)),  # 141
+        "fx.length" / c.Optional(c.Int16ul),  # 143
+        "_u10" / c.Optional(c.Bytes(5)),  # 148
         "playback.start_offset" / c.Optional(c.Int32ul),  # 152
-        "_u6" / c.Optional(c.GreedyBytes),  # * 168 as of 20.9.1
-    ).compile()
+        "_u11" / c.Optional(c.Bytes(5)),  # 157
+        "fx.fix_trim" / c.Optional(c.Flag),  # 158 (FL 20.8.4 max)
+        "_extra" / c.GreedyBytes,  # * 168 as of 20.9.1
+    )
 
 
 @enum.unique
@@ -577,13 +591,13 @@ class Reverb(EventModel, ModelReprMixin):
 
 
 class FX(EventModel, ModelReprMixin):
-    """Pre-calculated effects used by :class:`Sampler`.
+    """Pre-computed effects used by :class:`Sampler`.
 
     ![](https://bit.ly/3U3Ys8l)
     ![](https://bit.ly/3qvdBSN)
 
     See Also:
-        :attr:`Sampler.fx`
+        :attr:`Sampler.fx`, :attr:`Reverb`
     """
 
     boost = EventProp[int](ChannelID.Preamp)
@@ -599,40 +613,54 @@ class FX(EventModel, ModelReprMixin):
     clip = FlagProp(_FXFlags.Clip, ChannelID.FXFlags)
     """Whether output is clipped at 0dB for :attr:`boost`."""
 
-    cutoff = EventProp[int](ChannelID.Cutoff)
-    """Filter Mod X. Defaults to maximum value.
+    crossfade = StructProp[int](ChannelID.Parameters, prop="fx.crossfade")
+    """Linear. Defaults to minimum value
 
-    | Min | Max  |
-    |-----|------|
-    | 16  | 1024 |
+    | Type | Value | Representation |
+    |------|-------|----------------|
+    | Min  | 0     | 0%             |
+    | Max  | 256   | 100%           |
     """
+
+    cutoff = EventProp[int](ChannelID.Cutoff)
+    """Filter Mod X. Defaults to maximum value. Min = 16. Max = 1024."""
 
     fade_in = EventProp[int](ChannelID.FadeIn)
-    """Quick fade-in. Defaults to minimum value.
-
-    | Min | Max  |
-    |-----|------|
-    | 0   | 1024 |
-    """
+    """Quick fade-in. Defaults to minimum value. Min = 0. Max = 1024."""
 
     fade_out = EventProp[int](ChannelID.FadeOut)
-    """Quick fade-out. Defaults to minimum value.
-
-    | Min | Max  |
-    |-----|------|
-    | 0   | 1024 |
+    """Quick fade-out. Defaults to minimum value. Min = 0. Max = 1024.
 
     *New in FL Studio v1.7.6*.
     """
 
     fade_stereo = FlagProp(_FXFlags.FadeStereo, ChannelID.FXFlags)
+    fix_trim = StructProp[bool](ChannelID.Parameters, prop="fx.fix_trim")
+    """:menuselection:`Trim --> Fix legacy precomputed length`.
+
+    Has no effect on the value of :attr:`trim`.
+    """
+
     freq_tilt = EventProp[int](ChannelID.FreqTilt)
-    """Shifts the frequency balance. Bi-polar.
+    """Shifts the frequency balance. Bipolar.
 
     | Min | Max | Default |
     |-----|-----|---------|
     | 0   | 256 | 128     |
     """
+
+    inverted = StructProp[bool](ChannelID.Parameters, prop="fx.inverted")
+    """Named :guilabel:`Reverse polarity` in FL's interface."""
+
+    length = StructProp[int](ChannelID.Parameters, prop="fx.length")
+    """Min = 0, Max = 61440. Logarithmic. Defaults to minimum value.
+
+    Named as :guilabel:`SMP START` in FL's interface.
+    Approximate example values - ``1% = 33920``. ``10% = ~47512``.
+    """
+
+    normalize = StructProp[bool](ChannelID.Parameters, prop="fx.normalize")
+    """Maximizes volume without clipping by normalizing peaks to 0dB."""
 
     pogo = EventProp[int](ChannelID.Pogo)
     """Pitch bend effect. Bipolar.
@@ -642,29 +670,33 @@ class FX(EventModel, ModelReprMixin):
     | 0   | 512 | 256     |
     """
 
-    # remove_dc = StructProp[bool](ChannelID.Parameters, prop="fx.remove_dc")
-    # """*New in FL Studio v2.5.0*."""
+    remove_dc = StructProp[bool](ChannelID.Parameters, prop="fx.remove_dc")
+    """Whether DC offset (if present) is removed.
+
+    *New in FL Studio v2.5.0*.
+    """
 
     resonance = EventProp[int](ChannelID.Resonance)
-    """Filter Mod Y. Defaults to minimum value.
-
-    | Min | Max  |
-    |-----|------|
-    | 0   | 640  |
-    """
+    """Filter Mod Y. Min = 0. Max = 640. Defaults to minimum value."""
 
     reverb = NestedProp[Reverb](Reverb, ChannelID.Reverb)
     reverse = FlagProp(_FXFlags.Reverse, ChannelID.FXFlags)
     """Whether sample is reversed or not."""
 
     ringmod = EventProp[Tuple[int, int]](ChannelID.RingMod)
-    """Ring modulation returned as a tuple of `(mix, frequency)`.
+    """Ring modulation returned as a tuple of ``(mix, frequency)``.
 
     Limits for both:
 
     | Min | Max | Default |
     |-----|-----|---------|
     | 0   | 256 | 128     |
+    """
+
+    start = StructProp[int](ChannelID.Parameters, prop="fx.start")
+    """Min = 0, Max = 61440. Logarithmic. Defaults to minimum value.
+
+    Always set to 0 irrespective of the knob position unless a sample is loaded.
     """
 
     stereo_delay = EventProp[int](ChannelID.StereoDelay)
@@ -679,6 +711,15 @@ class FX(EventModel, ModelReprMixin):
 
     swap_stereo = FlagProp(_FXFlags.SwapStereo, ChannelID.FXFlags)
     """Whether left and right channels are swapped or not."""
+
+    trim = StructProp[int](ChannelID.Parameters, prop="fx.trim")
+    """Silence trimming threshold. Defaults to minimum. Linear.
+
+    | Type | Value | Representation |
+    |------|-------|----------------|
+    | Min  | 0     | 0%             |
+    | Max  | 256   | 100%           |
+    """
 
 
 class Envelope(EventModel, ModelReprMixin):
@@ -997,7 +1038,10 @@ class Content(EventModel, ModelReprMixin):
     declick_mode = StructProp[DeclickMode](
         ChannelID.Parameters, prop="content.declick_mode"
     )
-    """Defaults to ``DeclickMode.OutOnly``."""
+    """Defaults to ``DeclickMode.OutOnly``.
+
+    *New in FL Studio v9.0.0*.
+    """
 
     keep_on_disk = FlagProp(_SamplerFlags.KeepOnDisk, ChannelID.SamplerFlags)
     """Whether a sample is streamed from disk or kept in RAM, defaults to ``False``.
@@ -1335,6 +1379,7 @@ class Sampler(_SamplerInstrument):
         ChannelID.FadeIn,
         ChannelID.FadeOut,
         ChannelID.FreqTilt,
+        ChannelID.Parameters,
         ChannelID.Pogo,
         ChannelID.Preamp,
         ChannelID.Resonance,

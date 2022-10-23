@@ -228,7 +228,7 @@ class PatternPlaylistItem(PlaylistItemBase, ModelReprMixin):
     """
 
     @property
-    def pattern(self) -> Pattern | None:
+    def pattern(self) -> Pattern:
         return self._kw["pattern"]
 
     @pattern.setter

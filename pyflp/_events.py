@@ -449,7 +449,7 @@ class StructEventBase(DataEventBase):
         if len(new_data) != len(self._data):
             warnings.warn(
                 "{} built a stream of incorrect size {}; expected {}.".format(
-                    type(self.STRUCT).__name__, len(new_data), len(self._data)
+                    type(self).__name__, len(new_data), len(self._data)
                 ),
                 BytesWarning,
                 stacklevel=0,

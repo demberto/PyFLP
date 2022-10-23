@@ -205,6 +205,32 @@ def test_sampler_envelopes(load_sampler: SamplerFixture):
     assert mod_x.attack_tension == mod_x.release_tension == mod_x.decay_tension == 128
 
 
+def test_sampler_fx(load_sampler: SamplerFixture):
+    fx = load_sampler("sampler-fx.fst").fx
+    assert fx.boost == 128
+    assert fx.clip
+    assert fx.cutoff == 16
+    assert fx.fade_in == 1024
+    assert fx.fade_out == 0
+    assert fx.fade_stereo
+    assert fx.fix_trim
+    assert fx.freq_tilt == 0
+    assert fx.length == 0
+    assert not fx.normalize
+    assert fx.pogo == 256
+    assert fx.inverted
+    assert not fx.remove_dc
+    assert fx.resonance == 640
+    assert fx.reverb.type == ReverbType.A
+    assert fx.reverb.mix == 128
+    assert not fx.reverse
+    assert fx.ringmod == (64, 192)
+    assert fx.start == 0
+    assert fx.stereo_delay == 4096
+    assert fx.swap_stereo
+    assert fx.trim == 256
+
+
 def test_sampler_lfo(load_sampler: SamplerFixture):
     lfos = load_sampler("lfo.fst").lfos
     assert lfos and len(lfos) == 5
@@ -226,25 +252,6 @@ def test_sampler_lfo(load_sampler: SamplerFixture):
     assert mod_x.speed == 200
     assert not mod_x.retrig
     assert mod_x.synced
-
-
-def test_sampler_fx(load_sampler: SamplerFixture):
-    fx = load_sampler("sampler-fx.fst").fx
-    assert fx.boost == 128
-    assert fx.clip
-    assert fx.cutoff == 16
-    assert fx.fade_in == 1024
-    assert fx.fade_out == 0
-    assert fx.fade_stereo
-    assert fx.freq_tilt == 0
-    assert fx.pogo == 256
-    assert fx.resonance == 640
-    assert fx.reverb.type == ReverbType.A
-    assert fx.reverb.mix == 128
-    assert not fx.reverse
-    assert fx.ringmod == (64, 192)
-    assert fx.stereo_delay == 4096
-    assert fx.swap_stereo
 
 
 def test_sampler_path(load_sampler: SamplerFixture):

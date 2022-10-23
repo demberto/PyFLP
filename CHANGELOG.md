@@ -1,4 +1,5 @@
-<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable no-duplicate-heading -->
+<!-- markdownlint-disable link-image-reference-definitions -->
 
 # Changelog
 
@@ -12,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Implementation for ``Channel`` and ``Pattern`` playlist items [#84].
+- ``FX.remove_dc``, ``FX.trim``, ``FX.fix_trim``, ``FX.crossfade``,
+  ``FX.length``, ``FX.normalize``, ``FX.inverted``, ``FX.start`` [#55].
 
 ### Changed
 
@@ -21,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ``PlaylistItemBase.start_offset`` and ``PlaylistItemBase.end_offset``.
 
+[#55]: https://github.com/demberto/PyFLP/issues/55
 [#84]: https://github.com/demberto/PyFLP/issues/84
 
 ## [2.0.0a4] - 2022-10-22
