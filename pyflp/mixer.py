@@ -43,6 +43,7 @@ from ._descriptors import (
     NamedPropMixin,
     ROProperty,
     RWProperty,
+    StdEnum,
 )
 from ._events import (
     DATA,
@@ -57,7 +58,6 @@ from ._events import (
     I16Event,
     I32Event,
     ListEventBase,
-    StdEnum,
     StructEventBase,
     T,
     U16Event,

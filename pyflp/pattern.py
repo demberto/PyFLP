@@ -24,7 +24,7 @@ from typing import DefaultDict, Iterator, cast
 import colour
 import construct as c
 
-from ._descriptors import EventProp, FlagProp, StructProp
+from ._descriptors import EventProp, FlagProp, StdEnum, StructProp
 from ._events import (
     DATA,
     DWORD,
@@ -37,7 +37,6 @@ from ._events import (
     I32Event,
     IndexedEvent,
     ListEventBase,
-    StdEnum,
     U16Event,
     U32Event,
 )

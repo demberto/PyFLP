@@ -36,7 +36,6 @@ from typing import (
     Iterator,
     Tuple,
     TypeVar,
-    Union,
     cast,
 )
 
@@ -47,7 +46,6 @@ else:
 
 import colour
 import construct as c
-import construct_typed as ct
 from sortedcontainers import SortedList, SortedSet
 
 from .exceptions import (
@@ -69,19 +67,10 @@ NEW_TEXT_IDS: Final = (
 )
 
 T = TypeVar("T")
-ET = TypeVar("ET", bound=Union[ct.EnumBase, enum.IntFlag])
 T_co = TypeVar("T_co", covariant=True)
 FourByteBool: c.ExprAdapter[int, int, bool, int] = c.ExprAdapter(
     c.Int32ul, lambda obj_, *_: bool(obj_), lambda obj_, *_: int(obj_)  # type: ignore
 )
-
-
-class StdEnum(ct.Adapter[int, int, ET, ET]):
-    def _encode(self, obj: ET, *_: Any):  # pylint: disable=no-self-use
-        return obj.value
-
-    def _decode(self, obj: int, *_: Any) -> ET:
-        return self.__orig_class__.__args__[0](obj)  # type: ignore
 
 
 class _EventEnumMeta(enum.EnumMeta):

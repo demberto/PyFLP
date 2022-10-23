@@ -33,7 +33,7 @@ import colour
 import construct as c
 import construct_typed as ct
 
-from ._descriptors import EventProp, NestedProp, StructProp
+from ._descriptors import EventProp, NestedProp, StdEnum, StructProp
 from ._events import (
     DATA,
     DWORD,
@@ -45,7 +45,6 @@ from ._events import (
     EventTree,
     FourByteBool,
     ListEventBase,
-    StdEnum,
     StructEventBase,
     U8Event,
     U16Event,

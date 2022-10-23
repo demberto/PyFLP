@@ -29,7 +29,7 @@ import colour
 import construct as c
 import construct_typed as ct
 
-from ._descriptors import EventProp, FlagProp, KWProp, NestedProp, StructProp
+from ._descriptors import EventProp, FlagProp, KWProp, NestedProp, StdEnum, StructProp
 from ._events import (
     DATA,
     DWORD,
@@ -40,7 +40,6 @@ from ._events import (
     F32Event,
     I8Event,
     I32Event,
-    StdEnum,
     StructEventBase,
     U8Event,
     U16Event,

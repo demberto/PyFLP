@@ -13,19 +13,21 @@
 
 # pylint: disable=super-init-not-called
 
-"""Contains the descriptor classes used by the model classes."""
+"""Contains the descriptor and adaptor classes used by models and events."""
 
 from __future__ import annotations
 
 import abc
 import enum
 import sys
-from typing import Any, TypeVar, overload
+from typing import Any, TypeVar, Union, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
 else:
     from typing_extensions import Protocol, final, runtime_checkable
+
+import construct_typed as ct
 
 from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
 from ._models import EMT_co, EventModel, ItemModel, ModelBase
@@ -226,3 +228,14 @@ class StructProp(PropBase[T], NamedPropMixin):
 
     def _set(self, ev_or_ins: Any, value: T):
         ev_or_ins[self._prop] = value
+
+
+ET = TypeVar("ET", bound=Union[ct.EnumBase, enum.IntFlag])
+
+
+class StdEnum(ct.Adapter[int, int, ET, ET]):
+    def _encode(self, obj: ET, *_: Any):  # pylint: disable=no-self-use
+        return obj.value
+
+    def _decode(self, obj: int, *_: Any) -> ET:
+        return self.__orig_class__.__args__[0](obj)  # type: ignore

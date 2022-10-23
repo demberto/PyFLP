@@ -28,7 +28,7 @@ else:
 import construct as c
 import construct_typed as ct
 
-from ._descriptors import FlagProp, RWProperty, StructProp
+from ._descriptors import FlagProp, RWProperty, StdEnum, StructProp
 from ._events import (
     DATA,
     DWORD,
@@ -38,7 +38,6 @@ from ._events import (
     EventEnum,
     EventTree,
     FourByteBool,
-    StdEnum,
     StructEventBase,
     T,
     U32Event,
