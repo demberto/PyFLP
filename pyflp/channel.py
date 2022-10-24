@@ -29,7 +29,15 @@ import colour
 import construct as c
 import construct_typed as ct
 
-from ._descriptors import EventProp, FlagProp, KWProp, NestedProp, StdEnum, StructProp
+from ._descriptors import (
+    EventProp,
+    FlagProp,
+    KWProp,
+    LogNormal,
+    NestedProp,
+    StdEnum,
+    StructProp,
+)
 from ._events import (
     DATA,
     DWORD,
@@ -254,20 +262,18 @@ class ParametersEvent(StructEventBase):
         "fx.inverted" / c.Optional(c.Flag),  # 82
         "_u4" / c.Optional(c.Bytes(1)),  # 83
         "content.declick_mode" / c.Optional(StdEnum[DeclickMode](c.Int8ul)),  # 84
-        "fx.crossfade" / c.Optional(c.Int16ul),  # 86
-        "_u5" / c.Optional(c.Bytes(2)),  # 88
-        "fx.trim" / c.Optional(c.Int16ul),  # 90
-        "_u6" / c.Optional(c.Bytes(2)),  # 92
+        "fx.crossfade" / c.Optional(c.Int32ul),  # 88
+        "fx.trim" / c.Optional(c.Int32ul),  # 92
         "arp.repeat" / c.Optional(c.Int32ul),  # 96; FL 4.5.2+
-        "_u7" / c.Optional(c.Bytes(12)),  # 108
+        "_u5" / c.Optional(c.Bytes(12)),  # 108
         "stretching.mode" / c.Optional(StdEnum[StretchMode](c.Int32sl)),  # 112
-        "_u8" / c.Optional(c.Bytes(21)),  # 133
-        "fx.start" / c.Optional(c.Int16ul),  # 135
-        "_u9" / c.Optional(c.Bytes(6)),  # 141
-        "fx.length" / c.Optional(c.Int16ul),  # 143
-        "_u10" / c.Optional(c.Bytes(5)),  # 148
+        "_u6" / c.Optional(c.Bytes(21)),  # 133
+        "fx.start" / LogNormal(c.Int16ul[2], (0, 61440)),  # 137
+        "_u7" / c.Optional(c.Bytes(4)),  # 141
+        "fx.length" / LogNormal(c.Int16ul[2], (0, 61440)),  # 145
+        "_u8" / c.Optional(c.Bytes(3)),  # 148
         "playback.start_offset" / c.Optional(c.Int32ul),  # 152
-        "_u11" / c.Optional(c.Bytes(5)),  # 157
+        "_u9" / c.Optional(c.Bytes(5)),  # 157
         "fx.fix_trim" / c.Optional(c.Flag),  # 158 (FL 20.8.4 max)
         "_extra" / c.GreedyBytes,  # * 168 as of 20.9.1
     )
@@ -651,11 +657,10 @@ class FX(EventModel, ModelReprMixin):
     inverted = StructProp[bool](ChannelID.Parameters, prop="fx.inverted")
     """Named :guilabel:`Reverse polarity` in FL's interface."""
 
-    length = StructProp[int](ChannelID.Parameters, prop="fx.length")
-    """Min = 0, Max = 61440. Logarithmic. Defaults to minimum value.
+    length = StructProp[float](ChannelID.Parameters, prop="fx.length")
+    """Min = 0.0, Max = 1.0. Defaults to minimum value.
 
-    Named as :guilabel:`SMP START` in FL's interface.
-    Approximate example values - ``1% = 33920``. ``10% = ~47512``.
+    Named :guilabel:`SMP START` in FL's interface.
     """
 
     normalize = StructProp[bool](ChannelID.Parameters, prop="fx.normalize")
@@ -692,10 +697,10 @@ class FX(EventModel, ModelReprMixin):
     | 0   | 256 | 128     |
     """
 
-    start = StructProp[int](ChannelID.Parameters, prop="fx.start")
-    """Min = 0, Max = 61440. Logarithmic. Defaults to minimum value.
+    start = StructProp[float](ChannelID.Parameters, prop="fx.start")
+    """Min = 0.0, Max = 1.0. Defaults to minimum value.
 
-    Always set to 0 irrespective of the knob position unless a sample is loaded.
+    Always set to 0.0 irrespective of the knob position unless a sample is loaded.
     """
 
     stereo_delay = EventProp[int](ChannelID.StereoDelay)

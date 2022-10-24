@@ -255,10 +255,12 @@ class InsertEQBand(ModelBase):
     """
 
     freq = _InsertEQBandProp()
-    """
-    | Min | Max   | Default             |
-    |-----|-------|:--------------------|
-    | 0   | 65536 | Depends on the band |
+    """Nonlinear. Default depends on band e.g. ``InsertEQ.low``.
+
+    | Type | Value | Representation |
+    |------|-------|----------------|
+    | Min  | 0     | 10 Hz          |
+    | Max  | 65536 | 16 kHz         |
     """
 
     reso = _InsertEQBandProp()

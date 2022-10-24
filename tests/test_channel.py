@@ -210,12 +210,13 @@ def test_sampler_fx(load_sampler: SamplerFixture):
     assert fx.boost == 128
     assert fx.clip
     assert fx.cutoff == 16
+    assert fx.crossfade == 0
     assert fx.fade_in == 1024
     assert fx.fade_out == 0
     assert fx.fade_stereo
     assert fx.fix_trim
     assert fx.freq_tilt == 0
-    assert fx.length == 0
+    assert fx.length == 0.0
     assert not fx.normalize
     assert fx.pogo == 256
     assert fx.inverted
@@ -225,7 +226,7 @@ def test_sampler_fx(load_sampler: SamplerFixture):
     assert fx.reverb.mix == 128
     assert not fx.reverse
     assert fx.ringmod == (64, 192)
-    assert fx.start == 0
+    assert fx.start == 0.0
     assert fx.stereo_delay == 4096
     assert fx.swap_stereo
     assert fx.trim == 256

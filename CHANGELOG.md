@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementation for ``Channel`` and ``Pattern`` playlist items [#84].
 - ``FX.remove_dc``, ``FX.trim``, ``FX.fix_trim``, ``FX.crossfade``,
   ``FX.length``, ``FX.normalize``, ``FX.inverted``, ``FX.start`` [#55].
+- Normalized linear values for certain properties, more user friendly to deal with.
+  The required encode / decode is done at event level itself.
 
 ### Changed
 
