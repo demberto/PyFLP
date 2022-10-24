@@ -1,6 +1,13 @@
 Features
 ========
 
+Non-destructive editing
+-----------------------
+
+The modifications you make will have a minimum effect on the internal structure
+of an FLP. Infact, I guarantee you that if you save a :class:`pyflp.Project`
+as-is, the new file will be exactly alike (compare hashes if you want).
+
 📝 Godlevel docstrings
 ----------------------
 

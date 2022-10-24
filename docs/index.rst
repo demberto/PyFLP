@@ -14,6 +14,7 @@ Navigation
    contributing
    guides
    faq
+   limitations
    helping
    changelog
 
