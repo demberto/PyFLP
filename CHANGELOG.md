@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Normalized linear values for certain properties, more user friendly to deal with.
   The required encode / decode is done at event level itself.
 - ``TimeStretching.time``, ``TimeStretching.pitch``, ``TimeStretching.multiplier`` [#87].
+- (Undiscovered) ``MIDIControllerEvent``.
 
 ### Changed
 

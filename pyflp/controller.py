@@ -26,23 +26,25 @@ from ._models import EventModel, ModelReprMixin
 __all__ = ["RemoteController"]
 
 
-_RemoteControllerStruct = c.Struct(
-    "_u1" / c.Optional(c.Bytes(2)),  # 2
-    "_u2" / c.Optional(c.Byte),  # 3
-    "_u3" / c.Optional(c.Byte),  # 4
-    "parameter_data" / c.Optional(c.Int16ul),  # 6
-    "destination_data" / c.Optional(c.Int16sl),  # 8
-    "_u4" / c.Optional(c.Bytes(8)),  # 16
-    "_u5" / c.Optional(c.Bytes(4)),  # 20
-).compile()
+class MIDIControllerEvent(StructEventBase):
+    STRUCT = c.Struct("_u1" / c.GreedyBytes)
 
 
 class RemoteControllerEvent(StructEventBase):
-    STRUCT = _RemoteControllerStruct
+    STRUCT = c.Struct(
+        "_u1" / c.Optional(c.Bytes(2)),  # 2
+        "_u2" / c.Optional(c.Byte),  # 3
+        "_u3" / c.Optional(c.Byte),  # 4
+        "parameter_data" / c.Optional(c.Int16ul),  # 6
+        "destination_data" / c.Optional(c.Int16sl),  # 8
+        "_u4" / c.Optional(c.Bytes(8)),  # 16
+        "_u5" / c.Optional(c.Bytes(4)),  # 20
+    ).compile()
 
 
 @enum.unique
 class ControllerID(EventEnum):
+    MIDI = (DATA + 18, MIDIControllerEvent)
     Remote = (DATA + 19, RemoteControllerEvent)
 
 
