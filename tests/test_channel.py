@@ -216,7 +216,7 @@ def test_sampler_fx(load_sampler: SamplerFixture):
     assert fx.fade_stereo
     assert fx.fix_trim
     assert fx.freq_tilt == 0
-    assert fx.length == 0.0
+    assert fx.length == 1.0
     assert not fx.normalize
     assert fx.pogo == 256
     assert fx.inverted
