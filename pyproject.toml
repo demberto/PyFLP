@@ -81,6 +81,7 @@ disable = [
   "invalid-name",
   "line-too-long",                                # Black does this better
   "no-member",
+  "no-self-use",
   "missing-class-docstring",
   "missing-function-docstring",
   "redefined-builtin",                            # Really a non issue in small scopes

@@ -283,14 +283,14 @@ class LogNormal(ct.Adapter[List[int], List[int], float, float]):
         if not 0.0 <= obj <= 1.0:
             raise ValueError(f"Expected a value between 0.0 to 1.0; got {obj}")
 
-        if obj == 0.0:  # log2(0.0) --> -inf ==> 0
+        if not obj:  # log2(0.0) --> -inf ==> 0
             return [0, 0]
 
         return [min(max(self.lo, int(2**12 * (math.log2(obj) + 15))), self.hi), 63]
 
     def _decode(self, obj: list[int], *_: Any) -> float:
         """Returns a float representation of ``obj[0]`` between 0.0 to 1.0."""
-        if obj[0] == 0:
+        if not obj[0]:
             return 0.0
 
         if obj[1] != 63:
@@ -300,7 +300,7 @@ class LogNormal(ct.Adapter[List[int], List[int], float, float]):
 
 
 class StdEnum(ct.Adapter[int, int, ET, ET]):
-    def _encode(self, obj: ET, *_: Any) -> int:  # pylint: disable=no-self-use
+    def _encode(self, obj: ET, *_: Any) -> int:
         return obj.value
 
     def _decode(self, obj: int, *_: Any) -> ET:
