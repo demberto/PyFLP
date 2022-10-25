@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ``FX.length``, ``FX.normalize``, ``FX.inverted``, ``FX.start`` [#55].
 - Normalized linear values for certain properties, more user friendly to deal with.
   The required encode / decode is done at event level itself.
+- ``TimeStretching.time``, ``TimeStretching.pitch``, ``TimeStretching.multiplier`` [#87].
 
 ### Changed
 
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [#55]: https://github.com/demberto/PyFLP/issues/55
 [#84]: https://github.com/demberto/PyFLP/issues/84
+[#87]: https://github.com/demberto/PyFLP/issues/87
 
 ## [2.0.0a4] - 2022-10-22
 

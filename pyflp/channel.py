@@ -33,7 +33,10 @@ from ._descriptors import (
     EventProp,
     FlagProp,
     KWProp,
+    LinearMusical,
+    Log2,
     LogNormal,
+    MusicalTime,
     NestedProp,
     StdEnum,
     StructProp,
@@ -265,7 +268,9 @@ class ParametersEvent(StructEventBase):
         "fx.crossfade" / c.Optional(c.Int32ul),  # 88
         "fx.trim" / c.Optional(c.Int32ul),  # 92
         "arp.repeat" / c.Optional(c.Int32ul),  # 96; FL 4.5.2+
-        "_u5" / c.Optional(c.Bytes(12)),  # 108
+        "stretching.time" / c.Optional(LinearMusical(c.Int32ul)),  # 100
+        "stretching.pitch" / c.Optional(c.Int32sl),  # 104
+        "stretching.multiplier" / c.Optional(Log2(c.Int32sl, 10000)),  # 108
         "stretching.mode" / c.Optional(StdEnum[StretchMode](c.Int32sl)),  # 112
         "_u6" / c.Optional(c.Bytes(21)),  # 133
         "fx.start" / LogNormal(c.Int16ul[2], (0, 61440)),  # 137
@@ -354,7 +359,7 @@ class ChannelID(EventEnum):
     # _MainResoCutOff = DWORD + 9
     # DelayModXY = DWORD + 10
     Reverb = (DWORD + 11, U32Event)  #: 1.4.0+
-    StretchTime = (DWORD + 12, F32Event)  #: 5.0+
+    _StretchTime = (DWORD + 12, F32Event)  #: 5.0+
     FineTune = (DWORD + 14, I32Event)
     SamplerFlags = (DWORD + 15, U32Event)
     LayerFlags = (DWORD + 16, U32Event)
@@ -1028,9 +1033,21 @@ class TimeStretching(EventModel, ModelReprMixin):
     """
 
     mode = StructProp[StretchMode](ChannelID.Parameters, prop="stretching.mode")
-    # multiplier: Optional[int] = None
-    # pitch: Optional[int] = None
-    time = EventProp[float](ChannelID.StretchTime)
+    multiplier = StructProp[float](ChannelID.Parameters, prop="stretching.multiplier")
+    """Logarithmic. Bipolar.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0.25  | 25%            |
+    | Max     | 4.0   | 400%           |
+    | Default | 0     | 100%           |
+    """
+
+    pitch = StructProp[int](ChannelID.Parameters, prop="stretching.pitch")
+    """Pitch shift (in cents). Min = -1200. Max = 1200. Defaults to 0."""
+
+    time = StructProp[MusicalTime](ChannelID.Parameters, prop="stretching.time")
+    """Returns a tuple of ``(bars, beats, ticks)``."""
 
 
 class Content(EventModel, ModelReprMixin):
@@ -1447,11 +1464,8 @@ class Sampler(_SamplerInstrument):
         path = "" if str(value) == "." else str(value)
         self.events.first(ChannelID.SamplePath).value = path
 
-    stretching = NestedProp(
-        TimeStretching,
-        ChannelID.StretchTime,
-        ChannelID.Parameters,
-    )
+    # TODO Find whether ChannelID._StretchTime was really used for attr ``time``.
+    stretching = NestedProp(TimeStretching, ChannelID.Parameters)
     """:menuselection:`Sample settings (page) --> Time stretching`"""
 
 

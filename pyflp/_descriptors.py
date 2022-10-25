@@ -21,7 +21,8 @@ import abc
 import enum
 import math
 import sys
-from typing import Any, List, TypeVar, Union, overload
+import warnings
+from typing import Any, List, NamedTuple, TypeVar, Union, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
@@ -232,6 +233,42 @@ class StructProp(PropBase[T], NamedPropMixin):
 
 
 ET = TypeVar("ET", bound=Union[ct.EnumBase, enum.IntFlag])
+
+
+class MusicalTime(NamedTuple):
+    bars: int
+    """1 bar == 16 beats == 768 (internal representation)"""
+
+    beats: int
+    """1 beat == 240 ticks == 48 (internal representation)"""
+
+    ticks: int
+    """5 ticks == 1 (internal representation)"""
+
+
+class LinearMusical(ct.Adapter[int, int, MusicalTime, MusicalTime]):
+    def _encode(self, obj: MusicalTime, *_: Any) -> int:
+        if obj.ticks % 5:
+            warnings.warn("Ticks must be a multiple of 5", UserWarning)
+
+        return (obj.bars * 768) + (obj.beats * 48) + int(obj.ticks * 0.2)
+
+    def _decode(self, obj: int, *_: Any) -> MusicalTime:
+        bars, remainder = divmod(obj, 768)
+        beats, remainder = divmod(remainder, 48)
+        return MusicalTime(bars, beats, ticks=remainder * 5)
+
+
+class Log2(ct.Adapter[int, int, float, float]):
+    def __init__(self, subcon: Any, factor: int):
+        super().__init__(subcon)
+        self.factor = factor
+
+    def _encode(self, obj: float, *_: Any) -> int:
+        return int(self.factor * math.log2(obj))
+
+    def _decode(self, obj: int, *_: Any) -> float:
+        return 2 ** (obj / self.factor)
 
 
 # Thanks to @algmyr from Python Discord server for finding out the formulae used

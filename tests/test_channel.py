@@ -16,6 +16,7 @@ from pyflp.channel import (
     LFOShape,
     ReverbType,
     Sampler,
+    StretchMode,
 )
 
 from .conftest import ModelFixture
@@ -271,3 +272,11 @@ def test_sampler_playback(load_sampler: SamplerFixture):
     assert playback.use_loop_points
     assert playback.ping_pong_loop
     assert playback.start_offset == 1072693248
+
+
+def test_sampler_stretching(load_sampler: SamplerFixture):
+    stretching = load_sampler("sampler-stretching.fst").stretching
+    assert stretching.mode == StretchMode.E3Generic
+    assert stretching.multiplier == 0.25
+    assert stretching.pitch == 1200
+    assert stretching.time == (4, 0, 0)
