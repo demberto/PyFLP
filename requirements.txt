@@ -1,4 +1,4 @@
 colour==0.1.5
-construct-typing==0.5.2
+git+https://github.com/timrid/construct-typing
 sortedcontainers==2.4.0
 typing_extensions==4.4.0

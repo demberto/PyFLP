@@ -77,6 +77,7 @@ for wonderful things like creating new channels, moving inserts etc.
 [#47]: https://github.com/demberto/PyFLP/issues/47
 [#50]: https://github.com/demberto/PyFLP/issues/50
 [#77]: https://github.com/demberto/PyFLP/issues/77
+[#80]: https://github.com/demberto/PyFLP/issues/80
 [PEP544]: https://peps.python.org/pep-0544
 
 ## [2.0.0a3] - 2022-10-08
