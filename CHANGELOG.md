@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The required encode / decode is done at event level itself.
 - ``TimeStretching.time``, ``TimeStretching.pitch``, ``TimeStretching.multiplier`` [#87].
 - (Undiscovered) ``MIDIControllerEvent``.
+- ``Delay.mod_x``, ``Delay.mod_y``, ``Delay.fat_mode`` and ``Delay.ping_pong`` [#88].
 
 ### Changed
 
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#55]: https://github.com/demberto/PyFLP/issues/55
 [#84]: https://github.com/demberto/PyFLP/issues/84
 [#87]: https://github.com/demberto/PyFLP/issues/87
+[#88]: https://github.com/demberto/PyFLP/issues/88
 
 ## [2.0.0a4] - 2022-10-22
 

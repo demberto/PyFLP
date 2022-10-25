@@ -120,7 +120,11 @@ def test_instrument_delay(load_instrument: InstrumentFixture):
     delay = load_instrument("delay.fst").delay
     assert delay.feedback == 12800
     assert delay.echoes == 10
+    assert delay.fat_mode
+    assert delay.mod_x == 0
+    assert delay.mod_y == 256
     assert delay.pan == -6400
+    assert delay.ping_pong
     assert delay.time == 144
 
 

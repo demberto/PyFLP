@@ -235,6 +235,12 @@ class DeclickMode(ct.EnumBase):
 
 
 @enum.unique
+class _DelayFlags(enum.IntFlag):
+    PingPong = 1 << 1
+    FatMode = 1 << 2
+
+
+@enum.unique
 class StretchMode(ct.EnumBase):
     Stretch = -1
     Resample = 0
@@ -253,7 +259,8 @@ class ParametersEvent(StructEventBase):
     STRUCT = c.Struct(
         "_u1" / c.Optional(c.Bytes(9)),  # 9
         "fx.remove_dc" / c.Optional(c.Flag),  # 10
-        "_u2" / c.Optional(c.Bytes(30)),  # 40
+        "delay.flags" / c.Optional(StdEnum[_DelayFlags](c.Int8ul)),  # 11
+        "_u2" / c.Optional(c.Bytes(29)),  # 40
         "arp.direction" / c.Optional(StdEnum[ArpDirection](c.Int32ul)),  # 44
         "arp.range" / c.Optional(c.Int32ul),  # 48
         "arp.chord" / c.Optional(c.Int32ul),  # 52
@@ -289,14 +296,6 @@ class _PolyphonyFlags(enum.IntFlag):
     None_ = 0
     Mono = 1 << 0
     Porta = 1 << 1
-
-    # Unknown
-    U1 = 1 << 2
-    U2 = 1 << 3
-    U3 = 1 << 4
-    U4 = 1 << 5
-    U5 = 1 << 6
-    U6 = 1 << 7
 
 
 class PolyphonyEvent(StructEventBase):
@@ -357,7 +356,7 @@ class ChannelID(EventEnum):
     CutGroup = (DWORD + 4, U16TupleEvent)
     RootNote = (DWORD + 7, U32Event)
     # _MainResoCutOff = DWORD + 9
-    # DelayModXY = DWORD + 10
+    DelayModXY = (DWORD + 10, U16TupleEvent)
     Reverb = (DWORD + 11, U32Event)  #: 1.4.0+
     _StretchTime = (DWORD + 12, F32Event)  #: 5.0+
     FineTune = (DWORD + 14, I32Event)
@@ -484,20 +483,13 @@ class Delay(EventModel, ModelReprMixin):
     ![](https://bit.ly/3RyzbBD)
     """
 
-    # is_fat_mode: Optional[bool] = None    #: 3.4.0+
-    # is_ping_pong: Optional[bool] = None   #: 1.7.6+
-    # mod_x: Optional[int] = None
-    # mod_y: Optional[int] = None
+    echoes = StructProp[int](ChannelID.Delay)
+    """Number of echoes generated for each note. Min = 1. Max = 10."""
 
-    echoes = StructProp[int]()
-    """Number of echoes generated for each note.
+    fat_mode = FlagProp(_DelayFlags.FatMode, ChannelID.Parameters, prop="delay.flags")
+    """*New in FL Studio v3.4.0*."""
 
-    | Min | Max |
-    |-----|-----|
-    | 1   | 10  |
-    """
-
-    feedback = StructProp[int]()
+    feedback = StructProp[int](ChannelID.Delay)
     """Factor with which the volume of every next echo is multiplied.
 
     Defaults to minimum value.
@@ -508,7 +500,27 @@ class Delay(EventModel, ModelReprMixin):
     | Max  | 25600 | 200%           |
     """
 
-    pan = StructProp[int]()
+    @property
+    def mod_x(self) -> int:
+        """Min = 0. Max = 256. Default = 128."""
+        return self.events.first(ChannelID.DelayModXY).value[0]
+
+    @mod_x.setter
+    def mod_x(self, value: int):
+        event = self.events.first(ChannelID.DelayModXY)
+        event.value = (value, event.value[1])
+
+    @property
+    def mod_y(self) -> int:
+        """Min = 0. Max = 256. Default = 128."""
+        return self.events.first(ChannelID.DelayModXY).value[1]
+
+    @mod_y.setter
+    def mod_y(self, value: int):
+        event = self.events.first(ChannelID.DelayModXY)
+        event.value = (event.value[0], value)
+
+    pan = StructProp[int](ChannelID.Delay)
     """
     | Type    | Value | Representation |
     |---------|-------|----------------|
@@ -517,7 +529,14 @@ class Delay(EventModel, ModelReprMixin):
     | Default | 0     | Centred        |
     """
 
-    pitch_shift = StructProp[int]()
+    ping_pong = FlagProp(
+        _DelayFlags.PingPong,
+        ChannelID.Parameters,
+        prop="delay.flags",
+    )
+    """*New in FL Studio v1.7.6*."""
+
+    pitch_shift = StructProp[int](ChannelID.Delay)
     """Pitch shift (in cents).
 
     | Min   | Max   | Default |
@@ -525,7 +544,7 @@ class Delay(EventModel, ModelReprMixin):
     | -1200 | 1200  | 0       |
     """
 
-    time = StructProp[int]()
+    time = StructProp[int](ChannelID.Delay)
     """Tempo-synced delay time. PPQ dependant.
 
     | Type    | Value     | Representation |
@@ -1330,7 +1349,9 @@ class _SamplerInstrument(Channel):
         To cut itself when retriggered, set the same value for both.
     """
 
-    delay = NestedProp(Delay, ChannelID.Delay)
+    delay = NestedProp(
+        Delay, ChannelID.Delay, ChannelID.DelayModXY, ChannelID.Parameters
+    )
     """:menuselection:`Miscellaneous functions -> Echo delay / fat mode`"""
 
     insert = EventProp[int](ChannelID.RoutedTo)
