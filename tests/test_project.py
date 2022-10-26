@@ -60,12 +60,9 @@ def test_project(project: Project):
         project.version = "2.2"  # type: ignore
 
 
-# ! TODO saving the Project opened by the project fixture fails
-def test_null_check(tmp_path: pathlib.Path):
-    flp = pathlib.Path(__file__).parent / "assets" / "FL 20.8.4.flp"
-    project = pyflp.parse(flp)
+def test_null_check(project: Project, tmp_path: pathlib.Path):
     pyflp.save(project, tmp_path / "null_check.flp")
-    b1 = open(flp, "rb").read()
+    b1 = open(pathlib.Path(__file__).parent / "assets" / "FL 20.8.4.flp", "rb").read()
     b2 = open(tmp_path / "null_check.flp", "rb").read()
     result = b1 == b2  # ! Don't compare 2 big bytes objects in pytest EVER
     assert result
