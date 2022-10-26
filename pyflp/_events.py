@@ -671,18 +671,18 @@ class EventTree:
     def divide(self, separator: EventEnum, *ids: EventEnum) -> Iterator[EventTree]:
         """Yields subtrees containing events separated by ``separator`` infinitely."""
         el: list[IndexedEvent] = []
-        start = False
+        first = True
         for ie in sorted(chain.from_iterable(self.dct.values())):
-            if ie.e.id in ids:
-                el.append(ie)
-
             if ie.e.id == separator:
-                if start:
+                if not first:
                     yield EventTree(self, el)
                     el = []
-                    start = False
-                start = True
-        return EventTree(self, el)  # Yield the last one
+                else:
+                    first = False
+
+            if ie.e.id in ids:
+                el.append(ie)
+        yield EventTree(self, el)  # Yield the last one
 
     def first(self, id: EventEnum) -> AnyEvent:
         if id not in self.dct:

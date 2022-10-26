@@ -86,6 +86,9 @@ class PropBase(abc.ABC, RWProperty[T]):
 
         if isinstance(instance, EventModel):
             if not self._ids:
+                if len(instance.events) > 1:  # Prevent ambiguous situations
+                    raise LookupError("Event ID not specified")
+
                 return tuple(instance.events.all())[0]
 
             for id in self._ids:

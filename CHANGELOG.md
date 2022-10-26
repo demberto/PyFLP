@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `PlaylistItemBase` to `PLItemBase` and `PatternPlaylistItem` to `PatternPLItem`.
 - Rename `Polyphony` members `is_mono` to `mono` and `is_porta` to `porta`.
 
+### Fixed
+
+- `EventTree.divide` fails to yield the only element [#90].
+
 ### Removed
 
 - `PlaylistItemBase.start_offset` and `PlaylistItemBase.end_offset`.
@@ -40,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#87]: https://github.com/demberto/PyFLP/issues/87
 [#88]: https://github.com/demberto/PyFLP/issues/88
 [#89]: https://github.com/demberto/PyFLP/issues/89
+[#90]: https://github.com/demberto/PyFLP/issues/90
 
 ## [2.0.0a4] - 2022-10-22
 
