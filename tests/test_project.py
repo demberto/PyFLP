@@ -7,7 +7,6 @@ import textwrap
 import pytest
 
 import pyflp
-from pyflp.exceptions import ExpectedValue
 from pyflp.project import VALID_PPQS, FileFormat, FLVersion, PanLaw, Project
 
 
@@ -50,13 +49,13 @@ def test_project(project: Project):
     with pytest.raises(ValueError, match="cannot be less than zero"):
         project.channel_count = -1
 
-    with pytest.raises(ExpectedValue, match=f"{VALID_PPQS}"):
+    with pytest.raises(ValueError, match=f"{VALID_PPQS}"):
         project.ppq = 0
 
     with pytest.raises(ValueError, match="10.0-522.0"):
         project.tempo = 999.0
 
-    with pytest.raises(ExpectedValue, match="major.minor.build.patch?"):
+    with pytest.raises(ValueError, match="major.minor.build.patch?"):
         project.version = "2.2"  # type: ignore
 
 

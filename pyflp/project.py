@@ -61,7 +61,7 @@ from .arrangement import (
     TrackID,
 )
 from .channel import ChannelID, ChannelRack, DisplayGroupID, RackID
-from .exceptions import ExpectedValue, PropertyCannotBeSet, UnexpectedType
+from .exceptions import PropertyCannotBeSet
 from .mixer import InsertID, Mixer, MixerID, SlotID
 from .pattern import PatternID, Patterns, PatternsID
 from .plugin import PluginID
@@ -395,7 +395,7 @@ class Project(EventModel):
             beyond PyFLP's scope to properly recalculate the timings.
 
         Raises:
-            ExpectedValue: When a value not in ``VALID_PPQS`` is tried to be set.
+            ValueError: When a value not in ``VALID_PPQS`` is tried to be set.
 
         *Changed in FL Studio v2.1.1*: Defaults to ``96``.
         """
@@ -404,7 +404,7 @@ class Project(EventModel):
     @ppq.setter
     def ppq(self, value: int):
         if value not in VALID_PPQS:
-            raise ExpectedValue(value, VALID_PPQS)
+            raise ValueError(f"Expected one of {VALID_PPQS}; got {value} instead")
         self._kw["ppq"] = value
 
     show_info = EventProp[bool](ProjectID.ShowInfo)
@@ -430,7 +430,7 @@ class Project(EventModel):
         ![](https://bit.ly/3MKdAEO)
 
         Raises:
-            UnexpectedType: When a fine-tuned tempo (``float``) isn't
+            TypeError: When a fine-tuned tempo (``float``) isn't
                 supported. Use an ``int`` (coarse tempo) value.
             PropertyCannotBeSet: If underlying event isn't found.
             ValueError: When a tempo outside the allowed range is set.
@@ -462,7 +462,7 @@ class Project(EventModel):
         )
 
         if isinstance(value, float) and self.version < FLVersion(3, 4, 0):
-            raise UnexpectedType(int, float)
+            raise TypeError("Expected an 'int' object got a 'float' instead")
 
         if float(value) > max_tempo or float(value) < MIN_TEMPO:
             raise ValueError(f"Invalid tempo {value}; expected {MIN_TEMPO}-{max_tempo}")
@@ -514,7 +514,7 @@ class Project(EventModel):
         Raises:
             PropertyCannotBeSet: This error should NEVER occur; if it does,
                 it indicates possible corruption.
-            ExpectedValue: When a string with an invalid format is tried to be set.
+            ValueError: When a string with an invalid format is tried to be set.
         """
         event = cast(AsciiEvent, self.events.first(ProjectID.FLVersion))
         return FLVersion(*tuple(int(part) for part in event.value.split(".")))
@@ -534,7 +534,7 @@ class Project(EventModel):
             parts = list(value)
 
         if len(parts) < 3 or len(parts) > 4:
-            raise ExpectedValue("Expected format: major.minor.build.patch?")
+            raise ValueError("Expected format: major.minor.build.patch?")
 
         version = ".".join(str(part) for part in parts)
         self.events.first(ProjectID.FLVersion).value = version

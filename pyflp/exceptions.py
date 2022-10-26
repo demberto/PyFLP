@@ -22,17 +22,20 @@ __all__ = [
     "NoModelsFound",
     "EventIDOutOfRange",
     "InvalidEventChunkSize",
-    "UnexpectedType",
     "PropertyCannotBeSet",
     "HeaderCorrupted",
     "VersionNotDetected",
-    "ExpectedValue",
     "ModelNotFound",
+    "DataCorrupted",
 ]
 
 
 class Error(Exception):
     """Base class for PyFLP exceptions.
+
+    It is not guaranteed that exceptions raised from PyFLP always subclass Error.
+    This is done to prevent duplication of exceptions. All exceptions raised by
+    a function (in its body) explicitly are documented.
 
     Some exceptions derive from standard Python exceptions to ease handling.
     """
@@ -45,7 +48,7 @@ class EventIDOutOfRange(Error, ValueError):
         super().__init__(f"Expected ID in {min_i}-{max_e - 1}; got {id} instead")
 
 
-class InvalidEventChunkSize(Error, TypeError):
+class InvalidEventChunkSize(Error, BufferError):
     """A fixed size event is created with a wrong amount of bytes."""
 
     def __init__(self, expected: int, got: int):
@@ -56,21 +59,9 @@ class ListEventNotParsed(Error, AttributeError, IndexError):
     """`ListEventBase` could not be parsed due to mismatching struct layouts."""
 
 
-class UnexpectedType(Error, TypeError):
-    def __init__(self, expected: type, got: type):
-        super().__init__(
-            f"Expected a {expected.__name__!r}; got a {got.__name__!r} instead"
-        )
-
-
 class PropertyCannotBeSet(Error, AttributeError):
     def __init__(self, *ids: enum.Enum):
         super().__init__(f"Event(s) {ids!r} was / were not found")
-
-
-class ExpectedValue(Error, ValueError):
-    def __init__(self, invalid: object, *valid: object):
-        super().__init__(f"Invalid value {invalid!r}; expected one of {valid!r}")
 
 
 class DataCorrupted(Error):

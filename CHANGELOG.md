@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `PlaylistItemBase.start_offset` and `PlaylistItemBase.end_offset`.
+- Redundant exceptions `ExpectedValue`, `UnexpectedType`.
 
 [#55]: https://github.com/demberto/PyFLP/issues/55
 [#84]: https://github.com/demberto/PyFLP/issues/84
