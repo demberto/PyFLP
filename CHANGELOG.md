@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - ``PlaylistItemBase.offsets`` now returns start and end offsets.
+- Use git commit for ``construct-typing`` which has fixed certain bugs.
 
 ### Removed
 
