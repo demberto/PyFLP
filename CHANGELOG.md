@@ -12,24 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Implementation for ``Channel`` and ``Pattern`` playlist items [#84].
-- ``FX.remove_dc``, ``FX.trim``, ``FX.fix_trim``, ``FX.crossfade``,
-  ``FX.length``, ``FX.normalize``, ``FX.inverted``, ``FX.start`` [#55].
+- Implementation for `Channel` and `Pattern` playlist items [#84].
+- `FX.remove_dc`, `FX.trim`, `FX.fix_trim`, `FX.crossfade`,
+  `FX.length`, `FX.normalize`, `FX.inverted`, `FX.start` [#55].
 - Normalized linear values for certain properties, more user friendly to deal with.
   The required encode / decode is done at event level itself.
-- ``TimeStretching.time``, ``TimeStretching.pitch``, ``TimeStretching.multiplier`` [#87].
-- (Undiscovered) ``MIDIControllerEvent``.
-- ``Delay.mod_x``, ``Delay.mod_y``, ``Delay.fat_mode`` and ``Delay.ping_pong`` [#88].
-- Improve enum performance by using ``f-enum`` library (``pyflp.parse`` is 50% faster).
+- `TimeStretching.time`, `TimeStretching.pitch`, `TimeStretching.multiplier` [#87].
+- (Undiscovered) `MIDIControllerEvent`.
+- `Delay.mod_x`, `Delay.mod_y`, `Delay.fat_mode` and `Delay.ping_pong` [#88].
+- Improve enum performance by using `f-enum` library (`pyflp.parse` is 50% faster).
 
 ### Changed
 
-- ``PlaylistItemBase.offsets`` now returns start and end offsets.
-- Use git commit for ``construct-typing`` which has fixed certain bugs.
+- `PlaylistItemBase.offsets` now returns start and end offsets.
+- Use git commit for `construct-typing` which has fixed certain bugs.
+- Rename `PlaylistItemBase` to `PLItemBase` and `PatternPlaylistItem` to `PatternPLItem`.
 
 ### Removed
 
-- ``PlaylistItemBase.start_offset`` and ``PlaylistItemBase.end_offset``.
+- `PlaylistItemBase.start_offset` and `PlaylistItemBase.end_offset`.
 
 [#55]: https://github.com/demberto/PyFLP/issues/55
 [#84]: https://github.com/demberto/PyFLP/issues/84
@@ -39,24 +40,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0a4] - 2022-10-22
 
 The way models were passed events has changed. I designed a new data structure
-called ``EventTree`` (check ``pyflp._events``) to allow the insertion and
+called `EventTree` (check `pyflp._events`) to allow the insertion and
 deletion of events like a list while preserving the speed of a dict lookups.
 
-Sounds *awfully* like ``multidict`` except that it doesn't allow mutable views.
-``EventTree`` knows its parents and any attempt to insert or delete an event
+Sounds *awfully* like `multidict` except that it doesn't allow mutable views.
+`EventTree` knows its parents and any attempt to insert or delete an event
 from it will also affect its parents *and vice-versa*. Took quite some to do.
 
-``EventTree`` will allow for insertion / removal of events when corresponding
+`EventTree` will allow for insertion / removal of events when corresponding
 descriptor setters / deleters (yet to implement) are invoked. This can allow
 for wonderful things like creating new channels, moving inserts etc.
 
 ### Added
 
-- A multidict with mutable dict view ``EventTree``.
+- A multidict with mutable dict view `EventTree`.
 - PyPy 3.7+ support [#77].
 - Slicing for ModelBase collections [#31].
 - Fruity Center parser [#42].
-- Dependency on ``sortedcontainers`` library for ``EventTree``.
+- Dependency on `sortedcontainers` library for `EventTree`.
 - Remaining and some new images for docstrings [#47].
 - GUI locations of descriptors (w.r.t. FL 20.8.4) [#80].
 

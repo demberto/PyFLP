@@ -72,7 +72,7 @@ __all__ = [
     "TrackPress",
     "TrackSync",
     "ChannelPLItem",
-    "PatternPlaylistItem",
+    "PatternPLItem",
 ]
 
 
@@ -181,7 +181,7 @@ class TimeMarkerType(enum.IntEnum):
     """Used for time signature markers."""
 
 
-class PlaylistItemBase(ItemModel, ModelReprMixin):
+class PLItemBase(ItemModel, ModelReprMixin):
     group = StructProp[int]()
     """Returns 0 for no group, else a group number for clips in the same group."""
 
@@ -204,7 +204,7 @@ class PlaylistItemBase(ItemModel, ModelReprMixin):
     position = StructProp[int]()
 
 
-class ChannelPLItem(PlaylistItemBase, ModelReprMixin):
+class ChannelPLItem(PLItemBase, ModelReprMixin):
     """An audio clip or automation on the playlist of an arrangement.
 
     *New in FL Studio v2.0.1*.
@@ -220,7 +220,7 @@ class ChannelPLItem(PlaylistItemBase, ModelReprMixin):
         self["item_index"] = channel.iid
 
 
-class PatternPlaylistItem(PlaylistItemBase, ModelReprMixin):
+class PatternPLItem(PLItemBase, ModelReprMixin):
     """A pattern block or clip on the playlist of an arrangement.
 
     *New in FL Studio v7.0.0*.
@@ -290,10 +290,10 @@ class _TrackColorProp(StructProp[colour.Color]):
 
 
 class _TrackKW(TypedDict):
-    items: list[PlaylistItemBase]
+    items: list[PLItemBase]
 
 
-class Track(EventModel, ModelCollection[PlaylistItemBase]):
+class Track(EventModel, ModelCollection[PLItemBase]):
     """Represents a track in an arrangement on which playlist items are arranged.
 
     ![](https://bit.ly/3de6R8y)
@@ -311,7 +311,7 @@ class Track(EventModel, ModelCollection[PlaylistItemBase]):
         """An integer in the range of 1 to :attr:`Arrangements.max_tracks`."""
         return cast(TrackEvent, self.events.first(TrackID.Data))["index"]
 
-    def __iter__(self) -> Iterator[PlaylistItemBase]:
+    def __iter__(self) -> Iterator[PLItemBase]:
         """An iterator over :attr:`items`."""
         yield from self._kw["items"]
 
@@ -439,7 +439,7 @@ class Arrangement(EventModel):
             pl_event = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
 
         for track_idx, ed in enumerate(self.events.group(*TrackID)):
-            items: list[PlaylistItemBase] = []
+            items: list[PLItemBase] = []
             for item in pl_event or []:
                 idx = item["track_index"]
                 if max_idx - idx == track_idx:
@@ -450,7 +450,7 @@ class Arrangement(EventModel):
                     else:
                         pattern_num = item["item_index"] - item["pattern_base"]
                         pattern = self._kw["patterns"][pattern_num]
-                        items.append(PatternPlaylistItem(item, pattern=pattern))
+                        items.append(PatternPLItem(item, pattern=pattern))
             yield Track(ed, items=items)
 
 

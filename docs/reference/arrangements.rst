@@ -14,14 +14,14 @@ Arrangement
 Playlist
 --------
 
-.. autoclass:: PlaylistItemBase
+.. autoclass:: PLItemBase
    :members:
-.. autoclass:: ChannelPlaylistItem
+.. autoclass:: ChannelPLItem
    :members:
-   :show-inheritance: PlaylistItemBase
-.. autoclass:: PatternPlaylistItem
+   :show-inheritance: PLItemBase
+.. autoclass:: PatternPLItem
    :members:
-   :show-inheritance: PlaylistItemBase
+   :show-inheritance: PLItemBase
 
 TimeMarker
 ----------
