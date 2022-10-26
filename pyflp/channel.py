@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""Contains the types used by the channels and channel rack."""
+"""Contains the types used by channels and the channel rack."""
 
 from __future__ import annotations
 

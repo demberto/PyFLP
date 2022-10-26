@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""Contains the types used by native and VST plugins."""
+"""Contains the types used by native and VST plugins to store their preset data."""
 
 from __future__ import annotations
 

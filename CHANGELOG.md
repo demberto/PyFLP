@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use git commit for `construct-typing` which has fixed certain bugs.
 - Rename `PlaylistItemBase` to `PLItemBase` and `PatternPlaylistItem` to `PatternPLItem`.
 - Rename `Polyphony` members `is_mono` to `mono` and `is_porta` to `porta`.
+- `NoModelsFound` also bases `LookupError` now.
 
 ### Fixed
 

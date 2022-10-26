@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""Contains the types used by MIDI and remote controllers."""
+"""Contains the types used by MIDI and remote ("internal") controllers."""
 
 from __future__ import annotations
 

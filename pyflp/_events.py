@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""Contains implementations for various types of event data representations.
+"""Contains implementations for various types of event data and its container.
 
 These types serve as the backbone for model creation and simplify marshalling
 and unmarshalling.

@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""Contains the types used by the public API and other project-wide properties."""
+"""Contains the class (and types it uses) used by the parser and serializer."""
 
 from __future__ import annotations
 

@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""Contains the types used by MIDI patterns, notes and their automation data."""
+"""Contains the types used by patterns, MIDI notes and their automation data."""
 
 from __future__ import annotations
 

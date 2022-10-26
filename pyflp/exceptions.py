@@ -79,7 +79,7 @@ class HeaderCorrupted(DataCorrupted, ValueError):
         super().__init__(f"Error parsing header: {desc}")
 
 
-class NoModelsFound(DataCorrupted):
+class NoModelsFound(DataCorrupted, LookupError):
     """Model's `__iter__` method fails to generate any model."""
 
 

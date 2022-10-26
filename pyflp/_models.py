@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""Contains the ABCs used by model classes."""
+"""Contains the ABCs used by model classes and some shared classes."""
 
 from __future__ import annotations
 
