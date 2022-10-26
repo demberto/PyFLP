@@ -335,3 +335,23 @@ Helpers
 ^^^^^^^
 
 .. autoclass:: NamedPropMixin
+
+Adapters
+^^^^^^^^
+
+Adapters used by :class:`construct.Struct` objects.
+
+.. autoclass:: LinearMusical
+   :members:
+.. autoclass:: Log2
+   :members:
+.. autoclass:: LogNormal
+   :members:
+.. autoclass:: StdEnum
+   :members:
+
+Shared models
+^^^^^^^^^^^^^
+
+.. autoclass:: MusicalTime
+   :members:
