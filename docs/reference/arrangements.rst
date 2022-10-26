@@ -46,35 +46,7 @@ Track
 -----
 
 .. autoclass:: Track
-
-   .. image:: /img/arrangement/track/preview.png
-      :scale: 50 %
-
-   .. grid::
-      :padding: 2 2 3 3
-
-      .. grid-item::
-
-         Performance options:
-
-         * :attr:`motion`
-         * :attr:`position_sync`
-         * :attr:`press`
-         * :attr:`tolerant`
-         * :attr:`trigger_sync`
-         * :attr:`queued`.
-
-      .. grid-item::
-
-         .. image:: /img/arrangement/track/performance-settings.png
-            :align: left
-
-   .. autoattribute:: position_sync
-   .. autoattribute:: press
-   .. autoattribute:: tolerant
-   .. autoattribute:: trigger_sync
-   .. autoattribute:: queued
-   .. autoattribute:: color
+   :members:
 
 .. grid::
 
@@ -118,19 +90,8 @@ Track
 Classes
 -------
 
-.. grid::
-
-   .. grid-item::
-
-      .. autoclass:: TimeSignature
-         :members:
-
-   .. grid-item::
-      :child-align: center
-      :columns: auto
-
-      .. image:: /img/arrangement/time-signature.png
-
+.. autoclass:: TimeSignature
+   :members:
 
 Event IDs
 ---------

@@ -1175,7 +1175,10 @@ class Channel(EventModel):
     """Located at the bottom of :menuselection:`Miscellaneous functions (page)`."""
 
     locked = EventProp[bool](ChannelID.IsLocked)
-    """![](https://bit.ly/3BOBc7j)"""
+    """Whether in a locked state or not; mute / solo acts differently when ``True``.
+
+    ![](https://bit.ly/3BOBc7j)
+    """
 
     name = EventProp[str](PluginID.Name, ChannelID._Name)
     """The name associated with a channel.

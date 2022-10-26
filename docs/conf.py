@@ -10,6 +10,7 @@ import os
 import re
 import sys
 
+import colour
 import m2r2
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -17,6 +18,7 @@ sys.path.insert(0, os.path.abspath(".."))
 from pyflp._descriptors import EventProp, NestedProp, StructProp
 from pyflp._events import EventEnum
 from pyflp._models import ModelBase
+from pyflp.arrangement import _TrackColorProp
 
 BITLY_LINK = re.compile(r"!\[.*\]\((https://bit\.ly/[A-z0-9]*)\)")
 NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
@@ -121,7 +123,9 @@ def add_annotations(app, what, name, obj, options, signature, return_annotation)
     if what == "class" and issubclass(obj, ModelBase):
         annotations = {}
         for name_, type in vars(obj).items():
-            if isinstance(obj, NestedProp):
+            if isinstance(type, _TrackColorProp):
+                annotations[name_] = colour.Color
+            if isinstance(type, NestedProp):
                 annotations[name_] = type._type
             elif hasattr(type, "__orig_class__"):
                 annotations[name_] = type.__orig_class__.__args__[0]
@@ -169,7 +173,7 @@ def include_obsolete_ids(app, what, name, obj, skip, options):
 
 
 def show_model_dunders(app, what, name, obj, skip, options):
-    """ModelBase subclasses show these dunders regardless of any settings."""
+    """Subclasses of ``ModelBase`` show these dunders regardless of any settings."""
     if name in ("__getitem__", "__setitem__", "__iter__", "__len__", "__index__"):
         return False
 
