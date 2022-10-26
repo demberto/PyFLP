@@ -32,9 +32,9 @@ from __future__ import annotations
 import io
 import os
 import pathlib
+import sys
 
 import construct as c
-import fastenum
 
 from ._events import (
     DATA,
@@ -60,7 +60,10 @@ from .project import VALID_PPQS, FileFormat, Project, ProjectID
 __all__ = ["parse", "save"]
 __version__ = "2.0.0a4"
 
-fastenum.enable()
+if sys.version_info < (3, 11):  # https://github.com/Bobronium/fastenum/issues/2
+    import fastenum
+
+    fastenum.enable()  # 50% faster parse()
 
 
 def parse(file: pathlib.Path | str) -> Project:

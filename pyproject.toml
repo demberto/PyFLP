@@ -18,6 +18,7 @@ classifiers = [
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
   "Topic :: Multimedia",
@@ -27,7 +28,7 @@ classifiers = [
 license = { text = "GPL-3.0" }
 dependencies = [
   "colour>=0.1.5",
-  "f-enum>=0.2.0",
+  "f-enum>=0.2.0;python_version<='3.10'",
   "construct-typing @ git+https://github.com/timrid/construct-typing.git@ce871936d9e885c84f2f507c723fc5a7e99c9096",
   "sortedcontainers>=2.4.0",
   "typing_extensions>=4.4.0",
