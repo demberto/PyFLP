@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ``TimeStretching.time``, ``TimeStretching.pitch``, ``TimeStretching.multiplier`` [#87].
 - (Undiscovered) ``MIDIControllerEvent``.
 - ``Delay.mod_x``, ``Delay.mod_y``, ``Delay.fat_mode`` and ``Delay.ping_pong`` [#88].
+- Improve enum performance by using ``f-enum`` library (``pyflp.parse`` is 50% faster).
 
 ### Changed
 

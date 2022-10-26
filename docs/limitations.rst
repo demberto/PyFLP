@@ -43,8 +43,17 @@ Slow is a relative term - to some it might not be noticeable at all.
 Although in my opinion, PyFLP has become way slower since I migrated to
 ``construct``, which provides a lot more benefits than what I did earlier.
 
-The :class:`pyflp._events.EventTree` class is slow as well bacause of its
-need for ``sortedcontainers.SortedList`` which is implemented in pure Python.
+``construct`` has an opt-in compilation feature which although isn't usable
+for all kinds of structs, is available for most of them, which gived quite a
+speed boost for structs that occur a lot (MIDI notes, playlist items to name
+a few.)
+
+* Due to PyFLP's lazily evaluated nature, most delays don't occur upfront i.e
+  during :meth:`pyflp.parse`.
+* Python enums are quite slow, to the point that adding the ``f-enum`` library
+  patch, reduced parse time by 50%.
+* :class:`pyflp._events.EventTree` class' need for ``sortedcontainers.SortedList``
+  which is implemented in pure Python.
 
 I am all ears if anyone has any suggestions on improving PyFLP's performance.
 

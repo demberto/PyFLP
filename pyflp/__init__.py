@@ -34,6 +34,7 @@ import os
 import pathlib
 
 import construct as c
+import fastenum
 
 from ._events import (
     DATA,
@@ -58,6 +59,8 @@ from .project import VALID_PPQS, FileFormat, Project, ProjectID
 
 __all__ = ["parse", "save"]
 __version__ = "2.0.0a4"
+
+fastenum.enable()
 
 
 def parse(file: pathlib.Path | str) -> Project:
