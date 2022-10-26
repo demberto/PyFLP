@@ -204,11 +204,11 @@ class ByteEventBase(PODEventBase[T]):
     def __init__(self, id: EventEnum, data: bytes):
         """
         Args:
-            id (int): **0** to **63**.
-            data (bytes): Event data of size 1.
+            id: **0** to **63**.
+            data: Event data of size 1.
 
         Raises:
-            EventIDOutOfRangeError: When `id` is not in range of 0-63.
+            EventIDOutOfRangeError: When ``id`` is not in range of 0-63.
             InvalidEventChunkSizeError: When size of `data` is not 1.
         """
         super().__init__(id, data)
@@ -240,11 +240,11 @@ class WordEventBase(PODEventBase[T], abc.ABC):
     def __init__(self, id: EventEnum, data: bytes):
         """
         Args:
-            id (int): **64** to **127**.
-            data (bytes): Event data of size 2.
+            id: **64** to **127**.
+            data: Event data of size 2.
 
         Raises:
-            EventIDOutOfRangeError: When `id` is not in range of 64-127.
+            EventIDOutOfRangeError: When ``id`` is not in range of 64-127.
             InvalidEventChunkSizeError: When size of `data` is not 2.
         """
         super().__init__(id, data)
@@ -270,11 +270,11 @@ class DWordEventBase(PODEventBase[T], abc.ABC):
     def __init__(self, id: EventEnum, data: bytes):
         """
         Args:
-            id (int): **128** to **191**.
-            data (bytes): Event data of size 4.
+            id: **128** to **191**.
+            data: Event data of size 4.
 
         Raises:
-            EventIDOutOfRangeError: When `id` is not in range of 128-191.
+            EventIDOutOfRangeError: When ``id`` is not in range of 128-191.
             InvalidEventChunkSizeError: When size of `data` is not 4.
         """
         super().__init__(id, data)
@@ -362,11 +362,11 @@ class StrEventBase(VarintEventBase[str]):
     def __init__(self, id: EventEnum, data: bytes):
         """
         Args:
-            id (int): **192** to **207** or in :attr:`NEW_TEXT_IDS`.
-            data (bytes): ASCII or UTF16 encoded string data.
+            id: **192** to **207** or in :attr:`NEW_TEXT_IDS`.
+            data: ASCII or UTF16 encoded string data.
 
         Raises:
-            ValueError: When `id` is not in 192-207 or in :attr:`NEW_TEXT_IDS`.
+            ValueError: When ``id`` is not in 192-207 or in :attr:`NEW_TEXT_IDS`.
         """
         if id not in {*range(TEXT, DATA), *NEW_TEXT_IDS}:
             raise ValueError(f"Unexpected ID{id!r}")
@@ -403,11 +403,11 @@ class DataEventBase(VarintEventBase[bytes]):
     def __init__(self, id: EventEnum, data: bytes):
         """
         Args:
-            id (int): **208** to **255**.
-            data (bytes): Event data (no size limit).
+            id: **208** to **255**.
+            data: Event data (no size limit).
 
         Raises:
-            EventIDOutOfRange: `id` is not in the range of 208-255.
+            EventIDOutOfRange: ``id`` is not in the range of 208-255.
         """
         if id < DATA:
             raise EventIDOutOfRange(id, DATA, 256)

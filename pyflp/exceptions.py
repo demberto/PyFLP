@@ -72,7 +72,7 @@ class HeaderCorrupted(DataCorrupted, ValueError):
     """Header chunk contains an unexpected / invalid value.
 
     Args:
-        desc (str): A string containing details about what is corrupted.
+        desc: A string containing details about what is corrupted.
     """
 
     def __init__(self, desc: str):

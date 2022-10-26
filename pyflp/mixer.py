@@ -439,8 +439,8 @@ class Insert(EventModel, ModelCollection[Slot]):
         """Returns an effect slot of the specified index or name.
 
         Args:
-            i (int): An index in the range of 0 to :attr:`Mixer.max_slots`
-                or the name of the :class:`Slot`.
+            i: An index in the range of 0 to :attr:`Mixer.max_slots`
+               or the name of the :class:`Slot`.
 
         Raises:
             ModelNotFound: An effect :class:`Slot` with the specified index
@@ -634,9 +634,9 @@ class Mixer(EventModel, ModelCollection[Insert]):
         """Returns an insert with the specified index or name.
 
         Args:
-            i (int | str | slice): An index between 0 to :attr:`Mixer.max_inserts`
-                resembling the one shown by FL Studio or the name of the insert.
-                Use 0 for master and -1 for "current" insert.
+            i: An index between 0 to :attr:`Mixer.max_inserts` resembling the
+                one shown by FL Studio or the name of the insert. Use 0 for
+                master and -1 for "current" insert.
 
         Raises:
             ModelNotFound: An :class:`Insert` with the specifcied name or index

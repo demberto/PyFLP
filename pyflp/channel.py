@@ -1306,7 +1306,7 @@ class Layer(Channel, ModelCollection[Channel]):
         """Returns a child :class:`Channel` with an IID of :attr:`Channel.iid`.
 
         Args:
-            i (int | str | slice): IID or 0-based index of the child(ren).
+            i: IID or 0-based index of the child(ren).
 
         Raises:
             ChannelNotFound: Child(ren) with the specific index or IID couldn't
@@ -1507,8 +1507,8 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
         """Gets a channel from the rack based on its IID or name.
 
         Args:
-            i (str | int | slice): Compared with :attr:`Channel.iid` if an int
-                or slice or with the :attr:`Channel.display_name`.
+            i: Compared with :attr:`Channel.iid` if an int or
+               slice or with the :attr:`Channel.display_name`.
 
         Raises:
             ChannelNotFound: A channel with the specified IID or name isn't found.

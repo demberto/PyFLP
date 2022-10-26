@@ -313,7 +313,7 @@ class Patterns(EventModel):
         """Returns the pattern with the specified index or :attr:`Pattern.name`.
 
         Args:
-            i (int | str): Internal index used by the pattern or its name.
+            i: Internal index used by the pattern or its name.
 
         Raises:
             ModelNotFound: A :class:`Pattern` with the specified name or index

@@ -491,9 +491,9 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         """Returns an arrangement based either on its index or name.
 
         Args:
-            i (int | str | slice): The index of the arrangement in which they
-                occur or :attr:`Arrangement.name` of the arrangement to lookup
-                for or a slice of indexes.
+            i: The index of the arrangement in which they occur or
+               :attr:`Arrangement.name` of the arrangement to lookup for or a
+               slice of indexes.
 
         Raises:
             ModelNotFound: An :class:`Arrangement` with the specifed name or
