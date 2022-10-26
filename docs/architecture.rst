@@ -7,17 +7,33 @@
     - Type annotations
     - Binary data types and streams
 
-.. svgbob::
-   :align: center
-   :fill-color: #ffff00
-   :font-family: Arial
-   :stroke-color: #00ffff
+.. todo::
 
-   +---------------+       +----------------+    +--> Descriptor 1
-   | Events        |       | Models         |   /
-   |               |------>|                |--+
-   | Low level API |       | High level API |   \
-   +---------------+       +----------------+    +--> Descriptor 2
+   Use raw-literal until sphinxcontrib-svgbob supports UTF-8. Check this
+   `issue <https://github.com/sphinx-contrib/svgbob/issues/2>`_.
+
+::
+
+    ┌──────────────────────────────────────────────────────────────────────────┐
+    │     Events - binary representation - low level API - Stage 1 parser      │
+    │                                                                          │
+    │ ┌─────────────────────────┐ ┌─────────────────────────┐ ┌─────────────┐  │
+    │ │  Project-wide / 1-time  │ │      Per-instance       │ │    Shared   │  │
+    │ │┌─────────┐   ┌─────────┐│ │┌─────────┐   ┌─────────┐│ │ ┌─────────┐ │  │
+    │ ││ Event 1 │   │ Event 2 ││ ││ Event 3 │   │ Event 4 ││ │ │ Event 5 │ │  │
+    │ ││ id: 199 │ → │ id: 159 ││→││ id: 64  │ → │ id: 215 ││→│ │ id: 225 │ │  │
+    │ ││ string  │   │ integer ││ ││ integer │   │ struct  ││ │ │   AoS   │ │  │
+    │ │└─────────┘   └─────────┘│ │└─────────┘   └─────────┘│ │ └─────────┘ │  │
+    │ └─────│──────────────│────┘ └─────────────────────────┘ └─────────────┘  │
+    │       │      ╭───────╯          ╭────────╯                     │         │
+    │ ┌───────────────┐ ┌───────┬──────────┬──────────────┐ ┌────────────────┐ │
+    │ │    Model A    │ │ Model │ Model B1 │ attr_64: int │ │ Model C1: e[0] │ │
+    │ │ attr_199: str │ │ list  ├──────────┼──────────────┤ ├────────────────┤ │
+    │ │ attr_159: int │ │ of B  │ Model B2 │ attr_215: X  │ │ Model C2: e[1] │ │
+    │ └───────────────┘ └───────┴──────────┴──────────────┘ └────────────────┘ │
+    │                                                                          │
+    │    Models - PyFLP's representation - high level API - Stage 2 parser     │
+    └──────────────────────────────────────────────────────────────────────────┘
 
 PyFLP provides a high-level and a low-level API. Normally the high-level API
 should get your work done. However, it might be possible that due to a bug or
@@ -195,6 +211,10 @@ variable size events to represent what I call a :ref:`model <architecture-model>
 
    Explain different types of "custom structures" (:class:`DataEventBase`
    subclasses).
+
+.. todo::
+
+   Explain :class:`EventTree`
 
 .. _architecture-model:
 
