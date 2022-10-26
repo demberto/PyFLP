@@ -267,10 +267,14 @@ class ParametersEvent(StructEventBase):
         "arp.time" / c.Optional(c.Float32l),  # 56
         "arp.gate" / c.Optional(c.Float32l),  # 60
         "arp.slide" / c.Optional(c.Flag),  # 61
-        "_u3" / c.Optional(c.Bytes(19)),  # 80
+        "_u3" / c.Optional(c.Bytes(1)),  # 62
+        "time.full_porta" / c.Optional(c.Flag),  # 63
+        "_u4" / c.Optional(c.Bytes(1)),  # 64
+        "time.gate" / c.Optional(c.Int16ul),  # 66
+        "_u5" / c.Optional(c.Bytes(14)),  # 80
         "fx.normalize" / c.Optional(c.Flag),  # 81
         "fx.inverted" / c.Optional(c.Flag),  # 82
-        "_u4" / c.Optional(c.Bytes(1)),  # 83
+        "_u6" / c.Optional(c.Bytes(1)),  # 83
         "content.declick_mode" / c.Optional(StdEnum[DeclickMode](c.Int8ul)),  # 84
         "fx.crossfade" / c.Optional(c.Int32ul),  # 88
         "fx.trim" / c.Optional(c.Int32ul),  # 92
@@ -279,13 +283,13 @@ class ParametersEvent(StructEventBase):
         "stretching.pitch" / c.Optional(c.Int32sl),  # 104
         "stretching.multiplier" / c.Optional(Log2(c.Int32sl, 10000)),  # 108
         "stretching.mode" / c.Optional(StdEnum[StretchMode](c.Int32sl)),  # 112
-        "_u6" / c.Optional(c.Bytes(21)),  # 133
+        "_u7" / c.Optional(c.Bytes(21)),  # 133
         "fx.start" / LogNormal(c.Int16ul[2], (0, 61440)),  # 137
-        "_u7" / c.Optional(c.Bytes(4)),  # 141
+        "_u8" / c.Optional(c.Bytes(4)),  # 141
         "fx.length" / LogNormal(c.Int16ul[2], (0, 61440)),  # 145
-        "_u8" / c.Optional(c.Bytes(3)),  # 148
+        "_u9" / c.Optional(c.Bytes(3)),  # 148
         "playback.start_offset" / c.Optional(c.Int32ul),  # 152
-        "_u9" / c.Optional(c.Bytes(5)),  # 157
+        "_u10" / c.Optional(c.Bytes(5)),  # 157
         "fx.fix_trim" / c.Optional(c.Flag),  # 158 (FL 20.8.4 max)
         "_extra" / c.GreedyBytes,  # * 168 as of 20.9.1
     )
@@ -345,7 +349,7 @@ class ChannelID(EventEnum):
     Pogo = (WORD + 22, U16Event)
     # _DotReso = WORD + 23
     # _DotCutOff = WORD + 24
-    # _ShiftDelay = WORD + 25
+    TimeShift = (WORD + 25, U16Event)
     # _Dot = WORD + 27
     # _DotRel = WORD + 32
     # _DotShift = WORD + 28
@@ -576,9 +580,32 @@ class Time(EventModel, ModelReprMixin):
     """
 
     swing = EventProp[int](ChannelID.Swing)
-    # gate: int
-    # shift: int
-    # is_full_porta: bool
+    """Percentage of the ``ChannelRack.swing`` that affects this channel.
+
+    Linear. Min = 0. Max = 128. Defaults to maximum.
+    """
+
+    gate = StructProp[int](ChannelID.Parameters, prop="time.gate")
+    """Logarithmic. Defaults to disabled state.
+
+    | Type     | Value | Representation |
+    |----------|-------|----------------|
+    | Min      | 450   | 0:03           |
+    | Max      | 1446  | 4:00           |
+    | Disabled | 1447  | Off            |
+    """
+
+    shift = EventProp[int](ChannelID.TimeShift)
+    """Fine time shift. Nonlinear. Defaults to minimum.
+
+    | Type | Value | Representation |
+    |------|-------|----------------|
+    | Min  | 0     | 0:00           |
+    | Max  | 1024  | 1:00           |
+    """
+
+    full_porta = StructProp[bool](ChannelID.Parameters, prop="time.full_porta")
+    """Whether :attr:`gate` is bypassed when :attr:`Polyphony.porta` is on."""
 
 
 class Reverb(EventModel, ModelReprMixin):
@@ -939,10 +966,10 @@ class Polyphony(EventModel, ModelReprMixin):
     ![](https://bit.ly/3DlvWcl)
     """
 
-    is_mono = FlagProp(_PolyphonyFlags.Mono)
+    mono = FlagProp(_PolyphonyFlags.Mono)
     """Whether monophonic mode is enabled or not."""
 
-    is_porta = FlagProp(_PolyphonyFlags.Porta)
+    porta = FlagProp(_PolyphonyFlags.Porta)
     """*New in FL Studio v3.3.0*."""
 
     max = StructProp[int]()
@@ -1369,7 +1396,7 @@ class _SamplerInstrument(Channel):
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
     """:menuselection:`Miscellaneous functions -> Polyphony`"""
 
-    time = NestedProp(Time, ChannelID.Swing)
+    time = NestedProp(Time, ChannelID.Swing, ChannelID.TimeShift, ChannelID.Parameters)
     """:menuselection:`Miscellaneous functions -> Time`"""
 
     @property
@@ -1522,7 +1549,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
         """Yields all the channels found in the project."""
         ch_dict: dict[int, Channel] = {}
 
-        for et in self.events.divide(ChannelID.New, *ChannelID):
+        for et in self.events.divide(ChannelID.New, *ChannelID, *PluginID):
             iid = et.first(ChannelID.New).value
             typ = et.first(ChannelID.Type).value
 
@@ -1542,7 +1569,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
                 if not et.first(PluginID.InternalName).value and ct == Instrument:
                     ct = Sampler
 
-            if ct is not None and iid is not None:
+            if iid is not None:
                 cur_ch = ch_dict[iid] = ct(et, channels=ch_dict)
                 yield cur_ch
 

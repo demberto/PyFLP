@@ -21,12 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (Undiscovered) `MIDIControllerEvent`.
 - `Delay.mod_x`, `Delay.mod_y`, `Delay.fat_mode` and `Delay.ping_pong` [#88].
 - Improve enum performance by using `f-enum` library (`pyflp.parse` is 50% faster).
+- `Time.gate`, `Time.shift` and `Time.full_porta` [#89].
 
 ### Changed
 
 - `PlaylistItemBase.offsets` now returns start and end offsets.
 - Use git commit for `construct-typing` which has fixed certain bugs.
 - Rename `PlaylistItemBase` to `PLItemBase` and `PatternPlaylistItem` to `PatternPLItem`.
+- Rename `Polyphony` members `is_mono` to `mono` and `is_porta` to `porta`.
 
 ### Removed
 
@@ -37,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#84]: https://github.com/demberto/PyFLP/issues/84
 [#87]: https://github.com/demberto/PyFLP/issues/87
 [#88]: https://github.com/demberto/PyFLP/issues/88
+[#89]: https://github.com/demberto/PyFLP/issues/89
 
 ## [2.0.0a4] - 2022-10-22
 

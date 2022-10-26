@@ -6,6 +6,7 @@ from typing import Any, Callable
 import colour
 import pytest
 
+from pyflp import Project
 from pyflp.channel import (
     Automation,
     Channel,
@@ -68,8 +69,8 @@ def load_sampler(load_channel: Any):
     return wrapper
 
 
-def test_channels(rack: ChannelRack):
-    assert len(rack) == 19
+def test_channels(project: Project, rack: ChannelRack):
+    assert len(rack) == project.channel_count
     assert rack.fit_to_steps is None
     assert rack.height == 646
     assert [group.name for group in rack.groups] == ["Audio", "Generators", "Unsorted"]
@@ -136,14 +137,22 @@ def test_instrument_keyboard(load_instrument: InstrumentFixture):
 
 def test_instrument_polyphony(load_instrument: InstrumentFixture):
     polyphony = load_instrument("polyphony.fst").polyphony
-    assert polyphony.is_mono
-    assert polyphony.is_porta
+    assert polyphony.mono
+    assert polyphony.porta
     assert polyphony.max == 4
     assert polyphony.slide == 820
 
 
 def test_instrument_routing(load_instrument: InstrumentFixture):
     assert load_instrument("routed.fst").insert == 125
+
+
+def test_instrument_time(load_instrument: InstrumentFixture):
+    time = load_instrument("time.fst").time
+    assert time.full_porta
+    assert time.gate == 450
+    assert time.shift == 1024
+    assert time.swing == 64
 
 
 def test_instrument_tracking(load_instrument: InstrumentFixture):
