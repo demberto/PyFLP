@@ -36,7 +36,7 @@ def arrangement(arrangements: Arrangements):
 
 @pytest.fixture(scope="session")
 def tracks(arrangement: Callable[[int], Arrangement]):
-    return tuple(arrangement(0).tracks)[:21]
+    return tuple(arrangement(0).tracks)[:22]
 
 
 def test_track_color(tracks: tuple[Track, ...]):
@@ -118,6 +118,7 @@ def test_track_motion(tracks: tuple[Track, ...]):
 
 def test_track_name(tracks: tuple[Track, ...]):
     assert [track.name for track in tracks] == [
+        None,
         "Enabled",
         "Disabled",
         "Locked",

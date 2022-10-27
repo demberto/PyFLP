@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `EventTree.divide` fails to yield the only element [#90].
+- `TrackID.Name` events were grouped instead of getting divided [#96].
 
 ### Removed
 
@@ -53,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#90]: https://github.com/demberto/PyFLP/issues/90
 [#93]: https://github.com/demberto/PyFLP/issues/93
 [#95]: https://github.com/demberto/PyFLP/issues/95
+[#96]: https://github.com/demberto/PyFLP/issues/96
 
 ## [2.0.0a4] - 2022-10-22
 

@@ -438,7 +438,7 @@ class Arrangement(EventModel):
         if ArrangementID.Playlist in self.events:
             pl_event = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
 
-        for track_idx, ed in enumerate(self.events.group(*TrackID)):
+        for track_idx, ed in enumerate(self.events.divide(TrackID.Data, *TrackID)):
             items: list[PLItemBase] = []
             for item in pl_event or []:
                 idx = item["track_index"]
