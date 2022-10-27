@@ -90,3 +90,32 @@ def test_vst_plugin(plugin: PluginFixture[VSTPlugin]):
         djmfilter.plugin_path
         == r"C:\Program Files\Common Files\VST2\Xfer Records\DJMFilter_x64.dll"
     )
+
+
+def test_fruity_wrapper(plugin: PluginFixture[VSTPlugin]):
+    wrapper = plugin("fruity-wrapper.fst", VSTPlugin)
+
+    # VSTPluginEvent properties
+    assert wrapper.automation.notify_changes
+    assert wrapper.compatibility.buffers_maxsize
+    assert wrapper.compatibility.fast_idle
+    assert not wrapper.compatibility.fixed_buffers
+    assert wrapper.compatibility.process_maximum
+    assert wrapper.compatibility.reset_on_transport
+    assert wrapper.compatibility.send_loop
+    assert not wrapper.compatibility.use_time_offset
+    assert wrapper.midi.input == 6
+    assert wrapper.midi.output == 9
+    assert wrapper.midi.pb_range == 36
+    assert not wrapper.midi.send_modx
+    assert not wrapper.midi.send_pb
+    assert wrapper.midi.send_release
+    assert wrapper.processing.allow_sd
+    assert not wrapper.processing.bridged
+    assert wrapper.processing.keep_state
+    assert wrapper.processing.multithreaded
+    assert wrapper.processing.notify_render
+    assert wrapper.ui.accept_drop
+    assert not wrapper.ui.always_update
+    assert wrapper.ui.dpi_aware
+    assert not wrapper.ui.scale_editor

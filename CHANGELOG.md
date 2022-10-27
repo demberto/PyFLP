@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve enum performance by using `f-enum` library (`pyflp.parse` is 50% faster).
 - `Time.gate`, `Time.shift` and `Time.full_porta` [#89].
 - *Experimental* Python 3.11 support is back.
+- A shit ton of flags in `VSTPlugin` and refactoring [#95].
 
 ### Changed
 
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `PlaylistItemBase` to `PLItemBase` and `PatternPlaylistItem` to `PatternPLItem`.
 - Rename `Polyphony` members `is_mono` to `mono` and `is_porta` to `porta`.
 - `NoModelsFound` also bases `LookupError` now.
+- Compiled `VSTPluginEvent.STRUCT`.
 
 ### Fixed
 
@@ -40,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `PlaylistItemBase.start_offset` and `PlaylistItemBase.end_offset`.
 - Redundant exceptions `ExpectedValue`, `UnexpectedType`.
+- Undiscovered `num_inputs`, `num_outputs` and `vst_number` from `VSTPlugin`.
 
 [#55]: https://github.com/demberto/PyFLP/issues/55
 [#84]: https://github.com/demberto/PyFLP/issues/84

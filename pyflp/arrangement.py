@@ -566,7 +566,10 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
                 raise ModelNotFound(index) from exc
 
     loop_pos = EventProp[int](ArrangementsID.LoopPos)
-    """*New in FL Studio v1.3.8*."""
+    """Playlist loop start and end points,
+
+    *New in FL Studio v1.3.8*.
+    """
 
     @property
     def max_tracks(self) -> Literal[500, 199]:

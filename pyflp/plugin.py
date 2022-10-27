@@ -18,7 +18,7 @@ from __future__ import annotations
 import enum
 import sys
 import warnings
-from typing import Any, ClassVar, Dict, Generic, TypeVar
+from typing import Any, ClassVar, Dict, Generic, TypeVar, cast
 
 if sys.version_info >= (3, 8):
     from typing import Literal, Protocol, get_args, runtime_checkable
@@ -28,7 +28,7 @@ else:
 import construct as c
 import construct_typed as ct
 
-from ._descriptors import FlagProp, RWProperty, StdEnum, StructProp
+from ._descriptors import FlagProp, NamedPropMixin, RWProperty, StdEnum, StructProp
 from ._events import (
     DATA,
     DWORD,
@@ -160,10 +160,10 @@ class WrapperEvent(StructEventBase):
 
 @enum.unique
 class _VSTPluginEventID(ct.EnumBase):
-    def __new__(cls, id: int, key: str | None = None):
+    def __new__(cls, id: int, ascii: bool = False):
         obj = int.__new__(cls, id)
         obj._value_ = id
-        setattr(obj, "key", key)
+        setattr(obj, "ascii", ascii)
         return obj
 
     MIDI = 1
@@ -172,16 +172,60 @@ class _VSTPluginEventID(ct.EnumBase):
     Inputs = 31
     Outputs = 32
     PluginInfo = 50
-    FourCC = (51, "fourcc")  # Not present for Waveshells & VST3
-    GUID = (52, "guid")
-    State = (53, "state")
-    Name = (54, "name")
-    PluginPath = (55, "plugin_path")
-    Vendor = (56, "vendor")
+    FourCC = (51, True)  # Not present for Waveshells & VST3
+    GUID = 52
+    State = 53
+    Name = (54, True)
+    PluginPath = (55, True)
+    Vendor = (56, True)
     _57 = 57  # TODO, not present for Waveshells
 
 
+class _VSTFlags(enum.IntFlag):
+    SendPBRange = 1 << 0
+    FixedSizeBuffers = 1 << 1
+    NotifyRender = 1 << 2
+    ProcessInactive = 1 << 3
+    DontSendRelVelo = 1 << 5
+    DontNotifyChanges = 1 << 6
+    SendLoopPos = 1 << 11
+    AllowThreaded = 1 << 12
+    KeepFocus = 1 << 15
+    DontKeepCPUState = 1 << 16
+    SendModX = 1 << 17
+    LoadBridged = 1 << 18
+    ExternalWindow = 1 << 21
+    UpdateWhenHidden = 1 << 23
+    DontResetOnTransport = 1 << 25
+    DPIAwareBridged = 1 << 26
+    AcceptFileDrop = 1 << 28
+    AllowSmartDisable = 1 << 29
+    ScaleEditor = 1 << 30
+    DontUseTimeOffset = 1 << 31
+
+
+class _VSTFlags2(enum.IntFlag):
+    ProcessMaxSize = 1 << 0
+    UseMaxFromHost = 1 << 1
+
+
 class VSTPluginEvent(StructEventBase):
+    _MIDIStruct = c.Struct(
+        "input" / c.Optional(c.Int32sl),  # 4
+        "output" / c.Optional(c.Int32sl),  # 8
+        "pb_range" / c.Optional(c.Int32ul),  # 12
+        "_extra" / c.GreedyBytes,  # upto 20
+    ).compile()
+
+    _FlagsStruct = c.Struct(
+        "_u1" / c.Optional(c.Bytes(9)),  # 9
+        "flags" / c.Optional(StdEnum[_VSTFlags](c.Int32ul)),  # 13
+        "flags2" / c.Optional(StdEnum[_VSTFlags2](c.Int32ul)),  # 17
+        "_u2" / c.Optional(c.Bytes(5)),  # 22
+        "fast_idle" / c.Optional(c.Flag),  # 23
+        "_extra" / c.GreedyBytes,
+    ).compile()
+
     STRUCT = c.Struct(
         "type" / c.Int32ul,  # * 8 or 10 for VSTs, but I am not forcing it
         "events"
@@ -190,10 +234,21 @@ class VSTPluginEvent(StructEventBase):
                 "id" / StdEnum[_VSTPluginEventID](c.Int32ul),
                 # ! Using a c.Select or c.IfThenElse doesn't work here
                 # Check https://github.com/construct/construct/issues/993
-                "data" / c.Prefixed(c.Int64ul, c.GreedyBytes),
+                "data"
+                / c.Prefixed(
+                    c.Int64ul,
+                    c.Switch(
+                        c.this["id"],
+                        {
+                            _VSTPluginEventID.MIDI: _MIDIStruct,
+                            _VSTPluginEventID.Flags: _FlagsStruct,
+                        },
+                        default=c.GreedyBytes,
+                    ),
+                ),
             ),
         ),
-    )
+    ).compile()
 
     def __init__(self, id: Any, data: bytearray):
         if data[0] not in (8, 10):
@@ -206,33 +261,33 @@ class VSTPluginEvent(StructEventBase):
             )
         super().__init__(id, data)
 
-    def __getitem__(self, key: str) -> str | bytes:
-        for event in self._struct["events"]:
-            if event["id"].key == key:
-                if self._is_ascii_event(event["id"]):
-                    return event["data"].decode("ascii")
-                return event["data"]
+    def __getitem__(self, key: Any):
+        if not isinstance(key, _VSTPluginEventID):
+            raise TypeError("Expected 'key' to be of type _VSTPluginEventID")
+
+        for e in self._struct["events"]:
+            if e["id"] == key:
+                return e["data"].decode("ascii") if e["id"].ascii else e["data"]
         raise AttributeError(f"No event with key {key!r} found")
 
-    def __setitem__(self, key: str, value: str | bytes):
-        for event in self._struct["events"]:
-            if self._is_ascii_event(event["id"]) and isinstance(value, str):
+    def __setitem__(self, key: Any, value: Any):
+        if not isinstance(key, _VSTPluginEventID):
+            raise TypeError("Expected 'key' to be of type _VSTPluginEventID")
+
+        for e in self._struct["events"]:
+            if e["id"].ascii and isinstance(value, str):
                 try:
                     value.encode("ascii")
                 except UnicodeEncodeError as exc:
                     raise ValueError("Strings must have only ASCII data") from exc
 
-            if event["id"].key == key:
-                event["size"] = len(value)
-                event["data"] = value
+            if e["id"].key == key:
+                e["size"] = len(value)
+                e["data"] = value
 
         # Errors if any, will be raised here itself, so its
         # better not to override __bytes__ for this part
         self._data = self.STRUCT.build(self._struct)
-
-    @staticmethod
-    def _is_ascii_event(id: _VSTPluginEventID):
-        return not getattr(id, "key").isdecimal()
 
 
 @enum.unique
@@ -327,9 +382,51 @@ class PluginProp(RWProperty[AnyPlugin]):
         instance.events[PluginID.Wrapper] = value.events[PluginID.Wrapper]
 
 
-class _PluginDataProp(StructProp[T]):
-    def __init__(self, prop: str | None = None):
-        super().__init__(PluginID.Data, prop=prop)
+class _NativePluginProp(StructProp[T]):
+    def __init__(self, prop: str | None = None, **kwds: Any):
+        super().__init__(PluginID.Data, prop=prop, **kwds)
+
+
+class _VSTPluginProp(RWProperty[T], NamedPropMixin):
+    def __init__(self, id: _VSTPluginEventID, prop: str | None = None):
+        self._id = id
+        NamedPropMixin.__init__(self, prop)
+
+    def __get__(self, instance: EventModel, _=None) -> T:
+        value = cast(VSTPluginEvent, instance.events.first(PluginID.Data))[self._id]
+        return self._get(value)
+
+    def _get(self, value: Any) -> T:
+        return cast(T, value if isinstance(value, (str, bytes)) else value[self._prop])
+
+    def __set__(self, instance: EventModel, value: T):
+        self._set(cast(VSTPluginEvent, instance.events.first(PluginID.Data)), value)
+
+    def _set(self, event: VSTPluginEvent, value: T):
+        if self._prop is None:
+            event[self._id] = value
+        else:
+            event[self._id][self._prop] = value
+
+
+class _VSTFlagProp(_VSTPluginProp[bool]):
+    def __init__(self, flag: enum.IntFlag, prop: str = "flags", inverted: bool = False):
+        super().__init__(_VSTPluginEventID.Flags, prop)
+        self._flag = flag
+        self._inverted = inverted
+
+    def _get(self, value: Any) -> bool:
+        retbool = self._flag in value[self._prop]
+        return retbool if not self._inverted else not retbool
+
+    def _set(self, event: VSTPluginEvent, value: bool):
+        if self._inverted:
+            value = not value
+
+        if value:
+            event[self._id][self._prop] |= value
+        else:
+            event[self._id][self._prop] &= ~value
 
 
 class PluginIOInfo(EventModel):
@@ -345,48 +442,208 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     """
 
     INTERNAL_NAME = "Fruity Wrapper"
-    fourcc = _PluginDataProp[str]()
+
+    class _AutomationOptions(EventModel):
+        """See :attr:`VSTPlugin.automation`."""
+
+        notify_changes = _VSTFlagProp(_VSTFlags.DontNotifyChanges, inverted=True)
+        """Record parameter changes as automation.
+
+        :guilabel:`Notify about parameter changes`. Defaults to ``True``.
+        """
+
+    class _CompatibilityOptions(EventModel):
+        """See :attr:`VSTPlugin.compatibility`."""
+
+        buffers_maxsize = _VSTFlagProp(_VSTFlags2.UseMaxFromHost, prop="flags2")
+        """:guilabel:`Use maximum buffer size from host`. Defaults to ``False``."""
+
+        fast_idle = _VSTPluginProp[bool](_VSTPluginEventID.Flags)
+        """Increases idle rate - can make plugin GUI feel more responsive if its slow.
+
+        May increase CPU usage. Defaults to ``False``.
+        """
+
+        fixed_buffers = _VSTFlagProp(_VSTFlags.FixedSizeBuffers)
+        """:guilabel:`Use fixed size buffers`. Defaults to ``False``.
+
+        Makes FL Studio send fixed size buffers instead of variable ones when ``True``.
+        Can fix rendering errors caused by plugins. Increases latency by 2ms.
+        """
+
+        process_maximum = _VSTFlagProp(_VSTFlags2.ProcessMaxSize, prop="flags2")
+        """:guilabel:`Process maximum size buffers`. Defaults to ``False``."""
+
+        reset_on_transport = _VSTFlagProp(_VSTFlags.DontResetOnTransport, inverted=True)
+        """:guilabel:`Reset plugin when FL Studio resets`. Defaults to ``True``."""
+
+        send_loop = _VSTFlagProp(_VSTFlags.SendLoopPos)
+        """Lets the plugin know about :attr:`Arrangemnt.loop_pos`.
+
+        :guilabel:`Send loop position`. Defaults to ``True``.
+        """
+
+        use_time_offset = _VSTFlagProp(_VSTFlags.DontUseTimeOffset, inverted=True)
+        """Adjust time information reported by plugin.
+
+        Can fix timing issues caused by plugins in FL Studio <20.7 project.
+        :guilabel:`Use time offset`. Defaults to ``False``.
+        """
+
+    class _MIDIOptions(EventModel):
+        """See :attr:`VSTPlugin.midi`.
+
+        ![](https://bit.ly/3NbGr4U)
+        """
+
+        input = _VSTPluginProp[int](_VSTPluginEventID.MIDI)
+        """MIDI Input Port. Min = 0, Max = 255. Not selected = -1 (default)."""
+
+        output = _VSTPluginProp[int](_VSTPluginEventID.MIDI)
+        """MIDI Output Port. Min = 0, Max = 255. Not selected = -1 (default)."""
+
+        pb_range = _VSTPluginProp[int](_VSTPluginEventID.MIDI)
+        """Pitch bend range MIDI RPN sent to the plugin (in semitones).
+
+        Min = 1. Max = 48. Defaults to 12.
+        """
+
+        send_modx = _VSTFlagProp(_VSTFlags.SendModX)
+        """:guilabel:`Send MOD X as polyphonic aftertouch`. Defaults to ``False``."""
+
+        send_pb = _VSTFlagProp(_VSTFlags.SendPBRange)
+        """:guilabel:`Send pitch bend range (semitones)`. Defaults to ``False``.
+
+        See also:
+            :attr:`pb_range` - Sent to plugin as a MIDI RPN if this is ``True``.
+        """
+
+        send_release = _VSTFlagProp(_VSTFlags.DontSendRelVelo, inverted=True)
+        """Whether release velocity should be sent in note off messages.
+
+        :guilabel:`Send note release velocity`. Defaults to ``True``.
+        """
+
+    class _ProcessingOptions(EventModel):
+        """See :attr:`VSTPlugin.processing`."""
+
+        allow_sd = _VSTFlagProp(_VSTFlags.AllowSmartDisable)
+        """:guilabel:`Allow smart disable`. Defaults to ``True``.
+
+        Disables the :attr:`VSTPlugin.smart_disable` feature if ``False``.
+        """
+
+        bridged = _VSTFlagProp(_VSTFlags.LoadBridged)
+        """Load a plugin in separate process.
+
+        :guilabel:`Make bridged`. Defaults to ``False``.
+        """
+
+        external = _VSTFlagProp(_VSTFlags.ExternalWindow)
+        """Keep plugin editor in bridge process.
+
+        :guilabel:`External window`. Defaults to ``False``.
+        """
+
+        keep_state = _VSTFlagProp(_VSTFlags.DontKeepCPUState, inverted=True)
+        """Don't touch unless you have issues like DC offsets, spikes and crashes.
+
+        :guilabel:`Ensure processor state in callbacks`. Defaults to ``True``.
+        """
+
+        multithreaded = _VSTFlagProp(_VSTFlags.AllowThreaded)
+        """Allow plugin to be multi-threaded by FL Studio.
+
+        Disables the :attr:`VSTPlugin.multithreaded` feature if ``False``.
+
+        :guilabel:`Allow threaded processing`. Defaults to ``True``.
+        """
+
+        notify_render = _VSTFlagProp(_VSTFlags.NotifyRender)
+        """Lets the plugin know when rendering to audio file.
+
+        This can be used by the plugin to switch to HQ processing or disable
+        output entirely if it is in demo mode (depends on the plugin logic).
+
+        :guilabel:`Notify about rendering mode`. Defaults to ``True``.
+        """
+
+        process_inactive = _VSTFlagProp(_VSTFlags.ProcessInactive)
+        """Make FL Studio also process inputs / outputs marked as inactive by plugin.
+
+        :guilabel:`Process inactive inputs and outputs`. Defaults to ``True``.
+        """
+
+    class _UIOptions(EventModel):
+        """See :attr:`VSTPlugin.ui`..
+
+        ![](https://bit.ly/3Nb3dtP)
+        """
+
+        accept_drop = _VSTFlagProp(_VSTFlags.AcceptFileDrop)
+        """Host is bypassed when a file is dropped on the plugin editor.
+
+        :guilabel:`Accept dropped files`. Defaults to ``False``.
+        """
+
+        always_update = _VSTFlagProp(_VSTFlags.UpdateWhenHidden)
+        """Whether plugin UI should be updated when hidden; default to ``False``."""
+
+        dpi_aware = _VSTFlagProp(_VSTFlags.DPIAwareBridged)
+        """Enable if plugin editors look too big or small.
+
+        :guilabel:`DPI aware when bridged`. Defaults to ``True``.
+        """
+
+        scale_editor = _VSTFlagProp(_VSTFlags.ScaleEditor)
+        """Scale dimensions of editor that appear cut-off on high-res screens.
+
+        :guilabel:`Scale editor dimensions`. Defaults to ``False``.
+        """
+
+    def __init__(self, events: EventTree, **kw: Any):
+        super().__init__(events, **kw)
+
+        # This doesn't break lazy evaluation in any way
+        self.automation = self._AutomationOptions(events)
+        self.compatibility = self._CompatibilityOptions(events)
+        self.midi = self._MIDIOptions(events)
+        self.processing = self._ProcessingOptions(events)
+        self.ui = self._UIOptions(events)
+
+    fourcc = _VSTPluginProp[str](_VSTPluginEventID.FourCC)
     """A unique four character code identifying the plugin.
 
     A database can be found on Steinberg's developer portal.
     """
 
-    guid = _PluginDataProp[bytes]()  # See issue #8
-    midi_in = _PluginDataProp[int]()
-    """MIDI Input Port. Min: 0, Max: 255."""
-
-    midi_out = _PluginDataProp[int]()
-    """MIDI Output Port. Min: 0, Max: 255."""
-
-    name = _PluginDataProp[str]()
+    guid = _VSTPluginProp[bytes](_VSTPluginEventID.GUID)  # See issue #8
+    name = _VSTPluginProp[str](_VSTPluginEventID.Name)
     """Factory name of the plugin."""
 
-    num_inputs = _PluginDataProp[int]()
-    """Number of inputs the plugin supports."""
+    # num_inputs = _VSTPluginProp[int]()
+    # """Number of inputs the plugin supports."""
 
-    num_outputs = _PluginDataProp[int]()
-    """Number of outputs the plugin supports."""
+    # num_outputs = _VSTPluginProp[int]()
+    # """Number of outputs the plugin supports."""
 
-    pitch_bend = _PluginDataProp[int]()
-    """Pitch bend range sent to the plugin (in semitones)."""
-
-    plugin_path = _PluginDataProp[str]()
+    plugin_path = _VSTPluginProp[str](_VSTPluginEventID.PluginPath)
     """The absolute path to the plugin binary."""
 
-    state = _PluginDataProp[bytes]()
+    state = _VSTPluginProp[bytes](_VSTPluginEventID.State)
     """Plugin specific preset data blob."""
 
-    vendor = _PluginDataProp[int]()
+    vendor = _VSTPluginProp[str](_VSTPluginEventID.Vendor)
     """Plugin developer (vendor) name."""
 
-    vst_number = _PluginDataProp[int]()  # TODO
+    # vst_number = _VSTPluginProp[int]()  # TODO
 
 
 class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3Bk3aGK)"""
 
     INTERNAL_NAME = "BooBass"
-    bass = _PluginDataProp[int]()
+    bass = _NativePluginProp[int]()
     """Volume of the bass region.
 
     | Min | Max   | Default |
@@ -394,7 +651,7 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     | 0   | 65535 | 32767   |
     """
 
-    high = _PluginDataProp[int]()
+    high = _NativePluginProp[int]()
     """Volume of the high region.
 
     | Min | Max   | Default |
@@ -402,7 +659,7 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     | 0   | 65535 | 32767   |
     """
 
-    mid = _PluginDataProp[int]()
+    mid = _NativePluginProp[int]()
     """Volume of the mid region.
 
     | Min | Max   | Default |
@@ -415,7 +672,7 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3RWItqU)"""
 
     INTERNAL_NAME = "Fruity Balance"
-    pan = _PluginDataProp[int]()
+    pan = _NativePluginProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -425,7 +682,7 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     | Default | 0     | Centred        |
     """
 
-    volume = _PluginDataProp[int]()
+    volume = _NativePluginProp[int]()
     """Logarithmic.
 
     | Type    | Value | Representation |
@@ -440,7 +697,7 @@ class FruityCenter(_PluginBase[FruityCenterEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3TA9IIv)"""
 
     INTERNAL_NAME = "Fruity Center"
-    enabled = _PluginDataProp[bool]()
+    enabled = _NativePluginProp[bool]()
     """Removes DC offset if True; effectively behaving like a bypass button.
 
     Labelled as **Status** for some reason in the UI.
@@ -451,8 +708,8 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     """![](https://bit.ly/3qT6Jil)"""
 
     INTERNAL_NAME = "Fruity Fast Dist"
-    kind = _PluginDataProp[Literal["A", "B"]]()
-    mix = _PluginDataProp[int]()
+    kind = _NativePluginProp[Literal["A", "B"]]()
+    mix = _NativePluginProp[int]()
     """Linear. Defaults to maximum value.
 
     | Type | Value | Mix (wet) |
@@ -461,7 +718,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     | Max  | 128   | 100%      |
     """
 
-    post = _PluginDataProp[int]()
+    post = _NativePluginProp[int]()
     """Linear. Defaults to maximum value.
 
     | Type | Value | Mix (wet) |
@@ -470,7 +727,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     | Max  | 128   | 100%      |
     """
 
-    pre = _PluginDataProp[int]()
+    pre = _NativePluginProp[int]()
     """Linear.
 
     | Type    | Value | Percentage |
@@ -480,7 +737,7 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     | Default | 128   | 67%        |
     """
 
-    threshold = _PluginDataProp[int]()
+    threshold = _NativePluginProp[int]()
     """Linear, Stepped. Defaults to maximum value.
 
     | Type | Value | Percentage |
@@ -494,16 +751,16 @@ class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixi
     """![](https://bit.ly/3RHa4g5)"""
 
     INTERNAL_NAME = "Fruity NoteBook 2"
-    active_page = _PluginDataProp[int]()
+    active_page = _NativePluginProp[int]()
     """Active page number of the notebook. Min: 0, Max: 100."""
 
-    editable = _PluginDataProp[bool]()
+    editable = _NativePluginProp[bool]()
     """Whether the notebook is marked as editable or read-only.
 
     This attribute is just a visual marker used by FL Studio.
     """
 
-    pages = _PluginDataProp[Dict[int, str]]()
+    pages = _NativePluginProp[Dict[int, str]]()
     """A dict of page numbers to their contents."""
 
 
@@ -511,7 +768,7 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3DqjvMu)"""
 
     INTERNAL_NAME = "Fruity Send"
-    dry = _PluginDataProp[int]()
+    dry = _NativePluginProp[int]()
     """Linear. Defaults to maximum value.
 
     | Type | Value | Mix (wet) |
@@ -520,7 +777,7 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     | Max  | 256   | 100%      |
     """
 
-    pan = _PluginDataProp[int]()
+    pan = _NativePluginProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -530,10 +787,10 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     | Default | 0     | Centred        |
     """
 
-    send_to = _PluginDataProp[int]()
+    send_to = _NativePluginProp[int]()
     """Target insert index; depends on insert routing. Defaults to -1 (Master)."""
 
-    volume = _PluginDataProp[int]()
+    volume = _NativePluginProp[int]()
     """Logarithmic.
 
     | Type    | Value | Representation |
@@ -548,7 +805,7 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
     """![](https://bit.ly/3BCWfJX)"""
 
     INTERNAL_NAME = "Fruity Soft Clipper"
-    post = _PluginDataProp[int]()
+    post = _NativePluginProp[int]()
     """Linear.
 
     | Type    | Value | Mix (wet) |
@@ -558,7 +815,7 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
     | Default | 128   | 80%       |
     """
 
-    threshold = _PluginDataProp[int]()
+    threshold = _NativePluginProp[int]()
     """Logarithmic.
 
     | Type    | Value | Representation |
@@ -575,10 +832,10 @@ class FruityStereoEnhancer(
     """![](https://bit.ly/3DoHvji)"""
 
     INTERNAL_NAME = "Fruity Stereo Enhancer"
-    effect_position = _PluginDataProp[Literal["pre", "post"]]()
+    effect_position = _NativePluginProp[Literal["pre", "post"]]()
     """Defaults to ``post``."""
 
-    pan = _PluginDataProp[int]()
+    pan = _NativePluginProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -588,10 +845,10 @@ class FruityStereoEnhancer(
     | Default | 0     | Centred        |
     """
 
-    phase_inversion = _PluginDataProp[Literal["none", "left", "right"]]()
+    phase_inversion = _NativePluginProp[Literal["none", "left", "right"]]()
     """Default to ``None``."""
 
-    phase_offset = _PluginDataProp[int]()
+    phase_offset = _NativePluginProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -601,7 +858,7 @@ class FruityStereoEnhancer(
     | Default | 0     | No offset      |
     """
 
-    stereo_separation = _PluginDataProp[int]()
+    stereo_separation = _NativePluginProp[int]()
     """Linear.
 
     | Type    | Value | Representation |
@@ -611,7 +868,7 @@ class FruityStereoEnhancer(
     | Default | 0     | No effect      |
     """
 
-    volume = _PluginDataProp[int]()
+    volume = _NativePluginProp[int]()
     """Logarithmic.
 
     | Type    | Value | Representation |
@@ -626,7 +883,7 @@ class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3dip70y)"""
 
     INTERNAL_NAME = "Soundgoodizer"
-    amount = _PluginDataProp[int]()
+    amount = _NativePluginProp[int]()
     """Logarithmic.
 
     | Min | Max  | Default |
@@ -634,7 +891,7 @@ class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     | 0   | 1000 | 600     |
     """
 
-    mode = _PluginDataProp[Literal["A", "B", "C", "D"]]()
+    mode = _NativePluginProp[Literal["A", "B", "C", "D"]]()
     """4 preset modes (A, B, C and D). Defaults to ``A``."""
 
 
