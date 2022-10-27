@@ -106,7 +106,7 @@ class PatternID(EventEnum):
     Notes = (DATA + 16, NotesEvent)
 
 
-class Note(ItemModel):
+class Note(ItemModel[NotesEvent]):
     _NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
     def __repr__(self) -> str:
@@ -216,7 +216,7 @@ class Note(ItemModel):
     """
 
 
-class Controller(ItemModel):
+class Controller(ItemModel[ControllerEvent]):
     channel = StructProp[int]()
     """Corresponds to the containing channel's `Channel.IID`."""
 
@@ -248,7 +248,7 @@ class Pattern(EventModel):
         """
         if PatternID.Notes in self.events:
             event = cast(NotesEvent, self.events.first(PatternID.Notes))
-            yield from (Note(item) for item in event)
+            yield from (Note(item, i, event) for i, item in enumerate(event))
 
     def __repr__(self):
         num_notes = (
@@ -271,7 +271,7 @@ class Pattern(EventModel):
         """Parameter automations associated with this pattern (if any)."""
         if PatternID.Controllers in self.events:
             event = cast(ControllerEvent, self.events.first(PatternID.Controllers))
-            yield from (Controller(item) for item in event)
+            yield from (Controller(item, i, event) for i, item in enumerate(event))
 
     @property
     def index(self) -> int:

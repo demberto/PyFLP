@@ -181,7 +181,7 @@ class TimeMarkerType(enum.IntEnum):
     """Used for time signature markers."""
 
 
-class PLItemBase(ItemModel, ModelReprMixin):
+class PLItemBase(ItemModel[PlaylistEvent], ModelReprMixin):
     group = StructProp[int]()
     """Returns 0 for no group, else a group number for clips in the same group."""
 
@@ -432,25 +432,26 @@ class Arrangement(EventModel):
 
     @property
     def tracks(self) -> Iterator[Track]:
-        pl_event = None
+        e = None
         max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
 
         if ArrangementID.Playlist in self.events:
-            pl_event = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
+            e = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
 
         for track_idx, ed in enumerate(self.events.divide(TrackID.Data, *TrackID)):
             items: list[PLItemBase] = []
-            for item in pl_event or []:
+            for i, item in enumerate(e or []):
+                e = cast(PlaylistEvent, e)
                 idx = item["track_index"]
                 if max_idx - idx == track_idx:
                     if item["item_index"] <= item["pattern_base"]:
                         channel_iid = item["item_index"]
                         channel = self._kw["channels"][channel_iid]
-                        items.append(ChannelPLItem(item, channel=channel))
+                        items.append(ChannelPLItem(item, i, e, channel=channel))
                     else:
                         pattern_num = item["item_index"] - item["pattern_base"]
                         pattern = self._kw["patterns"][pattern_num]
-                        items.append(PatternPLItem(item, pattern=pattern))
+                        items.append(PatternPLItem(item, i, e, pattern=pattern))
             yield Track(ed, items=items)
 
 

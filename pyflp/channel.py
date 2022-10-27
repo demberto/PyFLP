@@ -18,7 +18,7 @@ from __future__ import annotations
 import enum
 import pathlib
 import sys
-from typing import Iterator, Tuple, cast
+from typing import Any, Iterator, Tuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -1141,7 +1141,11 @@ class AutomationLFO(EventModel, ModelReprMixin):
     """
 
 
-class AutomationPoint(ItemModel, ModelReprMixin):
+class AutomationPoint(ItemModel[AutomationEvent], ModelReprMixin):
+    def __setitem__(self, prop: str, value: Any):
+        self._item[prop] = value
+        self._parent["points"][self._index] = self._item
+
     position = StructProp[int](readonly=True)
     """PPQ dependant. Position on X-axis.
 
@@ -1314,8 +1318,8 @@ class Automation(Channel, ModelCollection[AutomationPoint]):
         """Iterator over the automation points inside the automation clip."""
         if ChannelID.Automation in self.events:
             event = cast(AutomationEvent, self.events.first(ChannelID.Automation))
-            for point in event["points"]:
-                yield AutomationPoint(point)
+            for i, point in enumerate(event["points"]):
+                yield AutomationPoint(point, i, event)
 
     lfo = NestedProp(AutomationLFO, ChannelID.Automation)  # TODO Add image
 

@@ -32,7 +32,7 @@ else:
 import construct_typed as ct
 
 from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
-from ._models import EMT_co, EventModel, ItemModel, ModelBase
+from ._models import DE, EMT_co, EventModel, ItemModel, ModelBase
 from .exceptions import PropertyCannotBeSet
 
 T = TypeVar("T")
@@ -73,27 +73,26 @@ class PropBase(abc.ABC, RWProperty[T]):
         self._readonly = readonly
 
     @overload
-    def _get_event(self, instance: ItemModel) -> ItemModel:
+    def _get_event(self, instance: ItemModel[DE]) -> ItemModel[DE]:
         ...
 
     @overload
     def _get_event(self, instance: EventModel) -> AnyEvent | None:
         ...
 
-    def _get_event(self, instance: ModelBase):
+    def _get_event(self, instance: ItemModel[DE] | EventModel):
         if isinstance(instance, ItemModel):
             return instance
 
-        if isinstance(instance, EventModel):
-            if not self._ids:
-                if len(instance.events) > 1:  # Prevent ambiguous situations
-                    raise LookupError("Event ID not specified")
+        if not self._ids:
+            if len(instance.events) > 1:  # Prevent ambiguous situations
+                raise LookupError("Event ID not specified")
 
-                return tuple(instance.events.all())[0]
+            return tuple(instance.events.all())[0]
 
-            for id in self._ids:
-                if id in instance.events:
-                    return instance.events.first(id)
+        for id in self._ids:
+            if id in instance.events:
+                return instance.events.first(id)
 
     @property
     def default(self) -> T | None:  # Configure version based defaults here
@@ -126,7 +125,8 @@ class PropBase(abc.ABC, RWProperty[T]):
         event = self._get_event(instance)
         if event is not None:
             self._set(event, value)
-        raise PropertyCannotBeSet(*self._ids)
+        else:
+            raise PropertyCannotBeSet(*self._ids)
 
 
 class FlagProp(PropBase[bool]):
@@ -228,10 +228,10 @@ class StructProp(PropBase[T], NamedPropMixin):
         super().__init__(*ids, **kwds)
         NamedPropMixin.__init__(self, prop)
 
-    def _get(self, ev_or_ins: Any) -> T | None:
+    def _get(self, ev_or_ins: ItemModel[Any]) -> T | None:
         return ev_or_ins[self._prop]
 
-    def _set(self, ev_or_ins: Any, value: T):
+    def _set(self, ev_or_ins: ItemModel[Any], value: T):
         ev_or_ins[self._prop] = value
 
 

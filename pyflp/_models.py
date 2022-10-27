@@ -19,14 +19,18 @@ import abc
 import dataclasses
 import functools
 import sys
-from typing import Any, Callable, Iterable, Sequence, TypeVar, overload
+from typing import Any, Callable, Generic, Iterable, Sequence, TypeVar, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
 else:
     from typing_extensions import Protocol, runtime_checkable
 
-from ._events import EventTree
+import construct as c
+
+from ._events import DataEventBase, EventTree, ListEventBase
+
+DE = TypeVar("DE", bound=DataEventBase)
 
 
 class ModelBase(abc.ABC):
@@ -34,11 +38,13 @@ class ModelBase(abc.ABC):
         self._kw = kw
 
 
-class ItemModel(ModelBase):
+class ItemModel(ModelBase, Generic[DE]):
     """Base class for event-less models."""
 
-    def __init__(self, item: dict[str, Any], **kw: Any):
+    def __init__(self, item: c.Container[Any], index: int, parent: DE, **kw: Any):
         self._item = item
+        self._index = index
+        self._parent = parent
         super().__init__(**kw)
 
     def __getitem__(self, prop: str):
@@ -46,6 +52,11 @@ class ItemModel(ModelBase):
 
     def __setitem__(self, prop: str, value: Any):
         self._item[prop] = value
+
+        if not isinstance(self._parent, ListEventBase):
+            raise NotImplementedError
+
+        self._parent[self._index] = self._item
 
 
 class EventModel(ModelBase):

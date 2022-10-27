@@ -418,6 +418,7 @@ class DataEventBase(VarintEventBase[bytes]):
         return f"{type(self).__name__} (id={self.id!r}, size={len(self._data)})"
 
 
+# TODO Due to construct's poor implementation of LazyStruct, this is no longer lazy
 class StructEventBase(DataEventBase):
     """Base class for events used for storing fixed size structured data.
 

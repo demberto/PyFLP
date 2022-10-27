@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *Experimental* Python 3.11 support is back.
 - A shit ton of flags in `VSTPlugin` and refactoring [#95].
 - `WrapperEvent.page`, `WrapperEvent.height`, `WrapperEvent.width` [#93].
+- `ItemModel.__setitem__` propagates back changes to owner event [#97].
 
 ### Changed
 
@@ -39,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EventTree.divide` fails to yield the only element [#90].
 - `TrackID.Name` events were grouped instead of getting divided [#96].
+- `PropBase.__set__` always raises `PropertyCannotBeSet` [#97].
 
 ### Removed
 
@@ -55,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#93]: https://github.com/demberto/PyFLP/issues/93
 [#95]: https://github.com/demberto/PyFLP/issues/95
 [#96]: https://github.com/demberto/PyFLP/issues/96
+[#97]: https://github.com/demberto/PyFLP/issues/97
 
 ## [2.0.0a4] - 2022-10-22
 
