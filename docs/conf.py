@@ -15,7 +15,7 @@ import m2r2
 
 sys.path.insert(0, os.path.abspath(".."))
 
-from pyflp._descriptors import EventProp, NestedProp, StructProp
+from pyflp._descriptors import EventProp, FlagProp, NestedProp, StructProp
 from pyflp._events import EventEnum
 from pyflp._models import ModelBase
 from pyflp.arrangement import _TrackColorProp
@@ -125,8 +125,10 @@ def add_annotations(app, what, name, obj, options, signature, return_annotation)
         for name_, type in vars(obj).items():
             if isinstance(type, _TrackColorProp):
                 annotations[name_] = colour.Color
-            if isinstance(type, NestedProp):
+            elif isinstance(type, NestedProp):
                 annotations[name_] = type._type
+            elif isinstance(type, FlagProp):
+                annotations[name_] = bool | None
             elif hasattr(type, "__orig_class__"):
                 annotations[name_] = type.__orig_class__.__args__[0]
 
