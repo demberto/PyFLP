@@ -15,6 +15,7 @@ from pyflp.plugin import (
     PluginID,
     Soundgoodizer,
     VSTPlugin,
+    WrapperPage,
 )
 
 from .conftest import ModelFixture
@@ -94,6 +95,21 @@ def test_vst_plugin(plugin: PluginFixture[VSTPlugin]):
 
 def test_fruity_wrapper(plugin: PluginFixture[VSTPlugin]):
     wrapper = plugin("fruity-wrapper.fst", VSTPlugin)
+
+    # WrapperEvent properties
+    assert not wrapper.compact
+    assert not wrapper.demo_mode
+    assert not wrapper.detached
+    assert not wrapper.directx
+    assert not wrapper.disabled
+    assert wrapper.generator
+    assert wrapper.height == 410
+    assert not wrapper.minimized
+    assert wrapper.multithreaded
+    assert wrapper.page == WrapperPage.Settings
+    assert not wrapper.smart_disable
+    assert wrapper.visible
+    assert wrapper.width == 561
 
     # VSTPluginEvent properties
     assert wrapper.automation.notify_changes

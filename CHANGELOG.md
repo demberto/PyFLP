@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Time.gate`, `Time.shift` and `Time.full_porta` [#89].
 - *Experimental* Python 3.11 support is back.
 - A shit ton of flags in `VSTPlugin` and refactoring [#95].
+- `WrapperEvent.page`, `WrapperEvent.height`, `WrapperEvent.width` [#93].
 
 ### Changed
 
@@ -50,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#88]: https://github.com/demberto/PyFLP/issues/88
 [#89]: https://github.com/demberto/PyFLP/issues/89
 [#90]: https://github.com/demberto/PyFLP/issues/90
+[#93]: https://github.com/demberto/PyFLP/issues/93
+[#95]: https://github.com/demberto/PyFLP/issues/95
 
 ## [2.0.0a4] - 2022-10-22
 

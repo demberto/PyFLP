@@ -63,13 +63,13 @@ class _WrapperFlags(enum.IntFlag):
     Visible = 1 << 0
     _Disabled = 1 << 1
     Detached = 1 << 2
-    Maximized = 1 << 3
+    # _U3 = 1 << 3
     Generator = 1 << 4
     SmartDisable = 1 << 5
     ThreadedProcessing = 1 << 6
     DemoMode = 1 << 7  # saved with a demo version
     HideSettings = 1 << 8
-    Captionized = 1 << 9  # TODO find meaning
+    Minimized = 1 << 9
     _DirectX = 1 << 16  # indicates the plugin is a DirectX plugin
     _EditorSize = 2 << 16
 
@@ -150,11 +150,33 @@ class SoundgoodizerEvent(StructEventBase):
     ).compile()
 
 
+class WrapperPage(ct.EnumBase):
+    Editor = 0
+    """:guilabel:`Plugin editor`."""
+
+    Settings = 1
+    """:guilabel:`VST wrapper settings`."""
+
+    Sample = 3
+    """:guilabel:`Sample settings`."""
+
+    Envelope = 4
+    """:guilabel:`Envelope / instrument settings`."""
+
+    Miscellaneous = 5
+    """:guilabel:`Miscallenous functions`."""
+
+
 class WrapperEvent(StructEventBase):
     STRUCT = c.Struct(
-        "_u1" / c.Bytes(16),  # 16
-        "flags" / StdEnum[_WrapperFlags](c.Int16ul),  # 18
-        "_u2" / c.Bytes(34),  # 52
+        "_u1" / c.Optional(c.Bytes(16)),  # 16
+        "flags" / c.Optional(StdEnum[_WrapperFlags](c.Int16ul)),  # 18
+        "_u2" / c.Optional(c.Bytes(2)),  # 20
+        "page" / c.Optional(StdEnum[WrapperPage](c.Int8ul)),  # 21
+        "_u3" / c.Optional(c.Bytes(23)),  # 44
+        "width" / c.Optional(c.Int32ul),  # 48
+        "height" / c.Optional(c.Int32ul),  # 52
+        "_extra" / c.GreedyBytes,  # None as of 20.9.2
     ).compile()
 
 
@@ -324,23 +346,33 @@ class _PluginBase(EventModel, Generic[_PE_co]):
         super().__init__(events, **kw)
 
     compact = _WrapperProp(_WrapperFlags.HideSettings)
-    """Whether plugin page toolbar is hidden or not.
+    """Whether plugin page toolbar (:guilabel:`Detailed settings`) is hidden.
 
     ![](https://bit.ly/3qzOMoO)
     """
 
-    demo_mode = _WrapperProp(_WrapperFlags.DemoMode)
-    """Whether the plugin state was saved in a demo / trial version of the plugin."""
+    demo_mode = _WrapperProp(_WrapperFlags.DemoMode)  # TODO Verify if this works
+    """Whether the plugin state was saved in a demo / trial version."""
 
     detached = _WrapperProp(_WrapperFlags.Detached)
+    """Plugin editor can be moved between different monitors when detached."""
+
     disabled = _WrapperProp(_WrapperFlags._Disabled)
+    """This is a legacy property; DON'T use it.
+
+    Check :attr:`Channel.enabled` or :attr:`Slot.enabled` instead.
+    """
+
     directx = _WrapperProp(_WrapperFlags._DirectX)
     """Whether the plugin is a DirectX plugin or not."""
 
     generator = _WrapperProp(_WrapperFlags.Generator)
     """Whether the plugin is a generator or an effect."""
 
-    maximized = _WrapperProp(_WrapperFlags.Maximized)
+    height = StructProp[int](PluginID.Wrapper)
+    """Height of the plugin editor (in pixels)."""
+
+    minimized = _WrapperProp(_WrapperFlags.Minimized)
     """Whether the plugin editor is maximized or minimized.
 
     ![](https://bit.ly/3QDMWO3)
@@ -349,11 +381,20 @@ class _PluginBase(EventModel, Generic[_PE_co]):
     multithreaded = _WrapperProp(_WrapperFlags.ThreadedProcessing)
     """Whether threaded processing is enabled or not."""
 
+    page = StructProp[WrapperPage](PluginID.Wrapper)
+    """Active / selected / current page.
+
+    ![](https://bit.ly/3ffJKM3)
+    """
+
     smart_disable = _WrapperProp(_WrapperFlags.SmartDisable)
     """Whether smart disable is enabled or not."""
 
     visible = _WrapperProp(_WrapperFlags.Visible)
     """Whether the editor of the plugin is visible or closed."""
+
+    width = StructProp[int](PluginID.Wrapper)
+    """Width of the plugin editor (in pixels)."""
 
 
 AnyPlugin = _PluginBase[AnyEvent]  # TODO alias to _IPlugin + _PluginBase (both)
