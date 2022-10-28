@@ -58,7 +58,7 @@ from .plugin import PluginID, get_event_by_internal_name
 from .project import VALID_PPQS, FileFormat, Project, ProjectID
 
 __all__ = ["parse", "save"]
-__version__ = "2.0.0a4"
+__version__ = "2.0.0a5"
 
 if sys.version_info < (3, 11):  # https://github.com/Bobronium/fastenum/issues/2
     import fastenum
