@@ -67,15 +67,14 @@ def test_track_grouped(tracks: tuple[Track, ...]):
         assert track.grouped if track.name == "Grouped" else not track.grouped
 
 
-# TODO #35
-# def test_track_height(tracks: tuple[Track, ...]):
-#     for track in tracks:
-#         if track.name == "Min Size":
-#             assert track.height == 0.0
-#         elif track.name == "Max Size":
-#             assert track.height == 18.4
-#         else:
-#             assert track.height == 1.0
+def test_track_height(tracks: tuple[Track, ...]):
+    for track in tracks:
+        if track.name == "Min Size":
+            assert track.height == "0%"
+        elif track.name == "Max Size":
+            assert track.height == "1000%"
+        else:
+            assert track.height == "100%"
 
 
 def test_track_icon(tracks: tuple[Track, ...]):
