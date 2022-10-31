@@ -341,6 +341,8 @@ class Project(EventModel):
     """Whether a portion of the playlist is selected."""
 
     main_pitch = EventProp[int](ProjectID.Pitch)
+    """:guilabel:`Master pitch` (in cents). Min = -1200. Max = +1200. Defaults to 0."""
+
     main_volume = EventProp[int](ProjectID._Volume)
     """*Changed in FL Studio v1.7.6*: Can be upto 125% (+5.6dB) now."""
 

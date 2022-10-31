@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.0.0a6 - Unreleased
 
+### Added
+
+- `Keyboard.main_pitch`, `Keyboard.add_root`, `Keyboard.key_region` [#92].
+
 ### Changed
 
 - `PLItemBase.offsets` and its fields in `PlaylistEvent` are [float32](https://stackoverflow.com/a/74247360/)
@@ -19,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `Track.locked_height` as what this quantity stores is unknown to me yet.
+
+[#92]: https://github.com/demberto/PyFLP/issues/92
 
 ## [2.0.0a5.post] - 2022-10-31
 

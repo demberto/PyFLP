@@ -22,13 +22,14 @@ import enum
 import math
 import sys
 import warnings
-from typing import Any, List, NamedTuple, TypeVar, Union, overload
+from typing import Any, NamedTuple, Tuple, TypeVar, Union, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
 else:
     from typing_extensions import Protocol, final, runtime_checkable
 
+import construct as c
 import construct_typed as ct
 
 from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
@@ -36,6 +37,8 @@ from ._models import DE, EMT_co, EventModel, ItemModel, ModelBase
 from .exceptions import PropertyCannotBeSet
 
 T = TypeVar("T")
+U = TypeVar("U")
+ET = TypeVar("ET", bound=Union[ct.EnumBase, enum.IntFlag])
 T_co = TypeVar("T_co", covariant=True)
 
 
@@ -235,7 +238,16 @@ class StructProp(PropBase[T], NamedPropMixin):
         ev_or_ins[self._prop] = value
 
 
-ET = TypeVar("ET", bound=Union[ct.EnumBase, enum.IntFlag])
+SimpleAdapter = ct.Adapter[T, T, U, U]
+"""Duplicates type parameters for `construct.Adapter`"""
+
+
+class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):
+    def _decode(self, obj: c.ListContainer[int], *_: Any) -> Tuple[int, int]:
+        return tuple(obj)
+
+    def _encode(self, obj: Tuple[int, int], *_: Any) -> c.ListContainer[int]:
+        return c.ListContainer([*obj])
 
 
 class MusicalTime(NamedTuple):

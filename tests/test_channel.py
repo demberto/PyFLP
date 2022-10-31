@@ -131,7 +131,10 @@ def test_instrument_delay(load_instrument: InstrumentFixture):
 
 def test_instrument_keyboard(load_instrument: InstrumentFixture):
     keyboard = load_instrument("keyboard.fst").keyboard
+    assert keyboard.add_root
     assert keyboard.fine_tune == 100
+    assert keyboard.key_region == (48, 72)
+    assert keyboard.main_pitch
     assert keyboard.root_note == 60
 
 

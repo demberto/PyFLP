@@ -34,6 +34,7 @@ from ._descriptors import (
     FlagProp,
     KWProp,
     LinearMusical,
+    List2Tuple,
     Log2,
     LogNormal,
     MusicalTime,
@@ -260,7 +261,8 @@ class ParametersEvent(StructEventBase):
         "_u1" / c.Optional(c.Bytes(9)),  # 9
         "fx.remove_dc" / c.Optional(c.Flag),  # 10
         "delay.flags" / c.Optional(StdEnum[_DelayFlags](c.Int8ul)),  # 11
-        "_u2" / c.Optional(c.Bytes(29)),  # 40
+        "keyboard.main_pitch" / c.Optional(c.Flag),  # 12
+        "_u2" / c.Optional(c.Bytes(28)),  # 40
         "arp.direction" / c.Optional(StdEnum[ArpDirection](c.Int32ul)),  # 44
         "arp.range" / c.Optional(c.Int32ul),  # 48
         "arp.chord" / c.Optional(c.Int32ul),  # 52
@@ -269,9 +271,11 @@ class ParametersEvent(StructEventBase):
         "arp.slide" / c.Optional(c.Flag),  # 61
         "_u3" / c.Optional(c.Bytes(1)),  # 62
         "time.full_porta" / c.Optional(c.Flag),  # 63
-        "_u4" / c.Optional(c.Bytes(1)),  # 64
+        "keyboard.add_root" / c.Optional(c.Flag),  # 64
         "time.gate" / c.Optional(c.Int16ul),  # 66
-        "_u5" / c.Optional(c.Bytes(14)),  # 80
+        "_u4" / c.Optional(c.Bytes(2)),  # 68
+        "keyboard.key_region" / c.Optional(List2Tuple(c.Int32ul[2])),  # 76
+        "_u5" / c.Optional(c.Bytes(4)),  # 80
         "fx.normalize" / c.Optional(c.Flag),  # 81
         "fx.inverted" / c.Optional(c.Flag),  # 82
         "_u6" / c.Optional(c.Bytes(1)),  # 83
@@ -1039,16 +1043,21 @@ class Keyboard(EventModel, ModelReprMixin):
     root_note = EventProp[int](ChannelID.RootNote, default=60)
     """Min - 0 (C0), Max - 131 (B10)."""
 
-    # main_pitch_enabled = StructProp[bool](ChannelID.Parameters)
-    # """Whether triggered note is affected by changes to `project.main_pitch`."""
+    main_pitch = StructProp[bool](ChannelID.Parameters, prop="keyboard.main_pitch")
+    """Whether triggered note is affected by changes to :attr:`Project.main_pitch`."""
 
-    # added_to_key = StructProp[bool](ChannelID.Parameters)
-    # """Whether root note should be added to triggered note instead of pitch.
-    #
-    # *New in FL Studio v3.4.0*.
-    # """
+    add_root = StructProp[bool](ChannelID.Parameters, prop="keyboard.add_root")
+    """Whether to add root note (instead of pitch) to triggered note.
 
-    # note_range: tuple[int] - Should be a 2-short or 2-byte tuple
+    Named as :guilabel:`Add to key`. Defaults to ``False``.
+
+    *New in FL Studio v3.4.0*.
+    """
+
+    key_region = StructProp[Tuple[int, int]](
+        ChannelID.Parameters, prop="keyboard.key_region"
+    )
+    """A `(start_note, end_note)` tuple representing the playable range."""
 
 
 class Playback(EventModel, ModelReprMixin):
@@ -1202,7 +1211,9 @@ class Channel(EventModel):
     """
 
     iid = EventProp[int](ChannelID.New)
-    keyboard = NestedProp(Keyboard, ChannelID.FineTune, ChannelID.RootNote)
+    keyboard = NestedProp(
+        Keyboard, ChannelID.FineTune, ChannelID.RootNote, ChannelID.Parameters
+    )
     """Located at the bottom of :menuselection:`Miscellaneous functions (page)`."""
 
     locked = EventProp[bool](ChannelID.IsLocked)
