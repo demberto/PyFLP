@@ -22,7 +22,7 @@ import enum
 import math
 import sys
 import warnings
-from typing import Any, NamedTuple, Tuple, TypeVar, Union, overload
+from typing import Any, List, NamedTuple, Tuple, TypeVar, Union, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
@@ -261,7 +261,7 @@ class MusicalTime(NamedTuple):
     """5 ticks == 1 (internal representation)"""
 
 
-class LinearMusical(ct.Adapter[int, int, MusicalTime, MusicalTime]):
+class LinearMusical(SimpleAdapter[int, MusicalTime]):
     def _encode(self, obj: MusicalTime, *_: Any) -> int:
         if obj.ticks % 5:
             warnings.warn("Ticks must be a multiple of 5", UserWarning)
@@ -274,7 +274,7 @@ class LinearMusical(ct.Adapter[int, int, MusicalTime, MusicalTime]):
         return MusicalTime(bars, beats, ticks=remainder * 5)
 
 
-class Log2(ct.Adapter[int, int, float, float]):
+class Log2(SimpleAdapter[int, float]):
     def __init__(self, subcon: Any, factor: int):
         super().__init__(subcon)
         self.factor = factor
@@ -314,7 +314,7 @@ class LogNormal(ct.Adapter[List[int], List[int], float, float]):
         return max(min(1.0, 2 ** (obj[0] / 2**12) / 2**15), 0.0)
 
 
-class StdEnum(ct.Adapter[int, int, ET, ET]):
+class StdEnum(SimpleAdapter[int, ET]):
     def _encode(self, obj: ET, *_: Any) -> int:
         return obj.value
 

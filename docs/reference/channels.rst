@@ -38,6 +38,8 @@ These implement functionality used by :class:`Channel` or its subclasses.
    :members:
 .. autoclass:: Envelope
    :members:
+.. autoclass:: Filter
+   :members:
 .. autoclass:: FX
    :members:
 .. autoclass:: Keyboard

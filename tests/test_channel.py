@@ -12,6 +12,7 @@ from pyflp.channel import (
     Channel,
     ChannelRack,
     DeclickMode,
+    FilterType,
     Instrument,
     Layer,
     LFOShape,
@@ -220,6 +221,13 @@ def test_sampler_envelopes(load_sampler: SamplerFixture):
     assert mod_x.amount == 128
     assert not mod_x.synced
     assert mod_x.attack_tension == mod_x.release_tension == mod_x.decay_tension == 128
+
+
+def test_sampler_filter(load_sampler: SamplerFixture):
+    filter = load_sampler("sampler-filter.fst").filter
+    assert filter.mod_x == 0
+    assert filter.mod_y == 256
+    assert filter.type == FilterType.SVFLPx2
 
 
 def test_sampler_fx(load_sampler: SamplerFixture):

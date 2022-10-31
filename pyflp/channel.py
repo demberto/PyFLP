@@ -204,12 +204,25 @@ class LevelAdjustsEvent(StructEventBase):
     ).compile()
 
 
+class FilterType(ct.EnumBase):
+    FastLP = 0
+    LP = 1
+    BP = 2
+    HP = 3
+    BS = 4
+    LPx2 = 5
+    SVFLP = 6
+    SVFLPx2 = 7
+
+
 class LevelsEvent(StructEventBase):
     STRUCT = c.Struct(
         "pan" / c.Optional(c.Int32sl),  # 4
         "volume" / c.Optional(c.Int32ul),  # 8
         "pitch_shift" / c.Optional(c.Int32sl),  # 12
-        "_u1" / c.Optional(c.Bytes(12)),  # 24
+        "filter.mod_x" / c.Optional(c.Int32ul),  # 16
+        "filter.mod_y" / c.Optional(c.Int32ul),  # 20
+        "filter.type" / c.Optional(StdEnum[FilterType](c.Int32ul)),  # 24
     ).compile()
 
 
@@ -288,9 +301,9 @@ class ParametersEvent(StructEventBase):
         "stretching.multiplier" / c.Optional(Log2(c.Int32sl, 10000)),  # 108
         "stretching.mode" / c.Optional(StdEnum[StretchMode](c.Int32sl)),  # 112
         "_u7" / c.Optional(c.Bytes(21)),  # 133
-        "fx.start" / LogNormal(c.Int16ul[2], (0, 61440)),  # 137
+        "fx.start" / c.Optional(LogNormal(c.Int16ul[2], (0, 61440))),  # 137
         "_u8" / c.Optional(c.Bytes(4)),  # 141
-        "fx.length" / LogNormal(c.Int16ul[2], (0, 61440)),  # 145
+        "fx.length" / c.Optional(LogNormal(c.Int16ul[2], (0, 61440))),  # 145
         "_u9" / c.Optional(c.Bytes(3)),  # 148
         "playback.start_offset" / c.Optional(c.Int32ul),  # 152
         "_u10" / c.Optional(c.Bytes(5)),  # 157
@@ -561,6 +574,22 @@ class Delay(EventModel, ModelReprMixin):
     | Max     | PPQ * 4   | 8:00           |
     | Default | PPQ * 3/2 | 3:00           |
     """
+
+
+class Filter(EventModel, ModelReprMixin):
+    """Used by :class:`Sampler`.
+
+    ![](https://bit.ly/3zT5tAH)
+    """
+
+    mod_x = StructProp[int](ChannelID.Levels, prop="filter.mod_x")
+    """Filter cutoff. Min = 0. Max = 256. Defaults to maximum."""
+
+    mod_y = StructProp[int](ChannelID.Levels, prop="filter.mod_y")
+    """Filter resonance. Min = 0. Max = 256. Defaults to minimum."""
+
+    type = StructProp[FilterType](ChannelID.Levels, prop="filter.type")
+    """Defaults to :attr:`FilterType.FastLP`."""
 
 
 class LevelAdjusts(EventModel, ModelReprMixin):
@@ -1459,6 +1488,8 @@ class Sampler(_SamplerInstrument):
         if ChannelID.EnvelopeLFO in self.events:
             envs = [Envelope(e) for e in self.events.separate(ChannelID.EnvelopeLFO)]
             return dict(zip(EnvelopeName.__args__, envs))  # type: ignore
+
+    filter = NestedProp(Filter, ChannelID.Levels)
 
     fx = NestedProp(
         FX,

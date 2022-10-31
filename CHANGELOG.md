@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Keyboard.main_pitch`, `Keyboard.add_root`, `Keyboard.key_region` [#92].
+- `Sampler.filter` and `Filter` [#99].
 
 ### Changed
 
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Track.locked_height` as what this quantity stores is unknown to me yet.
 
 [#92]: https://github.com/demberto/PyFLP/issues/92
+[#99]: https://github.com/demberto/PyFLP/issues/99
 
 ## [2.0.0a5.post] - 2022-10-31
 
