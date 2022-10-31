@@ -2,17 +2,10 @@ include *.md
 include *.yaml
 include .all-contributorsrc
 include .editorconfig
+include pyflp/py.typed
 include requirements.txt
 include tox.ini
-include pyflp/py.typed
-
+graft docs
+prune docs/_build
 recursive-include .vscode *.json
-
-include docs/conf.py
-include docs/Makefile
-include docs/make.bat
-include docs/requirements.txt
-recursive-include docs *.rst
-graft docs/img
-
 recursive-include tests *.flp *.fst *.fsc *.py

@@ -1,5 +1,5 @@
 colour==0.1.5
-construct-typing @ git+https://github.com/timrid/construct-typing.git@ce871936d9e885c84f2f507c723fc5a7e99c9096
+construct-typing==0.5.3
 f-enum==0.2.0;python_version<="3.10"
 sortedcontainers==2.4.0
 typing_extensions==4.4.0
