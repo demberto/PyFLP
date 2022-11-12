@@ -17,9 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `Channel.group` becomes a read-only property (modify event to change channel group).
 - `PLItemBase.offsets` and its fields in `PlaylistEvent` are [float32](https://stackoverflow.com/a/74247360/)
   Thanks to `chrslg` from Stackoverflow and @jubabrut.
 - `Track.height` returns an `str` of its percentage e.g. `100%`.
+
+### Fixed
+
+- `Channel.group` remained unitialised [#100].
 
 ### Removed
 
@@ -27,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [#92]: https://github.com/demberto/PyFLP/issues/92
 [#99]: https://github.com/demberto/PyFLP/issues/99
+[#100]: https://github.com/demberto/PyFLP/issues/100
 
 ## [2.0.0a5.post] - 2022-10-31
 

@@ -96,6 +96,16 @@ def test_channel_enabled(load_channel: ChannelFixture):
     assert not load_channel("disabled.fst").enabled
 
 
+def test_channel_group(rack: ChannelRack):
+    for channel in rack:
+        if channel.name == "22in Kick":
+            assert channel.group.name == "Audio"
+        elif channel.display_name in ("BooBass", "Fruit Kick", "Plucked!"):
+            assert channel.group.name == "Generators"
+        else:
+            assert channel.group.name == "Unsorted"
+
+
 def test_channel_icon(load_channel: ChannelFixture):
     assert load_channel("iconified.fst").icon == 116
 

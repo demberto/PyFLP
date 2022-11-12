@@ -32,7 +32,6 @@ import construct_typed as ct
 from ._descriptors import (
     EventProp,
     FlagProp,
-    KWProp,
     LinearMusical,
     List2Tuple,
     Log2,
@@ -1230,8 +1229,10 @@ class Channel(EventModel):
     enabled = EventProp[bool](ChannelID.IsEnabled)
     """![](https://bit.ly/3sbN8KU)"""
 
-    group = KWProp[DisplayGroup]()
-    """Display group / filter under which this channel is grouped."""
+    @property
+    def group(self) -> DisplayGroup:  # TODO Setter
+        """Display group / filter under which this channel is grouped."""
+        return self._kw["group"]
 
     icon = EventProp[int](PluginID.Icon)
     """Internal ID of the icon shown beside the ``display_name``.
@@ -1594,10 +1595,12 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
     def __iter__(self) -> Iterator[Channel]:
         """Yields all the channels found in the project."""
         ch_dict: dict[int, Channel] = {}
+        groups = [DisplayGroup(et) for et in self.events.separate(DisplayGroupID.Name)]
 
         for et in self.events.divide(ChannelID.New, *ChannelID, *PluginID):
             iid = et.first(ChannelID.New).value
             typ = et.first(ChannelID.Type).value
+            groupnum = et.first(ChannelID.GroupNum).value
 
             # pylint: disable=redefined-outer-name
             ct = Channel  # prevent type error and logic failure below
@@ -1616,7 +1619,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
                     ct = Sampler
 
             if iid is not None:
-                cur_ch = ch_dict[iid] = ct(et, channels=ch_dict)
+                cur_ch = ch_dict[iid] = ct(et, channels=ch_dict, group=groups[groupnum])
                 yield cur_ch
 
     def __len__(self):
