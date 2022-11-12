@@ -152,7 +152,7 @@ class EventBase(Generic[T]):  # pylint: disable=eq-without-hash
     @property
     def value(self) -> T:
         """Deserialized event-type specific value."""
-        ...  # pylint: disable=unnecessary-ellipsis
+        raise NotImplementedError
 
     @value.setter
     def value(self, value: T):

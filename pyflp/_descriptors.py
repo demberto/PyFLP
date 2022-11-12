@@ -244,7 +244,8 @@ SimpleAdapter = ct.Adapter[T, T, U, U]
 
 class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):
     def _decode(self, obj: c.ListContainer[int], *_: Any) -> Tuple[int, int]:
-        return tuple(obj)
+        _1, _2 = tuple(obj)
+        return _1, _2
 
     def _encode(self, obj: Tuple[int, int], *_: Any) -> c.ListContainer[int]:
         return c.ListContainer([*obj])
