@@ -7,12 +7,8 @@
     - Type annotations
     - Binary data types and streams
 
-.. todo::
-
-   Use raw-literal until sphinxcontrib-svgbob supports UTF-8. Check this
-   `issue <https://github.com/sphinx-contrib/svgbob/issues/2>`_.
-
-::
+.. svgbob::
+   :align: center
 
     ┌──────────────────────────────────────────────────────────────────────────┐
     │     Events - binary representation - low level API - Stage 1 parser      │
