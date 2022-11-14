@@ -21,9 +21,9 @@ import warnings
 from typing import Any, ClassVar, Dict, Generic, TypeVar, cast
 
 if sys.version_info >= (3, 8):
-    from typing import Literal, Protocol, get_args, runtime_checkable
+    from typing import Literal, Protocol, runtime_checkable
 else:
-    from typing_extensions import get_args, Literal, Protocol, runtime_checkable
+    from typing_extensions import Literal, Protocol, runtime_checkable
 
 import construct as c
 import construct_typed as ct
@@ -409,7 +409,10 @@ class PluginProp(RWProperty[AnyPlugin]):
             return NotImplemented
 
         for ptype in self._types:
-            if isinstance(ins.events.first(PluginID.Data), get_args(ptype)[0]):
+            if isinstance(
+                ins.events.first(PluginID.Data),
+                ptype.__orig_bases__[0].__args__[0],  # type: ignore
+            ):
                 return ptype(
                     ins.events.subdict(
                         lambda e: e.id in (PluginID.Wrapper, PluginID.Data)
@@ -483,6 +486,9 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     """
 
     INTERNAL_NAME = "Fruity Wrapper"
+
+    def __repr__(self) -> str:
+        return f"VSTPlugin (name={self.name!r}, vendor={self.vendor!r})"
 
     class _AutomationOptions(EventModel):
         """See :attr:`VSTPlugin.automation`."""

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `Channel.group` remained unitialised [#100].
+- `Chanel.plugin` failed due to base class type parameter check [#101].
 
 ### Removed
 
