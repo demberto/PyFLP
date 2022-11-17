@@ -41,6 +41,7 @@ from ._events import (
     StructEventBase,
     T,
     U32Event,
+    UnknownDataEvent,
 )
 from ._models import EventModel, ModelReprMixin
 
@@ -148,6 +149,10 @@ class SoundgoodizerEvent(StructEventBase):
         "mode" / c.Enum(c.Int32ul, A=0, B=1, C=2, D=3),
         "amount" / c.Int32ul,
     ).compile()
+
+
+NativePluginEvent = UnknownDataEvent
+"""Placeholder event type for unimplemented native :attr:`PluginID.Data` events."""
 
 
 class WrapperPage(ct.EnumBase):
@@ -404,20 +409,26 @@ class PluginProp(RWProperty[AnyPlugin]):
     def __init__(self, *types: type[AnyPlugin]) -> None:
         self._types = types
 
+    @staticmethod
+    def _get_plugin_events(ins: EventModel):
+        return ins.events.subdict(lambda e: e.id in (PluginID.Wrapper, PluginID.Data))
+
     def __get__(self, ins: EventModel, owner: Any = None) -> AnyPlugin | None:
         if owner is None:
             return NotImplemented
 
+        try:
+            data_event = ins.events.first(PluginID.Data)
+        except KeyError:
+            return None
+
+        if isinstance(data_event, UnknownDataEvent):
+            return _PluginBase(self._get_plugin_events(ins))
+
         for ptype in self._types:
-            if isinstance(
-                ins.events.first(PluginID.Data),
-                ptype.__orig_bases__[0].__args__[0],  # type: ignore
-            ):
-                return ptype(
-                    ins.events.subdict(
-                        lambda e: e.id in (PluginID.Wrapper, PluginID.Data)
-                    )
-                )
+            event_type = ptype.__orig_bases__[0].__args__[0]  # type: ignore
+            if isinstance(data_event, event_type):
+                return ptype(self._get_plugin_events(ins))
 
     def __set__(self, instance: EventModel, value: AnyPlugin):
         if isinstance(value, _IPlugin):
@@ -942,7 +953,8 @@ class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
     """4 preset modes (A, B, C and D). Defaults to ``A``."""
 
 
-def get_event_by_internal_name(name: str) -> type[StructEventBase] | None:
+def get_event_by_internal_name(name: str) -> type[AnyEvent]:
     for cls in _PluginBase.__subclasses__():
         if getattr(cls, "INTERNAL_NAME", None) == name:
             return cls.__orig_bases__[0].__args__[0]  # type: ignore
+    return NativePluginEvent

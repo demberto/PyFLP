@@ -457,12 +457,8 @@ class Insert(EventModel, ModelCollection[Slot]):
 
     def __iter__(self) -> Iterator[Slot]:
         """Iterator over the effect empty and used slots."""
-        index = 0
-        for ed in self.events.subdicts(
-            lambda e: e.id in (*SlotID, *PluginID), self._kw["max_slots"]
-        ):
-            yield Slot(ed, params=self._kw["params"][index])
-            index += 1
+        for idx, ed in enumerate(self.events.divide(SlotID.Index, *SlotID, *PluginID)):
+            yield Slot(ed, params=self._kw["params"].slots[idx])
 
     def __len__(self):
         try:
