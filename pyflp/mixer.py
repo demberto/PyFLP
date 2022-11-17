@@ -227,13 +227,13 @@ class _InsertEQBandKW(TypedDict, total=False):
 
 
 class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
-    def __get__(self, instance: InsertEQBand, owner: Any = None) -> int | None:
+    def __get__(self, ins: InsertEQBand, owner: Any = None) -> int | None:
         if owner is None:
             return NotImplemented
-        return instance._kw[self._prop]["msg"]
+        return ins._kw[self._prop]["msg"]
 
-    def __set__(self, instance: InsertEQBand, value: int):
-        instance._kw[self._prop]["msg"] = value
+    def __set__(self, ins: InsertEQBand, value: int):
+        ins._kw[self._prop]["msg"] = value
 
 
 class InsertEQBand(ModelBase):
@@ -282,12 +282,12 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
         super().__init__()
         self._ids = ids
 
-    def __get__(self, instance: InsertEQ, owner: Any = None) -> InsertEQBand:
+    def __get__(self, ins: InsertEQ, owner: Any = None) -> InsertEQBand:
         if owner is None:
             return NotImplemented
 
         items: _InsertEQBandKW = {}
-        for id, param in cast(_InsertItems, instance._kw["params"]).own.items():
+        for id, param in cast(_InsertItems, ins._kw["params"]).own.items():
             if id == self._ids.freq:
                 items["freq"] = param
             elif id == self._ids.gain:
@@ -346,16 +346,16 @@ class _MixerParamProp(RWProperty[T]):
     def __init__(self, id: int):  # pylint: disable=super-init-not-called
         self._id = id
 
-    def __get__(self, instance: Insert, owner: object = None) -> T | None:
+    def __get__(self, ins: Insert, owner: object = None) -> T | None:
         if owner is None:
             return NotImplemented
 
-        for id, item in cast(_InsertItems, instance._kw["params"]).own.items():
+        for id, item in cast(_InsertItems, ins._kw["params"]).own.items():
             if id == self._id:
                 return item["msg"]
 
-    def __set__(self, instance: Insert, value: T):
-        for id, item in cast(_InsertItems, instance._kw["params"]).own.items():
+    def __set__(self, ins: Insert, value: T):
+        for id, item in cast(_InsertItems, ins._kw["params"]).own.items():
             if id == self._id:
                 item["msg"] = value
         raise PropertyCannotBeSet(self._id)  # type: ignore

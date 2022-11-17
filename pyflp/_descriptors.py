@@ -46,7 +46,7 @@ T_co = TypeVar("T_co", covariant=True)
 class ROProperty(Protocol[T_co]):
     """Protocol for a read-only descriptor."""
 
-    def __get__(self, instance: Any, owner: Any = None) -> T_co | None:
+    def __get__(self, ins: Any, owner: Any = None) -> T_co | None:
         ...
 
 
@@ -54,7 +54,7 @@ class ROProperty(Protocol[T_co]):
 class RWProperty(ROProperty[T], Protocol):
     """Protocol for a read-write descriptor."""
 
-    def __set__(self, instance: Any, value: T):
+    def __set__(self, ins: Any, value: T):
         ...
 
 
@@ -76,26 +76,26 @@ class PropBase(abc.ABC, RWProperty[T]):
         self._readonly = readonly
 
     @overload
-    def _get_event(self, instance: ItemModel[DE]) -> ItemModel[DE]:
+    def _get_event(self, ins: ItemModel[DE]) -> ItemModel[DE]:
         ...
 
     @overload
-    def _get_event(self, instance: EventModel) -> AnyEvent | None:
+    def _get_event(self, ins: EventModel) -> AnyEvent | None:
         ...
 
-    def _get_event(self, instance: ItemModel[DE] | EventModel):
-        if isinstance(instance, ItemModel):
-            return instance
+    def _get_event(self, ins: ItemModel[DE] | EventModel):
+        if isinstance(ins, ItemModel):
+            return ins
 
         if not self._ids:
-            if len(instance.events) > 1:  # Prevent ambiguous situations
+            if len(ins.events) > 1:  # Prevent ambiguous situations
                 raise LookupError("Event ID not specified")
 
-            return tuple(instance.events.all())[0]
+            return tuple(ins.events.all())[0]
 
         for id in self._ids:
-            if id in instance.events:
-                return instance.events.first(id)
+            if id in ins.events:
+                return ins.events.first(id)
 
     @property
     def default(self) -> T | None:  # Configure version based defaults here
@@ -110,22 +110,22 @@ class PropBase(abc.ABC, RWProperty[T]):
         ...
 
     @final
-    def __get__(self, instance: Any, owner: Any = None) -> T | None:
+    def __get__(self, ins: Any, owner: Any = None) -> T | None:
         if owner is None:
             return NotImplemented
 
-        event = self._get_event(instance)
+        event = self._get_event(ins)
         if event is not None:
             return self._get(event)
 
         return self.default
 
     @final
-    def __set__(self, instance: Any, value: T):
+    def __set__(self, ins: Any, value: T):
         if self._readonly:
             raise PropertyCannotBeSet(*self._ids)
 
-        event = self._get_event(instance)
+        event = self._get_event(ins)
         if event is not None:
             self._set(event, value)
         else:
@@ -191,15 +191,15 @@ class KWProp(NamedPropMixin, RWProperty[T]):
     These values are passed to the class constructor as keyword arguments.
     """
 
-    def __get__(self, instance: ModelBase, owner: Any = None) -> T:
+    def __get__(self, ins: ModelBase, owner: Any = None) -> T:
         if owner is None:
             return NotImplemented
-        return instance._kw[self._prop]
+        return ins._kw[self._prop]
 
-    def __set__(self, instance: ModelBase, value: T):
-        if self._prop not in instance._kw:
+    def __set__(self, ins: ModelBase, value: T):
+        if self._prop not in ins._kw:
             raise KeyError(self._prop)
-        instance._kw[self._prop] = value
+        ins._kw[self._prop] = value
 
 
 class EventProp(PropBase[T]):
@@ -239,7 +239,7 @@ class StructProp(PropBase[T], NamedPropMixin):
 
 
 SimpleAdapter = ct.Adapter[T, T, U, U]
-"""Duplicates type parameters for `construct.Adapter`"""
+"""Duplicates type parameters for `construct.Adapter`."""
 
 
 class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):
@@ -253,13 +253,13 @@ class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):
 
 class MusicalTime(NamedTuple):
     bars: int
-    """1 bar == 16 beats == 768 (internal representation)"""
+    """1 bar == 16 beats == 768 (internal representation)."""
 
     beats: int
-    """1 beat == 240 ticks == 48 (internal representation)"""
+    """1 beat == 240 ticks == 48 (internal representation)."""
 
     ticks: int
-    """5 ticks == 1 (internal representation)"""
+    """5 ticks == 1 (internal representation)."""
 
 
 class LinearMusical(SimpleAdapter[int, MusicalTime]):

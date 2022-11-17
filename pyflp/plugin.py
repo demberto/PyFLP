@@ -430,11 +430,11 @@ class PluginProp(RWProperty[AnyPlugin]):
             if isinstance(data_event, event_type):
                 return ptype(self._get_plugin_events(ins))
 
-    def __set__(self, instance: EventModel, value: AnyPlugin):
+    def __set__(self, ins: EventModel, value: AnyPlugin):
         if isinstance(value, _IPlugin):
-            setattr(instance, "internal_name", value.INTERNAL_NAME)
-        instance.events[PluginID.Data] = value.events[PluginID.Data]
-        instance.events[PluginID.Wrapper] = value.events[PluginID.Wrapper]
+            setattr(ins, "internal_name", value.INTERNAL_NAME)
+        ins.events[PluginID.Data] = value.events[PluginID.Data]
+        ins.events[PluginID.Wrapper] = value.events[PluginID.Wrapper]
 
 
 class _NativePluginProp(StructProp[T]):
@@ -447,15 +447,15 @@ class _VSTPluginProp(RWProperty[T], NamedPropMixin):
         self._id = id
         NamedPropMixin.__init__(self, prop)
 
-    def __get__(self, instance: EventModel, _=None) -> T:
-        value = cast(VSTPluginEvent, instance.events.first(PluginID.Data))[self._id]
+    def __get__(self, ins: EventModel, _=None) -> T:
+        value = cast(VSTPluginEvent, ins.events.first(PluginID.Data))[self._id]
         return self._get(value)
 
     def _get(self, value: Any) -> T:
         return cast(T, value if isinstance(value, (str, bytes)) else value[self._prop])
 
-    def __set__(self, instance: EventModel, value: T):
-        self._set(cast(VSTPluginEvent, instance.events.first(PluginID.Data)), value)
+    def __set__(self, ins: EventModel, value: T):
+        self._set(cast(VSTPluginEvent, ins.events.first(PluginID.Data)), value)
 
     def _set(self, event: VSTPluginEvent, value: T):
         if self._prop is None:
