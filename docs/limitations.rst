@@ -1,5 +1,5 @@
-Limitations
-===========
+🚫 Limitations
+===============
 
 Before you begin reading, I would like to **emphasize** that FLP is a closed
 and undocumented format. The knowledge needed for understanding the internals

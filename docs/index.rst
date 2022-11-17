@@ -16,7 +16,7 @@ Navigation
    faq
    limitations
    helping
-   changelog
+   ⏰ Changelog <changelog>
 
 .. sidebar-links::
    :github:

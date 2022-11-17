@@ -70,4 +70,28 @@ This will create a ZIP file of the structure:
    the same name*, FL Studio doesn't store the full path inside an FLP for
    stock samples. See :attr:`pyflp.channel.Sampler.sample_path` for more info.
 
-.. todo:: More to come, soon™
+🔓 Unlocking FLPs saved with a demo version of FL Studio
+---------------------------------------------------------
+
+.. seealso::
+
+   :attr:`Project.licensed <pyflp.project.Project.licensed>` and
+   :attr:`_PluginBase.demo_mode <pyflp.plugin._PluginBase.demo_mode>`.
+
+.. code-block:: python
+
+   import pyflp
+
+   project = pyflp.parse("/path/to/myflp.flp")
+
+   # Unlock the FLP itself
+   project.registered = True
+
+   # Unlock trial version native plugins
+   for instument in project.channels.instruments:
+       instrument.demo_mode = False
+
+   for insert in project.mixer:
+       for slot in insert:
+           if slot.plugin is not None:
+              slot.plugin.demo_mode = False
