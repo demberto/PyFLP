@@ -648,7 +648,7 @@ class Reverb(EventModel, ModelReprMixin):
 
     @property
     def type(self) -> ReverbType | None:
-        if ChannelID.Reverb in self.events:
+        if ChannelID.Reverb in self.events.ids:
             event = self.events.first(ChannelID.Reverb)
             return ReverbType.B if event.value >= ReverbType.B else ReverbType.A
 
@@ -667,12 +667,12 @@ class Reverb(EventModel, ModelReprMixin):
         |-----|-----|
         | 0   | 256 |
         """
-        if ChannelID.Reverb in self.events:
+        if ChannelID.Reverb in self.events.ids:
             return self.events.first(ChannelID.Reverb).value - self.type
 
     @mix.setter
     def mix(self, value: int):
-        if ChannelID.Reverb not in self.events:
+        if ChannelID.Reverb not in self.events.ids:
             raise PropertyCannotBeSet(ChannelID.Reverb)
 
         self.events.first(ChannelID.Reverb).value += value
@@ -1272,11 +1272,11 @@ class Channel(EventModel):
         |-----|-------|---------|
         | 0   | 12800 | 6400    |
         """
-        if ChannelID.Levels in self.events:
+        if ChannelID.Levels in self.events.ids:
             return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pan"]
 
         for id in (ChannelID._PanWord, ChannelID._PanByte):
-            if id in self.events:
+            if id in self.events.ids:
                 return self.events.first(id).value
 
     @pan.setter
@@ -1284,12 +1284,12 @@ class Channel(EventModel):
         if self.pan is None:
             raise PropertyCannotBeSet
 
-        if ChannelID.Levels in self.events:
+        if ChannelID.Levels in self.events.ids:
             cast(LevelsEvent, self.events.first(ChannelID.Levels))["pan"] = value
             return
 
         for id in (ChannelID._PanWord, ChannelID._PanByte):
-            if id in self.events:
+            if id in self.events.ids:
                 self.events.first(id).value = value
 
     @property
@@ -1300,11 +1300,11 @@ class Channel(EventModel):
         |-----|-------|---------|
         | 0   | 12800 | 10000   |
         """
-        if ChannelID.Levels in self.events:
+        if ChannelID.Levels in self.events.ids:
             return cast(LevelsEvent, self.events.first(ChannelID.Levels))["volume"]
 
         for id in (ChannelID._VolWord, ChannelID._VolByte):
-            if id in self.events:
+            if id in self.events.ids:
                 return self.events.first(id).value
 
     @volume.setter
@@ -1312,12 +1312,12 @@ class Channel(EventModel):
         if self.volume is None:
             raise PropertyCannotBeSet
 
-        if ChannelID.Levels in self.events:
+        if ChannelID.Levels in self.events.ids:
             cast(LevelsEvent, self.events.first(ChannelID.Levels))["volume"] = value
             return
 
         for id in (ChannelID._VolWord, ChannelID._VolByte):
-            if id in self.events:
+            if id in self.events.ids:
                 self.events.first(id).value = value
 
     # If the channel is not zipped, underlying event is not stored.
@@ -1327,7 +1327,7 @@ class Channel(EventModel):
 
         ![](https://bit.ly/3S2imib)
         """
-        if ChannelID.Zipped in self.events:
+        if ChannelID.Zipped in self.events.ids:
             return self.events.first(ChannelID.Zipped).value
         return False
 
@@ -1357,7 +1357,7 @@ class Automation(Channel, ModelCollection[AutomationPoint]):
 
     def __iter__(self) -> Iterator[AutomationPoint]:
         """Iterator over the automation points inside the automation clip."""
-        if ChannelID.Automation in self.events:
+        if ChannelID.Automation in self.events.ids:
             event = cast(AutomationEvent, self.events.first(ChannelID.Automation))
             for i, point in enumerate(event["points"]):
                 yield AutomationPoint(point, i, event)
@@ -1390,8 +1390,8 @@ class Layer(Channel, ModelCollection[Channel]):
         raise ChannelNotFound(i)
 
     def __iter__(self) -> Iterator[Channel]:
-        if ChannelID.Children in self.events:
-            for event in self.events[ChannelID.Children]:
+        if ChannelID.Children in self.events.ids:
+            for event in self.events.get(ChannelID.Children):
                 yield self._kw["channels"][event.value]
 
     def __len__(self):
@@ -1450,7 +1450,7 @@ class _SamplerInstrument(Channel):
 
         :menuselection:`Miscellaneous functions -> Tracking`
         """
-        if ChannelID.Tracking in self.events:
+        if ChannelID.Tracking in self.events.ids:
             tracking = [Tracking(e) for e in self.events.separate(ChannelID.Tracking)]
             return dict(zip(("volume", "keyboard"), tracking))
 
@@ -1486,7 +1486,7 @@ class Sampler(_SamplerInstrument):
 
         :menuselection:`Envelope / instruement settings`
         """
-        if ChannelID.EnvelopeLFO in self.events:
+        if ChannelID.EnvelopeLFO in self.events.ids:
             envs = [Envelope(e) for e in self.events.separate(ChannelID.EnvelopeLFO)]
             return dict(zip(EnvelopeName.__args__, envs))  # type: ignore
 
@@ -1515,7 +1515,7 @@ class Sampler(_SamplerInstrument):
 
         :menuselection:`Envelope / instruement settings (page)`
         """
-        if ChannelID.EnvelopeLFO in self.events:
+        if ChannelID.EnvelopeLFO in self.events.ids:
             lfos = [SamplerLFO(e) for e in self.events.separate(ChannelID.EnvelopeLFO)]
             return dict(zip(LFOName.__args__, lfos))  # type: ignore
 
@@ -1526,7 +1526,7 @@ class Sampler(_SamplerInstrument):
         Raises:
             PropertyCannotBeSet: When a `ChannelID.Levels` event is not found.
         """
-        if ChannelID.Levels in self.events:
+        if ChannelID.Levels in self.events.ids:
             return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pitch_shift"]
 
     @pitch_shift.setter
@@ -1551,7 +1551,7 @@ class Sampler(_SamplerInstrument):
 
         Contains the string ``%FLStudioFactoryData%`` for stock samples.
         """
-        if ChannelID.SamplePath in self.events:
+        if ChannelID.SamplePath in self.events.ids:
             return pathlib.Path(self.events.first(ChannelID.SamplePath).value)
 
     @sample_path.setter
@@ -1628,7 +1628,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
         Raises:
             NoModelsFound: No channels could be found in the project.
         """
-        if ChannelID.New not in self.events:
+        if ChannelID.New not in self.events.ids:
             raise NoModelsFound
         return self.events.count(ChannelID.New)
 

@@ -57,7 +57,9 @@ class RemoteController(EventModel, ModelReprMixin):
     @property
     def parameter(self) -> int | None:
         """The ID of the plugin parameter to which controller is linked to."""
-        value = cast(StructEventBase, self.events.only())["parameter_data"]
+        value = cast(StructEventBase, self.events.first(ControllerID.Remote))[
+            "parameter_data"
+        ]
         if value is not None:
             return value & 0x7FFF
 
@@ -67,6 +69,8 @@ class RemoteController(EventModel, ModelReprMixin):
 
         None when linked to a plugin parameter on an insert slot.
         """
-        value = cast(StructEventBase, self.events.only())["parameter_data"]
+        value = cast(StructEventBase, self.events.first(ControllerID.Remote))[
+            "parameter_data"
+        ]
         if value is not None:
             return (value & 0x8000) > 0

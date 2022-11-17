@@ -23,14 +23,12 @@ import abc
 import enum
 import sys
 import warnings
-from collections import defaultdict
 from dataclasses import dataclass, field
-from itertools import chain, zip_longest
+from itertools import zip_longest
 from typing import (
     Any,
     Callable,
     ClassVar,
-    DefaultDict,
     Generic,
     Iterable,
     Iterator,
@@ -40,13 +38,13 @@ from typing import (
 )
 
 if sys.version_info >= (3, 8):
-    from typing import Final, Literal
+    from typing import Final
 else:
-    from typing_extensions import Final, Literal
+    from typing_extensions import Final
 
 import colour
 import construct as c
-from sortedcontainers import SortedList, SortedSet
+from sortedcontainers import SortedList
 
 from .exceptions import (
     EventIDOutOfRange,
@@ -541,9 +539,8 @@ class IndexedEvent:
     """The indexed event."""
 
 
-# TODO Insertion / deletion from parent should affect children
 class EventTree:
-    """Multidict which provides mutable "views" mimicking a tree-like structure.
+    """Provides mutable "views" which propagate changes back to parents.
 
     This tree is analogous to the hierarchy used by models.
 
@@ -560,10 +557,7 @@ class EventTree:
     ):
         """Create a new dictionary with an optional :attr:`parent`."""
         self.children: list[EventTree] = []
-        self.dct: DefaultDict[EventEnum, list[IndexedEvent]] = defaultdict(SortedList)
-        if init:
-            for ie in init:
-                self.dct[ie.e.id].add(ie)  # type: ignore
+        self.lst: list[IndexedEvent] = SortedList(init or [])
 
         self.parent = parent
         if parent is not None:
@@ -574,56 +568,35 @@ class EventTree:
         self.root = parent or self
 
     def __contains__(self, id: EventEnum):
-        """Whether the key :attr:`id` exists in the dictionary."""
-        return id in self.dct
-
-    def __delitem__(self, id: EventEnum):
-        """Removes all events with matching :attr:`id`."""
-        for _ in range(len(self.dct[id])):
-            self.remove(id)
+        """Whether the key :attr:`id` exists in the list."""
+        for ie in self.lst:
+            if ie.e.id == id:
+                return True
+        return False
 
     def __eq__(self, o: object) -> bool:
-        """Compares equality of internal dictionaries."""
+        """Compares equality of internal lists."""
         if not isinstance(o, EventTree):
             return NotImplemented
 
-        return self.dct == o.dct
-
-    def __getitem__(self, id: EventEnum) -> Iterator[AnyEvent]:
-        """Yields events with matching :attr:`id`."""
-        return (ie.e for ie in self.dct[id])
+        return self.lst == o.lst
 
     def __iadd__(self, *events: AnyEvent) -> None:
         """Analogous to :meth:`list.extend`."""
         for event in events:
             self.append(event)
 
-    def __ior__(self, ed: EventTree) -> None:
-        """Merge :attr:`ed` into this dictionary."""
-        if self.indexes & ed.indexes:
-            raise ValueError("Conflicting root indexes")
-
-        self.dct.update(ed.dct)
-
-    def __iter__(self) -> Iterator[EventEnum]:
-        return iter(self.dct)
+    def __iter__(self) -> Iterator[AnyEvent]:
+        return (ie.e for ie in self.lst)
 
     def __len__(self) -> int:
-        """Number of events of all IDs inside this dictionary."""
-        return sum(len(self.dct[id]) for id in self)
+        return len(self.lst)
 
     def __repr__(self) -> str:
-        return f"EventTree ({len(self.dct)} IDs, {len(self)} events)"
+        return f"EventTree ({len(self.ids)} IDs, {len(self)} events)"
 
-    def __setitem__(self, id: EventEnum, it: Iterator[AnyEvent]) -> None:
-        """Modifies events held by an existing :class:`IndexedEvent`.
-
-        Raises:
-            IndexError: When the internal dictionary's list for key :attr:`id`
-                isn't big enough to hold all events in :attr:`it`.
-        """
-        for i, e in enumerate(it):
-            self.dct[id][i].e = e
+    def _get_ie(self, *ids: EventEnum) -> Iterator[IndexedEvent]:
+        return (ie for ie in self.lst if ie.e.id in ids)
 
     def _recursive(self, action: Callable[[EventTree], None]) -> None:
         """Recursively performs :attr:`action` on self and all parents."""
@@ -633,47 +606,19 @@ class EventTree:
             action(ancestor)
             ancestor = ancestor.parent
 
-    def all(self) -> Iterator[AnyEvent]:
-        """Yields all events in this dictionary sorted w.r.t to their root indexes."""
-        return (ie.e for ie in sorted(ie for id in self for ie in self.dct[id]))
-
     def append(self, event: AnyEvent) -> None:
         """Appends an event at its corresponding key's list's end."""
-        self.insert(-1, event)
-
-    # Wish I could use __getitem__ overload for this, but EventEnum shadows int.
-    def at(self, index: int, mode: Literal["local", "root"] = "local") -> AnyEvent:
-        """Returns the event at local or root ``index``.
-
-        Args:
-            index: A list (+ve or -ve) index or a root (zero-based) index.
-            mode: Whether to lookup local (list) index or root (insertion) index.
-
-        Raises:
-            IndexError: If an event with ``index`` could not be found.
-        """
-        it = chain.from_iterable(self.dct.values())
-
-        if mode == "local":
-            return sorted(it)[index].e
-
-        for ie in it:
-            if ie.r == index:
-                return ie.e
-
-        raise IndexError(index)
+        self.insert(len(self), event)
 
     def count(self, id: EventEnum) -> int:
         """Returns the count of the events with :attr:`id`."""
-        if id not in self.dct:
-            raise KeyError(id)
-        return len(self.dct[id])
+        return len(list(self._get_ie(id)))
 
     def divide(self, separator: EventEnum, *ids: EventEnum) -> Iterator[EventTree]:
         """Yields subtrees containing events separated by ``separator`` infinitely."""
         el: list[IndexedEvent] = []
         first = True
-        for ie in sorted(chain.from_iterable(self.dct.values())):
+        for ie in self.lst:
             if ie.e.id == separator:
                 if not first:
                     yield EventTree(self, el)
@@ -686,69 +631,46 @@ class EventTree:
         yield EventTree(self, el)  # Yield the last one
 
     def first(self, id: EventEnum) -> AnyEvent:
-        if id not in self.dct:
-            raise KeyError(id)
-        return self.dct[id][0].e
+        try:
+            return next(self.get(id))
+        except StopIteration as exc:
+            raise KeyError(id) from exc
 
-    def get(self, *ids: EventEnum) -> list[AnyEvent]:
-        """Returns a sorted list of events whose ID is one of :attr:`ids`."""
-        return [t.e for t in sorted(t for i in ids if i in self for t in self.dct[i])]
+    def get(self, *ids: EventEnum) -> Iterator[AnyEvent]:
+        """Yields events whose ID is one of :attr:`ids`."""
+        return (e for e in self if e.id in ids)
 
     def group(self, *ids: EventEnum) -> Iterator[EventTree]:
-        """Yields EventTrees of zip objects of events with matching :attr:`ids`.
-
-        Transforms a ``dict`` like this:
-
-            {A: [Event(A, 1), Event(A, 2)], B: [Event(B, 1)]}
-
-        into an ``EventTree`` list like this:
-
-            [EventTree([Event(A, 1), Event(B, 1)]), EventTree([Event(A, 2)])]
-        """
-        for iel in zip_longest(*(self.dct[id] for id in ids)):  # unpack magic
-            obj = EventTree(self, [ie for ie in iel if ie])  # filter out None values
+        """Yields EventTrees of zip objects of events with matching :attr:`ids`."""
+        for iet in zip_longest(*(self._get_ie(id) for id in ids)):  # unpack magic
+            obj = EventTree(self, [ie for ie in iet if ie])  # filter out None values
             self.children.append(obj)
             yield obj
 
-    # TODO! First event's rootidx gets pushed to last
     def insert(self, pos: int, e: AnyEvent):
         """Inserts :attr:`ev` at :attr:`pos` in this and all parent trees."""
-        rootidx = cast(int, self.indexes[pos]) if len(self) else 0
+        rootidx = sorted(self.indexes)[pos] if len(self) else 0
 
         # Shift all root indexes after rootidx by +1 to prevent collisions
         # while sorting the entire list by root indexes before serialising.
-        for ie in chain.from_iterable(self.root.dct.values()):
+        for ie in self.root.lst:
             if ie.r >= rootidx:
                 ie.r += 1
 
-        self._recursive(lambda ed: ed.dct[e.id].add(IndexedEvent(rootidx, e)))  # type: ignore # noqa
-
-    def items(self) -> Iterator[tuple[EventEnum, Iterator[AnyEvent]]]:
-        yield from ((id, self[id]) for id in self)
-
-    def only(self) -> AnyEvent:
-        """Same as ``next(self.all())`` but raises ValueError if dict size isn't 1."""
-        if len(self) != 1:
-            raise ValueError("Dictionary should contain exactly one element.")
-        return next(self.all())
+        self._recursive(lambda et: et.lst.add(IndexedEvent(rootidx, e)))  # type: ignore
 
     def pop(self, id: EventEnum, pos: int = 0) -> AnyEvent:
         """Pops the event with ``id`` at ``pos`` in ``self`` and all parents."""
-        if id not in self.dct:
+        if id not in self.ids:
             raise KeyError(id)
 
-        ie = self.dct[id][pos]
-        self._recursive(lambda ed: ed.dct[id].remove(ie))
-
-        # Remove keys with empty lists
-        for k in tuple(self.dct.keys()):
-            if not self.dct[k]:
-                del self.dct[k]
+        ie = [ie for ie in self.lst if ie.e.id == id][pos]
+        self._recursive(lambda et: et.lst.remove(ie))
 
         # Shift all root indexes of events after rootidx by -1.
-        # Not really required but ensure consistency of the indexes
-        for ielt in (t for lst in self.root.dct.values() for t in lst if t.r >= ie.r):
-            ielt.r -= 1
+        for root_ie in self.root.lst:
+            if root_ie.r >= ie.r:
+                root_ie.r -= 1
 
         return ie.e
 
@@ -758,12 +680,12 @@ class EventTree:
 
     def separate(self, id: EventEnum) -> Iterator[EventTree]:
         """Yields a separate ``EventTree`` for every event with matching ``id``."""
-        for ie in self.dct[id]:
+        for ie in self._get_ie(id):
             obj = EventTree(self, [ie])
             self.children.append(obj)
             yield obj
 
-    def subdict(self, select: Callable[[AnyEvent], bool | None]) -> EventTree:
+    def subtree(self, select: Callable[[AnyEvent], bool | None]) -> EventTree:
         """Returns a mutable view containing events for which ``select`` was True.
 
         Caution:
@@ -771,14 +693,14 @@ class EventTree:
             chilren and passing parent to a child are best done here.
         """
         el: list[IndexedEvent] = []
-        for ie in sorted(chain.from_iterable(self.dct.values())):
+        for ie in self.lst:
             if select(ie.e):
                 el.append(ie)
         obj = EventTree(self, el)
         self.children.append(obj)
         return obj
 
-    def subdicts(
+    def subtrees(
         self, select: Callable[[AnyEvent], bool | None], repeat: int
     ) -> Iterator[EventTree]:
         """Yields mutable views till ``select`` and ``repeat`` are satisfied.
@@ -791,7 +713,7 @@ class EventTree:
             repeat: Use -1 for infinite iterations.
         """
         el: list[IndexedEvent] = []
-        for ie in sorted(chain.from_iterable(self.dct.values())):
+        for ie in self.lst:
             if not repeat:
                 return
 
@@ -806,6 +728,10 @@ class EventTree:
                 el.append(ie)
 
     @property
-    def indexes(self):
+    def ids(self) -> frozenset[EventEnum]:
+        return frozenset(ie.e.id for ie in self.lst)
+
+    @property
+    def indexes(self) -> frozenset[int]:
         """Returns root indexes for all events in ``self``."""
-        return SortedSet(ie.r for lst in self.dct.values() for ie in lst)
+        return frozenset(ie.r for ie in self.lst)

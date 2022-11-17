@@ -18,7 +18,6 @@ from __future__ import annotations
 import enum
 import warnings
 from collections import defaultdict
-from itertools import chain
 from typing import DefaultDict, Iterator, cast
 
 import colour
@@ -246,7 +245,7 @@ class Pattern(EventModel):
             However by using the :class:`Note` properties with a MIDI parsing
             library for example, you can export them to MIDI.
         """
-        if PatternID.Notes in self.events:
+        if PatternID.Notes in self.events.ids:
             event = cast(NotesEvent, self.events.first(PatternID.Notes))
             yield from (Note(item, i, event) for i, item in enumerate(event))
 
@@ -269,7 +268,7 @@ class Pattern(EventModel):
     @property
     def controllers(self) -> Iterator[Controller]:
         """Parameter automations associated with this pattern (if any)."""
-        if PatternID.Controllers in self.events:
+        if PatternID.Controllers in self.events.ids:
             event = cast(ControllerEvent, self.events.first(PatternID.Controllers))
             yield from (Controller(item, i, event) for i, item in enumerate(event))
 
@@ -285,7 +284,7 @@ class Pattern(EventModel):
 
     @index.setter
     def index(self, value: int):
-        for event in self.events[PatternID.New]:
+        for event in self.events.get(PatternID.New):
             event.value = value
 
     length = EventProp[int](PatternID.Length)
@@ -333,7 +332,7 @@ class Patterns(EventModel):
         cur_pat_id = 0
         tmp_dict: DefaultDict[int, list[IndexedEvent]] = defaultdict(list)
 
-        for ie in sorted(chain.from_iterable(self.events.dct.values())):
+        for ie in self.events.lst:
             if ie.e.id == PatternID.New:
                 cur_pat_id = ie.e.value
 
@@ -341,7 +340,9 @@ class Patterns(EventModel):
                 tmp_dict[cur_pat_id].append(ie)
 
         for events in tmp_dict.values():
-            yield Pattern(EventTree(self.events, events))
+            et = EventTree(self.events, events)
+            self.events.children.append(et)
+            yield Pattern(et)
 
     def __len__(self):
         """Returns the number of patterns found in the project.
@@ -349,9 +350,9 @@ class Patterns(EventModel):
         Raises:
             NoModelsFound: No patterns were found.
         """
-        if PatternID.New not in self.events:
+        if PatternID.New not in self.events.ids:
             raise NoModelsFound
-        return len({event.value for event in self.events[PatternID.New]})
+        return len({e.value for e in self.events.get(PatternID.New)})
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)
     """Whether truncated notes of patterns placed in the playlist should be played.
@@ -365,7 +366,7 @@ class Patterns(EventModel):
     @property
     def current(self) -> Pattern | None:
         """Returns the currently selected pattern."""
-        if PatternsID.CurrentlySelected in self.events:
+        if PatternsID.CurrentlySelected in self.events.ids:
             index = self.events.first(PatternsID.CurrentlySelected).value
             for pattern in self:
                 if pattern.index == index:

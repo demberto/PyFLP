@@ -195,7 +195,7 @@ def save(project: Project, file: pathlib.Path | str):
 
     project.events.insert(0, project.events.pop(ProjectID.FLVersion))
     events_size = 0
-    for event in project.events.all():
+    for event in project.events:
         events_size += event.size
         stream.write(bytes(event))
 

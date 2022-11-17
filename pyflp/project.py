@@ -182,7 +182,7 @@ class Project(EventModel):
                 return True
 
         return Arrangements(
-            self.events.subdict(select),
+            self.events.subtree(select),
             channels=self.channels,
             patterns=self.patterns,
             version=self.version,
@@ -225,7 +225,7 @@ class Project(EventModel):
                 return True
 
         return ChannelRack(
-            self.events.subdict(select),
+            self.events.subtree(select),
             channel_count=self.channel_count,
         )
 
@@ -247,7 +247,7 @@ class Project(EventModel):
 
         Located at the bottom of :menuselection:`Options --> &Project info` page.
         """
-        if ProjectID.Timestamp in self.events:
+        if ProjectID.Timestamp in self.events.ids:
             event = cast(TimestampEvent, self.events.first(ProjectID.Timestamp))
             return _DELPHI_EPOCH + datetime.timedelta(days=event["created_on"])
 
@@ -262,12 +262,12 @@ class Project(EventModel):
 
         *New in FL Studio v9.0.0.*
         """
-        if ProjectID.DataPath in self.events:
+        if ProjectID.DataPath in self.events.ids:
             return pathlib.Path(self.events.first(ProjectID.DataPath).value)
 
     @data_path.setter
     def data_path(self, value: str | pathlib.Path):
-        if ProjectID.DataPath not in self.events:
+        if ProjectID.DataPath not in self.events.ids:
             raise PropertyCannotBeSet(ProjectID.DataPath)
 
         if isinstance(value, pathlib.Path):
@@ -305,7 +305,7 @@ class Project(EventModel):
 
         *New in FL Studio v1.3.9*.
         """
-        if ProjectID.Licensee in self.events:
+        if ProjectID.Licensee in self.events.ids:
             event = self.events.first(ProjectID.Licensee)
             licensee = bytearray()
             for idx, char in enumerate(event.value):
@@ -323,7 +323,7 @@ class Project(EventModel):
         if self.version < FLVersion(1, 3, 9):
             pass
 
-        if ProjectID.Licensee not in self.events:
+        if ProjectID.Licensee not in self.events.ids:
             raise PropertyCannotBeSet(ProjectID.Licensee)
 
         event = self.events.first(ProjectID.Licensee)
@@ -361,13 +361,13 @@ class Project(EventModel):
             if inserts_began and e.id in PluginID:
                 return True
 
-        return Mixer(self.events.subdict(select), version=self.version)
+        return Mixer(self.events.subtree(select), version=self.version)
 
     @property
     def patterns(self) -> Patterns:
         """Returns a collection of patterns and other related properties."""
         return Patterns(
-            self.events.subdict(lambda e: e.id in (*PatternID, *PatternsID))
+            self.events.subtree(lambda e: e.id in (*PatternID, *PatternsID))
         )
 
     pan_law = EventProp[PanLaw](ProjectID.PanLaw)
@@ -442,13 +442,13 @@ class Project(EventModel):
         * *Changed in FL Studio v11*: Max tempo limited to ``522.000``.
             Probably when tempo automations
         """
-        if ProjectID.Tempo in self.events:
+        if ProjectID.Tempo in self.events.ids:
             return self.events.first(ProjectID.Tempo).value / 1000
 
         tempo = None
-        if ProjectID._TempoCoarse in self.events:
+        if ProjectID._TempoCoarse in self.events.ids:
             tempo = self.events.first(ProjectID._TempoCoarse).value
-        if ProjectID._TempoFine in self.events:
+        if ProjectID._TempoFine in self.events.ids:
             tempo += self.events.first(ProjectID._TempoFine).value / 1000
         return tempo
 
@@ -469,14 +469,14 @@ class Project(EventModel):
         if float(value) > max_tempo or float(value) < MIN_TEMPO:
             raise ValueError(f"Invalid tempo {value}; expected {MIN_TEMPO}-{max_tempo}")
 
-        if ProjectID.Tempo in self.events:
+        if ProjectID.Tempo in self.events.ids:
             self.events.first(ProjectID.Tempo).value = int(value * 1000)
 
-        if ProjectID._TempoFine in self.events:
+        if ProjectID._TempoFine in self.events.ids:
             tempo_fine = int((value - math.floor(value)) * 1000)
             self.events.first(ProjectID._TempoFine).value = tempo_fine
 
-        if ProjectID._TempoCoarse in self.events:
+        if ProjectID._TempoCoarse in self.events.ids:
             self.events.first(ProjectID._TempoCoarse).value = math.floor(value)
 
     @property
@@ -487,7 +487,7 @@ class Project(EventModel):
 
         Located at the bottom of :menuselection:`Options --> &Project info` page.
         """
-        if ProjectID.Timestamp in self.events:
+        if ProjectID.Timestamp in self.events.ids:
             event = cast(TimestampEvent, self.events.first(ProjectID.Timestamp))
             return datetime.timedelta(days=event["time_spent"])
 
@@ -523,7 +523,7 @@ class Project(EventModel):
 
     @version.setter
     def version(self, value: FLVersion | str | tuple[int, ...]):
-        if ProjectID.FLVersion not in self.events:
+        if ProjectID.FLVersion not in self.events.ids:
             raise PropertyCannotBeSet(ProjectID.FLVersion)
 
         if isinstance(value, FLVersion):
@@ -540,5 +540,5 @@ class Project(EventModel):
 
         version = ".".join(str(part) for part in parts)
         self.events.first(ProjectID.FLVersion).value = version
-        if len(parts) == 4 and ProjectID.FLBuild in self.events:
+        if len(parts) == 4 and ProjectID.FLBuild in self.events.ids:
             self.events.first(ProjectID.FLBuild).value = parts[3]

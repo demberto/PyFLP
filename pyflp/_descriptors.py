@@ -91,7 +91,7 @@ class PropBase(abc.ABC, RWProperty[T]):
             if len(ins.events) > 1:  # Prevent ambiguous situations
                 raise LookupError("Event ID not specified")
 
-            return tuple(ins.events.all())[0]
+            return tuple(ins.events)[0]
 
         for id in self._ids:
             if id in ins.events:
@@ -221,7 +221,7 @@ class NestedProp(ROProperty[EMT_co]):
         if owner is None:
             return NotImplemented
 
-        return self._type(ins.events.subdict(lambda e: e.id in self._ids))
+        return self._type(ins.events.subtree(lambda e: e.id in self._ids))
 
 
 class StructProp(PropBase[T], NamedPropMixin):

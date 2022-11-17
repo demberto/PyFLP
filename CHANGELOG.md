@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Track.height` returns an `str` of its percentage e.g. `100%`.
 - `Instrument.plugin` and `Slot.plugin` return `_PluginBase` for unimplemented
   native plugins [#102].
+- Reimplemented `EventTree` to use a list and got a 10+% perf boost in unit tests.
 
 ### Fixed
 

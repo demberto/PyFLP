@@ -60,7 +60,7 @@ def get_model():
     def wrapper(suffix: str, type: type[ModelBase], *only: EventEnum):
         parsed = pyflp.parse(pathlib.Path(__file__).parent / "assets" / suffix)
         if only:
-            return type(parsed.events.subdict(lambda e: e.id in only))
+            return type(parsed.events.subtree(lambda e: e.id in only))
         return type(parsed.events)
 
     return wrapper

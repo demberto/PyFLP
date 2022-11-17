@@ -490,15 +490,17 @@ class Insert(EventModel, ModelCollection[Slot]):
 
         ![](https://bit.ly/3eLum9D)
         """
-        events = self.events.get(InsertID.Flags)
-        if events is not None:
-            event = cast(InsertFlagsEvent, events[0])
-            flags = _InsertFlags(event["flags"])
-            if _InsertFlags.DockMiddle in flags:
-                return InsertDock.Middle
-            if _InsertFlags.DockRight in flags:
-                return InsertDock.Right
-            return InsertDock.Left
+        try:
+            event = cast(InsertFlagsEvent, self.events.first(InsertID.Flags))
+        except KeyError:
+            return None
+
+        flags = _InsertFlags(event["flags"])
+        if _InsertFlags.DockMiddle in flags:
+            return InsertDock.Middle
+        if _InsertFlags.DockRight in flags:
+            return InsertDock.Right
+        return InsertDock.Left
 
     enabled = FlagProp(_InsertFlags.Enabled, InsertID.Flags)
     """Whether an insert in the mixer is enabled or disabled.
@@ -652,10 +654,10 @@ class Mixer(EventModel, ModelCollection[Insert]):
                 return True
 
         params: dict[int, _InsertItems] = {}
-        if MixerID.Params in self.events:
+        if MixerID.Params in self.events.ids:
             params = cast(MixerParamsEvent, self.events.first(MixerID.Params)).items
 
-        for i, ed in enumerate(self.events.subdicts(select, self.max_inserts)):
+        for i, ed in enumerate(self.events.subtrees(select, self.max_inserts)):
             if i in params:
                 yield Insert(
                     ed, index=i - 1, max_slots=self.max_slots, params=params[i]
@@ -669,7 +671,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
         Raises:
             NoModelsFound: No inserts could be found.
         """
-        if InsertID.Flags not in self.events:
+        if InsertID.Flags not in self.events.ids:
             raise NoModelsFound
         return self.events.count(InsertID.Flags)
 

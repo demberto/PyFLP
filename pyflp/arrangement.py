@@ -270,7 +270,7 @@ class TimeMarker(EventModel):
 
     @property
     def position(self) -> int | None:
-        if TimeMarkerID.Position in self.events:
+        if TimeMarkerID.Position in self.events.ids:
             event = self.events.first(TimeMarkerID.Position)
             if event.value < TimeMarkerType.Signature:
                 return event.value
@@ -282,7 +282,7 @@ class TimeMarker(EventModel):
 
         [![](https://bit.ly/3RDM1yn)]()
         """
-        if TimeMarkerID.Position in self.events:
+        if TimeMarkerID.Position in self.events.ids:
             event = self.events.first(TimeMarkerID.Position)
             if event.value >= TimeMarkerType.Signature:
                 return TimeMarkerType.Signature
@@ -436,7 +436,7 @@ class Arrangement(EventModel):
         e = None
         max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
 
-        if ArrangementID.Playlist in self.events:
+        if ArrangementID.Playlist in self.events.ids:
             e = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
 
         for track_idx, ed in enumerate(self.events.divide(TrackID.Data, *TrackID)):
@@ -535,7 +535,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
 
         yield from (
             Arrangement(ed, **self._kw)
-            for ed in self.events.subdicts(select, len(self))
+            for ed in self.events.subtrees(select, len(self))
         )
 
     def __len__(self):
@@ -544,7 +544,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         Raises:
             NoModelsFound: When no arrangements are found.
         """
-        if ArrangementID.New not in self.events:
+        if ArrangementID.New not in self.events.ids:
             raise NoModelsFound
         return self.events.count(ArrangementID.New)
 
@@ -559,7 +559,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             ModelNotFound: When the underlying event value points to an
                 invalid arrangement index.
         """
-        if ArrangementsID.Current in self.events:
+        if ArrangementsID.Current in self.events.ids:
             event = self.events.first(ArrangementsID.Current)
             index = event.value
             try:

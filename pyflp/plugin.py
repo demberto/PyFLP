@@ -411,7 +411,7 @@ class PluginProp(RWProperty[AnyPlugin]):
 
     @staticmethod
     def _get_plugin_events(ins: EventModel):
-        return ins.events.subdict(lambda e: e.id in (PluginID.Wrapper, PluginID.Data))
+        return ins.events.subtree(lambda e: e.id in (PluginID.Wrapper, PluginID.Data))
 
     def __get__(self, ins: EventModel, owner: Any = None) -> AnyPlugin | None:
         if owner is None:
@@ -433,8 +433,11 @@ class PluginProp(RWProperty[AnyPlugin]):
     def __set__(self, ins: EventModel, value: AnyPlugin):
         if isinstance(value, _IPlugin):
             setattr(ins, "internal_name", value.INTERNAL_NAME)
-        ins.events[PluginID.Data] = value.events[PluginID.Data]
-        ins.events[PluginID.Wrapper] = value.events[PluginID.Wrapper]
+
+        for id in (PluginID.Data, PluginID.Wrapper):
+            for ie in ins.events.lst:
+                if ie.e.id == id:
+                    ie.e = value.events.first(id)
 
 
 class _NativePluginProp(StructProp[T]):
