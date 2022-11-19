@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Type, TypeVar
-
-import pytest
+from typing import TypeVar
 
 from pyflp.plugin import (
     AnyPlugin,
@@ -18,34 +16,28 @@ from pyflp.plugin import (
     WrapperPage,
 )
 
-from .conftest import ModelFixture
+from .conftest import get_model
 
 T = TypeVar("T", bound=AnyPlugin)
-PluginFixture = Callable[[str, Type[T]], T]
 
 
-@pytest.fixture
-def plugin(get_model: ModelFixture):
-    def wrapper(preset_file: str, type: type[T]):
-        suffix = f"plugins/{preset_file}"
-        return get_model(suffix, type, PluginID.Data, PluginID.Wrapper)
-
-    return wrapper
+def get_plugin(preset_file: str, type: type[T]):
+    return get_model(f"plugins/{preset_file}", type, PluginID.Data, PluginID.Wrapper)
 
 
-def test_fruity_balance(plugin: PluginFixture[FruityBalance]):
-    fruity_balance = plugin("fruity-balance.fst", FruityBalance)
+def test_fruity_balance():
+    fruity_balance = get_plugin("fruity-balance.fst", FruityBalance)
     assert fruity_balance.volume == 256
     assert fruity_balance.pan == 0
 
 
-def test_fruity_center(plugin: PluginFixture[FruityCenter]):
-    fruity_center = plugin("fruity-center.fst", FruityCenter)
+def test_fruity_center():
+    fruity_center = get_plugin("fruity-center.fst", FruityCenter)
     assert not fruity_center.enabled
 
 
-def test_fruity_fast_dist(plugin: PluginFixture[FruityFastDist]):
-    fruity_fast_dist = plugin("fruity-fast-dist.fst", FruityFastDist)
+def test_fruity_fast_dist():
+    fruity_fast_dist = get_plugin("fruity-fast-dist.fst", FruityFastDist)
     assert fruity_fast_dist.pre == 128
     assert fruity_fast_dist.threshold == 10
     assert fruity_fast_dist.kind == "A"
@@ -53,22 +45,24 @@ def test_fruity_fast_dist(plugin: PluginFixture[FruityFastDist]):
     assert fruity_fast_dist.post == 128
 
 
-def test_fruity_send(plugin: PluginFixture[FruitySend]):
-    fruity_send = plugin("fruity-send.fst", FruitySend)
+def test_fruity_send():
+    fruity_send = get_plugin("fruity-send.fst", FruitySend)
     assert fruity_send.dry == 256
     assert fruity_send.send_to == -1
     assert fruity_send.pan == 0
     assert fruity_send.volume == 256
 
 
-def test_fruity_soft_clipper(plugin: PluginFixture[FruitySoftClipper]):
-    fruity_soft_clipper = plugin("fruity-soft-clipper.fst", FruitySoftClipper)
+def test_fruity_soft_clipper():
+    fruity_soft_clipper = get_plugin("fruity-soft-clipper.fst", FruitySoftClipper)
     assert fruity_soft_clipper.threshold == 100
     assert fruity_soft_clipper.post == 128
 
 
-def test_fruity_stereo_enhancer(plugin: PluginFixture[FruityStereoEnhancer]):
-    fruity_stereo_enhancer = plugin("fruity-stereo-enhancer.fst", FruityStereoEnhancer)
+def test_fruity_stereo_enhancer():
+    fruity_stereo_enhancer = get_plugin(
+        "fruity-stereo-enhancer.fst", FruityStereoEnhancer
+    )
     assert fruity_stereo_enhancer.stereo_separation == 0
     assert fruity_stereo_enhancer.effect_position == "post"
     assert fruity_stereo_enhancer.phase_offset == 0
@@ -77,14 +71,14 @@ def test_fruity_stereo_enhancer(plugin: PluginFixture[FruityStereoEnhancer]):
     assert fruity_stereo_enhancer.volume == 256
 
 
-def test_soundgoodizer(plugin: PluginFixture[Soundgoodizer]):
-    soundgoodizer = plugin("soundgoodizer.fst", Soundgoodizer)
+def test_soundgoodizer():
+    soundgoodizer = get_plugin("soundgoodizer.fst", Soundgoodizer)
     assert soundgoodizer.amount == 600
     assert soundgoodizer.mode == "A"
 
 
-def test_vst_plugin(plugin: PluginFixture[VSTPlugin]):
-    djmfilter = plugin("xfer-djmfilter.fst", VSTPlugin)
+def test_vst_plugin():
+    djmfilter = get_plugin("xfer-djmfilter.fst", VSTPlugin)
     assert djmfilter.name == "DJMFilter"
     assert djmfilter.vendor == "Xfer Records"
     assert (
@@ -93,8 +87,8 @@ def test_vst_plugin(plugin: PluginFixture[VSTPlugin]):
     )
 
 
-def test_fruity_wrapper(plugin: PluginFixture[VSTPlugin]):
-    wrapper = plugin("fruity-wrapper.fst", VSTPlugin)
+def test_fruity_wrapper():
+    wrapper = get_plugin("fruity-wrapper.fst", VSTPlugin)
 
     # WrapperEvent properties
     assert not wrapper.compact

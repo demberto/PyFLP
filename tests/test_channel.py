@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Any, Callable
+from typing import TypeVar
 
 import colour
-import pytest
 
 from pyflp import Project
 from pyflp.channel import (
@@ -21,53 +20,35 @@ from pyflp.channel import (
     StretchMode,
 )
 
-from .conftest import ModelFixture
+from .conftest import get_model
 
-AutomationFixture = Callable[[str], Automation]
-ChannelFixture = Callable[[str], Channel]
-InstrumentFixture = Callable[[str], Instrument]
-LayerFixture = Callable[[str], Layer]
-SamplerFixture = Callable[[str], Sampler]
+CT = TypeVar("CT", bound=Channel)
 
 
-@pytest.fixture
-def load_channel(get_model: ModelFixture):
-    def wrapper(preset: str, type: type[Channel] = Channel):
-        return get_model(f"channels/{preset}", type)
-
-    return wrapper
+def _load_channel(preset: str, type: type[CT]):
+    return get_model(f"channels/{preset}", type)
 
 
-@pytest.fixture
-def load_automation(load_channel: ModelFixture):
-    def wrapper(preset: str):
-        return load_channel(preset, Automation)
-
-    return wrapper
+# This is separated only to pass type checks
+# (preset: str, type: type[CT] = Channel) -> CT messes inferred return type
+def load_channel(preset: str):
+    return _load_channel(preset, Channel)
 
 
-@pytest.fixture
-def load_instrument(load_channel: ModelFixture):
-    def wrapper(preset: str):
-        return load_channel(preset, Instrument)
-
-    return wrapper
+def load_automation(preset: str):
+    return _load_channel(preset, Automation)
 
 
-@pytest.fixture
-def load_layer(load_channel: Any):
-    def wrapper(preset: str):
-        return load_channel(preset, Layer)
-
-    return wrapper
+def load_instrument(preset: str):
+    return _load_channel(preset, Instrument)
 
 
-@pytest.fixture
-def load_sampler(load_channel: Any):
-    def wrapper(preset: str):
-        return load_channel(preset, Sampler)
+def load_layer(preset: str):
+    return _load_channel(preset, Layer)
 
-    return wrapper
+
+def load_sampler(preset: str):
+    return _load_channel(preset, Sampler)
 
 
 def test_channels(project: Project, rack: ChannelRack):
@@ -78,21 +59,21 @@ def test_channels(project: Project, rack: ChannelRack):
     assert not rack.swing
 
 
-def test_automation_lfo(load_automation: AutomationFixture):
+def test_automation_lfo():
     lfo = load_automation("automation-lfo.fst").lfo
     assert lfo.amount == 64
 
 
-def test_automation_points(load_automation: AutomationFixture):
+def test_automation_points():
     points = [point for point in load_automation("automation-points.fst")]
     assert [int(p.position or 0) for p in points] == [0, 8, 8, 16, 24, 32]
 
 
-def test_channel_color(load_channel: ChannelFixture):
+def test_channel_color():
     assert load_channel("colored.fst").color == colour.Color("#1414FF")
 
 
-def test_channel_enabled(load_channel: ChannelFixture):
+def test_channel_enabled():
     assert not load_channel("disabled.fst").enabled
 
 
@@ -106,16 +87,16 @@ def test_channel_group(rack: ChannelRack):
             assert channel.group.name == "Unsorted"
 
 
-def test_channel_icon(load_channel: ChannelFixture):
+def test_channel_icon():
     assert load_channel("iconified.fst").icon == 116
 
 
-def test_channel_pan(load_channel: ChannelFixture):
+def test_channel_pan():
     assert load_channel(r"100%-left.fst").pan == 0
     assert load_channel(r"100%-right.fst").pan == 12800
 
 
-def test_channel_volume(load_channel: ChannelFixture):
+def test_channel_volume():
     assert load_channel("full-volume.fst").volume == 12800
     assert not load_channel("zero-volume.fst").volume
 
@@ -128,7 +109,7 @@ def test_channel_zipped(rack: ChannelRack):
             assert not channel.zipped
 
 
-def test_instrument_delay(load_instrument: InstrumentFixture):
+def test_instrument_delay():
     delay = load_instrument("delay.fst").delay
     assert delay.feedback == 12800
     assert delay.echoes == 10
@@ -140,7 +121,7 @@ def test_instrument_delay(load_instrument: InstrumentFixture):
     assert delay.time == 144
 
 
-def test_instrument_keyboard(load_instrument: InstrumentFixture):
+def test_instrument_keyboard():
     keyboard = load_instrument("keyboard.fst").keyboard
     assert keyboard.add_root
     assert keyboard.fine_tune == 100
@@ -149,7 +130,7 @@ def test_instrument_keyboard(load_instrument: InstrumentFixture):
     assert keyboard.root_note == 60
 
 
-def test_instrument_polyphony(load_instrument: InstrumentFixture):
+def test_instrument_polyphony():
     polyphony = load_instrument("polyphony.fst").polyphony
     assert polyphony.mono
     assert polyphony.porta
@@ -157,11 +138,11 @@ def test_instrument_polyphony(load_instrument: InstrumentFixture):
     assert polyphony.slide == 820
 
 
-def test_instrument_routing(load_instrument: InstrumentFixture):
+def test_instrument_routing():
     assert load_instrument("routed.fst").insert == 125
 
 
-def test_instrument_time(load_instrument: InstrumentFixture):
+def test_instrument_time():
     time = load_instrument("time.fst").time
     assert time.full_porta
     assert time.gate == 450
@@ -169,7 +150,7 @@ def test_instrument_time(load_instrument: InstrumentFixture):
     assert time.swing == 64
 
 
-def test_instrument_tracking(load_instrument: InstrumentFixture):
+def test_instrument_tracking():
     tracking = load_instrument("tracking.fst").tracking
     assert tracking and len(tracking) == 2
 
@@ -181,18 +162,18 @@ def test_instrument_tracking(load_instrument: InstrumentFixture):
 
 
 # ! Apparently, layer children events aren't stored in presets
-# def test_layer_children(load_layer: LayerFixture):
+# def test_layer_children(): pass
 
 
-def test_layer_crossfade(load_layer: LayerFixture):
+def test_layer_crossfade():
     assert load_layer("layer-crossfade.fst").crossfade
 
 
-def test_layer_random(load_layer: LayerFixture):
+def test_layer_random():
     assert load_layer("layer-random.fst").random
 
 
-def test_sampler_content(load_sampler: SamplerFixture):
+def test_sampler_content():
     content = load_sampler("sampler-content.fst").content
     assert content.keep_on_disk
     assert content.resample
@@ -201,11 +182,11 @@ def test_sampler_content(load_sampler: SamplerFixture):
     assert content.declick_mode == DeclickMode.Generic
 
 
-def test_sampler_cut_group(load_sampler: SamplerFixture):
+def test_sampler_cut_group():
     assert load_sampler("cut-groups.fst").cut_group == (1, 2)
 
 
-def test_sampler_envelopes(load_sampler: SamplerFixture):
+def test_sampler_envelopes():
     envelopes = load_sampler("envelope.fst").envelopes
     assert envelopes and len(envelopes) == 5
 
@@ -233,14 +214,14 @@ def test_sampler_envelopes(load_sampler: SamplerFixture):
     assert mod_x.attack_tension == mod_x.release_tension == mod_x.decay_tension == 128
 
 
-def test_sampler_filter(load_sampler: SamplerFixture):
+def test_sampler_filter():
     filter = load_sampler("sampler-filter.fst").filter
     assert filter.mod_x == 0
     assert filter.mod_y == 256
     assert filter.type == FilterType.SVFLPx2
 
 
-def test_sampler_fx(load_sampler: SamplerFixture):
+def test_sampler_fx():
     fx = load_sampler("sampler-fx.fst").fx
     assert fx.boost == 128
     assert fx.clip
@@ -267,7 +248,7 @@ def test_sampler_fx(load_sampler: SamplerFixture):
     assert fx.trim == 256
 
 
-def test_sampler_lfo(load_sampler: SamplerFixture):
+def test_sampler_lfo():
     lfos = load_sampler("lfo.fst").lfos
     assert lfos and len(lfos) == 5
 
@@ -290,25 +271,25 @@ def test_sampler_lfo(load_sampler: SamplerFixture):
     assert mod_x.synced
 
 
-def test_sampler_path(load_sampler: SamplerFixture):
+def test_sampler_path():
     assert load_sampler("sampler-path.fst").sample_path == pathlib.Path(
         r"%FLStudioFactoryData%\Data\Patches\Packs\Drums\Kicks\22in Kick.wav"
     )
 
 
-def test_sampler_pitch_shift(load_sampler: SamplerFixture):
+def test_sampler_pitch_shift():
     assert load_sampler("+4800-cents.fst").pitch_shift == 4800
     assert load_sampler("-4800-cents.fst").pitch_shift == -4800
 
 
-def test_sampler_playback(load_sampler: SamplerFixture):
+def test_sampler_playback():
     playback = load_sampler("sampler-playback.fst").playback
     assert playback.use_loop_points
     assert playback.ping_pong_loop
     assert playback.start_offset == 1072693248
 
 
-def test_sampler_stretching(load_sampler: SamplerFixture):
+def test_sampler_stretching():
     stretching = load_sampler("sampler-stretching.fst").stretching
     assert stretching.mode == StretchMode.E3Generic
     assert stretching.multiplier == 0.25

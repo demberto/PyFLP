@@ -33,7 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `Track.locked_height` as what this quantity stores is unknown to me yet.
+- Use of fixture factories in unittests [#74].
 
+[#74]: https://github.com/demberto/PyFLP/issues/74
 [#92]: https://github.com/demberto/PyFLP/issues/92
 [#99]: https://github.com/demberto/PyFLP/issues/99
 [#100]: https://github.com/demberto/PyFLP/issues/100
