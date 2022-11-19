@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.0.0a6 - Unreleased
+## [2.0.0a6] - 2022-11-19
 
 ### Added
 
@@ -588,6 +588,7 @@ Same as in 0.1.1
 - `flpinfo` doesn't output correctly sometimes due to long strings.
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
+[2.0.0a6]: https://github.com/demberto/PyFLP/compare/v2.0.0a5.post...v2.0.0a6
 [2.0.0a5.post]: https://github.com/demberto/PyFLP/compare/v2.0.0a5...v2.0.0a5.post
 [2.0.0a5]: https://github.com/demberto/PyFLP/compare/v2.0.0a4...v2.0.0a5
 [2.0.0a4]: https://github.com/demberto/PyFLP/compare/v2.0.0a3...v2.0.0a4

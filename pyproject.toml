@@ -117,7 +117,7 @@ version = { attr = "pyflp.__version__" }
 github_url = "https://github.com/demberto/PyFLP/"
 
 [tool.tbump.version]
-current = "2.0.0a5.post"
+current = "2.0.0a6"
 regex = '''
   (?P<major>\d+)
   \.
