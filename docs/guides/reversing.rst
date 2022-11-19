@@ -1,5 +1,5 @@
-Reversing FLP format
-====================
+🤓 Reversing FLP format
+========================
 
     You should first take a look at :doc:`what events are <../architecture>`.
     A decent knowledge of the topics mentioned there as well as Python itself

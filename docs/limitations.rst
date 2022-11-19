@@ -56,19 +56,3 @@ a few.)
   which is implemented in pure Python.
 
 I am all ears if anyone has any suggestions on improving PyFLP's performance.
-
-Testing can never be truly enough
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For non dev audiences, testing is a process to check the integrity of code.
-Its always done as new features can break existing ones.
-
-For a long time, I used only a single FLP to test all of PyFLP's API.
-Things have changed now and I use presets exported from FL Studio
-itself for the testing of a huge chunk of API to ensure **isolation** of test
-results.
-
-The problem is that all the test data comes from FL Studio itself and can
-be only really validated in the same. That's the reason I usually don't
-raise any errors event if I know quite surely that, for example a value out of
-range is set for some property.

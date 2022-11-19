@@ -1,5 +1,5 @@
-Features
-========
+✨ Features
+============
 
 Non-destructive editing
 -----------------------
