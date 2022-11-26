@@ -4,13 +4,14 @@
 This page contains some ideas on how one can use PyFLP for automating
 tasks (*to a certain extent*) which can only be done via FL Studio.
 
-A basic-to-intermediate level of Python knowledge is assumed.
+A basic-to-intermediate level of Python knowledge is assumed. No prior
+knowledge of PyFLP is required for any of the sections below.
 
 *These all are written from a dev's POV. I would ♥ to get more ideas and hear
 about different use cases.*
 
-📦 Exporting an FLP to a ZIP
------------------------------
+📦 Exporting to a ZIP
+----------------------
 
 Imagine you had a folder structure like this:
 
@@ -70,8 +71,19 @@ This will create a ZIP file of the structure:
    the same name*, FL Studio doesn't store the full path inside an FLP for
    stock samples. See :attr:`pyflp.channel.Sampler.sample_path` for more info.
 
-🔓 Unlocking FLPs saved with a demo version of FL Studio
----------------------------------------------------------
+🔓 Unlocking demo version FLPs
+-------------------------------
+
+FLPs saved with a trial version of FL Studio cannot be reopened again without
+saving in a registered version. The state of demo versions of native plugins'
+is not retained either.
+
+.. hint::
+
+   This section **doesn't** explain how to make 3rd party plugin demos
+   recall their state. They have their own mechanisms for doing that.
+
+It is possible to undo both of these:
 
 .. seealso::
 
@@ -95,3 +107,11 @@ This will create a ZIP file of the structure:
        for slot in insert:
            if slot.plugin is not None:
               slot.plugin.demo_mode = False
+
+   pyflp.save(project, "/path/to/myflp_unlocked.flp")
+
+.. note::
+
+   An unregistered version of FL Studio will roll back these changes once you
+   save an FLP in it (even previously registered ones), so you need to repeat
+   this process everytime.
