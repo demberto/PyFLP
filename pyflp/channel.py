@@ -1348,7 +1348,7 @@ class Automation(Channel, ModelCollection[AutomationPoint]):
     ![](https://bit.ly/3RXQhIN)
     """
 
-    @supports_slice
+    @supports_slice  # type: ignore
     def __getitem__(self, i: int | slice) -> AutomationPoint:
         for idx, p in enumerate(self):
             if idx == i:
@@ -1373,7 +1373,7 @@ class Layer(Channel, ModelCollection[Channel]):
     *New in FL Studio v3.4.0*.
     """
 
-    @supports_slice
+    @supports_slice  # type: ignore
     def __getitem__(self, i: int | str | slice):
         """Returns a child :class:`Channel` with an IID of :attr:`Channel.iid`.
 
@@ -1576,7 +1576,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
     def __repr__(self) -> str:
         return f"ChannelRack - {len(self)} channels"
 
-    @supports_slice
+    @supports_slice  # type: ignore
     def __getitem__(self, i: str | int | slice):
         """Gets a channel from the rack based on its IID or name.
 

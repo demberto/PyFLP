@@ -82,7 +82,7 @@ class PlaylistEvent(ListEventBase):
         "pattern_base" / c.Int16ul * "Always 20480",  # 6
         "item_index" / c.Int16ul,  # 8
         "length" / c.Int32ul,  # 12
-        "track_index" / c.Int16ul * "Stored reversed i.e. Track 1 would be 499",  # 14
+        "track_rvidx" / c.Int16ul * "Stored reversed i.e. Track 1 would be 499",  # 14
         "group" / c.Int16ul,  # 16
         "_u1" / c.Bytes(2) * "Always (120, 0)",  # 18
         "item_flags" / c.Int16ul * "Always (64, 0)",  # 20
@@ -433,26 +433,28 @@ class Arrangement(EventModel):
 
     @property
     def tracks(self) -> Iterator[Track]:
-        e = None
+        pl_evt = raw_items = None
         max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
+        channels = {channel.iid: channel for channel in self._kw["channels"]}
+        patterns = {pattern.index: pattern for pattern in self._kw["patterns"]}
 
         if ArrangementID.Playlist in self.events.ids:
-            e = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
+            pl_evt = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
+            raw_items = tuple(pl_evt)  # Repeating this is quite slow
 
         for track_idx, ed in enumerate(self.events.divide(TrackID.Data, *TrackID)):
             items: list[PLItemBase] = []
-            for i, item in enumerate(e or []):
-                e = cast(PlaylistEvent, e)
-                idx = item["track_index"]
-                if max_idx - idx == track_idx:
-                    if item["item_index"] <= item["pattern_base"]:
-                        channel_iid = item["item_index"]
-                        channel = self._kw["channels"][channel_iid]
-                        items.append(ChannelPLItem(item, i, e, channel=channel))
-                    else:
-                        pattern_num = item["item_index"] - item["pattern_base"]
-                        pattern = self._kw["patterns"][pattern_num]
-                        items.append(PatternPLItem(item, i, e, pattern=pattern))
+            for i, item in enumerate(raw_items or []):
+                pl_evt = cast(PlaylistEvent, pl_evt)
+                if max_idx - item["track_rvidx"] != track_idx:
+                    continue
+
+                if item["item_index"] <= item["pattern_base"]:
+                    iid = item["item_index"]
+                    items.append(ChannelPLItem(item, i, pl_evt, channel=channels[iid]))
+                else:
+                    num = item["item_index"] - item["pattern_base"]
+                    items.append(PatternPLItem(item, i, pl_evt, pattern=patterns[num]))
             yield Track(ed, items=items)
 
 
@@ -488,7 +490,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
     def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]):
         super().__init__(events, **kw)
 
-    @supports_slice
+    @supports_slice  # type: ignore
     def __getitem__(self, i: int | str | slice):
         """Returns an arrangement based either on its index or name.
 

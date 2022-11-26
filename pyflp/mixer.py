@@ -434,7 +434,7 @@ class Insert(EventModel, ModelCollection[Slot]):
     def __repr__(self):
         return f"Insert (name={self.name!r}, index={self.__index__()})"
 
-    @supports_slice
+    @supports_slice  # type: ignore
     def __getitem__(self, i: int | str):
         """Returns an effect slot of the specified index or name.
 
@@ -627,7 +627,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
         super().__init__(events, **kw)
 
     # Inserts don't store their index internally.
-    @supports_slice
+    @supports_slice  # type: ignore
     def __getitem__(self, i: int | str | slice):
         """Returns an insert with the specified index or name.
 

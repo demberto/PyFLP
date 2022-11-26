@@ -42,6 +42,13 @@ class ItemModel(ModelBase, Generic[DE]):
     """Base class for event-less models."""
 
     def __init__(self, item: c.Container[Any], index: int, parent: DE, **kw: Any):
+        """Create a new item model.
+
+        Args:
+            item: Parsed :class:`construct.Struct` instance from :attr:`parent`.
+            index: 0-based index used to propagate changes back to :attr:`parent`.
+            parent: A :class:`StructEventBase` or :class:`ListEventBase` instance.
+        """
         self._item = item
         self._index = index
         self._parent = parent
@@ -92,23 +99,25 @@ class ModelCollection(  # pylint: disable=abstract-method
         ...
 
 
-def supports_slice(func: Callable[[Any, Any], MT_co]):
+def supports_slice(func: Callable[[ModelCollection[MT_co], str | int | slice], MT_co]):
     """Wraps a :meth:`ModelCollection.__getitem__` to return a sequence if required."""
 
     @overload
-    def wrapper(self: Any, i: int) -> MT_co:
+    def wrapper(self: ModelCollection[MT_co], i: int) -> MT_co:
         ...
 
     @overload
-    def wrapper(self: Any, i: str) -> MT_co:
+    def wrapper(self: ModelCollection[MT_co], i: str) -> MT_co:
         ...
 
     @overload
-    def wrapper(self: Any, i: slice) -> Sequence[MT_co]:
+    def wrapper(self: ModelCollection[MT_co], i: slice) -> Sequence[MT_co]:
         ...
 
     @functools.wraps(func)
-    def wrapper(self: Any, i: Any) -> MT_co | Sequence[MT_co]:
+    def wrapper(
+        self: ModelCollection[MT_co], i: str | int | slice
+    ) -> MT_co | Sequence[MT_co]:
         if isinstance(i, slice):
             return [
                 model
