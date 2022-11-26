@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Renamed `PlaylistEvent.track_index` to `PlaylistEvent.track_rvidx`.
-- Optimized `Arrangement.tracks` iteration logic.
+- Optimized `Arrangement.tracks` iteration logic - 50% lesser time to run tests.
 
 ## [2.0.0a6] - 2022-11-19
 

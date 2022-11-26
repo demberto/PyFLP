@@ -32,6 +32,7 @@ from __future__ import annotations
 import io
 import os
 import pathlib
+import struct
 import sys
 
 import construct as c
@@ -60,17 +61,17 @@ from .project import VALID_PPQS, FileFormat, Project, ProjectID
 __all__ = ["parse", "save"]
 __version__ = "2.0.0a6"
 
+FLP_HEADER = struct.Struct("4sIh2H")
+
 if sys.version_info < (3, 11):  # https://github.com/Bobronium/fastenum/issues/2
     import fastenum
 
-    fastenum.enable()  # 50% faster parse()
+    fastenum.enable()  # 33% faster parse()
 
 
 def parse(file: pathlib.Path | str) -> Project:
     # pylint: disable=too-many-branches
-    # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
-    # pylint: disable=too-complex
     """Parses an FL Studio project file and returns a parsed :class:`Project`.
 
     Args:
@@ -84,30 +85,31 @@ def parse(file: pathlib.Path | str) -> Project:
         stream = io.BytesIO(flp.read())
 
     events: list[AnyEvent] = []
+    header = stream.read(FLP_HEADER.size)
 
-    if stream.read(4) != b"FLhd":  # 4
+    try:
+        hdr_magic, hdr_size, fmt, channel_count, ppq = FLP_HEADER.unpack(header)
+    except struct.error as exc:
+        raise HeaderCorrupted("Couldn't read the header entirely") from exc
+
+    if hdr_magic != b"FLhd":
         raise HeaderCorrupted("Unexpected header chunk magic; expected 'FLhd'")
 
-    if c.Int32ul.parse_stream(stream) != 6:  # 8
+    if hdr_size != 6:
         raise HeaderCorrupted("Unexpected header chunk size; expected 6")
 
     try:
-        file_format = FileFormat(c.Int16sl.parse_stream(stream))  # 10
+        file_format = FileFormat(fmt)
     except ValueError as exc:
         raise HeaderCorrupted("Unsupported project file format") from exc
 
-    channel_count = c.Int16ul.parse_stream(stream)  # 12
-    if channel_count is None:  # pragma: no cover
-        raise HeaderCorrupted("Channel count couldn't be read")
-
-    ppq = c.Int16ul.parse_stream(stream)  # 14
     if ppq not in VALID_PPQS:
         raise HeaderCorrupted("Invalid PPQ")
 
-    if stream.read(4) != b"FLdt":  # 18
+    if stream.read(4) != b"FLdt":
         raise HeaderCorrupted("Unexpected data chunk magic; expected 'FLdt'")
 
-    events_size = c.Int32ul.parse_stream(stream)  # 22
+    events_size = int.from_bytes(stream.read(4), "little")
     if events_size is None:  # pragma: no cover
         raise HeaderCorrupted("Data chunk size couldn't be read")
 
@@ -184,23 +186,13 @@ def save(project: Project, file: pathlib.Path | str):
         project: The object returned by :meth:`parse`.
         file: The file in which the contents of :attr:`project` are serialised back.
     """
-    stream = io.BytesIO()
-    stream.write(b"FLhd")  # 4
-    c.Int32ul.build_stream(6, stream)  # 8
-    c.Int16sl.build_stream(project.format, stream)  # 10
-    c.Int16ul.build_stream(project.channel_count, stream)  # 12
-    c.Int16ul.build_stream(project.ppq, stream)  # 14
-    stream.write(b"FLdt")  # 18
-    stream.seek(4, 1)  # leave space for total event size
-
-    project.events.insert(0, project.events.pop(ProjectID.FLVersion))
-    events_size = 0
+    buf = bytearray()
+    num_channels = len(project.channels)
+    header = FLP_HEADER.pack(b"FLhd", 6, project.format, num_channels, project.ppq)
+    buf.extend(header)
+    buf.extend(b"FLdt" + sum(e.size for e in project.events).to_bytes(4, "little"))
     for event in project.events:
-        events_size += event.size
-        stream.write(bytes(event))
+        buf.extend(bytes(event))
 
-    stream.seek(18)
-    c.Int32ul.build_stream(events_size, stream)
-
-    with open(file, "wb") as flp:
-        flp.write(stream.getvalue())
+    with open(file, "wb") as fp:
+        fp.write(buf)
