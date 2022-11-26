@@ -32,6 +32,7 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    NoReturn,
     Tuple,
     TypeVar,
     cast,
@@ -467,6 +468,14 @@ class StructEventBase(DataEventBase):
     def __repr__(self):
         return f"{type(self).__name__} (id={self.id}, size={len(self._data)})"
 
+    @property
+    def value(self) -> NoReturn:
+        raise NotImplementedError
+
+    @value.setter
+    def value(self, value: bytes) -> NoReturn:
+        raise NotImplementedError
+
 
 class ListEventBase(DataEventBase):
     """Base class for events storing an array of structured data."""
@@ -575,10 +584,7 @@ class EventTree:
 
     def __contains__(self, id: EventEnum):
         """Whether the key :attr:`id` exists in the list."""
-        for ie in self.lst:
-            if ie.e.id == id:
-                return True
-        return False
+        return any(ie.e.id == id for ie in self.lst)
 
     def __eq__(self, o: object) -> bool:
         """Compares equality of internal lists."""
