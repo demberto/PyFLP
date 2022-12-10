@@ -1,5 +1,7 @@
 """Contains the types required for pattern and playlist timemarkers."""
 
+from __future__ import annotations
+
 import enum
 
 from ._descriptors import EventProp
