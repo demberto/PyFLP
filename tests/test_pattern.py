@@ -8,7 +8,7 @@ from .conftest import get_model
 
 
 def get_notes(score: str):
-    return tuple(get_model(f"patterns/{score}", Pattern, *PatternID))
+    return tuple(get_model(f"patterns/{score}", Pattern, *PatternID).notes)
 
 
 def test_patterns(patterns: Patterns):

@@ -226,28 +226,10 @@ class Controller(ItemModel[ControllerEvent]):
 # As of the latest version of FL, note and controller events are stored before
 # all channel events (if they exist). The rest is stored later on as it occurs.
 class Pattern(EventModel):
-    """Represents a MIDI pattern.
-
-    Iterate over it to get the notes contained inside it:
-
-    >>> [note for pattern in project.patterns for note in pattern]
-    [Note (key="C5", position=192, length=96, channel=2), ...]
-    """
+    """Represents a pattern which can contain notes, controllers and time markers."""
 
     def __index__(self):
         return self.index
-
-    def __iter__(self) -> Iterator[Note]:
-        """MIDI notes contained inside the pattern.
-
-        Note:
-            FL Studio uses its own custom format to represent notes internally.
-            However by using the :class:`Note` properties with a MIDI parsing
-            library for example, you can export them to MIDI.
-        """
-        if PatternID.Notes in self.events.ids:
-            event = cast(NotesEvent, self.events.first(PatternID.Notes))
-            yield from (Note(item, i, event) for i, item in enumerate(event))
 
     def __repr__(self):
         num_notes = (
@@ -301,6 +283,19 @@ class Pattern(EventModel):
 
     name = EventProp[str](PatternID.Name)
     """User given name of the pattern; None if not set."""
+
+    @property
+    def notes(self) -> Iterator[Note]:
+        """MIDI notes contained inside the pattern.
+
+        Note:
+            FL Studio uses its own custom format to represent notes internally.
+            However by using the :class:`Note` properties with a MIDI parsing
+            library for example, you can export them to MIDI.
+        """
+        if PatternID.Notes in self.events.ids:
+            event = cast(NotesEvent, self.events.first(PatternID.Notes))
+            yield from (Note(item, i, event) for i, item in enumerate(event))
 
 
 class Patterns(EventModel):
