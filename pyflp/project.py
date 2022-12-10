@@ -53,24 +53,22 @@ from ._events import (
     U32Event,
 )
 from ._models import EventModel, FLVersion
-from .arrangement import (
-    ArrangementID,
-    Arrangements,
-    ArrangementsID,
-    TimeMarkerID,
-    TrackID,
-)
+from .arrangement import ArrangementID, Arrangements, ArrangementsID, TrackID
 from .channel import ChannelID, ChannelRack, DisplayGroupID, RackID
 from .exceptions import PropertyCannotBeSet
 from .mixer import InsertID, Mixer, MixerID, SlotID
 from .pattern import PatternID, Patterns, PatternsID
 from .plugin import PluginID
+from .timemarker import TimeMarkerID
+
+__all__ = ["PanLaw", "Project", "FileFormat", "VALID_PPQS"]
 
 _DELPHI_EPOCH: Final = datetime.datetime(1899, 12, 30)
 MIN_TEMPO: Final = 10.000
-VALID_PPQS: Final = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
+"""Minimum tempo (in BPM) FL Studio supports."""
 
-__all__ = ["PanLaw", "Project", "FileFormat", "VALID_PPQS"]
+VALID_PPQS: Final = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
+"""PPQs / timebase supported by FL Studio as of its latest version."""
 
 
 class TimestampEvent(StructEventBase):
@@ -366,9 +364,22 @@ class Project(EventModel):
     @property
     def patterns(self) -> Patterns:
         """Returns a collection of patterns and other related properties."""
-        return Patterns(
-            self.events.subtree(lambda e: e.id in (*PatternID, *PatternsID))
-        )
+        arrnew_occured = False
+
+        def select(e: AnyEvent):
+            nonlocal arrnew_occured
+
+            if e.id == ArrangementID.New:
+                arrnew_occured = True
+
+            # * Prevents accidentally passing on Arrangement's timemarkers
+            elif e.id in TimeMarkerID and not arrnew_occured:
+                return True
+
+            elif e.id in (*PatternID, *PatternsID):
+                return True
+
+        return Patterns(self.events.subtree(select))
 
     pan_law = EventProp[PanLaw](ProjectID.PanLaw)
     """Whether a circular or a triangular pan law is used for the project.

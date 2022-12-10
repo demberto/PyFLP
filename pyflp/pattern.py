@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import enum
-import warnings
 from collections import defaultdict
 from typing import DefaultDict, Iterator, cast
 
@@ -41,6 +40,7 @@ from ._events import (
 )
 from ._models import EventModel, ItemModel
 from .exceptions import ModelNotFound, NoModelsFound
+from .timemarker import TimeMarker, TimeMarkerID
 
 __all__ = ["Note", "Controller", "Pattern", "Patterns"]
 
@@ -87,9 +87,6 @@ class PatternsID(EventEnum):
 
 # ChannelIID, _161, _162, Looped, Length occur when pattern is looped.
 # ChannelIID and _161 occur for every channel in order.
-# ! Looping a pattern puts timemarkers in it. The same TimeMarkerID events are
-# ! used, which means I need to refactor it out from pyflp.arrangement.
-# TODO Patterns share TimeMarker events with Arrangements
 class PatternID(EventEnum):
     Looped = (26, BoolEvent)
     New = (WORD + 1, U16Event)  # Marks the beginning of a new pattern, twice.
@@ -223,8 +220,6 @@ class Controller(ItemModel[ControllerEvent]):
     value = StructProp[float]()
 
 
-# As of the latest version of FL, note and controller events are stored before
-# all channel events (if they exist). The rest is stored later on as it occurs.
 class Pattern(EventModel):
     """Represents a pattern which can contain notes, controllers and time markers."""
 
@@ -299,6 +294,11 @@ class Pattern(EventModel):
             event = cast(NotesEvent, self.events.first(PatternID.Notes))
             yield from (Note(item, i, event) for i, item in enumerate(event))
 
+    @property
+    def timemarkers(self) -> Iterator[TimeMarker]:
+        """Yields timemarkers inside this pattern."""
+        yield from (TimeMarker(et) for et in self.events.group(*TimeMarkerID))
+
 
 class Patterns(EventModel):
     def __repr__(self):
@@ -320,6 +320,8 @@ class Patterns(EventModel):
                 return pattern
         raise ModelNotFound(i)
 
+    # Doesn't use EventTree delegates since PatternID.New occurs twice.
+    # Once for note and controller events and again for the rest of them.
     def __iter__(self) -> Iterator[Pattern]:
         """An iterator over the patterns found in the project."""
         cur_pat_id = 0
@@ -329,7 +331,7 @@ class Patterns(EventModel):
             if ie.e.id == PatternID.New:
                 cur_pat_id = ie.e.value
 
-            if ie.e.id in PatternID:
+            if ie.e.id in (*PatternID, *TimeMarkerID):
                 tmp_dict[cur_pat_id].append(ie)
 
         for events in tmp_dict.values():

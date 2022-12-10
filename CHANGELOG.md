@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0a7] - Unreleased
 
+### Added
+
+- `Pattern` timemarkers [#27].
+
 ### Changed
 
 - Renamed `PlaylistEvent.track_index` to `PlaylistEvent.track_rvidx`.
@@ -22,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Patterns.__getitem__` didn't work with pattern names as documented.
 
+[#27]: https://github.com/demberto/PyFLP/issues/27
 
 ## [2.0.0a6] - 2022-11-19
 

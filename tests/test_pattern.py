@@ -27,6 +27,10 @@ def test_pattern_names(patterns: Patterns):
     )
 
 
+def test_pattern_timemarkers(patterns: Patterns):
+    assert len(tuple(patterns["Timemarkers"].timemarkers)) == 5
+
+
 def test_empty_pattern():
     assert not len(get_notes("empty.fsc"))
 

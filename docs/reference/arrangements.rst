@@ -23,25 +23,6 @@ Playlist
    :members:
    :show-inheritance: PLItemBase
 
-TimeMarker
-----------
-
-.. autoclass:: TimeMarker
-   :members:
-
-.. grid::
-
-   .. grid-item::
-
-      .. autoclass:: TimeMarkerType
-         :members:
-
-   .. grid-item::
-      :child-align: center
-      :columns: auto
-
-      .. image:: /img/arrangement/timemarker/action.png
-
 Track
 -----
 
@@ -100,9 +81,6 @@ Event IDs
    :members:
    :member-order: bysource
 .. autoclass:: ArrangementID
-   :members:
-   :member-order: bysource
-.. autoclass:: TimeMarkerID
    :members:
    :member-order: bysource
 .. autoclass:: TrackID

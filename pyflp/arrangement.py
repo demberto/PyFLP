@@ -11,7 +11,7 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-"""Contains the types used by timemarkers, tracks and arrangements."""
+"""Contains the types used by tracks and arrangements."""
 
 from __future__ import annotations
 
@@ -61,12 +61,11 @@ from ._models import (
 from .channel import Channel, ChannelRack
 from .exceptions import ModelNotFound, NoModelsFound
 from .pattern import Pattern, Patterns
+from .timemarker import TimeMarker, TimeMarkerID
 
 __all__ = [
     "Arrangements",
     "Arrangement",
-    "TimeMarker",
-    "TimeMarkerType",
     "Track",
     "TrackMotion",
     "TrackPress",
@@ -168,25 +167,9 @@ class ArrangementID(EventEnum):
 
 
 @enum.unique
-class TimeMarkerID(EventEnum):
-    Numerator = (33, U8Event)
-    Denominator = (34, U8Event)
-    Position = (DWORD + 20, U32Event)
-    Name = TEXT + 13
-
-
-@enum.unique
 class TrackID(EventEnum):
     Name = TEXT + 47
     Data = (DATA + 30, TrackEvent)
-
-
-class TimeMarkerType(enum.IntEnum):
-    Marker = 0
-    """Normal text marker."""
-
-    Signature = 134217728
-    """Used for time signature markers."""
 
 
 class PLItemBase(ItemModel[PlaylistEvent], ModelReprMixin):
@@ -244,49 +227,7 @@ class PatternPLItem(PLItemBase, ModelReprMixin):
     @pattern.setter
     def pattern(self, pattern: Pattern):
         self._kw["pattern"] = pattern
-        self["item_index"] = pattern.index + self["pattern_base"]
-
-
-class TimeMarker(EventModel):
-    """A marker in the timeline of an :class:`Arrangement`.
-
-    ![](https://bit.ly/3gltKbt)
-    """
-
-    def __repr__(self):
-        if self.type == TimeMarkerType.Marker:
-            if self.name:
-                return f"Marker {self.name!r} @ {self.position!r}"
-            return f"Unnamed marker @ {self.position!r}"
-
-        time_sig = f"{self.numerator}/{self.denominator}"
-        if self.name:
-            return f"Signature {self.name!r} ({time_sig}) @ {self.position!r}"
-        return f"Unnamed {time_sig} signature @ {self.position!r}"
-
-    denominator: EventProp[int] = EventProp[int](TimeMarkerID.Denominator)
-    name = EventProp[str](TimeMarkerID.Name)
-    numerator = EventProp[int](TimeMarkerID.Numerator)
-
-    @property
-    def position(self) -> int | None:
-        if TimeMarkerID.Position in self.events.ids:
-            event = self.events.first(TimeMarkerID.Position)
-            if event.value < TimeMarkerType.Signature:
-                return event.value
-            return event.value - TimeMarkerType.Signature
-
-    @property
-    def type(self) -> TimeMarkerType | None:
-        """The action with which a time marker is associated.
-
-        [![](https://bit.ly/3RDM1yn)]()
-        """
-        if TimeMarkerID.Position in self.events.ids:
-            event = self.events.first(TimeMarkerID.Position)
-            if event.value >= TimeMarkerType.Signature:
-                return TimeMarkerType.Signature
-            return TimeMarkerType.Marker
+        self["item_index"] = pattern.iid + self["pattern_base"]
 
 
 class _TrackColorProp(StructProp[colour.Color]):
