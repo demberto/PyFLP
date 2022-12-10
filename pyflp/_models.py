@@ -138,7 +138,7 @@ class ModelReprMixin:
             mapping[var] = getattr(self, var, None)
 
         params = ", ".join([f"{k}={v!r}" for k, v in mapping.items()])
-        return f"{type(self).__name__} ({params})"
+        return f"{type(self).__name__}({params})"
 
 
 @dataclasses.dataclass(frozen=True, order=True)

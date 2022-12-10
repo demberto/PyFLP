@@ -502,7 +502,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     INTERNAL_NAME = "Fruity Wrapper"
 
     def __repr__(self) -> str:
-        return f"VSTPlugin (name={self.name!r}, vendor={self.vendor!r})"
+        return f"VSTPlugin(name={self.name!r}, vendor={self.vendor!r})"
 
     class _AutomationOptions(EventModel):
         """See :attr:`VSTPlugin.automation`."""

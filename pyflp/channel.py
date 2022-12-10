@@ -458,7 +458,7 @@ class _SamplerFlags(enum.IntFlag):
 
 
 class DisplayGroup(EventModel, ModelReprMixin):
-    def __repr__(self):
+    def __str__(self):
         if self.name is None:
             return "Unnamed display group"
         return f"Display group {self.name}"
@@ -1402,7 +1402,7 @@ class Layer(Channel, ModelCollection[Channel]):
             return 0
 
     def __repr__(self):
-        return f"{super().__repr__()} ({len(self)} children)"
+        return f"{super().__repr__()[:-1]}, {len(self)} children)"
 
     crossfade = FlagProp(_LayerFlags.Crossfade, ChannelID.LayerFlags)
     """:menuselection:`Miscellaneous functions --> Layering`"""

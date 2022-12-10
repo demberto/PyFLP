@@ -271,7 +271,7 @@ class Track(EventModel, ModelCollection[PLItemBase]):
         return len(self._kw["items"])
 
     def __repr__(self):
-        return f"Track (name={self.name}, index={self.__index__()}, {len(self)} items)"
+        return f"Track(name={self.name}, index={self.__index__()}, {len(self)} items)"
 
     color = _TrackColorProp(TrackID.Data)
     """Defaults to #485156 (dark slate gray).
@@ -354,7 +354,7 @@ class Arrangement(EventModel):
         super().__init__(events, **kw)
 
     def __repr__(self):
-        return "Arrangement (index={}, name={}, {} timemarkers, {} tracks)".format(
+        return "Arrangement(index={}, name={}, {} timemarkers, {} tracks)".format(
             self.__index__(),
             repr(self.name),
             len(tuple(self.timemarkers)),
@@ -400,10 +400,10 @@ class Arrangement(EventModel):
 
 
 # TODO Find whether time is set to signature or division mode.
-class TimeSignature(EventModel):
+class TimeSignature(EventModel, ModelReprMixin):
     """![](https://bit.ly/3EYiMmy)"""
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return f"Global time signature: {self.num}/{self.beat}"
 
     num = EventProp[int](ArrangementsID.TimeSigNum)

@@ -62,7 +62,14 @@ from ._events import (
     T,
     U16Event,
 )
-from ._models import EventModel, FLVersion, ModelBase, ModelCollection, supports_slice
+from ._models import (
+    EventModel,
+    FLVersion,
+    ModelBase,
+    ModelCollection,
+    ModelReprMixin,
+    supports_slice,
+)
 from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
@@ -236,12 +243,9 @@ class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
         ins._kw[self._prop]["msg"] = value
 
 
-class InsertEQBand(ModelBase):
+class InsertEQBand(ModelBase, ModelReprMixin):
     def __init__(self, **kw: Unpack[_InsertEQBandKW]):
         super().__init__(**kw)
-
-    def __repr__(self):
-        return f"InsertEQ band (gain={self.gain}, freq={self.freq}, q={self.reso})"
 
     @property
     def size(self) -> int:
@@ -298,7 +302,7 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
 
 
 # Stored in MixerID.Params event.
-class InsertEQ(ModelBase):
+class InsertEQ(ModelBase, ModelReprMixin):
     """Post-effect :class:`Insert` EQ with 3 adjustable bands.
 
     ![](https://bit.ly/3RUCQt6)
@@ -309,12 +313,6 @@ class InsertEQ(ModelBase):
 
     def __init__(self, params: _InsertItems):
         super().__init__(params=params)
-
-    def __repr__(self):
-        low = f"freq={self.low.freq}, gain={self.low.gain}, reso={self.low.reso}"
-        mid = f"freq={self.mid.freq}, gain={self.mid.gain}, reso={self.mid.reso}"
-        high = f"freq={self.high.freq}, gain={self.high.gain}, reso={self.high.reso}"
-        return f"InsertEQ (low={low}, mid={mid}, high={high})"
 
     @property
     def size(self) -> int:
@@ -432,7 +430,7 @@ class Insert(EventModel, ModelCollection[Slot]):
 
     # TODO Add number of used slots
     def __repr__(self):
-        return f"Insert (name={self.name!r}, index={self.__index__()})"
+        return f"Insert(name={self.name!r}, index={self.__index__()})"
 
     @supports_slice  # type: ignore
     def __getitem__(self, i: int | str):
@@ -675,7 +673,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
             raise NoModelsFound
         return self.events.count(InsertID.Flags)
 
-    def __repr__(self):
+    def __str__(self):
         return f"Mixer: {len(self)} inserts"
 
     apdc = EventProp[bool](MixerID.APDC)

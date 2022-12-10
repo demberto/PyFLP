@@ -38,7 +38,13 @@ from ._events import (
     U16Event,
     U32Event,
 )
-from ._models import EventModel, ItemModel
+from ._models import (
+    EventModel,
+    ItemModel,
+    ModelCollection,
+    ModelReprMixin,
+    supports_slice,
+)
 from .exceptions import ModelNotFound, NoModelsFound
 from .timemarker import TimeMarker, TimeMarkerID
 
@@ -106,9 +112,12 @@ class Note(ItemModel[NotesEvent]):
     _NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
     def __repr__(self) -> str:
-        return "Note (key={}, position={}, length={}, channel={})".format(
+        return "Note(key={}, position={}, length={}, channel={})".format(
             self.key, self.position, self.length, self.rack_channel
         )
+
+    def __str__(self) -> str:
+        return f"{self.key} note @ {self.position} of {self.length}"
 
     fine_pitch = StructProp[int]()
     """Linear.
@@ -212,9 +221,12 @@ class Note(ItemModel[NotesEvent]):
     """
 
 
-class Controller(ItemModel[ControllerEvent]):
+class Controller(ItemModel[ControllerEvent], ModelReprMixin):
+    def __str__(self) -> str:
+        return f"Controller @ {self.position} of channel #{self.channel}"
+
     channel = StructProp[int]()
-    """Corresponds to the containing channel's `Channel.IID`."""
+    """Corresponds to the containing channel's :attr:`Channel.iid`."""
 
     position = StructProp[int]()
     value = StructProp[float]()
@@ -224,6 +236,7 @@ class Pattern(EventModel):
     """Represents a pattern which can contain notes, controllers and time markers."""
 
     def __index__(self):
+        """Zero-based index of a pattern."""
         return self.iid - 1
 
     def __repr__(self):
@@ -233,7 +246,7 @@ class Pattern(EventModel):
             else 0
         )
         return (
-            f"Pattern (index={self.__index__()}, name={self.name!r}, {num_notes} notes)"
+            f"Pattern(index={self.__index__()}, name={self.name!r}, {num_notes} notes)"
         )
 
     color = EventProp[colour.Color](PatternID.Color)
@@ -300,16 +313,17 @@ class Pattern(EventModel):
         yield from (TimeMarker(et) for et in self.events.group(*TimeMarkerID))
 
 
-class Patterns(EventModel):
-    def __repr__(self):
+class Patterns(EventModel, ModelCollection[Pattern]):
+    def __str__(self):
         indexes = [pattern.__index__() for pattern in self]
         return f"{len(indexes)} Patterns {indexes!r}"
 
-    def __getitem__(self, i: int | str) -> Pattern:
+    @supports_slice  # type: ignore
+    def __getitem__(self, i: int | str | slice) -> Pattern:
         """Returns the pattern with the specified index or :attr:`Pattern.name`.
 
         Args:
-            i: A zero-based index or its name.
+            i: A zero-based index, its name or a slice of indexes.
 
         Raises:
             ModelNotFound: A :class:`Pattern` with the specified name or index

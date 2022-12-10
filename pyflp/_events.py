@@ -186,7 +186,7 @@ class PODEventBase(EventBase[T]):
         return c.Byte.build(self.id) + self._data
 
     def __repr__(self):
-        return f"{type(self).__name__} (id={self.id!r}, value={self.value!r})"
+        return f"{type(self).__name__}(id={self.id!r}, value={self.value!r})"
 
     @property
     def size(self):
@@ -379,7 +379,7 @@ class StrEventBase(VarintEventBase[str]):
         super().__init__(id, data)
 
     def __repr__(self):
-        return f"{type(self).__name__} (id={self.id!r}, string={self.value!r})"
+        return f"{type(self).__name__}(id={self.id!r}, string={self.value!r})"
 
 
 class AsciiEvent(StrEventBase):
@@ -420,7 +420,7 @@ class DataEventBase(VarintEventBase[bytes]):
         super().__init__(id, data)
 
     def __repr__(self):
-        return f"{type(self).__name__} (id={self.id!r}, size={len(self._data)})"
+        return f"{type(self).__name__}(id={self.id!r}, size={len(self._data)})"
 
 
 # TODO Due to construct's poor implementation of LazyStruct, this is no longer lazy
@@ -466,7 +466,7 @@ class StructEventBase(DataEventBase):
         self._struct[key] = value
 
     def __repr__(self):
-        return f"{type(self).__name__} (id={self.id}, size={len(self._data)})"
+        return f"{type(self).__name__}(id={self.id}, size={len(self._data)})"
 
     @property
     def value(self) -> NoReturn:
@@ -528,7 +528,7 @@ class ListEventBase(DataEventBase):
             yield self[i]
 
     def __repr__(self):
-        return "{} (id={}, size={}, {} items)".format(
+        return "{}(id={}, size={}, {} items)".format(
             type(self).__name__, self.id, len(self._data), len(self)
         )
 
@@ -616,7 +616,7 @@ class EventTree:
         return len(self.lst)
 
     def __repr__(self) -> str:
-        return f"EventTree ({len(self.ids)} IDs, {len(self)} events)"
+        return f"EventTree({len(self.ids)} IDs, {len(self)} events)"
 
     def _get_ie(self, *ids: EventEnum) -> Iterator[IndexedEvent]:
         return (ie for ie in self.lst if ie.e.id in ids)

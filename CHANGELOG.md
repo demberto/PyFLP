@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `StructEventBase.value` raises `NotImplementedError`.
 - Ambiguous `Pattern.__iter__` refactored into a property `Pattern.notes`.
 - `Pattern.index` renamed to `Pattern.iid`.
+- Improved `__repr__` strings; replaced with `ModelReprMixin` at some places
+  use `__str__` for a more human readable representation.
 
 ### Fixed
 

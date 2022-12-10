@@ -157,6 +157,11 @@ class Project(EventModel):
         super().__init__(events, **kw)
 
     def __repr__(self) -> str:
+        return "Project(format={}, version={}, {} channels)".format(
+            self.format, self.version, self.channel_count
+        )
+
+    def __str__(self) -> str:
         return f"FL Studio {str(self.version)} {self.format.name.lower()}"
 
     @property

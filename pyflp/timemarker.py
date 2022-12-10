@@ -4,7 +4,7 @@ import enum
 
 from ._descriptors import EventProp
 from ._events import DWORD, TEXT, EventEnum, U8Event, U32Event
-from ._models import EventModel
+from ._models import EventModel, ModelReprMixin
 
 __all__ = ["TimeMarkerID", "TimeMarkerType", "TimeMarker"]
 
@@ -25,13 +25,13 @@ class TimeMarkerType(enum.IntEnum):
     """Used for time signature markers."""
 
 
-class TimeMarker(EventModel):
+class TimeMarker(EventModel, ModelReprMixin):
     """A marker in the timeline of an :class:`Arrangement`.
 
     ![](https://bit.ly/3gltKbt)
     """
 
-    def __repr__(self):
+    def __str__(self):
         if self.type == TimeMarkerType.Marker:
             if self.name:
                 return f"Marker {self.name!r} @ {self.position!r}"
