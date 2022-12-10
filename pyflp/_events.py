@@ -554,6 +554,17 @@ class IndexedEvent:
     """The indexed event."""
 
 
+def yields_child(func: Callable[Concatenate[EventTree, P], Iterator[EventTree]]):
+    """Adds an :class:`EventTree` to its parent's list of children and yields it."""
+
+    def wrapper(self: EventTree, *args: P.args, **kwds: P.kwargs):
+        for child in func(self, *args, **kwds):
+            self.children.append(child)
+            yield child
+
+    return wrapper
+
+
 class EventTree:
     """Provides mutable "views" which propagate changes back to parents.
 
@@ -618,15 +629,6 @@ class EventTree:
             action(ancestor)
             ancestor = ancestor.parent
 
-    @staticmethod
-    def _register(func: Callable[Concatenate[EventTree, P], Iterator[EventTree]]):
-        def wrapper(self: EventTree, *args: P.args, **kwds: P.kwargs):
-            for child in func(self, *args, **kwds):
-                self.children.append(child)
-                yield child
-
-        return wrapper
-
     def append(self, event: AnyEvent) -> None:
         """Appends an event at its corresponding key's list's end."""
         self.insert(len(self), event)
@@ -635,7 +637,7 @@ class EventTree:
         """Returns the count of the events with :attr:`id`."""
         return len(list(self._get_ie(id)))
 
-    @_register
+    @yields_child
     def divide(self, separator: EventEnum, *ids: EventEnum) -> Iterator[EventTree]:
         """Yields subtrees containing events separated by ``separator`` infinitely."""
         el: list[IndexedEvent] = []
@@ -662,7 +664,7 @@ class EventTree:
         """Yields events whose ID is one of :attr:`ids`."""
         return (e for e in self if e.id in ids)
 
-    @_register
+    @yields_child
     def group(self, *ids: EventEnum) -> Iterator[EventTree]:
         """Yields EventTrees of zip objects of events with matching :attr:`ids`."""
         for iet in zip_longest(*(self._get_ie(id) for id in ids)):  # unpack magic
@@ -699,7 +701,7 @@ class EventTree:
         """Removes the event with ``id`` at ``pos`` in ``self`` and all parents."""
         self.pop(id, pos)
 
-    @_register
+    @yields_child
     def separate(self, id: EventEnum) -> Iterator[EventTree]:
         """Yields a separate ``EventTree`` for every event with matching ``id``."""
         yield from (EventTree(self, [ie]) for ie in self._get_ie(id))
@@ -719,7 +721,7 @@ class EventTree:
         self.children.append(obj)
         return obj
 
-    @_register
+    @yields_child
     def subtrees(
         self, select: Callable[[AnyEvent], bool | None], repeat: int
     ) -> Iterator[EventTree]:
