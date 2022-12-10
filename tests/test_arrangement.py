@@ -92,7 +92,7 @@ def test_track_items(tracks: tuple[Track, ...]):
         elif track.name == "MIDI":
             num_items = 4
             assert set(type(i) for i in track) == set((PatternPLItem,))
-            assert set(i.pattern.index for i in track) == set((3,))  # type: ignore
+            assert set(i.pattern.iid for i in track) == set((3,))  # type: ignore
             assert [i.position for i in track] == [p * 384 for p in range(num_items)]
         elif track.name in ("Cut pattern", "Automation"):
             num_items = 1

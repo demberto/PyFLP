@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimized `Arrangement.tracks` iteration logic - 50% lesser time to run tests.
 - `StructEventBase.value` raises `NotImplementedError`.
 - Ambiguous `Pattern.__iter__` refactored into a property `Pattern.notes`.
+- `Pattern.index` renamed to `Pattern.iid`.
+
 
 ## [2.0.0a6] - 2022-11-19
 

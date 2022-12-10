@@ -436,7 +436,7 @@ class Arrangement(EventModel):
         pl_evt = raw_items = None
         max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
         channels = {channel.iid: channel for channel in self._kw["channels"]}
-        patterns = {pattern.index: pattern for pattern in self._kw["patterns"]}
+        patterns = {pattern.iid: pattern for pattern in self._kw["patterns"]}
 
         if ArrangementID.Playlist in self.events.ids:
             pl_evt = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))

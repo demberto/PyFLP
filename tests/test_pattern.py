@@ -13,7 +13,7 @@ def get_notes(score: str):
 
 def test_patterns(patterns: Patterns):
     assert len(patterns) == 5
-    assert patterns.current == patterns[5]
+    assert patterns.current == patterns[4]
     assert patterns.play_cut_notes
 
 

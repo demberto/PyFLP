@@ -229,7 +229,7 @@ class Pattern(EventModel):
     """Represents a pattern which can contain notes, controllers and time markers."""
 
     def __index__(self):
-        return self.index
+        return self.iid - 1
 
     def __repr__(self):
         num_notes = (
@@ -237,7 +237,9 @@ class Pattern(EventModel):
             if PatternID.Notes in self.events
             else 0
         )
-        return f"Pattern (index={self.index}, name={self.name!r}, {num_notes} notes)"
+        return (
+            f"Pattern (index={self.__index__()}, name={self.name!r}, {num_notes} notes)"
+        )
 
     color = EventProp[colour.Color](PatternID.Color)
     """Returns a colour if one is set while saving the project file, else ``None``.
@@ -255,7 +257,7 @@ class Pattern(EventModel):
             yield from (Controller(item, i, event) for i, item in enumerate(event))
 
     @property
-    def index(self) -> int:
+    def iid(self) -> int:
         """Internal index of the pattern starting from 1.
 
         Caution:
@@ -264,8 +266,8 @@ class Pattern(EventModel):
         """
         return self.events.first(PatternID.New).value
 
-    @index.setter
-    def index(self, value: int):
+    @iid.setter
+    def iid(self, value: int):
         for event in self.events.get(PatternID.New):
             event.value = value
 
@@ -307,18 +309,14 @@ class Patterns(EventModel):
         """Returns the pattern with the specified index or :attr:`Pattern.name`.
 
         Args:
-            i: Internal index used by the pattern or its name.
+            i: A zero-based index or its name.
 
         Raises:
             ModelNotFound: A :class:`Pattern` with the specified name or index
                 isn't found.
         """
-        if not i:
-            warnings.warn("Patterns use a 1 based index; try 1 instead", stacklevel=0)
-            return NotImplemented
-
-        for pattern in self:
-            if pattern.__index__() == i:
+        for idx, pattern in enumerate(self):
+            if idx == i:
                 return pattern
         raise ModelNotFound(i)
 
@@ -364,5 +362,5 @@ class Patterns(EventModel):
         if PatternsID.CurrentlySelected in self.events.ids:
             index = self.events.first(PatternsID.CurrentlySelected).value
             for pattern in self:
-                if pattern.index == index:
+                if pattern.iid == index:
                     return pattern
