@@ -316,7 +316,7 @@ class Patterns(EventModel):
                 isn't found.
         """
         for idx, pattern in enumerate(self):
-            if idx == i:
+            if (isinstance(i, int) and idx == i) or i == pattern.name:
                 return pattern
         raise ModelNotFound(i)
 

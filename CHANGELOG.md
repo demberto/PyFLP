@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ambiguous `Pattern.__iter__` refactored into a property `Pattern.notes`.
 - `Pattern.index` renamed to `Pattern.iid`.
 
+### Fixed
+
+- `Patterns.__getitem__` didn't work with pattern names as documented.
+
 
 ## [2.0.0a6] - 2022-11-19
 
