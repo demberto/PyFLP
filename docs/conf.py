@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import enum
+import importlib.metadata
 import inspect
 import os
 import re
@@ -30,7 +31,7 @@ IGNORED_BITLY = ["3RDM1yn"]
 project = "PyFLP"
 author = "demberto"
 copyright = f"2022, {author}"
-release = "2.0.0a6"  # DON'T TOUCH! Auto-updated by tbump
+release = importlib.metadata.version("pyflp")
 extensions = [
     "hoverxref.extension",
     "m2r2",  # Markdown to reStructuredText conversion

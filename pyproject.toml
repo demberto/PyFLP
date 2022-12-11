@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=61.0.0", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -110,37 +110,5 @@ testpaths = "tests"
 [tool.setuptools]
 packages = ["pyflp"]
 
-[tool.setuptools.dynamic]
-version = { attr = "pyflp.__version__" }
-
-[tool.tbump]
-github_url = "https://github.com/demberto/PyFLP/"
-
-[tool.tbump.version]
-current = "2.0.0a6"
-regex = '''
-  (?P<major>\d+)
-  \.
-  (?P<minor>\d+)
-  \.
-  (?P<patch>\d+)
-  (.
-    (?P<extra>.+)
-  )?
-  '''
-
-[tool.tbump.git]
-message_template = "version: bump to {new_version}"
-tag_template = "v{new_version}"
-
-[[tool.tbump.file]]
-src = "pyflp/__init__.py"
-search = "__version__ = \"{current_version}\""
-
-[[tool.tbump.file]]
-src = "docs/conf.py"
-search = "release = \"{current_version}\""
-
-[[tool.tbump.before_commit]]
-name = "check changelog"
-cmd = "git grep -q {new_version} CHANGELOG.md"
+[tool.setuptools_scm]
+write_to = "pyflp/_version.py"

@@ -5,7 +5,6 @@ from typing import TypeVar
 
 import colour
 
-from pyflp import Project
 from pyflp.channel import (
     Automation,
     Channel,
@@ -19,6 +18,7 @@ from pyflp.channel import (
     Sampler,
     StretchMode,
 )
+from pyflp.project import Project
 
 from .conftest import get_model
 

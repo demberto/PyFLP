@@ -5,7 +5,7 @@ import pathlib
 import pytest
 
 import pyflp
-from pyflp import HeaderCorrupted
+from pyflp.exceptions import HeaderCorrupted
 
 CORRUPTED = pathlib.Path(__file__).parent / "assets" / "corrupted"
 
