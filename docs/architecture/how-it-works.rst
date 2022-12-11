@@ -78,33 +78,3 @@ e.g. a pattern is represented by :class:`pyflp.pattern.Pattern`.
 
 A model is constructed with events it requires and additional information (like
 PPQ) its descriptors might need.
-
-Disadvantages
--------------
-
-Difficult to make ports
-^^^^^^^^^^^^^^^^^^^^^^^
-
-The current working of PyFLP is non-replicable in most other languages.
-Descriptors are a Python specific feature I have yet to find anywhere else.
-Therefore, the possibility of a port that's as clean (and featured) as PyFLP is
-less. Most languages however have some sort of 3rd party Python interop library
-available, so its not like PyFLP is completely unuseable from other languages.
-
-A quick search on Github will return some FLP parsers available for other
-languages, but almost all of them are pretty much unmaintained or archived.
-
-Unit-testing is paramount
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Due to the lazy nature of models and their descriptors, each of them should be
-tested so as to ensure that no changes in the event handling affect or break.
-
-For a long time, I used only a single FLP to test all of PyFLP's API. Things
-have changed now and I use presets exported from FL Studio itself for the
-testing of a huge chunk of API to ensure isolation of test results.
-
-The problem is that all the test data comes from FL Studio itself and can
-be only really validated in the same. That's the reason I usually don't
-raise any errors event if I know quite surely that, for example a value out of
-range is set for some property.
