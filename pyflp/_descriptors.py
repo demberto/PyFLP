@@ -22,7 +22,7 @@ import enum
 import math
 import sys
 import warnings
-from typing import Any, List, NamedTuple, Tuple, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, List, NamedTuple, Tuple, TypeVar, Union, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
@@ -238,8 +238,15 @@ class StructProp(PropBase[T], NamedPropMixin):
         ev_or_ins[self._prop] = value
 
 
-SimpleAdapter = ct.Adapter[T, T, U, U]
-"""Duplicates type parameters for `construct.Adapter`."""
+# ! mypy 0.991 bug
+if TYPE_CHECKING:
+
+    class SimpleAdapter(ct.Adapter[T, T, U, U]):
+        ...
+
+else:
+    SimpleAdapter = ct.Adapter[T, T, U, U]
+    """Duplicates type parameters for `construct.Adapter`."""
 
 
 class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):
@@ -277,7 +284,7 @@ class LinearMusical(SimpleAdapter[int, MusicalTime]):
 
 class Log2(SimpleAdapter[int, float]):
     def __init__(self, subcon: Any, factor: int):
-        super().__init__(subcon)
+        super().__init__(subcon)  # type: ignore[call-arg]
         self.factor = factor
 
     def _encode(self, obj: float, *_: Any) -> int:
@@ -289,9 +296,9 @@ class Log2(SimpleAdapter[int, float]):
 
 # Thanks to @algmyr from Python Discord server for finding out the formulae used
 # ! See https://github.com/construct/construct/issues/999
-class LogNormal(ct.Adapter[List[int], List[int], float, float]):
+class LogNormal(SimpleAdapter[List[int], float]):
     def __init__(self, subcon: Any, bound: tuple[int, int]):
-        super().__init__(subcon)
+        super().__init__(subcon)  # type: ignore[call-arg]
         self.lo, self.hi = bound
 
     def _encode(self, obj: float, *_: Any) -> list[int]:

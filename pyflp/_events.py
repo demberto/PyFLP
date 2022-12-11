@@ -468,7 +468,7 @@ class StructEventBase(DataEventBase):
     def __repr__(self):
         return f"{type(self).__name__}(id={self.id}, size={len(self._data)})"
 
-    @property
+    @property  # type: ignore[override]
     def value(self) -> NoReturn:
         raise NotImplementedError
 

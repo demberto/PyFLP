@@ -65,7 +65,7 @@ shown me that they rarely change.
 -----------------------------------------------------------------
 
 PyFLP is fully tested with `pyright <https://github.com/microsoft/pyright>`_,
-a static type checker built right into VS Code.
+a static type checker built right into VS Code as well as mypy.
 
 :fas:`umbrella;sd-text-primary` 85%+ code coverage
 --------------------------------------------------

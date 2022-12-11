@@ -61,6 +61,7 @@ profile = "black"
 
 [tool.mypy]
 python_version = "3.7"
+check_untyped_defs = true
 enable_incomplete_features = true
 ignore_missing_imports = true
 warn_no_return = false
