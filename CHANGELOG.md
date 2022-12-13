@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Ambiguous `__index__` methods from a bunch of model classes.
+- Unimplemented `Slot.controllers`.
 
 [#27]: https://github.com/demberto/PyFLP/issues/27
 

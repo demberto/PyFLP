@@ -20,7 +20,7 @@ import enum
 import sys
 import warnings
 from collections import defaultdict
-from typing import Any, DefaultDict, Iterator, List, NamedTuple, cast
+from typing import Any, DefaultDict, Iterator, NamedTuple, cast
 
 if sys.version_info >= (3, 8):
     from typing import TypedDict
@@ -39,7 +39,6 @@ import construct_typed as ct
 from ._descriptors import (
     EventProp,
     FlagProp,
-    KWProp,
     NamedPropMixin,
     ROProperty,
     RWProperty,
@@ -70,7 +69,6 @@ from ._models import (
     ModelReprMixin,
     supports_slice,
 )
-from .controller import RemoteController
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
     FruityBalance,
@@ -369,12 +367,10 @@ class Slot(EventModel):
         super().__init__(events, params=params or [])
 
     def __repr__(self) -> str:
-        return f"Slot (name={self.name}, index={self.index}, plugin={self.plugin!r})"
-
-    def __index__(self) -> int:
-        return self.events.first(SlotID.Index).value
+        return f"Slot (name={self.name}, iid={self.index}, plugin={self.plugin!r})"
 
     color = EventProp[colour.Color](PluginID.Color)
+    # TODO controllers = KWProp[List[RemoteController]]()
     iid = EventProp[int](SlotID.Index)
     """A 0-based internal index."""
 
