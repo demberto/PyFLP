@@ -131,7 +131,7 @@ class HeightAdapter(ct.Adapter[float, float, str, str]):
 
 class TrackEvent(StructEventBase):
     STRUCT = c.Struct(
-        "index" / c.Optional(c.Int32ul),  # 4
+        "iid" / c.Optional(c.Int32ul),  # 4
         "color" / c.Optional(c.Int32ul),  # 8
         "icon" / c.Optional(c.Int32ul),  # 12
         "enabled" / c.Optional(c.Flag),  # 13
@@ -259,10 +259,6 @@ class Track(EventModel, ModelCollection[PLItemBase]):
             return NotImplemented
         return self._kw["items"][index]
 
-    def __index__(self) -> int:
-        """An integer in the range of 1 to :attr:`Arrangements.max_tracks`."""
-        return cast(TrackEvent, self.events.first(TrackID.Data))["index"]
-
     def __iter__(self) -> Iterator[PLItemBase]:
         """An iterator over :attr:`items`."""
         yield from self._kw["items"]
@@ -271,7 +267,7 @@ class Track(EventModel, ModelCollection[PLItemBase]):
         return len(self._kw["items"])
 
     def __repr__(self):
-        return f"Track(name={self.name}, index={self.__index__()}, {len(self)} items)"
+        return f"Track(name={self.name}, iid={self.iid}, {len(self)} items)"
 
     color = _TrackColorProp(TrackID.Data)
     """Defaults to #485156 (dark slate gray).
@@ -307,6 +303,9 @@ class Track(EventModel, ModelCollection[PLItemBase]):
 
     :guilabel:`Change icon`
     """
+
+    iid = StructProp[int](TrackID.Data)
+    """An integer in the range of 1 to :attr:`Arrangements.max_tracks`."""
 
     locked = StructProp[bool](TrackID.Data)
     """Whether the tracked is in a locked state.
@@ -354,16 +353,15 @@ class Arrangement(EventModel):
         super().__init__(events, **kw)
 
     def __repr__(self):
-        return "Arrangement(index={}, name={}, {} timemarkers, {} tracks)".format(
-            self.__index__(),
+        return "Arrangement(iid={}, name={}, {} timemarkers, {} tracks)".format(
+            self.iid,
             repr(self.name),
             len(tuple(self.timemarkers)),
             len(tuple(self.tracks)),
         )
 
-    def __index__(self) -> int:
-        """A 1-based index."""
-        return self.events.first(ArrangementID.New).value
+    iid = EventProp[int](ArrangementID.New)
+    """A 1-based internal index."""
 
     name = EventProp[str](ArrangementID.Name)
     """Name of the arrangement; defaults to **Arrangement**."""
@@ -445,7 +443,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
                 index isn't found.
         """
         for arr in self:
-            if (isinstance(i, str) and i == arr.name) or arr.__index__() == i:
+            if (isinstance(i, str) and i == arr.name) or arr.iid == i:
                 return arr
         raise ModelNotFound(i)
 

@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Patterns.__getitem__` didn't work with pattern names as documented.
 
+### Removed
+
+- Ambiguous `__index__` methods from a bunch of model classes.
+
 [#27]: https://github.com/demberto/PyFLP/issues/27
 
 ## [2.0.0a6] - 2022-11-19

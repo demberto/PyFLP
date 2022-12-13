@@ -20,7 +20,7 @@ def get_insert(preset: str):
     # the end of an Insert, which surprisingly isn't a part of presets.
     params = cast(MixerParamsEvent, mixer.events.first(MixerID.Params))
     items = tuple(params.items.values())[0]
-    return Insert(mixer.events, index=0, max_slots=10, params=items)
+    return Insert(mixer.events, iid=0, max_slots=10, params=items)
 
 
 def test_insert_bypassed():
@@ -40,7 +40,7 @@ def test_insert_dock(inserts: tuple[Insert, ...]):
     for insert in inserts:
         if insert.name in ("Docked left", "Master"):
             assert insert.dock == InsertDock.Left
-        elif insert.name == "Docked right" or insert.__index__() in sends:
+        elif insert.name == "Docked right" or insert.iid in sends:
             assert insert.dock == InsertDock.Right
         else:
             assert insert.dock == InsertDock.Middle

@@ -1202,9 +1202,6 @@ class Channel(EventModel):
     def __repr__(self):
         return f"{type(self).__name__} (name={self.display_name!r}, iid={self.iid})"
 
-    def __index__(self):
-        return cast(int, self.iid)
-
     color = EventProp[colour.Color](PluginID.Color)
     """Defaults to #5C656A (granite gray).
 

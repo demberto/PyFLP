@@ -178,7 +178,7 @@ def include_obsolete_ids(app, what, name, obj, skip, options):
 
 def show_model_dunders(app, what, name, obj, skip, options):
     """Subclasses of ``ModelBase`` show these dunders regardless of any settings."""
-    if name in ("__getitem__", "__setitem__", "__iter__", "__len__", "__index__"):
+    if name in ("__getitem__", "__setitem__", "__iter__", "__len__"):
         return False
 
 

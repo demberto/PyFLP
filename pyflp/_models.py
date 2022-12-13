@@ -120,9 +120,7 @@ def supports_slice(func: Callable[[ModelCollection[MT_co], str | int | slice], M
     ) -> MT_co | Sequence[MT_co]:
         if isinstance(i, slice):
             return [
-                model
-                for model in self
-                if getattr(model, "__index__")() in range(i.start, i.stop)
+                model for idx, model in enumerate(self) if idx in range(i.start, i.stop)
             ]
         return func(self, i)
 

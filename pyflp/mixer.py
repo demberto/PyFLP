@@ -375,7 +375,9 @@ class Slot(EventModel):
         return self.events.first(SlotID.Index).value
 
     color = EventProp[colour.Color](PluginID.Color)
-    controllers = KWProp[List[RemoteController]]()  # TODO
+    iid = EventProp[int](SlotID.Index)
+    """A 0-based internal index."""
+
     internal_name = EventProp[str](PluginID.InternalName)
     """'Fruity Wrapper' for VST/AU plugins or factory name for native plugins."""
 
@@ -410,7 +412,7 @@ class Slot(EventModel):
 
 
 class _InsertKW(TypedDict):
-    index: int
+    iid: int
     max_slots: int
     params: NotRequired[_InsertItems]
 
@@ -430,7 +432,7 @@ class Insert(EventModel, ModelCollection[Slot]):
 
     # TODO Add number of used slots
     def __repr__(self):
-        return f"Insert(name={self.name!r}, index={self.__index__()})"
+        return f"Insert(name={self.name!r}, iid={self.iid})"
 
     @supports_slice  # type: ignore
     def __getitem__(self, i: int | str):
@@ -449,7 +451,8 @@ class Insert(EventModel, ModelCollection[Slot]):
                 return slot
         raise ModelNotFound(i)
 
-    def __index__(self) -> int:
+    @property
+    def iid(self) -> int:
         """-1 for "current" insert, 0 for master and upto :attr:`Mixer.max_inserts`."""
         return self._kw["index"]
 
@@ -657,11 +660,9 @@ class Mixer(EventModel, ModelCollection[Insert]):
 
         for i, ed in enumerate(self.events.subtrees(select, self.max_inserts)):
             if i in params:
-                yield Insert(
-                    ed, index=i - 1, max_slots=self.max_slots, params=params[i]
-                )
+                yield Insert(ed, iid=i - 1, max_slots=self.max_slots, params=params[i])
             else:
-                yield Insert(ed, index=i - 1, max_slots=self.max_slots)
+                yield Insert(ed, iid=i - 1, max_slots=self.max_slots)
 
     def __len__(self):
         """Returns the number of inserts present in the project.
