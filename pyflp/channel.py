@@ -105,7 +105,7 @@ class ChannelNotFound(ModelNotFound, KeyError):
 
 class AutomationEvent(StructEventBase):
     @staticmethod
-    def _get_position(stream: c.StreamType, index: int):
+    def _get_position(stream: c.StreamType, index: int) -> float:
         cur = stream.tell()
         position = 0.0
         for i in range(index + 1):
@@ -458,7 +458,7 @@ class _SamplerFlags(enum.IntFlag):
 
 
 class DisplayGroup(EventModel, ModelReprMixin):
-    def __str__(self):
+    def __str__(self) -> str:
         if self.name is None:
             return "Unnamed display group"
         return f"Display group {self.name}"
@@ -526,7 +526,7 @@ class Delay(EventModel, ModelReprMixin):
         return self.events.first(ChannelID.DelayModXY).value[0]
 
     @mod_x.setter
-    def mod_x(self, value: int):
+    def mod_x(self, value: int) -> None:
         event = self.events.first(ChannelID.DelayModXY)
         event.value = (value, event.value[1])
 
@@ -536,7 +536,7 @@ class Delay(EventModel, ModelReprMixin):
         return self.events.first(ChannelID.DelayModXY).value[1]
 
     @mod_y.setter
-    def mod_y(self, value: int):
+    def mod_y(self, value: int) -> None:
         event = self.events.first(ChannelID.DelayModXY)
         event.value = (event.value[0], value)
 
@@ -653,7 +653,7 @@ class Reverb(EventModel, ModelReprMixin):
             return ReverbType.B if event.value >= ReverbType.B else ReverbType.A
 
     @type.setter
-    def type(self, value: ReverbType):
+    def type(self, value: ReverbType) -> None:
         if self.mix is None:
             raise PropertyCannotBeSet(ChannelID.Reverb)
 
@@ -671,7 +671,7 @@ class Reverb(EventModel, ModelReprMixin):
             return self.events.first(ChannelID.Reverb).value - self.type
 
     @mix.setter
-    def mix(self, value: int):
+    def mix(self, value: int) -> None:
         if ChannelID.Reverb not in self.events.ids:
             raise PropertyCannotBeSet(ChannelID.Reverb)
 
@@ -1179,7 +1179,7 @@ class AutomationLFO(EventModel, ModelReprMixin):
 
 
 class AutomationPoint(ItemModel[AutomationEvent], ModelReprMixin):
-    def __setitem__(self, prop: str, value: Any):
+    def __setitem__(self, prop: str, value: Any) -> None:
         self._item[prop] = value
         self._parent["points"][self._index] = self._item
 
@@ -1199,7 +1199,7 @@ class AutomationPoint(ItemModel[AutomationEvent], ModelReprMixin):
 class Channel(EventModel):
     """Represents a channel in the channel rack."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__} (name={self.display_name!r}, iid={self.iid})"
 
     color = EventProp[colour.Color](PluginID.Color)
@@ -1371,7 +1371,7 @@ class Layer(Channel, ModelCollection[Channel]):
     """
 
     @supports_slice  # type: ignore
-    def __getitem__(self, i: int | str | slice):
+    def __getitem__(self, i: int | str | slice) -> Channel:
         """Returns a child :class:`Channel` with an IID of :attr:`Channel.iid`.
 
         Args:
@@ -1391,14 +1391,14 @@ class Layer(Channel, ModelCollection[Channel]):
             for event in self.events.get(ChannelID.Children):
                 yield self._kw["channels"][event.value]
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Returns the number of channels whose parent this layer is."""
         try:
             return self.events.count(ChannelID.Children)
         except KeyError:
             return 0
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{super().__repr__()[:-1]}, {len(self)} children)"
 
     crossfade = FlagProp(_LayerFlags.Crossfade, ChannelID.LayerFlags)
@@ -1466,7 +1466,7 @@ class Sampler(_SamplerInstrument):
     ![](https://bit.ly/3DlHPiI)
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{super().__repr__()[:-1]}, sample_path={self.sample_path!r})"
 
     au_sample_rate = EventProp[int](ChannelID.AUSampleRate)
@@ -1527,7 +1527,7 @@ class Sampler(_SamplerInstrument):
             return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pitch_shift"]
 
     @pitch_shift.setter
-    def pitch_shift(self, value: int):
+    def pitch_shift(self, value: int) -> None:
         try:
             event = self.events.first(ChannelID.Levels)
         except KeyError as exc:
@@ -1552,7 +1552,7 @@ class Sampler(_SamplerInstrument):
             return pathlib.Path(self.events.first(ChannelID.SamplePath).value)
 
     @sample_path.setter
-    def sample_path(self, value: pathlib.Path):
+    def sample_path(self, value: pathlib.Path) -> None:
         if self.sample_path is None:
             raise PropertyCannotBeSet(ChannelID.SamplePath)
 
@@ -1574,7 +1574,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
         return f"ChannelRack - {len(self)} channels"
 
     @supports_slice  # type: ignore
-    def __getitem__(self, i: str | int | slice):
+    def __getitem__(self, i: str | int | slice) -> Channel:
         """Gets a channel from the rack based on its IID or name.
 
         Args:
@@ -1619,7 +1619,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
                 cur_ch = ch_dict[iid] = ct(et, channels=ch_dict, group=groups[groupnum])
                 yield cur_ch
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Returns the number of channels found in the project.
 
         Raises:

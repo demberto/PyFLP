@@ -277,7 +277,7 @@ class VSTPluginEvent(StructEventBase):
         ),
     ).compile()
 
-    def __init__(self, id: Any, data: bytearray):
+    def __init__(self, id: Any, data: bytearray) -> None:
         if data[0] not in (8, 10):
             warnings.warn(
                 f"VSTPluginEvent: Unknown marker {data[0]} detected ."
@@ -297,7 +297,7 @@ class VSTPluginEvent(StructEventBase):
                 return e["data"].decode("ascii") if e["id"].ascii else e["data"]
         raise AttributeError(f"No event with key {key!r} found")
 
-    def __setitem__(self, key: Any, value: Any):
+    def __setitem__(self, key: Any, value: Any) -> None:
         if not isinstance(key, _VSTPluginEventID):
             raise TypeError("Expected 'key' to be of type _VSTPluginEventID")
 
@@ -342,12 +342,12 @@ _PE_co = TypeVar("_PE_co", bound=AnyEvent, covariant=True)
 
 
 class _WrapperProp(FlagProp):
-    def __init__(self, flag: _WrapperFlags, **kw: Any):
+    def __init__(self, flag: _WrapperFlags, **kw: Any) -> None:
         super().__init__(flag, PluginID.Wrapper, **kw)
 
 
 class _PluginBase(EventModel, Generic[_PE_co]):
-    def __init__(self, events: EventTree, **kw: Any):
+    def __init__(self, events: EventTree, **kw: Any) -> None:
         super().__init__(events, **kw)
 
     compact = _WrapperProp(_WrapperFlags.HideSettings)
@@ -410,7 +410,7 @@ class PluginProp(RWProperty[AnyPlugin]):
         self._types = types
 
     @staticmethod
-    def _get_plugin_events(ins: EventModel):
+    def _get_plugin_events(ins: EventModel) -> EventTree:
         return ins.events.subtree(lambda e: e.id in (PluginID.Wrapper, PluginID.Data))
 
     def __get__(self, ins: EventModel, owner: Any = None) -> AnyPlugin | None:
@@ -430,7 +430,7 @@ class PluginProp(RWProperty[AnyPlugin]):
             if isinstance(data_event, event_type):
                 return ptype(self._get_plugin_events(ins))
 
-    def __set__(self, ins: EventModel, value: AnyPlugin):
+    def __set__(self, ins: EventModel, value: AnyPlugin) -> None:
         if isinstance(value, _IPlugin):
             setattr(ins, "internal_name", value.INTERNAL_NAME)
 
@@ -441,12 +441,12 @@ class PluginProp(RWProperty[AnyPlugin]):
 
 
 class _NativePluginProp(StructProp[T]):
-    def __init__(self, prop: str | None = None, **kwds: Any):
+    def __init__(self, prop: str | None = None, **kwds: Any) -> None:
         super().__init__(PluginID.Data, prop=prop, **kwds)
 
 
 class _VSTPluginProp(RWProperty[T], NamedPropMixin):
-    def __init__(self, id: _VSTPluginEventID, prop: str | None = None):
+    def __init__(self, id: _VSTPluginEventID, prop: str | None = None) -> None:
         self._id = id
         NamedPropMixin.__init__(self, prop)
 
@@ -457,10 +457,10 @@ class _VSTPluginProp(RWProperty[T], NamedPropMixin):
     def _get(self, value: Any) -> T:
         return cast(T, value if isinstance(value, (str, bytes)) else value[self._prop])
 
-    def __set__(self, ins: EventModel, value: T):
+    def __set__(self, ins: EventModel, value: T) -> None:
         self._set(cast(VSTPluginEvent, ins.events.first(PluginID.Data)), value)
 
-    def _set(self, event: VSTPluginEvent, value: T):
+    def _set(self, event: VSTPluginEvent, value: T) -> None:
         if self._prop is None:
             event[self._id] = value
         else:
@@ -468,7 +468,9 @@ class _VSTPluginProp(RWProperty[T], NamedPropMixin):
 
 
 class _VSTFlagProp(_VSTPluginProp[bool]):
-    def __init__(self, flag: enum.IntFlag, prop: str = "flags", inverted: bool = False):
+    def __init__(
+        self, flag: enum.IntFlag, prop: str = "flags", inverted: bool = False
+    ) -> None:
         super().__init__(_VSTPluginEventID.Flags, prop)
         self._flag = flag
         self._inverted = inverted
@@ -477,7 +479,7 @@ class _VSTFlagProp(_VSTPluginProp[bool]):
         retbool = self._flag in value[self._prop]
         return retbool if not self._inverted else not retbool
 
-    def _set(self, event: VSTPluginEvent, value: bool):
+    def _set(self, event: VSTPluginEvent, value: bool) -> None:
         if self._inverted:
             value = not value
 
@@ -662,7 +664,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
         :guilabel:`Scale editor dimensions`. Defaults to ``False``.
         """
 
-    def __init__(self, events: EventTree, **kw: Any):
+    def __init__(self, events: EventTree, **kw: Any) -> None:
         super().__init__(events, **kw)
 
         # This doesn't break lazy evaluation in any way

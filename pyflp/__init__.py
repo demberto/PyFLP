@@ -175,7 +175,7 @@ def parse(file: pathlib.Path | str) -> Project:
     )
 
 
-def save(project: Project, file: pathlib.Path | str):
+def save(project: Project, file: pathlib.Path | str) -> None:
     """Save a parsed project back into a file.
 
     Caution:

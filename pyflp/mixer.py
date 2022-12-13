@@ -164,7 +164,7 @@ class MixerParamsEvent(DataEventBase):
     ).compile()
     STRUCT_SIZE = STRUCT.sizeof()
 
-    def __init__(self, id: Any, data: bytearray):
+    def __init__(self, id: Any, data: bytearray) -> None:
         super().__init__(id, data)
         self.items: DefaultDict[int, _InsertItems] = defaultdict(_InsertItems)
         self.unparsed = False
@@ -237,12 +237,12 @@ class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
             return NotImplemented
         return ins._kw[self._prop]["msg"]
 
-    def __set__(self, ins: InsertEQBand, value: int):
+    def __set__(self, ins: InsertEQBand, value: int) -> None:
         ins._kw[self._prop]["msg"] = value
 
 
 class InsertEQBand(ModelBase, ModelReprMixin):
-    def __init__(self, **kw: Unpack[_InsertEQBandKW]):
+    def __init__(self, **kw: Unpack[_InsertEQBandKW]) -> None:
         super().__init__(**kw)
 
     @property
@@ -309,7 +309,7 @@ class InsertEQ(ModelBase, ModelReprMixin):
         :attr:`Insert.eq`
     """
 
-    def __init__(self, params: _InsertItems):
+    def __init__(self, params: _InsertItems) -> None:
         super().__init__(params=params)
 
     @property
@@ -339,7 +339,7 @@ class InsertEQ(ModelBase, ModelReprMixin):
 
 
 class _MixerParamProp(RWProperty[T]):
-    def __init__(self, id: int):  # pylint: disable=super-init-not-called
+    def __init__(self, id: int) -> None:  # pylint: disable=super-init-not-called
         self._id = id
 
     def __get__(self, ins: Insert, owner: object = None) -> T | None:
@@ -350,11 +350,12 @@ class _MixerParamProp(RWProperty[T]):
             if id == self._id:
                 return item["msg"]
 
-    def __set__(self, ins: Insert, value: T):
+    def __set__(self, ins: Insert, value: T) -> None:
         for id, item in cast(_InsertItems, ins._kw["params"]).own.items():
             if id == self._id:
                 item["msg"] = value
-        raise PropertyCannotBeSet(self._id)  # type: ignore
+                return
+        raise PropertyCannotBeSet(self._id)
 
 
 class Slot(EventModel):
@@ -363,7 +364,9 @@ class Slot(EventModel):
     ![](https://bit.ly/3RUDtTu)
     """
 
-    def __init__(self, events: EventTree, params: list[dict[str, Any]] | None = None):
+    def __init__(
+        self, events: EventTree, params: list[dict[str, Any]] | None = None
+    ) -> None:
         super().__init__(events, params=params or [])
 
     def __repr__(self) -> str:
@@ -423,15 +426,15 @@ class Insert(EventModel, ModelCollection[Slot]):
     ![](https://bit.ly/3LeGKuN)
     """
 
-    def __init__(self, events: EventTree, **kw: Unpack[_InsertKW]):
+    def __init__(self, events: EventTree, **kw: Unpack[_InsertKW]) -> None:
         super().__init__(events, **kw)
 
     # TODO Add number of used slots
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Insert(name={self.name!r}, iid={self.iid})"
 
     @supports_slice  # type: ignore
-    def __getitem__(self, i: int | str):
+    def __getitem__(self, i: int | str) -> Slot:
         """Returns an effect slot of the specified index or name.
 
         Args:
@@ -457,7 +460,7 @@ class Insert(EventModel, ModelCollection[Slot]):
         for idx, ed in enumerate(self.events.divide(SlotID.Index, *SlotID, *PluginID)):
             yield Slot(ed, params=self._kw["params"].slots[idx])
 
-    def __len__(self):
+    def __len__(self) -> int:
         try:
             return self.events.count(SlotID.Index)
         except KeyError:
@@ -620,12 +623,12 @@ class Mixer(EventModel, ModelCollection[Insert]):
 
     _MAX_SLOTS = {(1, 6, 5): 4, (3, 0, 0): 8}
 
-    def __init__(self, events: EventTree, **kw: Unpack[_MixerKW]):
+    def __init__(self, events: EventTree, **kw: Unpack[_MixerKW]) -> None:
         super().__init__(events, **kw)
 
     # Inserts don't store their index internally.
     @supports_slice  # type: ignore
-    def __getitem__(self, i: int | str | slice):
+    def __getitem__(self, i: int | str | slice) -> Insert:
         """Returns an insert with the specified index or name.
 
         Args:
@@ -643,7 +646,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
         raise ModelNotFound(i)
 
     def __iter__(self) -> Iterator[Insert]:
-        def select(e: AnyEvent):
+        def select(e: AnyEvent) -> bool | None:
             if e.id == InsertID.Output:
                 return False
 
@@ -660,7 +663,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
             else:
                 yield Insert(ed, iid=i - 1, max_slots=self.max_slots)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Returns the number of inserts present in the project.
 
         Raises:
@@ -670,7 +673,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
             raise NoModelsFound
         return self.events.count(InsertID.Flags)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Mixer: {len(self)} inserts"
 
     apdc = EventProp[bool](MixerID.APDC)

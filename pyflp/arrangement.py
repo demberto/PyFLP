@@ -191,7 +191,7 @@ class PLItemBase(ItemModel[PlaylistEvent], ModelReprMixin):
         return (self["start_offset"], self["end_offset"])
 
     @offsets.setter
-    def offsets(self, value: tuple[float, float]):
+    def offsets(self, value: tuple[float, float]) -> None:
         self["start_offset"], self["end_offset"] = value
 
     position = StructProp[int]()
@@ -209,7 +209,7 @@ class ChannelPLItem(PLItemBase, ModelReprMixin):
         return self._kw["channel"]
 
     @channel.setter
-    def channel(self, channel: Channel):
+    def channel(self, channel: Channel) -> None:
         self._kw["channel"] = channel
         self["item_index"] = channel.iid
 
@@ -225,18 +225,18 @@ class PatternPLItem(PLItemBase, ModelReprMixin):
         return self._kw["pattern"]
 
     @pattern.setter
-    def pattern(self, pattern: Pattern):
+    def pattern(self, pattern: Pattern) -> None:
         self._kw["pattern"] = pattern
         self["item_index"] = pattern.iid + self["pattern_base"]
 
 
 class _TrackColorProp(StructProp[colour.Color]):
-    def _get(self, ev_or_ins: Any):
+    def _get(self, ev_or_ins: Any) -> colour.Color | None:
         value = cast(Optional[int], super()._get(ev_or_ins))
         if value is not None:
             return ColorEvent.decode(bytearray(value.to_bytes(4, "little")))
 
-    def _set(self, ev_or_ins: Any, value: colour.Color):
+    def _set(self, ev_or_ins: Any, value: colour.Color) -> None:
         color_u32 = int.from_bytes(ColorEvent.encode(value), "little")
         super()._set(ev_or_ins, color_u32)  # type: ignore
 
@@ -251,7 +251,7 @@ class Track(EventModel, ModelCollection[PLItemBase]):
     ![](https://bit.ly/3de6R8y)
     """
 
-    def __init__(self, events: EventTree, **kw: Unpack[_TrackKW]):
+    def __init__(self, events: EventTree, **kw: Unpack[_TrackKW]) -> None:
         super().__init__(events, **kw)
 
     def __getitem__(self, index: int | slice | str):
@@ -266,7 +266,7 @@ class Track(EventModel, ModelCollection[PLItemBase]):
     def __len__(self) -> int:
         return len(self._kw["items"])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Track(name={self.name}, iid={self.iid}, {len(self)} items)"
 
     color = _TrackColorProp(TrackID.Data)
@@ -349,10 +349,10 @@ class Arrangement(EventModel):
     *New in FL Studio v12.9.1*: Support for multiple arrangements.
     """
 
-    def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]):
+    def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]) -> None:
         super().__init__(events, **kw)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Arrangement(iid={}, name={}, {} timemarkers, {} tracks)".format(
             self.iid,
             repr(self.name),
@@ -426,11 +426,11 @@ class TimeSignature(EventModel, ModelReprMixin):
 class Arrangements(EventModel, ModelCollection[Arrangement]):
     """Iterator over arrangements in the project and some related properties."""
 
-    def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]):
+    def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]) -> None:
         super().__init__(events, **kw)
 
     @supports_slice  # type: ignore
-    def __getitem__(self, i: int | str | slice):
+    def __getitem__(self, i: int | str | slice) -> Arrangement:
         """Returns an arrangement based either on its index or name.
 
         Args:
@@ -461,7 +461,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         """
         arrnew_occured = False
 
-        def select(e: AnyEvent):
+        def select(e: AnyEvent) -> bool | None:
             nonlocal arrnew_occured
             if e.id == ArrangementID.New:
                 if arrnew_occured:
@@ -479,7 +479,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             for ed in self.events.subtrees(select, len(self))
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """The number of arrangements present in the project.
 
         Raises:
@@ -489,7 +489,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             raise NoModelsFound
         return self.events.count(ArrangementID.New)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{len(self)} arrangements"
 
     @property

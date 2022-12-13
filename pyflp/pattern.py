@@ -150,7 +150,7 @@ class Note(ItemModel[NotesEvent]):
         return self._NOTE_NAMES[self["key"] % 12] + str(self["key"] // 12)
 
     @key.setter
-    def key(self, value: int | str):
+    def key(self, value: int | str) -> None:
         if isinstance(value, int):
             if value not in range(132):
                 raise ValueError("Expected a value between 0-131.")
@@ -277,7 +277,7 @@ class Pattern(EventModel):
         return self.events.first(PatternID.New).value
 
     @iid.setter
-    def iid(self, value: int):
+    def iid(self, value: int) -> None:
         for event in self.events.get(PatternID.New):
             event.value = value
 
@@ -355,7 +355,7 @@ class Patterns(EventModel, ModelCollection[Pattern]):
             self.events.children.append(et)
             yield Pattern(et)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Returns the number of patterns found in the project.
 
         Raises:

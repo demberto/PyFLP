@@ -44,14 +44,14 @@ class Error(Exception):
 class EventIDOutOfRange(Error, ValueError):
     """An event is created with an ID out of its allowed range."""
 
-    def __init__(self, id: int, min_i: int, max_e: int):
+    def __init__(self, id: int, min_i: int, max_e: int) -> None:
         super().__init__(f"Expected ID in {min_i}-{max_e - 1}; got {id} instead")
 
 
 class InvalidEventChunkSize(Error, BufferError):
     """A fixed size event is created with a wrong amount of bytes."""
 
-    def __init__(self, expected: int, got: int):
+    def __init__(self, expected: int, got: int) -> None:
         super().__init__(f"Expected a bytes object of length {expected}; got {got}")
 
 
@@ -60,7 +60,7 @@ class ListEventNotParsed(Error, AttributeError, IndexError):
 
 
 class PropertyCannotBeSet(Error, AttributeError):
-    def __init__(self, *ids: enum.Enum):
+    def __init__(self, *ids: enum.Enum | int) -> None:
         super().__init__(f"Event(s) {ids!r} was / were not found")
 
 
@@ -75,7 +75,7 @@ class HeaderCorrupted(DataCorrupted, ValueError):
         desc: A string containing details about what is corrupted.
     """
 
-    def __init__(self, desc: str):
+    def __init__(self, desc: str) -> None:
         super().__init__(f"Error parsing header: {desc}")
 
 

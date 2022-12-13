@@ -46,7 +46,7 @@ class TimeMarker(EventModel, ModelReprMixin):
     ![](https://bit.ly/3gltKbt)
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.type == TimeMarkerType.Marker:
             if self.name:
                 return f"Marker {self.name!r} @ {self.position!r}"
