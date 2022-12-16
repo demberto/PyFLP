@@ -189,9 +189,13 @@ def save(project: Project, file: pathlib.Path | str) -> None:
     num_channels = len(project.channels)
     header = FLP_HEADER.pack(b"FLhd", 6, project.format, num_channels, project.ppq)
     buf.extend(header)
-    buf.extend(b"FLdt" + sum(e.size for e in project.events).to_bytes(4, "little"))
+    buf.extend(b"FLdt" + (b"\0" * 4))
+    total_size = 0
     for event in project.events:
-        buf.extend(bytes(event))
+        raw = bytes(event)
+        total_size += len(raw)
+        buf.extend(raw)
+    buf[18:22] = total_size.to_bytes(4, "little")
 
     with open(file, "wb") as fp:
         fp.write(buf)
