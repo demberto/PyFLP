@@ -446,7 +446,7 @@ class _NativePluginProp(StructProp[T]):
 
 
 class _VSTPluginProp(RWProperty[T], NamedPropMixin):
-    def __init__(self, id: _VSTPluginEventID, prop: str | None = None) -> None:
+    def __init__(self, id: Any, prop: str | None = None) -> None:
         self._id = id
         NamedPropMixin.__init__(self, prop)
 
@@ -468,9 +468,7 @@ class _VSTPluginProp(RWProperty[T], NamedPropMixin):
 
 
 class _VSTFlagProp(_VSTPluginProp[bool]):
-    def __init__(
-        self, flag: enum.IntFlag, prop: str = "flags", inverted: bool = False
-    ) -> None:
+    def __init__(self, flag: Any, prop: str = "flags", inverted: bool = False) -> None:
         super().__init__(_VSTPluginEventID.Flags, prop)
         self._flag = flag
         self._inverted = inverted
