@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Pattern` timemarkers [#27].
+- FL Studio 21's expanded `PlaylistEvent` is parseable (not discovered yet) [#108].
 
 ### Changed
 
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unimplemented `Slot.controllers`.
 
 [#27]: https://github.com/demberto/PyFLP/issues/27
+[#108]: https://github.com/demberto/PyFLP/issues/108
 
 ## [2.0.0a6] - 2022-11-19
 

@@ -478,49 +478,65 @@ class StructEventBase(DataEventBase):
 
 
 class ListEventBase(DataEventBase):
-    """Base class for events storing an array of structured data."""
+    """Base class for events storing an array of structured data.
+
+    Attributes:
+        kwds: Keyword args passed to :meth:`STRUCT.parse` & :meth:`STRUCT.build`.
+    """
 
     STRUCT: ClassVar[c.Construct[c.Container[Any], Any]]
+    SIZES: ClassVar[list[int]] = []
+    """Manual :meth:`STRUCT.sizeof` override(s)."""
 
-    def __init__(self, id: EventEnum, data: bytes) -> None:
+    def __init__(self, id: EventEnum, data: bytes, **kwds: Any) -> None:
         super().__init__(id, data)
-        self.unparsed = False
+        self._struct_size: int | None = None
+        self.kwds = kwds
 
-        if len(data) % self.STRUCT.sizeof():  # pragma: no cover
-            self.unparsed = True
+        if not self.SIZES:
+            self._struct_size = self.STRUCT.sizeof()
+
+        for size in self.SIZES:
+            if not len(data) % size:
+                self._struct_size = size
+                break
+
+        if self._struct_size is None:  # pragma: no cover
             warnings.warn(
-                f"Cannot parse event {id} as event "
-                "size is not a multiple of struct size"
+                f"Cannot parse event {id} as event size {len(data)} "
+                f"is not a multiple of struct size(s) {self.SIZES}"
             )
 
     def __len__(self) -> int:
-        if self.unparsed:  # pragma: no cover
+        if self._struct_size is None:  # pragma: no cover
             raise ListEventNotParsed
 
-        return len(self._data) // self.STRUCT.sizeof()
+        return len(self._data) // self._struct_size
 
     def __getitem__(self, index: int) -> c.Container[Any]:
-        if self.unparsed:  # pragma: no cover
+        if self._struct_size is None:  # pragma: no cover
             raise ListEventNotParsed
 
         if index > len(self):
             raise IndexError(index)
 
-        start = self.STRUCT.sizeof() * index
-        count = self.STRUCT.sizeof()
-        return self.STRUCT.parse(self._data[start : start + count])
+        start = self._struct_size * index
+        count = self._struct_size
+        return self.STRUCT.parse(self._data[start : start + count], **self.kwds)
 
     def __setitem__(self, index: int, item: c.Container[Any]) -> None:
-        if self.unparsed:
+        if self._struct_size is None:
             raise ListEventNotParsed
 
         if index > len(self):
             raise IndexError(index)
 
-        start = self.STRUCT.sizeof() * index
-        count = self.STRUCT.sizeof()
+        start = self._struct_size * index
+        count = self._struct_size
         self._data = (  # pylint: disable=attribute-defined-outside-init
-            self._data[:start] + self.STRUCT.build(item) + self._data[start + count :]
+            self._data[:start]
+            + self.STRUCT.build(item, **self.kwds)
+            + self._data[start + count :]
         )
 
     def __iter__(self) -> Iterator[c.Container[Any]]:

@@ -88,7 +88,12 @@ class PlaylistEvent(ListEventBase):
         "_u2" / c.Bytes(4) * "Always (64, 100, 128, 128)",  # 24
         "start_offset" / c.Float32l,  # 28
         "end_offset" / c.Float32l,  # 32
+        "_u3" / c.If(c.this._params["new"], c.Bytes(28)) * "New in FL 21",  # 60
     ).compile()
+    SIZES = [32, 60]
+
+    def __init__(self, id: EventEnum, data: bytes) -> None:
+        super().__init__(id, data, new=not len(data) % 60)
 
 
 @enum.unique
@@ -442,8 +447,8 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             ModelNotFound: An :class:`Arrangement` with the specifed name or
                 index isn't found.
         """
-        for arr in self:
-            if (isinstance(i, str) and i == arr.name) or arr.iid == i:
+        for idx, arr in enumerate(self):
+            if (isinstance(i, str) and i == arr.name) or idx == i:
                 return arr
         raise ModelNotFound(i)
 
