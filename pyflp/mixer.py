@@ -453,7 +453,7 @@ class Insert(EventModel, ModelCollection[Slot]):
     @property
     def iid(self) -> int:
         """-1 for "current" insert, 0 for master and upto :attr:`Mixer.max_inserts`."""
-        return self._kw["index"]
+        return self._kw["iid"]
 
     def __iter__(self) -> Iterator[Slot]:
         """Iterator over the effect empty and used slots."""
