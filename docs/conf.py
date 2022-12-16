@@ -85,7 +85,7 @@ linkcheck_allowed_redirects = {
     r"https://pyflp.rtfd.io.*": r"https://pyflp.readthedocs.io/en/latest/.*",
     r"https://www.python.org/dev/peps/.*": r"https://peps.python.org/.*",
     r"https://github.com/demberto/PyFLP/files/.*": r"https://objects.githubusercontent.com/.*",
-    r"https://https://stackoverflow.com/a/.*": r"https://stackoverflow.com/questions/.*",
+    r"https://stackoverflow.com/a/.*": r"https://stackoverflow.com/questions/.*",
 }
 
 
