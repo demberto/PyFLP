@@ -1,11 +1,5 @@
-include *.md
-include *.yaml
-include .all-contributorsrc
-include .editorconfig
-include pyflp/py.typed
-include requirements.txt
-include tox.ini
-graft docs
-prune docs/_build
-recursive-include .vscode *.json
-recursive-include tests *.flp *.fst *.fsc *.py
+prune .github
+exclude .all-contributorsrc
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude .readthedocs.yaml

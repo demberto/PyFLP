@@ -12,6 +12,8 @@
   "python.linting.banditArgs": ["-r pyflp"],              // its kinda dumb
   "python.linting.flake8Enabled": true,                   // ? thinking of dumping this
   "python.linting.mypyEnabled": true,                     // ah ofc this shitty typechecker
+  "python.terminal.activateEnvironment": false,           // venvs don't deactivate properly
+  "python.terminal.activateEnvInCurrentTerminal": true,   // save my time instead
   "python.testing.pytestEnabled": true,                   // use pytest, and...
   "python.testing.unittestEnabled": false,                // not unittest
 }
