@@ -150,7 +150,7 @@ class Note(ItemModel[NotesEvent]):
         return self._NOTE_NAMES[self["key"] % 12] + str(self["key"] // 12)
 
     @key.setter
-    def key(self, value: int | str):
+    def key(self, value: int | str) -> None:
         if isinstance(value, int):
             if value not in range(132):
                 raise ValueError("Expected a value between 0-131.")
@@ -235,18 +235,20 @@ class Controller(ItemModel[ControllerEvent], ModelReprMixin):
 class Pattern(EventModel):
     """Represents a pattern which can contain notes, controllers and time markers."""
 
-    def __index__(self):
-        """Zero-based index of a pattern."""
-        return self.iid - 1
+    def __repr__(self) -> str:
+        try:
+            num_notes = len(self.events.first(PatternID.Notes))  # type: ignore
+        except KeyError:
+            num_notes = 0
 
-    def __repr__(self):
-        num_notes = (
-            len(cast(NotesEvent, self.events.first(PatternID.Notes)))
-            if PatternID.Notes in self.events
-            else 0
-        )
+        try:
+            num_ctrls = len(self.events.first(PatternID.Controllers))  # type: ignore
+        except KeyError:
+            num_ctrls = 0
+
         return (
-            f"Pattern(index={self.__index__()}, name={self.name!r}, {num_notes} notes)"
+            f"Pattern(iid={self.iid}, name={self.name!r},"
+            f"{num_notes} notes, {num_ctrls} controllers)"
         )
 
     color = EventProp[colour.Color](PatternID.Color)
@@ -275,7 +277,7 @@ class Pattern(EventModel):
         return self.events.first(PatternID.New).value
 
     @iid.setter
-    def iid(self, value: int):
+    def iid(self, value: int) -> None:
         for event in self.events.get(PatternID.New):
             event.value = value
 
@@ -314,9 +316,9 @@ class Pattern(EventModel):
 
 
 class Patterns(EventModel, ModelCollection[Pattern]):
-    def __str__(self):
-        indexes = [pattern.__index__() for pattern in self]
-        return f"{len(indexes)} Patterns {indexes!r}"
+    def __str__(self) -> str:
+        iids = [pattern.iid for pattern in self]
+        return f"{len(iids)} Patterns {iids!r}"
 
     @supports_slice  # type: ignore
     def __getitem__(self, i: int | str | slice) -> Pattern:
@@ -353,7 +355,7 @@ class Patterns(EventModel, ModelCollection[Pattern]):
             self.events.children.append(et)
             yield Pattern(et)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Returns the number of patterns found in the project.
 
         Raises:

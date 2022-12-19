@@ -23,9 +23,9 @@ import sys
 from typing import cast
 
 if sys.version_info >= (3, 8):
-    from typing import Final, TypedDict
+    from typing import Final, Literal, TypedDict
 else:
-    from typing_extensions import Final, TypedDict
+    from typing_extensions import Final, Literal, TypedDict
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -153,7 +153,7 @@ class _ProjectKW(TypedDict):
 class Project(EventModel):
     """Represents an FL Studio project."""
 
-    def __init__(self, events: EventTree, **kw: Unpack[_ProjectKW]):
+    def __init__(self, events: EventTree, **kw: Unpack[_ProjectKW]) -> None:
         super().__init__(events, **kw)
 
     def __repr__(self) -> str:
@@ -169,7 +169,7 @@ class Project(EventModel):
         """Provides an iterator over arrangements and other related properties."""
         arrnew_occured = False
 
-        def select(e: AnyEvent):
+        def select(e: AnyEvent) -> Literal[True] | None:
             nonlocal arrnew_occured
 
             if e.id == ArrangementID.New:
@@ -211,7 +211,7 @@ class Project(EventModel):
         return self._kw["channel_count"]
 
     @channel_count.setter
-    def channel_count(self, value: int):
+    def channel_count(self, value: int) -> None:
         if value < 0:
             raise ValueError("Channel count cannot be less than zero")
         self._kw["channel_count"] = value
@@ -220,7 +220,7 @@ class Project(EventModel):
     def channels(self) -> ChannelRack:
         """Provides an iterator over channels and channel rack properties."""
 
-        def select(e: AnyEvent):
+        def select(e: AnyEvent) -> bool | None:
             if e.id == InsertID.Flags:
                 return False
 
@@ -269,7 +269,7 @@ class Project(EventModel):
             return pathlib.Path(self.events.first(ProjectID.DataPath).value)
 
     @data_path.setter
-    def data_path(self, value: str | pathlib.Path):
+    def data_path(self, value: str | pathlib.Path) -> None:
         if ProjectID.DataPath not in self.events.ids:
             raise PropertyCannotBeSet(ProjectID.DataPath)
 
@@ -322,7 +322,7 @@ class Project(EventModel):
             return licensee.decode("ascii")
 
     @licensee.setter
-    def licensee(self, value: str):
+    def licensee(self, value: str) -> None:
         if self.version < FLVersion(1, 3, 9):
             pass
 
@@ -354,7 +354,7 @@ class Project(EventModel):
         """Provides an iterator over inserts and other mixer related properties."""
         inserts_began = False
 
-        def select(e: AnyEvent):
+        def select(e: AnyEvent) -> Literal[True] | None:
             nonlocal inserts_began
             if e.id in (*MixerID, *InsertID, *SlotID):
                 # TODO Find a more reliable to detect when inserts start.
@@ -371,7 +371,7 @@ class Project(EventModel):
         """Returns a collection of patterns and other related properties."""
         arrnew_occured = False
 
-        def select(e: AnyEvent):
+        def select(e: AnyEvent) -> Literal[True] | None:
             nonlocal arrnew_occured
 
             if e.id == ArrangementID.New:
@@ -420,7 +420,7 @@ class Project(EventModel):
         return self._kw["ppq"]
 
     @ppq.setter
-    def ppq(self, value: int):
+    def ppq(self, value: int) -> None:
         if value not in VALID_PPQS:
             raise ValueError(f"Expected one of {VALID_PPQS}; got {value} instead")
         self._kw["ppq"] = value
@@ -469,7 +469,7 @@ class Project(EventModel):
         return tempo
 
     @tempo.setter
-    def tempo(self, value: int | float):
+    def tempo(self, value: int | float) -> None:
         if self.tempo is None:
             raise PropertyCannotBeSet(
                 ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine
@@ -538,7 +538,7 @@ class Project(EventModel):
         return FLVersion(*tuple(int(part) for part in event.value.split(".")))
 
     @version.setter
-    def version(self, value: FLVersion | str | tuple[int, ...]):
+    def version(self, value: FLVersion | str | tuple[int, ...]) -> None:
         if ProjectID.FLVersion not in self.events.ids:
             raise PropertyCannotBeSet(ProjectID.FLVersion)
 

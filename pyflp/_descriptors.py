@@ -22,7 +22,7 @@ import enum
 import math
 import sys
 import warnings
-from typing import Any, List, NamedTuple, Tuple, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, List, NamedTuple, Tuple, TypeVar, Union, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
@@ -54,7 +54,7 @@ class ROProperty(Protocol[T_co]):
 class RWProperty(ROProperty[T], Protocol):
     """Protocol for a read-write descriptor."""
 
-    def __set__(self, ins: Any, value: T):
+    def __set__(self, ins: Any, value: T) -> None:
         ...
 
 
@@ -62,7 +62,7 @@ class NamedPropMixin:
     def __init__(self, prop: str | None = None) -> None:
         self._prop = prop or ""
 
-    def __set_name__(self, _: Any, name: str):
+    def __set_name__(self, _: Any, name: str) -> None:
         if not self._prop:
             self._prop = name
 
@@ -106,7 +106,7 @@ class PropBase(abc.ABC, RWProperty[T]):
         ...
 
     @abc.abstractmethod
-    def _set(self, ev_or_ins: Any, value: T):
+    def _set(self, ev_or_ins: Any, value: T) -> None:
         ...
 
     @final
@@ -121,7 +121,7 @@ class PropBase(abc.ABC, RWProperty[T]):
         return self.default
 
     @final
-    def __set__(self, ins: Any, value: T):
+    def __set__(self, ins: Any, value: T) -> None:
         if self._readonly:
             raise PropertyCannotBeSet(*self._ids)
 
@@ -142,7 +142,7 @@ class FlagProp(PropBase[bool]):
         prop: str = "flags",
         inverted: bool = False,
         default: bool | None = None,
-    ):
+    ) -> None:
         """
         Args:
             flag: The flag which is to be checked for.
@@ -169,7 +169,7 @@ class FlagProp(PropBase[bool]):
             retbool = self._flag in self._flag_type(flags)
             return not retbool if self._inverted else retbool
 
-    def _set(self, ev_or_ins: Any, value: bool):
+    def _set(self, ev_or_ins: Any, value: bool) -> None:
         if self._inverted:
             value = not value
 
@@ -196,7 +196,7 @@ class KWProp(NamedPropMixin, RWProperty[T]):
             return NotImplemented
         return ins._kw[self._prop]
 
-    def __set__(self, ins: ModelBase, value: T):
+    def __set__(self, ins: ModelBase, value: T) -> None:
         if self._prop not in ins._kw:
             raise KeyError(self._prop)
         ins._kw[self._prop] = value
@@ -208,12 +208,12 @@ class EventProp(PropBase[T]):
     def _get(self, ev_or_ins: AnyEvent) -> T | None:
         return ev_or_ins.value
 
-    def _set(self, ev_or_ins: AnyEvent, value: T):
+    def _set(self, ev_or_ins: AnyEvent, value: T) -> None:
         ev_or_ins.value = value
 
 
 class NestedProp(ROProperty[EMT_co]):
-    def __init__(self, type: type[EMT_co], *ids: EventEnum):
+    def __init__(self, type: type[EMT_co], *ids: EventEnum) -> None:
         self._ids = ids
         self._type = type
 
@@ -227,19 +227,26 @@ class NestedProp(ROProperty[EMT_co]):
 class StructProp(PropBase[T], NamedPropMixin):
     """Properties obtained from a :class:`construct.Struct`."""
 
-    def __init__(self, *ids: EventEnum, prop: str | None = None, **kwds: Any):
+    def __init__(self, *ids: EventEnum, prop: str | None = None, **kwds: Any) -> None:
         super().__init__(*ids, **kwds)
         NamedPropMixin.__init__(self, prop)
 
     def _get(self, ev_or_ins: ItemModel[Any]) -> T | None:
         return ev_or_ins[self._prop]
 
-    def _set(self, ev_or_ins: ItemModel[Any], value: T):
+    def _set(self, ev_or_ins: ItemModel[Any], value: T) -> None:
         ev_or_ins[self._prop] = value
 
 
-SimpleAdapter = ct.Adapter[T, T, U, U]
-"""Duplicates type parameters for `construct.Adapter`."""
+# ! mypy 0.991 bug
+if TYPE_CHECKING:
+
+    class SimpleAdapter(ct.Adapter[T, T, U, U]):
+        ...
+
+else:
+    SimpleAdapter = ct.Adapter[T, T, U, U]
+    """Duplicates type parameters for `construct.Adapter`."""
 
 
 class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):
@@ -276,8 +283,8 @@ class LinearMusical(SimpleAdapter[int, MusicalTime]):
 
 
 class Log2(SimpleAdapter[int, float]):
-    def __init__(self, subcon: Any, factor: int):
-        super().__init__(subcon)
+    def __init__(self, subcon: Any, factor: int) -> None:
+        super().__init__(subcon)  # type: ignore[call-arg]
         self.factor = factor
 
     def _encode(self, obj: float, *_: Any) -> int:
@@ -289,9 +296,9 @@ class Log2(SimpleAdapter[int, float]):
 
 # Thanks to @algmyr from Python Discord server for finding out the formulae used
 # ! See https://github.com/construct/construct/issues/999
-class LogNormal(ct.Adapter[List[int], List[int], float, float]):
-    def __init__(self, subcon: Any, bound: tuple[int, int]):
-        super().__init__(subcon)
+class LogNormal(SimpleAdapter[List[int], float]):
+    def __init__(self, subcon: Any, bound: tuple[int, int]) -> None:
+        super().__init__(subcon)  # type: ignore[call-arg]
         self.lo, self.hi = bound
 
     def _encode(self, obj: float, *_: Any) -> list[int]:

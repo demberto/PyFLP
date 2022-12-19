@@ -131,16 +131,16 @@ class EventEnum(int, enum.Enum, metaclass=_EventEnumMeta):
 class EventBase(Generic[T]):  # pylint: disable=eq-without-hash
     """Generic ABC representing an event."""
 
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes) -> None:
         self.id: Final = EventEnum(id)
         self._data: bytes = data
 
-    def __eq__(self, o: object):
+    def __eq__(self, o: object) -> bool:
         if not isinstance(o, EventBase):
             raise TypeError(f"Cannot find equality of an {type(o)} and {type(self)!r}")
         return self.id == o.id and self._data == o._data
 
-    def __ne__(self, o: object):
+    def __ne__(self, o: object) -> bool:
         if not isinstance(o, EventBase):
             raise TypeError(f"Cannot find inequality of a {type(o)} and {type(self)!r}")
         return self.id != o.id or self._data != o._data
@@ -160,7 +160,7 @@ class EventBase(Generic[T]):  # pylint: disable=eq-without-hash
         raise NotImplementedError
 
     @value.setter
-    def value(self, value: T):
+    def value(self, value: T) -> None:
         """Converts Python types into bytes/bytes objects and stores it."""
 
 
@@ -173,7 +173,7 @@ class PODEventBase(EventBase[T]):
     ID_RANGE: ClassVar[tuple[int, int]]
     CODEC: c.Construct[Any, Any]
 
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes) -> None:
         if id not in range(*self.ID_RANGE):
             raise EventIDOutOfRange(id, *self.ID_RANGE)
 
@@ -182,14 +182,14 @@ class PODEventBase(EventBase[T]):
 
         super().__init__(id, data)
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         return c.Byte.build(self.id) + self._data
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, value={self.value!r})"
 
     @property
-    def size(self):
+    def size(self) -> int:
         return 1 + self.CODEC.sizeof()
 
     @property
@@ -197,7 +197,7 @@ class PODEventBase(EventBase[T]):
         return self.CODEC.parse(self._data)
 
     @value.setter
-    def value(self, value: T):
+    def value(self, value: T) -> None:
         self._data = self.CODEC.build(value)
 
 
@@ -206,7 +206,7 @@ class ByteEventBase(PODEventBase[T]):
 
     ID_RANGE = (BYTE, WORD)
 
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes) -> None:
         """
         Args:
             id: **0** to **63**.
@@ -242,7 +242,7 @@ class WordEventBase(PODEventBase[T], abc.ABC):
 
     ID_RANGE = (WORD, DWORD)
 
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes) -> None:
         """
         Args:
             id: **64** to **127**.
@@ -272,7 +272,7 @@ class DWordEventBase(PODEventBase[T], abc.ABC):
 
     ID_RANGE = (DWORD, TEXT)
 
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes) -> None:
         """
         Args:
             id: **128** to **191**.
@@ -325,18 +325,18 @@ class ColorEvent(DWordEventBase[colour.Color]):
     )
 
     @staticmethod
-    def decode(buf: bytes | bytes):
+    def decode(buf: bytes | bytes) -> colour.Color:
         r, g, b = (c / 255 for c in buf[:3])
         return colour.Color(rgb=(r, g, b))
 
     @staticmethod
-    def encode(color: colour.Color):
+    def encode(color: colour.Color) -> bytes:
         return bytes(int(c * 255) for c in color.get_rgb()) + b"\x00"
 
 
 class VarintEventBase(EventBase[T]):
     @staticmethod
-    def _varint_len(buflen: int):
+    def _varint_len(buflen: int) -> int:
         ret = bytearray()
         while True:
             towrite = buflen & 0x7F
@@ -348,12 +348,12 @@ class VarintEventBase(EventBase[T]):
         return len(ret)
 
     @property
-    def size(self):
+    def size(self) -> int:
         if self._data:
             return 1 + self._varint_len(len(self._data)) + len(self._data)
         return 2
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         id = c.Byte.build(self.id)
 
         if self._data:
@@ -364,7 +364,7 @@ class VarintEventBase(EventBase[T]):
 class StrEventBase(VarintEventBase[str]):
     """Base class of events used for storing strings."""
 
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes) -> None:
         """
         Args:
             id: **192** to **207** or in :attr:`NEW_TEXT_IDS`.
@@ -378,34 +378,34 @@ class StrEventBase(VarintEventBase[str]):
 
         super().__init__(id, data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, string={self.value!r})"
 
 
 class AsciiEvent(StrEventBase):
     @property
-    def value(self):
+    def value(self) -> str:
         return self._data.decode("ascii").rstrip("\0")
 
     @value.setter
-    def value(self, value: str):
+    def value(self, value: str) -> None:
         if value is not None:
             self._data = value.encode("ascii") + b"\0"
 
 
 class UnicodeEvent(StrEventBase):
     @property
-    def value(self):
+    def value(self) -> str:
         return self._data.decode("utf-16-le").rstrip("\0")
 
     @value.setter
-    def value(self, value: str):
+    def value(self, value: str) -> None:
         if value is not None:
             self._data = value.encode("utf-16-le") + b"\0\0"
 
 
 class DataEventBase(VarintEventBase[bytes]):
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes) -> None:
         """
         Args:
             id: **208** to **255**.
@@ -419,7 +419,7 @@ class DataEventBase(VarintEventBase[bytes]):
 
         super().__init__(id, data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, size={len(self._data)})"
 
 
@@ -433,11 +433,11 @@ class StructEventBase(DataEventBase):
 
     STRUCT: ClassVar[c.Construct[c.Container[Any], Any]]
 
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes) -> None:
         super().__init__(id, data)
         self._struct = self.STRUCT.parse(data)
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         # pylint: disable=access-member-before-definition
         # pylint: disable=attribute-defined-outside-init
         new_data = self.STRUCT.build(self._struct)
@@ -454,21 +454,21 @@ class StructEventBase(DataEventBase):
         self._data = new_data + self._data[len(new_data) :]
         return super().__bytes__()
 
-    def __contains__(self, prop: str):
+    def __contains__(self, prop: str) -> bool:
         return prop in self._struct
 
     def __getitem__(self, key: str):
         return self._struct[key]
 
-    def __setitem__(self, key: str, value: Any):
+    def __setitem__(self, key: str, value: Any) -> None:
         if key not in self or self[key] is None:
             raise PropertyCannotBeSet
         self._struct[key] = value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id}, size={len(self._data)})"
 
-    @property
+    @property  # type: ignore[override]
     def value(self) -> NoReturn:
         raise NotImplementedError
 
@@ -478,56 +478,72 @@ class StructEventBase(DataEventBase):
 
 
 class ListEventBase(DataEventBase):
-    """Base class for events storing an array of structured data."""
+    """Base class for events storing an array of structured data.
+
+    Attributes:
+        kwds: Keyword args passed to :meth:`STRUCT.parse` & :meth:`STRUCT.build`.
+    """
 
     STRUCT: ClassVar[c.Construct[c.Container[Any], Any]]
+    SIZES: ClassVar[list[int]] = []
+    """Manual :meth:`STRUCT.sizeof` override(s)."""
 
-    def __init__(self, id: EventEnum, data: bytes):
+    def __init__(self, id: EventEnum, data: bytes, **kwds: Any) -> None:
         super().__init__(id, data)
-        self.unparsed = False
+        self._struct_size: int | None = None
+        self.kwds = kwds
 
-        if len(data) % self.STRUCT.sizeof():  # pragma: no cover
-            self.unparsed = True
+        if not self.SIZES:
+            self._struct_size = self.STRUCT.sizeof()
+
+        for size in self.SIZES:
+            if not len(data) % size:
+                self._struct_size = size
+                break
+
+        if self._struct_size is None:  # pragma: no cover
             warnings.warn(
-                f"Cannot parse event {id} as event "
-                "size is not a multiple of struct size"
+                f"Cannot parse event {id} as event size {len(data)} "
+                f"is not a multiple of struct size(s) {self.SIZES}"
             )
 
-    def __len__(self):
-        if self.unparsed:  # pragma: no cover
+    def __len__(self) -> int:
+        if self._struct_size is None:  # pragma: no cover
             raise ListEventNotParsed
 
-        return len(self._data) // self.STRUCT.sizeof()
+        return len(self._data) // self._struct_size
 
-    def __getitem__(self, index: int):
-        if self.unparsed:  # pragma: no cover
-            raise ListEventNotParsed
-
-        if index > len(self):
-            raise IndexError(index)
-
-        start = self.STRUCT.sizeof() * index
-        count = self.STRUCT.sizeof()
-        return self.STRUCT.parse(self._data[start : start + count])
-
-    def __setitem__(self, index: int, item: c.Container[Any]):
-        if self.unparsed:
+    def __getitem__(self, index: int) -> c.Container[Any]:
+        if self._struct_size is None:  # pragma: no cover
             raise ListEventNotParsed
 
         if index > len(self):
             raise IndexError(index)
 
-        start = self.STRUCT.sizeof() * index
-        count = self.STRUCT.sizeof()
+        start = self._struct_size * index
+        count = self._struct_size
+        return self.STRUCT.parse(self._data[start : start + count], **self.kwds)
+
+    def __setitem__(self, index: int, item: c.Container[Any]) -> None:
+        if self._struct_size is None:
+            raise ListEventNotParsed
+
+        if index > len(self):
+            raise IndexError(index)
+
+        start = self._struct_size * index
+        count = self._struct_size
         self._data = (  # pylint: disable=attribute-defined-outside-init
-            self._data[:start] + self.STRUCT.build(item) + self._data[start + count :]
+            self._data[:start]
+            + self.STRUCT.build(item, **self.kwds)
+            + self._data[start + count :]
         )
 
     def __iter__(self) -> Iterator[c.Container[Any]]:
         for i in range(len(self)):
             yield self[i]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "{}(id={}, size={}, {} items)".format(
             type(self).__name__, self.id, len(self._data), len(self)
         )
@@ -537,11 +553,11 @@ class UnknownDataEvent(DataEventBase):
     """Used for events whose structure is unknown as of yet."""
 
     @property
-    def value(self):
+    def value(self) -> bytes:
         return self._data
 
     @value.setter
-    def value(self, value: bytes):
+    def value(self, value: bytes) -> None:
         self._data = value
 
 
@@ -580,7 +596,7 @@ class EventTree:
         self,
         parent: EventTree | None = None,
         init: Iterable[IndexedEvent] | None = None,
-    ):
+    ) -> None:
         """Create a new dictionary with an optional :attr:`parent`."""
         self.children: list[EventTree] = []
         self.lst: list[IndexedEvent] = SortedList(init or [])
@@ -593,7 +609,7 @@ class EventTree:
             parent = parent.parent
         self.root = parent or self
 
-    def __contains__(self, id: EventEnum):
+    def __contains__(self, id: EventEnum) -> bool:
         """Whether the key :attr:`id` exists in the list."""
         return any(ie.e.id == id for ie in self.lst)
 
@@ -670,7 +686,7 @@ class EventTree:
         for iet in zip_longest(*(self._get_ie(id) for id in ids)):  # unpack magic
             yield EventTree(self, [ie for ie in iet if ie])  # filter out None values
 
-    def insert(self, pos: int, e: AnyEvent):
+    def insert(self, pos: int, e: AnyEvent) -> None:
         """Inserts :attr:`ev` at :attr:`pos` in this and all parent trees."""
         rootidx = sorted(self.indexes)[pos] if len(self) else 0
 

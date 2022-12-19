@@ -34,14 +34,18 @@ DE = TypeVar("DE", bound=DataEventBase)
 
 
 class ModelBase(abc.ABC):
-    def __init__(self, *args: Any, **kw: Any):  # pylint: disable=unused-argument
+    def __init__(
+        self, *args: Any, **kw: Any
+    ) -> None:  # pylint: disable=unused-argument
         self._kw = kw
 
 
 class ItemModel(ModelBase, Generic[DE]):
     """Base class for event-less models."""
 
-    def __init__(self, item: c.Container[Any], index: int, parent: DE, **kw: Any):
+    def __init__(
+        self, item: c.Container[Any], index: int, parent: DE, **kw: Any
+    ) -> None:
         """Create a new item model.
 
         Args:
@@ -57,7 +61,7 @@ class ItemModel(ModelBase, Generic[DE]):
     def __getitem__(self, prop: str):
         return self._item[prop]
 
-    def __setitem__(self, prop: str, value: Any):
+    def __setitem__(self, prop: str, value: Any) -> None:
         self._item[prop] = value
 
         if not isinstance(self._parent, ListEventBase):
@@ -67,11 +71,11 @@ class ItemModel(ModelBase, Generic[DE]):
 
 
 class EventModel(ModelBase):
-    def __init__(self, events: EventTree, **kw: Any):
+    def __init__(self, events: EventTree, **kw: Any) -> None:
         super().__init__(**kw)
         self.events = events
 
-    def __eq__(self, o: object):
+    def __eq__(self, o: object) -> bool:
         if not isinstance(o, type(self)):
             raise TypeError(f"Cannot compare {type(o)!r} with {type(self)!r}")
 
@@ -87,11 +91,7 @@ class ModelCollection(  # pylint: disable=abstract-method
     Iterable[MT_co], Protocol[MT_co]
 ):
     @overload
-    def __getitem__(self, i: int) -> MT_co:
-        ...
-
-    @overload
-    def __getitem__(self, i: str) -> MT_co:
+    def __getitem__(self, i: int | str) -> MT_co:
         ...
 
     @overload
@@ -103,11 +103,7 @@ def supports_slice(func: Callable[[ModelCollection[MT_co], str | int | slice], M
     """Wraps a :meth:`ModelCollection.__getitem__` to return a sequence if required."""
 
     @overload
-    def wrapper(self: ModelCollection[MT_co], i: int) -> MT_co:
-        ...
-
-    @overload
-    def wrapper(self: ModelCollection[MT_co], i: str) -> MT_co:
+    def wrapper(self: ModelCollection[MT_co], i: int | str) -> MT_co:
         ...
 
     @overload
@@ -115,14 +111,10 @@ def supports_slice(func: Callable[[ModelCollection[MT_co], str | int | slice], M
         ...
 
     @functools.wraps(func)
-    def wrapper(
-        self: ModelCollection[MT_co], i: str | int | slice
-    ) -> MT_co | Sequence[MT_co]:
+    def wrapper(self: Any, i: Any) -> MT_co | Sequence[MT_co]:
         if isinstance(i, slice):
             return [
-                model
-                for model in self
-                if getattr(model, "__index__")() in range(i.start, i.stop)
+                model for idx, model in enumerate(self) if idx in range(i.start, i.stop)
             ]
         return func(self, i)
 
@@ -132,7 +124,7 @@ def supports_slice(func: Callable[[ModelCollection[MT_co], str | int | slice], M
 class ModelReprMixin:
     """I am too lazy to make one `__repr__()` for every model."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         mapping: dict[str, Any] = {}
         for var in [var for var in vars(type(self)) if not var.startswith("_")]:
             mapping[var] = getattr(self, var, None)
@@ -148,7 +140,7 @@ class FLVersion:
     patch: int = 0
     build: int | None = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         version = f"{self.major}.{self.minor}.{self.patch}"
         if self.build is not None:
             return f"{version}.{self.build}"

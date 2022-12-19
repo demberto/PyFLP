@@ -1,16 +1,17 @@
 // Suggested settings for contributors using VSCode.
 {
-  "git.enableCommitSigning": true,
-  "python.analysis.autoImportCompletions": false,
-  "python.analysis.importFormat": "relative",
-  "python.analysis.inlayHints.functionReturnTypes": true,
-  "python.analysis.inlayHints.variableTypes": true,
-  "python.analysis.typeCheckingMode": "strict",
-  "python.formatting.provider": "black",
-  "python.languageServer": "Pylance",
-  "python.linting.banditEnabled": true,
-  "python.linting.banditArgs": ["-r pyflp"],
-  "python.linting.flake8Enabled": true,
-  "python.testing.pytestEnabled": true,
-  "python.testing.unittestEnabled": false,
+  "git.enableCommitSigning": true,                        // nice "Verified" badges @ GH
+  "python.analysis.autoImportCompletions": false,         // almost always wrong
+  "python.analysis.importFormat": "relative",             // from .module import ...
+  "python.analysis.inlayHints.functionReturnTypes": true, // time saver
+  "python.analysis.inlayHints.variableTypes": false,      // almost a PITA
+  "python.analysis.typeCheckingMode": "strict",           // pylance strict mode
+  "python.formatting.provider": "black",                  // the best out there
+  "python.languageServer": "Pylance",                     // obviously
+  "python.linting.banditEnabled": true,                   // gotta be secure
+  "python.linting.banditArgs": ["-r pyflp"],              // its kinda dumb
+  "python.linting.flake8Enabled": true,                   // ? thinking of dumping this
+  "python.linting.mypyEnabled": true,                     // ah ofc this shitty typechecker
+  "python.testing.pytestEnabled": true,                   // use pytest, and...
+  "python.testing.unittestEnabled": false,                // not unittest
 }

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import enum
+import importlib.metadata
 import inspect
 import os
 import re
@@ -30,7 +31,7 @@ IGNORED_BITLY = ["3RDM1yn"]
 project = "PyFLP"
 author = "demberto"
 copyright = f"2022, {author}"
-release = "2.0.0a6"  # DON'T TOUCH! Auto-updated by tbump
+release = importlib.metadata.version("pyflp")
 extensions = [
     "hoverxref.extension",
     "m2r2",  # Markdown to reStructuredText conversion
@@ -84,7 +85,7 @@ linkcheck_allowed_redirects = {
     r"https://pyflp.rtfd.io.*": r"https://pyflp.readthedocs.io/en/latest/.*",
     r"https://www.python.org/dev/peps/.*": r"https://peps.python.org/.*",
     r"https://github.com/demberto/PyFLP/files/.*": r"https://objects.githubusercontent.com/.*",
-    r"https://https://stackoverflow.com/a/.*": r"https://stackoverflow.com/questions/.*",
+    r"https://stackoverflow.com/a/.*": r"https://stackoverflow.com/questions/.*",
 }
 
 
@@ -177,7 +178,7 @@ def include_obsolete_ids(app, what, name, obj, skip, options):
 
 def show_model_dunders(app, what, name, obj, skip, options):
     """Subclasses of ``ModelBase`` show these dunders regardless of any settings."""
-    if name in ("__getitem__", "__setitem__", "__iter__", "__len__", "__index__"):
+    if name in ("__getitem__", "__setitem__", "__iter__", "__len__"):
         return False
 
 
