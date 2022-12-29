@@ -48,6 +48,7 @@ from ._models import EventModel, ModelReprMixin
 __all__ = [
     "BooBass",
     "FruityBalance",
+    "FruityBloodOverdrive",
     "FruityFastDist",
     "FruityNotebook2",
     "FruitySend",
@@ -86,6 +87,20 @@ class BooBassEvent(StructEventBase):
 
 class FruityBalanceEvent(StructEventBase):
     STRUCT = c.Struct("pan" / c.Int32ul, "volume" / c.Int32ul).compile()
+
+
+class FruityBloodOverdriveEvent(StructEventBase):
+    STRUCT = c.Struct(
+        "plugin_marker" / c.Optional(c.Bytes(4)),  # redesigned native plugin marker
+        "pre_band" / c.Int32ul,
+        "color" / c.Int32ul,
+        "pre_amp" / c.Int32ul,
+        "x100" / c.Flag,
+        "post_filter" / c.Int32ul,
+        "post_gain" / c.Int32ul,
+        "_u1" / c.Bytes(4),
+        "_u2" / c.Bytes(4),
+    ).compile()
 
 
 class FruityCenterEvent(StructEventBase):
@@ -750,6 +765,68 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     | Min     | 0     | -INFdB / 0.00  |
     | Max     | 320   | 5.6dB / 1.90   |
     | Default | 256   | 0.0dB / 1.00   |
+    """
+
+
+class FruityBloodOverdrive(
+    _PluginBase[FruityBloodOverdriveEvent], _IPlugin, ModelReprMixin
+):
+    """![]()"""  # noqa
+
+    INTERNAL_NAME = "Fruity Blood Overdrive"
+
+    pre_band = _NativePluginProp[int]()
+    """Linear.
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0.0000         |
+    | Max     | 10000 | 1.0000         |
+    | Default | 0     | 0.0000         |
+    """
+
+    color = _NativePluginProp[int]()
+    """Linear.
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0.0000         |
+    | Max     | 10000 | 1.0000         |
+    | Default | 5000  | 0.5000         |
+    """
+
+    pre_amp = _NativePluginProp[int]()
+    """Linear.
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0.0000         |
+    | Max     | 10000 | 1.0000         |
+    | Default | 0     | 0.0000         |
+    """
+
+    x100 = _NativePluginProp[bool]()
+    """Boolean.
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Off     | 0     | Off            |
+    | On      | 1     | On             |
+    | Default | 0     | Off            |
+    """
+
+    post_filter = _NativePluginProp[int]()
+    """Linear.
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0.0000         |
+    | Max     | 10000 | 1.0000         |
+    | Default | 0     | 0.0000         |
+    """
+
+    post_gain = _NativePluginProp[int]()
+    """Linear.
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | -1.0000        |
+    | Max     | 10000 |  0.0000        |
+    | Default | 10000 |  0.0000        |
     """
 
 

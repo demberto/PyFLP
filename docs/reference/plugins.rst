@@ -18,6 +18,8 @@ Effects
 
 .. autoclass:: FruityBalance
    :members:
+.. autoclass:: FruityBloodOverdrive
+   :members:
 .. autoclass:: FruityCenter
    :members:
 .. autoclass:: FruityFastDist

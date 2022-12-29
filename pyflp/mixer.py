@@ -72,6 +72,7 @@ from ._models import (
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
     FruityBalance,
+    FruityBloodOverdrive,
     FruityCenter,
     FruityFastDist,
     FruityNotebook2,
@@ -399,6 +400,7 @@ class Slot(EventModel):
     plugin = PluginProp(
         VSTPlugin,
         FruityBalance,
+        FruityBloodOverdrive,
         FruityCenter,
         FruityFastDist,
         FruityNotebook2,

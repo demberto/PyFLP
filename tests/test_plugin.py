@@ -5,6 +5,7 @@ from typing import TypeVar
 from pyflp.plugin import (
     AnyPlugin,
     FruityBalance,
+    FruityBloodOverdrive,
     FruityCenter,
     FruityFastDist,
     FruitySend,
@@ -29,6 +30,15 @@ def test_fruity_balance():
     fruity_balance = get_plugin("fruity-balance.fst", FruityBalance)
     assert fruity_balance.volume == 256
     assert fruity_balance.pan == 0
+
+
+def test_fruity_blood_overdrive():
+    fruity_blood_overdrive = get_plugin("fruity-blood-overdrive.fst", FruityBloodOverdrive)
+    assert fruity_blood_overdrive.pre_band == 0
+    assert fruity_blood_overdrive.color == 5000
+    assert fruity_blood_overdrive.pre_amp == 0
+    assert fruity_blood_overdrive.x100 == 0
+    assert fruity_blood_overdrive.post_filter == 0
 
 
 def test_fruity_center():
