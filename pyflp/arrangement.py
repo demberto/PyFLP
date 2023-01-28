@@ -507,7 +507,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         """
         if ArrangementsID.Current in self.events.ids:
             event = self.events.first(ArrangementsID.Current)
-            index = event.value
+            index: int = event.value
             try:
                 return list(self)[index]
             except IndexError as exc:

@@ -302,15 +302,14 @@ class VSTPluginEvent(StructEventBase):
             raise TypeError("Expected 'key' to be of type _VSTPluginEventID")
 
         for e in self._struct["events"]:
-            if e["id"].ascii and isinstance(value, str):
-                try:
-                    value.encode("ascii")
-                except UnicodeEncodeError as exc:
-                    raise ValueError("Strings must have only ASCII data") from exc
-
-            if e["id"].key == key:
-                e["size"] = len(value)
-                e["data"] = value
+            if e["id"] == key:
+                if e["id"].ascii and isinstance(value, str):
+                    try:
+                        value = value.encode("ascii")
+                    except UnicodeEncodeError as exc:
+                        raise ValueError("Strings must have only ASCII data") from exc
+                    e["size"] = len(value)
+                    e["data"] = value
 
         # Errors if any, will be raised here itself, so its
         # better not to override __bytes__ for this part
@@ -461,10 +460,7 @@ class _VSTPluginProp(RWProperty[T], NamedPropMixin):
         self._set(cast(VSTPluginEvent, ins.events.first(PluginID.Data)), value)
 
     def _set(self, event: VSTPluginEvent, value: T) -> None:
-        if self._prop is None:
-            event[self._id] = value
-        else:
-            event[self._id][self._prop] = value
+        event[self._id] = value
 
 
 class _VSTFlagProp(_VSTPluginProp[bool]):
