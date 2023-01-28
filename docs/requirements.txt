@@ -4,6 +4,6 @@ sphinx
 sphinx-copybutton
 sphinx-design
 sphinx-hoverxref
-sphinx-toolbox
+sphinx-toolbox>=3.4.0
 sphinxcontrib-spelling
 sphinxcontrib-svgbob>=0.2.0
