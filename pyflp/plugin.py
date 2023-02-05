@@ -280,11 +280,11 @@ class VSTPluginEvent(StructEventBase):
     def __init__(self, id: Any, data: bytearray) -> None:
         if data[0] not in (8, 10):
             warnings.warn(
-                f"VSTPluginEvent: Unknown marker {data[0]} detected ."
+                f"VSTPluginEvent: Unknown marker {data[0]} detected. "
                 "Open an issue at https://github.com/demberto/PyFLP/issues "
                 "if you are seeing this!",
                 RuntimeWarning,
-                stacklevel=0,
+                stacklevel=3,
             )
         super().__init__(id, data)
 
