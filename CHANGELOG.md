@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `VSTPluginEvent.__setitem__` and `_VSTPluginProp._set` [#113].
 
+### Removed
+
+- Support for PyPy 3.7 (unable to run tox, cannot find a download).
+
 [#113]: https://github.com/demberto/PyFLP/issues/113
 
 ## [2.0.0a7] - 2022-12-19

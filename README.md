@@ -310,13 +310,13 @@ implemented. Click on a link to go to the documentation for that feature.
 
 ## ⏬ Installation
 
-**Python 3.7+** required (CPython and PyPy are supported):
+CPython 3.7+ / PyPy 3.8+ required.
 
 ```bat
 python -m pip install -U --pre pyflp
 ```
 
-*The pre-release version is more stable and supported than the current
+*The pre-release versions are more stable and supported than the current
 stable version. Please prefer to use it over the legacy 1.x versions.*
 
 ## ▶ Usage
