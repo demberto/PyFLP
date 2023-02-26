@@ -43,7 +43,7 @@ project and preset files written in Python.
     <tr>
       <th>Activity</th>
       <td>
-        <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2022"/>
+        <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2023"/>
         <a href="https://pypistats.org/packages/pyflp">
           <img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/PyFLP"/>
         </a>

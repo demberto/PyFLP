@@ -29,9 +29,9 @@ license = { text = "GPL-3.0" }
 dependencies = [
   "colour>=0.1.5",
   "f-enum>=0.2.0;python_version<='3.10'",
-  "construct-typing==0.5.3",
+  "construct-typing==0.5.5",
   "sortedcontainers>=2.4.0",
-  "typing_extensions>=4.4.0",
+  "typing_extensions>=4.5.0",
 ]
 dynamic = ["version"]
 
@@ -62,7 +62,7 @@ profile = "black"
 [tool.mypy]
 python_version = "3.7"
 check_untyped_defs = true
-enable_incomplete_features = true
+enable_incomplete_feature = ["Unpack"]
 ignore_missing_imports = true
 warn_no_return = false
 
