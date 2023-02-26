@@ -109,7 +109,7 @@ def parse(file: pathlib.Path | str) -> Project:
         raise HeaderCorrupted("Unexpected data chunk magic; expected 'FLdt'")
 
     events_size = int.from_bytes(stream.read(4), "little")
-    if events_size is None:  # pragma: no cover
+    if not events_size:  # pragma: no cover
         raise HeaderCorrupted("Data chunk size couldn't be read")
 
     stream.seek(0, os.SEEK_END)

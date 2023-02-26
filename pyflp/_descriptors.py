@@ -22,7 +22,7 @@ import enum
 import math
 import sys
 import warnings
-from typing import TYPE_CHECKING, Any, List, NamedTuple, Tuple, TypeVar, Union, overload
+from typing import Any, List, NamedTuple, Tuple, TypeVar, Union, overload
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, final, runtime_checkable
@@ -114,7 +114,7 @@ class PropBase(abc.ABC, RWProperty[T]):
         if owner is None:
             return NotImplemented
 
-        event = self._get_event(ins)
+        event: Any = self._get_event(ins)
         if event is not None:
             return self._get(event)
 
@@ -125,7 +125,7 @@ class PropBase(abc.ABC, RWProperty[T]):
         if self._readonly:
             raise PropertyCannotBeSet(*self._ids)
 
-        event = self._get_event(ins)
+        event: Any = self._get_event(ins)
         if event is not None:
             self._set(event, value)
         else:
@@ -238,15 +238,8 @@ class StructProp(PropBase[T], NamedPropMixin):
         ev_or_ins[self._prop] = value
 
 
-# ! mypy 0.991 bug
-if TYPE_CHECKING:
-
-    class SimpleAdapter(ct.Adapter[T, T, U, U]):
-        ...
-
-else:
-    SimpleAdapter = ct.Adapter[T, T, U, U]
-    """Duplicates type parameters for `construct.Adapter`."""
+SimpleAdapter = ct.Adapter[T, T, U, U]
+"""Duplicates type parameters for `construct.Adapter`."""
 
 
 class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):

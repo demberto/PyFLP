@@ -306,7 +306,7 @@ class U32Event(DWordEventBase[int]):
 class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
     """An event used for storing a two-tuple of 2 byte unsigned integers."""
 
-    CODEC: c.ExprAdapter[
+    CODEC: c.ExprAdapter[  # pyright: ignore
         c.ListContainer[int], c.ListContainer[int], tuple[int, int], list[int]
     ] = c.ExprAdapter(
         c.Int16ul[2],
@@ -389,7 +389,7 @@ class AsciiEvent(StrEventBase):
 
     @value.setter
     def value(self, value: str) -> None:
-        if value is not None:
+        if value:
             self._data = value.encode("ascii") + b"\0"
 
 
@@ -400,7 +400,7 @@ class UnicodeEvent(StrEventBase):
 
     @value.setter
     def value(self, value: str) -> None:
-        if value is not None:
+        if value:
             self._data = value.encode("utf-16-le") + b"\0\0"
 
 
