@@ -77,7 +77,7 @@ class _WrapperFlags(enum.IntFlag):
 
 class BooBassEvent(StructEventBase):
     STRUCT = c.Struct(
-        "_u1" / c.Bytes(4),
+        "_u1" / c.If(c.this._.len == 16, c.Bytes(4)),
         "bass" / c.Int32ul,
         "mid" / c.Int32ul,
         "high" / c.Int32ul,
@@ -89,7 +89,10 @@ class FruityBalanceEvent(StructEventBase):
 
 
 class FruityCenterEvent(StructEventBase):
-    STRUCT = c.Struct("_u1" / c.Bytes(4), "enabled" / FourByteBool).compile()
+    STRUCT = c.Struct(
+        "_u1" / c.If(c.this._.len == 8, c.Bytes(4)),
+        "enabled" / FourByteBool,
+    ).compile()
 
 
 class FruityFastDistEvent(StructEventBase):
@@ -145,7 +148,7 @@ class FruityStereoEnhancerEvent(StructEventBase):
 
 class SoundgoodizerEvent(StructEventBase):
     STRUCT = c.Struct(
-        "_u1" / c.Bytes(4),
+        "_u1" / c.If(c.this._.len == 12, c.Bytes(4)),
         "mode" / c.Enum(c.Int32ul, A=0, B=1, C=2, D=3),
         "amount" / c.Int32ul,
     ).compile()

@@ -435,12 +435,12 @@ class StructEventBase(DataEventBase):
 
     def __init__(self, id: EventEnum, data: bytes) -> None:
         super().__init__(id, data)
-        self._struct = self.STRUCT.parse(data)
+        self._struct = self.STRUCT.parse(data, len=len(self._data))
 
     def __bytes__(self) -> bytes:
         # pylint: disable=access-member-before-definition
         # pylint: disable=attribute-defined-outside-init
-        new_data = self.STRUCT.build(self._struct)
+        new_data = self.STRUCT.build(self._struct, len=len(self._data))
         if len(new_data) != len(self._data):
             warnings.warn(
                 "{} built a stream of incorrect size {}; expected {}.".format(
