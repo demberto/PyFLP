@@ -33,7 +33,9 @@ def test_fruity_balance():
 
 
 def test_fruity_blood_overdrive():
-    fruity_blood_overdrive = get_plugin("fruity-blood-overdrive.fst", FruityBloodOverdrive)
+    fruity_blood_overdrive = get_plugin(
+        "fruity-blood-overdrive.fst", FruityBloodOverdrive
+    )
     assert fruity_blood_overdrive.pre_band == 0
     assert fruity_blood_overdrive.color == 5000
     assert fruity_blood_overdrive.pre_amp == 0

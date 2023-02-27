@@ -777,6 +777,7 @@ class FruityBloodOverdrive(
 
     pre_band = _NativePluginProp[int]()
     """Linear.
+
     | Type    | Value | Representation |
     |---------|-------|----------------|
     | Min     | 0     | 0.0000         |
@@ -786,6 +787,7 @@ class FruityBloodOverdrive(
 
     color = _NativePluginProp[int]()
     """Linear.
+
     | Type    | Value | Representation |
     |---------|-------|----------------|
     | Min     | 0     | 0.0000         |
@@ -795,6 +797,7 @@ class FruityBloodOverdrive(
 
     pre_amp = _NativePluginProp[int]()
     """Linear.
+
     | Type    | Value | Representation |
     |---------|-------|----------------|
     | Min     | 0     | 0.0000         |
@@ -804,6 +807,7 @@ class FruityBloodOverdrive(
 
     x100 = _NativePluginProp[bool]()
     """Boolean.
+
     | Type    | Value | Representation |
     |---------|-------|----------------|
     | Off     | 0     | Off            |
@@ -813,6 +817,7 @@ class FruityBloodOverdrive(
 
     post_filter = _NativePluginProp[int]()
     """Linear.
+
     | Type    | Value | Representation |
     |---------|-------|----------------|
     | Min     | 0     | 0.0000         |
@@ -822,6 +827,7 @@ class FruityBloodOverdrive(
 
     post_gain = _NativePluginProp[int]()
     """Linear.
+
     | Type    | Value | Representation |
     |---------|-------|----------------|
     | Min     | 0     | -1.0000        |
