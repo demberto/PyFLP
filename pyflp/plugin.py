@@ -91,7 +91,8 @@ class FruityBalanceEvent(StructEventBase):
 
 class FruityBloodOverdriveEvent(StructEventBase):
     STRUCT = c.Struct(
-        "plugin_marker" / c.If(c.this._.len == 36, c.Bytes(4)),  # redesigned native plugin marker
+        "plugin_marker"
+        / c.If(c.this._.len == 36, c.Bytes(4)),  # redesigned native plugin marker
         "pre_band" / c.Int32ul,
         "color" / c.Int32ul,
         "pre_amp" / c.Int32ul,
