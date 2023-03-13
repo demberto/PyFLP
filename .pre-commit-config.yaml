@@ -26,7 +26,7 @@ repos:
         additional_dependencies: [flake8-docstrings, flake8-typing-imports]
         exclude: ^(docs|tests)/
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.4
+    rev: 1.7.5
     hooks:
       - id: bandit
         exclude: ^(docs|tests)/
