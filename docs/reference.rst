@@ -7,6 +7,7 @@
    :caption: Contents:
    :glob:
 
+   reference/*/index
    reference/*
 
 :material-outlined:`api` API

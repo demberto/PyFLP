@@ -46,18 +46,16 @@
             .. image:: /img/project/settings.png
                :align: right
 
-Enumerations
-------------
+Enums
+-----
 
 .. autoclass:: FileFormat
    :members:
    :member-order: bysource
+
 .. autoclass:: PanLaw
    :members:
    :member-order: bysource
-
-Event IDs
----------
 
 .. autoclass:: ProjectID
    :members:

@@ -1,24 +1,19 @@
-Mixer
-=====
+\ :fas:`sliders` Insert
+=======================
 
-.. module:: pyflp.mixer
-.. autoclass:: Mixer
-   :members:
-
-Classes
--------
+.. currentmodule:: pyflp.mixer
 
 .. autoclass:: Insert
-    :members:
-.. autoclass:: Slot
    :members:
+
 .. autoclass:: InsertEQ
    :members:
+
 .. autoclass:: InsertEQBand
    :members:
 
-Enumerations
-------------
+Enums
+-----
 
 .. grid:: auto
 
@@ -32,15 +27,6 @@ Enumerations
 
       .. image:: /img/mixer/insert/dock.png
 
-Event IDs
----------
-
-.. autoclass:: MixerID
-   :members:
-   :member-order: bysource
 .. autoclass:: InsertID
-   :members:
-   :member-order: bysource
-.. autoclass:: SlotID
    :members:
    :member-order: bysource

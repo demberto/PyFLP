@@ -1,8 +1,8 @@
 furo
 m2r2==0.3.2  # https://github.com/CrossNox/m2r2/issues/55
-sphinx
+sphinx==5.3.0
 sphinx-copybutton
-sphinx-design
+sphinx-design==0.3.0
 sphinx-hoverxref
 sphinx-toolbox>=3.4.0
 sphinxcontrib-spelling

@@ -4,7 +4,7 @@ Part I: FLP Format & Events
 FLP is a binary format used by Image-Line FL Studio, a music production
 software, to store project files. Instead of using C-style structs entirely,
 the FLP format has evolved from what once was a MIDI-like format to a really
-bad and messy combination of :wikipedia:`type-length-value` encoded "events"
+bad and messy combination of :wikipedia:`Type-length-value` encoded "events"
 and structs.
 
 Specification

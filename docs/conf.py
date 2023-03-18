@@ -22,16 +22,22 @@ from pyflp._models import ModelBase
 from pyflp.arrangement import _TrackColorProp
 
 BITLY_LINK = re.compile(r"!\[.*\]\((https://bit\.ly/[A-z0-9]*)\)")
+"""Shortened URLs for links to in-docstring images and docs."""
+
 NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
+"""Matched in docstrings and replaced with an SVG by :meth:`badge_flstudio`."""
+
 EVENT_ID_DOC = re.compile(r"([0-9\.]*)\+")
 FL_BADGE = "https://img.shields.io/badge/FL%20Studio-{}+-5f686d?labelColor=ff7629&style=for-the-badge"
 GHUC_PREFIX = "https://raw.githubusercontent.com/demberto/PyFLP/master/docs/"
+"""Raw image URL root used for in-docstring images and docs."""
+
 IGNORED_BITLY = ["3RDM1yn"]
 
 project = "PyFLP"
 author = "demberto"
 copyright = f"2022, {author}"
-release = importlib.metadata.version("pyflp")
+release = importlib.metadata.version("pyflp")  # Needs package installation!
 extensions = [
     "hoverxref.extension",
     "m2r2",  # Markdown to reStructuredText conversion
@@ -48,7 +54,7 @@ extensions = [
     "sphinx.ext.todo",  # Items I need to document
     "sphinx.ext.viewcode",  # "Show source" button next to autodoc output
     "sphinx_toolbox",  # Badges and goodies
-    "sphinx_toolbox.github",
+    "sphinx_toolbox.github",  # Link to project issues / PRs easily
     "sphinx_toolbox.more_autodoc.autoprotocol",  # Autodoc extension for typing.Protocol
     "sphinx_toolbox.more_autodoc.sourcelink",  # Python docs-style source code link
     "sphinx_toolbox.sidebar_links",  # Links to repo and PyPi project in the sidebar
@@ -73,9 +79,9 @@ autodoc_show_sourcelink = True  # sphinx_toolbox.more_autodoc.sourcelink
 todo_include_todos = True  # Include .. todo:: directives in output
 todo_emit_warnings = True  # Emit warnings about it as well, so I don't forget
 html_css_files = [
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css"
 ]  # https://sphinx-design.rtfd.io/en/furo-theme/badges_buttons.html#fontawesome-icons
-sd_fontawesome_latex = True
+sd_fontawesome_latex = True  # Output FontAwesome icons in LaTeX
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "construct": ("https://construct.readthedocs.io/en/latest", None),

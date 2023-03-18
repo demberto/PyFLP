@@ -8,7 +8,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [2.0.0] - 2023-03-18
+
+Welcome PyFLP 2.0 🎉
+Read the previous changelogs to get the complete list of changes.
+
+### Added
+
+- `FruityBloodOverdrive` - thanks to @@ttaschke [#120].
+
+### Changed
+
+- Docs are way more easier to navigate now.
 
 ### Fixed
 
@@ -19,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for PyPy 3.7 (unable to run tox, cannot find a download).
 
 [#113]: https://github.com/demberto/PyFLP/issues/113
+[#120]: https://github.com/demberto/PyFLP/pull/120
 
 ## [2.0.0a7] - 2022-12-19
 
@@ -629,6 +641,7 @@ Same as in 0.1.1
 - `flpinfo` doesn't output correctly sometimes due to long strings.
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
+[2.0.0]: https://github.com/demberto/PyFLP/compare/v2.0.0a7.post0...v2.0.0
 [2.0.0a7]: https://github.com/demberto/PyFLP/compare/v2.0.0a6...v2.0.0a7
 [2.0.0a6]: https://github.com/demberto/PyFLP/compare/v2.0.0a5.post...v2.0.0a6
 [2.0.0a5.post]: https://github.com/demberto/PyFLP/compare/v2.0.0a5...v2.0.0a5.post

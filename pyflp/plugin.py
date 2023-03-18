@@ -651,7 +651,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
         """
 
     class _UIOptions(EventModel):
-        """See :attr:`VSTPlugin.ui`..
+        """See :attr:`VSTPlugin.ui`.
 
         ![](https://bit.ly/3Nb3dtP)
         """
@@ -772,7 +772,7 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
 class FruityBloodOverdrive(
     _PluginBase[FruityBloodOverdriveEvent], _IPlugin, ModelReprMixin
 ):
-    """![]()"""  # noqa
+    """![](https://bit.ly/3LnS1LE)"""
 
     INTERNAL_NAME = "Fruity Blood Overdrive"
 

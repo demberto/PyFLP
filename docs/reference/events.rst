@@ -1,5 +1,5 @@
-Events
-======
+\ :fas:`ellipsis` Events
+========================
 
     This section is intended for those who want to delve into PyFLP's low-level
     API or understand how internally events are ordered. A good understanding

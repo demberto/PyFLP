@@ -17,6 +17,6 @@ sphinx:
 # Optionally declare the Python requirements required to build your docs
 python:
   install:
-    - path: .
+    - path: . # Required by importlib.version for Sphinx (setuptools_scm)
     - requirements: docs/requirements.txt
     - requirements: requirements.txt

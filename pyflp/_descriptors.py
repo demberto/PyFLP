@@ -29,6 +29,11 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Protocol, final, runtime_checkable
 
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias
+else:
+    from typing_extensions import TypeAlias
+
 import construct as c
 import construct_typed as ct
 
@@ -238,7 +243,7 @@ class StructProp(PropBase[T], NamedPropMixin):
         ev_or_ins[self._prop] = value
 
 
-SimpleAdapter = ct.Adapter[T, T, U, U]
+SimpleAdapter: TypeAlias = ct.Adapter[T, T, U, U]
 """Duplicates type parameters for `construct.Adapter`."""
 
 

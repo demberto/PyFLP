@@ -1,30 +1,7 @@
-Arrangements
-============
-
-.. module:: pyflp.arrangement
-.. autoclass:: Arrangements
-   :members:
-
-Arrangement
------------
-
-.. autoclass:: Arrangement
-   :members:
-
-Playlist
---------
-
-.. autoclass:: PLItemBase
-   :members:
-.. autoclass:: ChannelPLItem
-   :members:
-   :show-inheritance: PLItemBase
-.. autoclass:: PatternPLItem
-   :members:
-   :show-inheritance: PLItemBase
-
 Track
------
+=====
+
+.. currentmodule:: pyflp.arrangement
 
 .. autoclass:: Track
    :members:
@@ -68,21 +45,6 @@ Track
 
       .. image:: /img/arrangement/track/sync.png
 
-Classes
--------
-
-.. autoclass:: TimeSignature
-   :members:
-
-Event IDs
----------
-
-.. autoclass:: ArrangementsID
-   :members:
-   :member-order: bysource
-.. autoclass:: ArrangementID
-   :members:
-   :member-order: bysource
 .. autoclass:: TrackID
    :members:
    :member-order: bysource

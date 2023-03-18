@@ -5,8 +5,8 @@
 .. autoclass:: RemoteController
    :members:
 
-Event IDs
----------
+Enums
+-----
 
 .. autoclass:: ControllerID
    :members:
