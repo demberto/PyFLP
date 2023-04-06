@@ -141,5 +141,8 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# Ruff
+.ruff_cache/
+
 # Just easier than running tests
 main.py

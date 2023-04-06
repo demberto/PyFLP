@@ -7,14 +7,10 @@ from __future__ import annotations
 import enum
 import importlib.metadata
 import inspect
-import os
 import re
-import sys
 
 import colour
 import m2r2
-
-sys.path.insert(0, os.path.abspath(".."))
 
 from pyflp._descriptors import EventProp, FlagProp, NestedProp, StructProp
 from pyflp._events import EventEnum
@@ -28,7 +24,7 @@ NEW_IN_FL = re.compile(r"\*New in FL Studio v([^\*]*)\*[\.:](.*)")
 """Matched in docstrings and replaced with an SVG by :meth:`badge_flstudio`."""
 
 EVENT_ID_DOC = re.compile(r"([0-9\.]*)\+")
-FL_BADGE = "https://img.shields.io/badge/FL%20Studio-{}+-5f686d?labelColor=ff7629&style=for-the-badge"
+FL_BADGE = "https://img.shields.io/badge/FL%20Studio-{}+-5f686d?labelColor=ff7629&style=for-the-badge"  # noqa
 GHUC_PREFIX = "https://raw.githubusercontent.com/demberto/PyFLP/master/docs/"
 """Raw image URL root used for in-docstring images and docs."""
 
@@ -86,11 +82,12 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "construct": ("https://construct.readthedocs.io/en/latest", None),
 }  # Put hyperlinks to docs of other projects
+
 linkcheck_allowed_redirects = {
-    r"https://bit.ly/.*": r"https://raw.githubusercontent.com/demberto/PyFLP/master/docs/img/.*",
+    r"https://bit.ly/.*": r"https://raw.githubusercontent.com/demberto/PyFLP/master/docs/img/.*",  # noqa
     r"https://pyflp.rtfd.io.*": r"https://pyflp.readthedocs.io/en/latest/.*",
     r"https://www.python.org/dev/peps/.*": r"https://peps.python.org/.*",
-    r"https://github.com/demberto/PyFLP/files/.*": r"https://objects.githubusercontent.com/.*",
+    r"https://github.com/demberto/PyFLP/files/.*": r"https://objects.githubusercontent.com/.*",  # noqa
     r"https://stackoverflow.com/a/.*": r"https://stackoverflow.com/questions/.*",
 }
 

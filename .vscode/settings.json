@@ -8,9 +8,6 @@
   "python.analysis.typeCheckingMode": "strict",           // pylance strict mode
   "python.formatting.provider": "black",                  // the best out there
   "python.languageServer": "Pylance",                     // obviously
-  "python.linting.banditEnabled": true,                   // gotta be secure
-  "python.linting.banditArgs": ["-r pyflp"],              // its kinda dumb
-  "python.linting.flake8Enabled": true,                   // ? thinking of dumping this
   "python.linting.mypyEnabled": true,                     // ah ofc this shitty typechecker
   "python.terminal.activateEnvironment": false,           // venvs don't deactivate properly
   "python.terminal.activateEnvInCurrentTerminal": true,   // save my time instead
