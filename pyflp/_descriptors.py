@@ -34,6 +34,11 @@ if sys.version_info >= (3, 10):
 else:
     from typing_extensions import TypeAlias
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+
 import construct as c
 import construct_typed as ct
 
@@ -51,7 +56,7 @@ T_co = TypeVar("T_co", covariant=True)
 class ROProperty(Protocol[T_co]):
     """Protocol for a read-only descriptor."""
 
-    def __get__(self, ins: Any, owner: Any = None) -> T_co | None:
+    def __get__(self, ins: Any, owner: Any = None) -> T_co | Self | None:
         ...
 
 
@@ -115,7 +120,10 @@ class PropBase(abc.ABC, RWProperty[T]):
         ...
 
     @final
-    def __get__(self, ins: Any, owner: Any = None) -> T | None:
+    def __get__(self, ins: Any, owner: Any = None) -> T | Self | None:
+        if ins is None:
+            return self
+
         if owner is None:
             return NotImplemented
 
@@ -196,7 +204,10 @@ class KWProp(NamedPropMixin, RWProperty[T]):
     These values are passed to the class constructor as keyword arguments.
     """
 
-    def __get__(self, ins: ModelBase, owner: Any = None) -> T:
+    def __get__(self, ins: ModelBase | None, owner: Any = None) -> T | Self:
+        if ins is None:
+            return self
+
         if owner is None:
             return NotImplemented
         return ins._kw[self._prop]
