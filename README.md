@@ -119,17 +119,7 @@ implemented. Click on a link to go to the documentation for that feature.
       </a>
     </td>
   </tr>
-  <tr>
-    <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#timemarker">🚩 Timemarkers</a></td>
-    <td>
-      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Aarrangement-timemarker">
-        <img alt="open arrangement-timemarker issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/arrangement-timemarker?label=open&style=flat-square"/>
-      </a>
-      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Aarrangement-timemarker">
-        <img alt="closed arrangement-timemarker issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/arrangement-timemarker?label=closed&style=flat-square"/>
-      </a>
-    </td>
-  </tr>
+  <tr></tr> <!-- only for formatting --->
   <tr>
     <td><a href="https://pyflp.readthedocs.io/en/latest/reference/arrangements.html#track">🎞️ Tracks</a></td>
     <td>
@@ -227,7 +217,7 @@ implemented. Click on a link to go to the documentation for that feature.
   </tr>
   <tr>
     <td rowspan="3">
-      <a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html">Patterns</a><br/>
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/patterns.html">🎶 Patterns</a><br/>
       <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Apattern-general">
         <img alt="open pattern-general issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/pattern-general?label=open&style=flat-square"/>
       </a>
@@ -256,9 +246,20 @@ implemented. Click on a link to go to the documentation for that feature.
       </a>
     </td>
   </tr>
+  <tr></tr> <!-- for formatting --->
   <tr>
-    <td>🚩 Timemarkers</td>
-    <td>⏰ Planned</td>
+    <td>
+      <a href="https://pyflp.readthedocs.io/en/latest/reference/timemarkers.html">🚩 Timemarkers</a>
+    </td>
+    <td></td>
+    <td>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aopen+is%3Aissue+label%3Atimemarker">
+        <img alt="open timemarker issues" src="https://img.shields.io/github/issues-raw/demberto/PyFLP/timemarker?label=open&style=flat-square"/>
+      </a>
+      <a href="https://github.com/demberto/PyFLP/issues?q=is%3Aclosed+is%3Aissue+label%3Atimemarker">
+        <img alt="closed timemarker issues" src="https://img.shields.io/github/issues-closed-raw/demberto/PyFLP/timemarker?label=closed&style=flat-square"/>
+      </a>
+    </td>
   </tr>
   <tr>
     <td rowspan="2">
@@ -312,12 +313,9 @@ implemented. Click on a link to go to the documentation for that feature.
 
 CPython 3.7+ / PyPy 3.8+ required.
 
-```bat
-python -m pip install -U --pre pyflp
+```none
+python -m pip install -U pyflp
 ```
-
-*The pre-release versions are more stable and supported than the current
-stable version. Please prefer to use it over the legacy 1.x versions.*
 
 ## ▶ Usage
 
