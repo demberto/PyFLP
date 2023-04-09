@@ -4,6 +4,7 @@ from typing import TypeVar
 
 from pyflp.plugin import (
     AnyPlugin,
+    BooBass,
     FruityBalance,
     FruityBloodOverdrive,
     FruityCenter,
@@ -24,6 +25,11 @@ T = TypeVar("T", bound=AnyPlugin)
 
 def get_plugin(preset_file: str, type: type[T]):
     return get_model(f"plugins/{preset_file}", type, PluginID.Data, PluginID.Wrapper)
+
+
+def test_boobass():
+    boobass = get_plugin("boobass.fst", BooBass)
+    assert boobass.bass == boobass.mid == boobass.high == 32767
 
 
 def test_fruity_balance():
