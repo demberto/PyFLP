@@ -5,6 +5,7 @@ from typing import TypeVar
 from pyflp.plugin import (
     AnyPlugin,
     BooBass,
+    FruitKick,
     FruityBalance,
     FruityBloodOverdrive,
     FruityCenter,
@@ -12,6 +13,7 @@ from pyflp.plugin import (
     FruitySend,
     FruitySoftClipper,
     FruityStereoEnhancer,
+    Plucked,
     PluginID,
     Soundgoodizer,
     VSTPlugin,
@@ -30,6 +32,16 @@ def get_plugin(preset_file: str, type: type[T]):
 def test_boobass():
     boobass = get_plugin("boobass.fst", BooBass)
     assert boobass.bass == boobass.mid == boobass.high == 32767
+
+
+def test_fruit_kick():
+    fruit_kick = get_plugin("fruit-kick.fst", FruitKick)
+    assert fruit_kick.max_freq == -876
+    assert fruit_kick.min_freq == 75
+    assert fruit_kick.freq_decay == 163
+    assert fruit_kick.amp_decay == 208
+    assert fruit_kick.click == 39
+    assert fruit_kick.distortion == 62
 
 
 def test_fruity_balance():
@@ -87,6 +99,15 @@ def test_fruity_stereo_enhancer():
     assert fruity_stereo_enhancer.phase_inversion == "none"
     assert fruity_stereo_enhancer.pan == 0
     assert fruity_stereo_enhancer.volume == 256
+
+
+def test_plucked():
+    plucked = get_plugin("plucked.fst", Plucked)
+    assert plucked.decay == 176
+    assert plucked.color == 56
+    assert plucked.normalize
+    assert plucked.gate
+    assert not plucked.widen
 
 
 def test_soundgoodizer():

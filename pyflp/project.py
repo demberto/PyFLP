@@ -162,7 +162,7 @@ class Project(EventModel):
         )
 
     def __str__(self) -> str:
-        return f"FL Studio {str(self.version)} {self.format.name.lower()}"
+        return f"FL Studio v{self.version!s} {self.format.name}"  # type: ignore
 
     @property
     def arrangements(self) -> Arrangements:

@@ -47,6 +47,7 @@ from ._models import EventModel, ModelReprMixin
 
 __all__ = [
     "BooBass",
+    "FruitKick",
     "FruityBalance",
     "FruityBloodOverdrive",
     "FruityFastDist",
@@ -54,6 +55,7 @@ __all__ = [
     "FruitySend",
     "FruitySoftClipper",
     "FruityStereoEnhancer",
+    "Plucked",
     "PluginIOInfo",
     "Soundgoodizer",
     "VSTPlugin",
@@ -82,6 +84,19 @@ class BooBassEvent(StructEventBase):
         "bass" / c.Int32ul,
         "mid" / c.Int32ul,
         "high" / c.Int32ul,
+    ).compile()
+
+
+class FruitKickEvent(StructEventBase):
+    STRUCT = c.Struct(
+        "_u1" / c.Bytes(4),
+        "max_freq" / c.Int32sl,
+        "min_freq" / c.Int32sl,
+        "freq_decay" / c.Int32ul,
+        "amp_decay" / c.Int32ul,
+        "click" / c.Int32ul,
+        "distortion" / c.Int32ul,
+        "_u2" / c.Bytes(4),
     ).compile()
 
 
@@ -159,6 +174,16 @@ class FruityStereoEnhancerEvent(StructEventBase):
         "phase_offset" / c.Int32ul,
         "effect_position" / c.Enum(c.Int32ul, pre=0, post=1),
         "phase_inversion" / c.Enum(c.Int32ul, none=0, left=1, right=2),
+    ).compile()
+
+
+class PluckedEvent(StructEventBase):
+    STRUCT = c.Struct(
+        "decay" / c.Int32ul,
+        "color" / c.Int32ul,
+        "normalize" / FourByteBool,
+        "gate" / FourByteBool,
+        "widen" / FourByteBool,
     ).compile()
 
 
@@ -744,6 +769,70 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     """
 
 
+class FruitKick(_PluginBase[FruitKickEvent], _IPlugin, ModelReprMixin):
+    """![](https://bit.ly/41fIPxE)"""
+
+    INTERNAL_NAME = "Fruit Kick"
+    amp_decay = _NativePluginProp[int]()
+    """Amplitude (volume) decay length. Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0%             |
+    | Max     | 256   | 100%           |
+    | Default | 128   | 50%            |
+    """
+
+    click = _NativePluginProp[int]()
+    """Amount of phase offset added to produce a click. Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0%             |
+    | Max     | 64    | 100%           |
+    | Default | 32    | 50%            |
+    """
+
+    distortion = _NativePluginProp[int]()
+    """Linear. Defaults to minimum.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0%             |
+    | Max     | 128   | 100%           |
+    """
+
+    freq_decay = _NativePluginProp[int]()
+    """Pitch sweep time / pitch decay. Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | 0     | 0%             |
+    | Max     | 256   | 100%           |
+    | Default | 64    | 25%            |
+    """
+
+    max_freq = _NativePluginProp[int]()
+    """Start frequency. Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -900  | -67%           |
+    | Max     | 3600  | 100%           |
+    | Default | 0     | 0%             |
+    """
+
+    min_freq = _NativePluginProp[int]()
+    """Sweep to / end frequency. Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -1200 | -100%          |
+    | Max     | 1200  | 100%           |
+    | Default | -600  | -50%           |
+    """
+
+
 class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3RWItqU)"""
 
@@ -1021,6 +1110,39 @@ class FruityStereoEnhancer(
     | Max     | 320   | 5.6dB / 1.90   |
     | Default | 256   | 0.0dB / 1.00   |
     """
+
+
+class Plucked(_PluginBase[PluckedEvent], _IPlugin, ModelReprMixin):
+    """![](https://bit.ly/3GuFz9k)"""
+
+    INTERNAL_NAME = "Plucked!"
+    color = _NativePluginProp[int]()
+    """Linear.
+
+    | Min | Max  | Default |
+    |-----|------|---------|
+    | 0   | 128  | 64      |
+    """
+
+    decay = _NativePluginProp[int]()
+    """Linear.
+
+    | Min | Max  | Default |
+    |-----|------|---------|
+    | 0   | 256  | 128     |
+    """
+
+    gate = _NativePluginProp[bool]()
+    """Stops the voices abruptly when released, otherwise the decay keeps going."""
+
+    normalize = _NativePluginProp[bool]()
+    """Same :attr:`decay` is tried to be used for all semitones.
+
+    If not, higher notes have a shorter decay.
+    """
+
+    widen = _NativePluginProp[bool]()
+    """Enriches the stereo panorama of the sound."""
 
 
 class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):

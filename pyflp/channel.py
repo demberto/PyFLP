@@ -65,7 +65,7 @@ from ._models import (
     supports_slice,
 )
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .plugin import BooBass, PluginID, PluginProp, VSTPlugin
+from .plugin import BooBass, FruitKick, Plucked, PluginID, PluginProp, VSTPlugin
 
 __all__ = [
     "ArpDirection",
@@ -1331,7 +1331,7 @@ class Channel(EventModel):
     @property
     def display_name(self) -> str | None:
         """The name of the channel that will be displayed in FL Studio."""
-        return self.name or self.internal_name
+        return self.name or self.internal_name  # type: ignore
 
 
 class Automation(Channel, ModelCollection[AutomationPoint]):
@@ -1455,7 +1455,7 @@ class _SamplerInstrument(Channel):
 class Instrument(_SamplerInstrument):
     """Represents a native or a 3rd party plugin loaded in a channel."""
 
-    plugin = PluginProp(VSTPlugin, BooBass)
+    plugin = PluginProp(VSTPlugin, BooBass, FruitKick, Plucked)
     """The plugin loaded into the channel."""
 
 
