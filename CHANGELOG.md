@@ -17,7 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Unbound descriptors return `self` - more `property`*esque* behaviour.
-  This is primarily done to allow flpinspect to inspect descriptor types.
+  This is primarily done to allow `flpinspect` to inspect descriptor types.
+- Moved `Sampler.pitch_shift` upto its base class `_SamplerInstrument`.
+
 
 ## [2.0.0] - 2023-03-18
 

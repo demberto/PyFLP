@@ -1435,6 +1435,25 @@ class _SamplerInstrument(Channel):
     level_adjusts = NestedProp(LevelAdjusts, ChannelID.LevelAdjusts)
     """:menuselection:`Miscellaneous functions -> Level adjustments`"""
 
+    @property
+    def pitch_shift(self) -> int | None:
+        """-4800 to +4800 (cents).
+
+        Raises:
+            PropertyCannotBeSet: When a `ChannelID.Levels` event is not found.
+        """
+        if ChannelID.Levels in self.events.ids:
+            return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pitch_shift"]
+
+    @pitch_shift.setter
+    def pitch_shift(self, value: int) -> None:
+        try:
+            event = self.events.first(ChannelID.Levels)
+        except KeyError as exc:
+            raise PropertyCannotBeSet(ChannelID.Levels) from exc
+        else:
+            cast(LevelsEvent, event)["pitch_shift"] = value
+
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
     """:menuselection:`Miscellaneous functions -> Polyphony`"""
 
@@ -1515,25 +1534,6 @@ class Sampler(_SamplerInstrument):
         if ChannelID.EnvelopeLFO in self.events.ids:
             lfos = [SamplerLFO(e) for e in self.events.separate(ChannelID.EnvelopeLFO)]
             return dict(zip(LFOName.__args__, lfos))  # type: ignore
-
-    @property
-    def pitch_shift(self) -> int | None:
-        """-4800 to +4800 (cents).
-
-        Raises:
-            PropertyCannotBeSet: When a `ChannelID.Levels` event is not found.
-        """
-        if ChannelID.Levels in self.events.ids:
-            return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pitch_shift"]
-
-    @pitch_shift.setter
-    def pitch_shift(self, value: int) -> None:
-        try:
-            event = self.events.first(ChannelID.Levels)
-        except KeyError as exc:
-            raise PropertyCannotBeSet(ChannelID.Levels) from exc
-        else:
-            cast(LevelsEvent, event)["pitch_shift"] = value
 
     playback = NestedProp(
         Playback, ChannelID.SamplerFlags, ChannelID.PingPongLoop, ChannelID.Parameters
