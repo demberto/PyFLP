@@ -2,6 +2,7 @@
   "recommendations": [
     "aaron-bond.better-comments", // Highlighting annotated comments
     "bierner.markdown-preview-github-styles", // Github-style markdown preview
+    "charliermarsh.ruff", // Ruff, btw
     "DavidAnson.vscode-markdownlint", // Lint markdown files, just like code
     "EditorConfig.EditorConfig", // For .editorconfig
     "leonhard-s.python-sphinx-highlight", // Highlight RST elements in docstrings

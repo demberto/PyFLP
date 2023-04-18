@@ -1,16 +1,17 @@
 // Suggested settings for contributors using VSCode.
 {
-  "git.enableCommitSigning": true,                        // nice "Verified" badges @ GH
-  "python.analysis.autoImportCompletions": false,         // almost always wrong
-  "python.analysis.importFormat": "relative",             // from .module import ...
+  "git.enableCommitSigning": true, // nice "Verified" badges @ GH
+  "python.analysis.autoImportCompletions": false, // almost always wrong
+  "python.analysis.importFormat": "relative", // from .module import ...
   "python.analysis.inlayHints.functionReturnTypes": true, // time saver
-  "python.analysis.inlayHints.variableTypes": false,      // almost a PITA
-  "python.analysis.typeCheckingMode": "strict",           // pylance strict mode
-  "python.formatting.provider": "black",                  // the best out there
-  "python.languageServer": "Pylance",                     // obviously
-  "python.linting.mypyEnabled": true,                     // ah ofc this shitty typechecker
-  "python.terminal.activateEnvironment": false,           // venvs don't deactivate properly
-  "python.terminal.activateEnvInCurrentTerminal": true,   // save my time instead
-  "python.testing.pytestEnabled": true,                   // use pytest, and...
-  "python.testing.unittestEnabled": false,                // not unittest
+  "python.analysis.inlayHints.variableTypes": false, // almost a PITA
+  "python.analysis.typeCheckingMode": "strict", // pylance strict mode
+  "python.formatting.provider": "black", // the best out there
+  "python.languageServer": "Pylance", // obviously
+  "python.linting.enabled": true,
+  "python.linting.mypyEnabled": true, // ah ofc this shitty typechecker
+  "python.terminal.activateEnvironment": false, // venvs don't deactivate properly
+  "python.terminal.activateEnvInCurrentTerminal": true, // save my time instead
+  "python.testing.pytestEnabled": true, // use pytest, and...
+  "python.testing.unittestEnabled": false // not unittest
 }
