@@ -20,11 +20,11 @@ def test_project(project: Project):
     This is a testing FLP used by PyFLP - An FL Studio project file parser.
 
     Notes for contributors:
-    1. Make a separate item for every testable property (and its inverse if its a boolean).
+    1. Make a separate item for every testable property (and its inverse if its a bool).
     2. Give item names related to the property they will be tested for.
 
     Terms:
-    "item(s)": Refers to a channel, inert, slot, clip, track, pattern, time marker, controller.
+    "item(s)": Refers to a channel, insert, slot, track, pattern, timemarker, etc.
     """
         ).replace("\n", "\r")
     )  # Who the hell uses \r?

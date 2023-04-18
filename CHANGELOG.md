@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `Fruit Kick` and `Plucked!` plugin data parsers.
+- Plugin data parsers: `FruitKick` and `Plucked`.
+- `ArrangementsID.PLSelection` [#132].
 
 ### Changed
 

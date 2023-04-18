@@ -56,6 +56,7 @@ __all__ = [
     "FruitySoftClipper",
     "FruityStereoEnhancer",
     "Plucked",
+    "PluginID",
     "PluginIOInfo",
     "Soundgoodizer",
     "VSTPlugin",
