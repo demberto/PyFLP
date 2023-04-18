@@ -35,6 +35,10 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+test = ["pre-commit >= 3.2.2", "pytest >=7.3.1", "tox >=4.4.12"]
+# for docs dependencies see docs/requirements.txt
+
 [project.urls]
 Source = "https://github.com/demberto/PyFLP"
 Changelog = "https://github.com/demberto/PyFLP/blob/master/CHANGELOG.md"
