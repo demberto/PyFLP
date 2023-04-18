@@ -4,6 +4,7 @@
 .. currentmodule:: pyflp.channel
 
 .. autoclass:: Automation
+   :show-inheritance:
    :members:
 
 .. autoclass:: AutomationLFO

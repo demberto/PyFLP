@@ -4,4 +4,5 @@
 .. currentmodule:: pyflp.channel
 
 .. autoclass:: Layer
+   :show-inheritance:
    :members:

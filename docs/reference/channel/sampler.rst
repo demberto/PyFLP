@@ -4,7 +4,9 @@
 .. currentmodule:: pyflp.channel
 
 .. autoclass:: Sampler
+   :show-inheritance:
    :members:
+   :inherited-members: Channel
 
 .. autoclass:: Content
    :members:
