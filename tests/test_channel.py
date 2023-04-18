@@ -54,7 +54,7 @@ def load_sampler(preset: str):
 def test_channels(project: Project, rack: ChannelRack):
     assert len(rack) == project.channel_count
     assert rack.fit_to_steps is None
-    assert rack.height == 621
+    assert rack.height == 646
     assert [group.name for group in rack.groups] == ["Audio", "Generators", "Unsorted"]
     assert not rack.swing
 
