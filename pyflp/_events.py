@@ -671,6 +671,11 @@ class EventTree:
         yield EventTree(self, el)  # Yield the last one
 
     def first(self, id: EventEnum) -> AnyEvent:
+        """Returns the first event with :attr:`id`.
+
+        Raises:
+            KeyError: An event with :attr:`id` isn't found.
+        """
         try:
             return next(self.get(id))
         except StopIteration as exc:

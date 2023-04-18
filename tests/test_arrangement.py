@@ -20,7 +20,7 @@ from pyflp.arrangement import (
 def test_arrangements(arrangements: Arrangements):
     assert len(arrangements) == 2
     assert arrangements.current == arrangements[0]
-    assert arrangements.loop_pos is None
+    assert arrangements.loop_pos == (3840, 5376)
     assert arrangements.max_tracks == 500
     assert arrangements.time_signature.num == 4
     assert arrangements.time_signature.beat == 4

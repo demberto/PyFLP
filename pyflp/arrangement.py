@@ -48,7 +48,7 @@ from ._events import (
     StructEventBase,
     U8Event,
     U16Event,
-    U32Event,
+    U16TupleEvent,
 )
 from ._models import (
     EventModel,
@@ -59,7 +59,7 @@ from ._models import (
     supports_slice,
 )
 from .channel import Channel, ChannelRack
-from .exceptions import ModelNotFound, NoModelsFound
+from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .pattern import Pattern, Patterns
 from .timemarker import TimeMarker, TimeMarkerID
 
@@ -73,6 +73,12 @@ __all__ = [
     "ChannelPLItem",
     "PatternPLItem",
 ]
+
+
+class PLSelectionEvent(StructEventBase):
+    STRUCT = c.Struct(
+        "start" / c.Optional(c.Int32ul), "end" / c.Optional(c.Int32ul)
+    ).compile()
 
 
 class PlaylistEvent(ListEventBase):
@@ -160,7 +166,9 @@ class ArrangementsID(EventEnum):
     TimeSigNum = (17, U8Event)
     TimeSigBeat = (18, U8Event)
     Current = (WORD + 36, U16Event)
-    LoopPos = (DWORD + 24, U32Event)  #: 1.3.8+
+    _LoopPos = (DWORD + 24, U16TupleEvent)  #: 1.3.8+
+    PLSelection = (DATA + 9, PLSelectionEvent)
+    """.. versionadded:: v2.1.0"""
 
 
 @enum.unique
@@ -513,11 +521,39 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             except IndexError as exc:
                 raise ModelNotFound(index) from exc
 
-    loop_pos = EventProp[int](ArrangementsID.LoopPos)
-    """Playlist loop start and end points,
+    @property
+    def loop_pos(self) -> tuple[int, int] | None:
+        """Playlist loop start and end points. PPQ dependant.
 
-    *New in FL Studio v1.3.8*.
-    """
+        .. versionchanged:: v2.1.0
+
+           :attr:`ArrangementsID.PLSelection` is used by default
+           while :attr:`ArrangementsID._LoopPos` is a fallback.
+
+        *New in FL Studio v1.3.8*.
+        """
+        if ArrangementsID.PLSelection in self.events:
+            event = cast(
+                PLSelectionEvent, self.events.first(ArrangementsID.PLSelection)
+            )
+            return event["start"], event["end"]
+
+        if ArrangementsID._LoopPos in self.events:
+            return self.events.first(ArrangementsID._LoopPos).value
+
+    @loop_pos.setter
+    def loop_pos(self, value: tuple[int, int]) -> None:
+        if ArrangementsID.PLSelection in self.events:
+            event = cast(
+                PLSelectionEvent, self.events.first(ArrangementsID.PLSelection)
+            )
+            event["start"], event["end"] = value
+        elif ArrangementsID._LoopPos in self.events:
+            self.events.first(ArrangementsID._LoopPos).value = value
+        else:
+            raise PropertyCannotBeSet(
+                ArrangementsID.PLSelection, ArrangementsID._LoopPos
+            )
 
     @property
     def max_tracks(self) -> Literal[500, 199]:

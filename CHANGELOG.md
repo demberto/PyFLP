@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This is primarily done to allow `flpinspect` to inspect descriptor types.
 - Moved `Sampler.pitch_shift` upto its base class `_SamplerInstrument`.
 
+### Deprecated
+
+- `ArrangementID.LoopPos` [#132].
+
+[#132]: https://github.com/demberto/PyFLP/issues/132
 
 ## [2.0.0] - 2023-03-18
 
