@@ -8,6 +8,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2023-05-24
+
+### Changed
+
+- Refactored `VSTPluginEvent` sub-event handling into `_VSTPluginProp`.
+- All `VSTPluginEvent` string sub-events decoded as UTF8.
+
+### Fixed
+
+- `VSTPlugin.name` encoded in UTF8 [#150].
+
+[#150]: https://github.com/demberto/PyFLP/issues/150
+
 ## [2.1.0] - 2023-04-18
 
 ### Added
@@ -610,7 +623,7 @@ Same as in 0.1.1
 
 - Changed documentation from Sphinx to MkDocs.
 - [FLPInfo](https://github.com/demberto/FLPInfo) is now a separate package.
-- [FLPInspect](https://github.com/demberto/FLPInspect) is now a separate package.
+- FLPInspect is now a separate package.
 - PyFLP now uses [BytesIOEx](https://github.com/demberto/BytesIOEx/) as an external dependency.
 
 ### Fixed
@@ -660,6 +673,7 @@ Same as in 0.1.1
 - `flpinfo` doesn't output correctly sometimes due to long strings.
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
+[2.1.1]: https://github.com/demberto/PyFLP/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/demberto/PyFLP/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/demberto/PyFLP/compare/v2.0.0a7.post0...v2.0.0
 [2.0.0a7]: https://github.com/demberto/PyFLP/compare/v2.0.0a6...v2.0.0a7

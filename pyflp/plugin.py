@@ -232,24 +232,18 @@ class WrapperEvent(StructEventBase):
 
 @enum.unique
 class _VSTPluginEventID(ct.EnumBase):
-    def __new__(cls, id: int, ascii: bool = False):
-        obj = int.__new__(cls, id)
-        obj._value_ = id
-        setattr(obj, "ascii", ascii)
-        return obj
-
     MIDI = 1
     Flags = 2
     IO = 30
     Inputs = 31
     Outputs = 32
     PluginInfo = 50
-    FourCC = (51, True)  # Not present for Waveshells & VST3
+    FourCC = 51  # Not present for Waveshells & VST3
     GUID = 52
     State = 53
-    Name = (54, True)
-    PluginPath = (55, True)
-    Vendor = (56, True)
+    Name = 54
+    PluginPath = 55
+    Vendor = 56
     _57 = 57  # TODO, not present for Waveshells
 
 
@@ -314,6 +308,10 @@ class VSTPluginEvent(StructEventBase):
                         {
                             _VSTPluginEventID.MIDI: _MIDIStruct,
                             _VSTPluginEventID.Flags: _FlagsStruct,
+                            _VSTPluginEventID.FourCC: c.GreedyString("utf8"),
+                            _VSTPluginEventID.Name: c.GreedyString("utf8"),  # See #150
+                            _VSTPluginEventID.Vendor: c.GreedyString("utf8"),
+                            _VSTPluginEventID.PluginPath: c.GreedyString("utf8"),
                         },
                         default=c.GreedyBytes,
                     ),
@@ -332,33 +330,6 @@ class VSTPluginEvent(StructEventBase):
                 stacklevel=3,
             )
         super().__init__(id, data)
-
-    def __getitem__(self, key: Any):
-        if not isinstance(key, _VSTPluginEventID):
-            raise TypeError("Expected 'key' to be of type _VSTPluginEventID")
-
-        for e in self._struct["events"]:
-            if e["id"] == key:
-                return e["data"].decode("ascii") if e["id"].ascii else e["data"]
-        raise AttributeError(f"No event with key {key!r} found")
-
-    def __setitem__(self, key: Any, value: Any) -> None:
-        if not isinstance(key, _VSTPluginEventID):
-            raise TypeError("Expected 'key' to be of type _VSTPluginEventID")
-
-        for e in self._struct["events"]:
-            if e["id"] == key:
-                if e["id"].ascii and isinstance(value, str):
-                    try:
-                        value = value.encode("ascii")
-                    except UnicodeEncodeError as exc:
-                        raise ValueError("Strings must have only ASCII data") from exc
-                    e["size"] = len(value)
-                    e["data"] = value
-
-        # Errors if any, will be raised here itself, so its
-        # better not to override __bytes__ for this part
-        self._data = self.STRUCT.build(self._struct)
 
 
 @enum.unique
@@ -490,13 +461,16 @@ class _NativePluginProp(StructProp[T]):
 
 
 class _VSTPluginProp(RWProperty[T], NamedPropMixin):
-    def __init__(self, id: Any, prop: str | None = None) -> None:
+    def __init__(self, id: _VSTPluginEventID, prop: str | None = None) -> None:
         self._id = id
         NamedPropMixin.__init__(self, prop)
 
     def __get__(self, ins: EventModel, _=None) -> T:
-        value = cast(VSTPluginEvent, ins.events.first(PluginID.Data))[self._id]
-        return self._get(value)
+        event = cast(VSTPluginEvent, ins.events.first(PluginID.Data))
+        for e in event["events"]:
+            if e["id"] == self._id:
+                return self._get(e["data"])
+        raise AttributeError(self._id)
 
     def _get(self, value: Any) -> T:
         return cast(T, value if isinstance(value, (str, bytes)) else value[self._prop])
@@ -505,11 +479,16 @@ class _VSTPluginProp(RWProperty[T], NamedPropMixin):
         self._set(cast(VSTPluginEvent, ins.events.first(PluginID.Data)), value)
 
     def _set(self, event: VSTPluginEvent, value: T) -> None:
-        event[self._id] = value
+        for e in event["events"]:
+            if e["id"] == self._id:
+                e["data"] = value
+                break
 
 
 class _VSTFlagProp(_VSTPluginProp[bool]):
-    def __init__(self, flag: Any, prop: str = "flags", inverted: bool = False) -> None:
+    def __init__(
+        self, flag: _VSTFlags | _VSTFlags2, prop: str = "flags", inverted: bool = False
+    ) -> None:
         super().__init__(_VSTPluginEventID.Flags, prop)
         self._flag = flag
         self._inverted = inverted
@@ -522,10 +501,13 @@ class _VSTFlagProp(_VSTPluginProp[bool]):
         if self._inverted:
             value = not value
 
-        if value:
-            event[self._id][self._prop] |= value
-        else:
-            event[self._id][self._prop] &= ~value
+        for e in event["events"]:
+            if e["id"] == self._id:
+                if value:
+                    e["data"][self._prop] |= value
+                else:
+                    e["data"][self._prop] &= ~value
+                break
 
 
 class PluginIOInfo(EventModel):
