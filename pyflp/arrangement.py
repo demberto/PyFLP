@@ -82,20 +82,24 @@ class PLSelectionEvent(StructEventBase):
 
 
 class PlaylistEvent(ListEventBase):
-    STRUCT = c.Struct(
-        "position" / c.Int32ul,  # 4
-        "pattern_base" / c.Int16ul * "Always 20480",  # 6
-        "item_index" / c.Int16ul,  # 8
-        "length" / c.Int32ul,  # 12
-        "track_rvidx" / c.Int16ul * "Stored reversed i.e. Track 1 would be 499",  # 14
-        "group" / c.Int16ul,  # 16
-        "_u1" / c.Bytes(2) * "Always (120, 0)",  # 18
-        "item_flags" / c.Int16ul * "Always (64, 0)",  # 20
-        "_u2" / c.Bytes(4) * "Always (64, 100, 128, 128)",  # 24
-        "start_offset" / c.Float32l,  # 28
-        "end_offset" / c.Float32l,  # 32
-        "_u3" / c.If(c.this._params["new"], c.Bytes(28)) * "New in FL 21",  # 60
-    ).compile()
+    STRUCT = c.GreedyRange(
+        c.Struct(
+            "position" / c.Int32ul,  # 4
+            "pattern_base" / c.Int16ul * "Always 20480",  # 6
+            "item_index" / c.Int16ul,  # 8
+            "length" / c.Int32ul,  # 12
+            "track_rvidx"
+            / c.Int16ul
+            * "Stored reversed i.e. Track 1 would be 499",  # 14
+            "group" / c.Int16ul,  # 16
+            "_u1" / c.Bytes(2) * "Always (120, 0)",  # 18
+            "item_flags" / c.Int16ul * "Always (64, 0)",  # 20
+            "_u2" / c.Bytes(4) * "Always (64, 100, 128, 128)",  # 24
+            "start_offset" / c.Float32l,  # 28
+            "end_offset" / c.Float32l,  # 32
+            "_u3" / c.If(c.this._params["new"], c.Bytes(28)) * "New in FL 21",  # 60
+        )
+    )
     SIZES = [32, 60]
 
     def __init__(self, id: EventEnum, data: bytes) -> None:

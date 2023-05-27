@@ -69,8 +69,6 @@ if sys.version_info < (3, 11):  # https://github.com/Bobronium/fastenum/issues/2
 
 
 def parse(file: pathlib.Path | str) -> Project:
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-statements
     """Parses an FL Studio project file and returns a parsed :class:`Project`.
 
     Args:

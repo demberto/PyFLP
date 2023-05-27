@@ -21,41 +21,21 @@ from __future__ import annotations
 
 import abc
 import enum
-import sys
 import warnings
+from collections import UserDict, UserList
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from itertools import zip_longest
-from typing import (
-    Any,
-    Callable,
-    ClassVar,
-    Generic,
-    Iterable,
-    Iterator,
-    NoReturn,
-    Tuple,
-    TypeVar,
-    cast,
-)
-
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
-
-if sys.version_info >= (3, 10):
-    from typing import Concatenate, ParamSpec
-else:
-    from typing_extensions import Concatenate, ParamSpec
+from typing import Any, ClassVar, Generic, Tuple, TypeVar, cast, TYPE_CHECKING
 
 import colour
 import construct as c
 from sortedcontainers import SortedList
+from typing_extensions import Concatenate, Final, ParamSpec, TypeAlias
 
 from .exceptions import (
     EventIDOutOfRange,
     InvalidEventChunkSize,
-    ListEventNotParsed,
     PropertyCannotBeSet,
 )
 
@@ -79,14 +59,13 @@ FourByteBool: c.ExprAdapter[int, int, bool, int] = c.ExprAdapter(
 
 
 class _EventEnumMeta(enum.EnumMeta):
-    # pylint: disable=bad-mcs-method-argument
     def __contains__(self, obj: object) -> bool:
         """Whether ``obj`` is one of the integer values of enum members.
 
         Args:
             obj: Can be an ``int`` or an ``EventEnum``.
         """
-        return obj in tuple(self)  # type: ignore
+        return obj in tuple(self)
 
 
 class EventEnum(int, enum.Enum, metaclass=_EventEnumMeta):
@@ -128,83 +107,75 @@ class EventEnum(int, enum.Enum, metaclass=_EventEnumMeta):
         # Raises ValueError in Enum.__new__
 
 
-class EventBase(Generic[T]):  # pylint: disable=eq-without-hash
+class EventBase(Generic[T]):
     """Generic ABC representing an event."""
 
-    def __init__(self, id: EventEnum, data: bytes) -> None:
-        self.id: Final = EventEnum(id)
-        self._data: bytes = data
+    STRUCT: c.Construct[T, T]
+    ALLOWED_IDS: ClassVar[Sequence[int]] = []
+
+    def __init__(self, id: EventEnum, data: bytes, **kwds: Any) -> None:
+        if self.ALLOWED_IDS and id not in self.ALLOWED_IDS:
+            raise EventIDOutOfRange(id, *self.ALLOWED_IDS)
+
+        if id < TEXT:
+            if id < WORD:
+                expected_size = 1
+            elif id < DWORD:
+                expected_size = 2
+            else:
+                expected_size = 4
+
+            if len(data) != expected_size:
+                raise InvalidEventChunkSize(expected_size, len(data))
+
+        self.id = EventEnum(id)
+        self._kwds = kwds
+        self.value = self.STRUCT.parse(data, **self._kwds)
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, EventBase):
             raise TypeError(f"Cannot find equality of an {type(o)} and {type(self)!r}")
-        return self.id == o.id and self._data == o._data
+        return self.id == o.id and self.value == cast(EventBase[T], o).value
 
     def __ne__(self, o: object) -> bool:
         if not isinstance(o, EventBase):
             raise TypeError(f"Cannot find inequality of a {type(o)} and {type(self)!r}")
-        return self.id != o.id or self._data != o._data
-
-    @abc.abstractmethod
-    def __bytes__(self) -> bytes:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def size(self) -> int:
-        """Serialised event size (in bytes)."""  # noqa: D402
-
-    @property
-    def value(self) -> T:
-        """Deserialized event-type specific value."""
-        raise NotImplementedError
-
-    @value.setter
-    def value(self, value: T) -> None:
-        """Converts Python types into bytes/bytes objects and stores it."""
-
-
-AnyEvent = EventBase[Any]
-
-
-class PODEventBase(EventBase[T]):
-    """Base class for events whose size is predetermined (POD types)."""
-
-    ID_RANGE: ClassVar[tuple[int, int]]
-    CODEC: c.Construct[Any, Any]
-
-    def __init__(self, id: EventEnum, data: bytes) -> None:
-        if id not in range(*self.ID_RANGE):
-            raise EventIDOutOfRange(id, *self.ID_RANGE)
-
-        if len(data) != self.CODEC.sizeof():
-            raise InvalidEventChunkSize(self.CODEC.sizeof(), len(data))
-
-        super().__init__(id, data)
+        return self.id != o.id or self.value != cast(EventBase[T], o).value
 
     def __bytes__(self) -> bytes:
-        return c.Byte.build(self.id) + self._data
+        id = c.Byte.build(self.id)
+        data = self.STRUCT.build(self.value, **self._kwds)
+
+        if self.id < TEXT:
+            return id + data
+
+        length = c.VarInt.build(len(data))
+        return id + length + data
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(id={self.id!r}, value={self.value!r})"
+        return f"<{type(self)!r}(id={self.id!r}, value={self.value!r})>"
 
     @property
     def size(self) -> int:
-        return 1 + self.CODEC.sizeof()
+        """Serialised event size (in bytes)."""
 
-    @property
-    def value(self) -> T:
-        return self.CODEC.parse(self._data)
+        if self.id >= TEXT:
+            return len(bytes(self))
+        elif self.id >= DWORD:
+            return 5
+        elif self.id >= WORD:
+            return 3
+        else:
+            return 2
 
-    @value.setter
-    def value(self, value: T) -> None:
-        self._data = self.CODEC.build(value)
+
+AnyEvent: TypeAlias = EventBase[Any]
 
 
-class ByteEventBase(PODEventBase[T]):
+class ByteEventBase(EventBase[T]):
     """Base class of events used for storing 1 byte data."""
 
-    ID_RANGE = (BYTE, WORD)
+    ALLOWED_IDS = range(BYTE, WORD)
 
     def __init__(self, id: EventEnum, data: bytes) -> None:
         """
@@ -222,25 +193,25 @@ class ByteEventBase(PODEventBase[T]):
 class BoolEvent(ByteEventBase[bool]):
     """An event used for storing a boolean."""
 
-    CODEC = c.Flag
+    STRUCT = c.Flag
 
 
 class I8Event(ByteEventBase[int]):
     """An event used for storing a 1 byte signed integer."""
 
-    CODEC = c.Int8sl
+    STRUCT = c.Int8sl
 
 
 class U8Event(ByteEventBase[int]):
     """An event used for storing a 1 byte unsigned integer."""
 
-    CODEC = c.Int8ul
+    STRUCT = c.Int8ul
 
 
-class WordEventBase(PODEventBase[T], abc.ABC):
+class WordEventBase(EventBase[int], abc.ABC):
     """Base class of events used for storing 2 byte data."""
 
-    ID_RANGE = (WORD, DWORD)
+    ALLOWED_IDS = range(WORD, DWORD)
 
     def __init__(self, id: EventEnum, data: bytes) -> None:
         """
@@ -255,22 +226,22 @@ class WordEventBase(PODEventBase[T], abc.ABC):
         super().__init__(id, data)
 
 
-class I16Event(WordEventBase[int]):
+class I16Event(WordEventBase):
     """An event used for storing a 2 byte signed integer."""
 
-    CODEC = c.Int16sl
+    STRUCT = c.Int16sl
 
 
-class U16Event(WordEventBase[int]):
+class U16Event(WordEventBase):
     """An event used for storing a 2 byte unsigned integer."""
 
-    CODEC = c.Int16ul
+    STRUCT = c.Int16ul
 
 
-class DWordEventBase(PODEventBase[T], abc.ABC):
+class DWordEventBase(EventBase[T], abc.ABC):
     """Base class of events used for storing 4 byte data."""
 
-    ID_RANGE = (DWORD, TEXT)
+    ALLOWED_IDS = range(DWORD, TEXT)
 
     def __init__(self, id: EventEnum, data: bytes) -> None:
         """
@@ -288,27 +259,25 @@ class DWordEventBase(PODEventBase[T], abc.ABC):
 class F32Event(DWordEventBase[float]):
     """An event used for storing 4 byte floats."""
 
-    CODEC = c.Float32l
+    STRUCT = c.Float32l
 
 
 class I32Event(DWordEventBase[int]):
     """An event used for storing a 4 byte signed integer."""
 
-    CODEC = c.Int32sl
+    STRUCT = c.Int32sl
 
 
 class U32Event(DWordEventBase[int]):
     """An event used for storing a 4 byte unsigned integer."""
 
-    CODEC = c.Int32ul
+    STRUCT = c.Int32ul
 
 
 class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
     """An event used for storing a two-tuple of 2 byte unsigned integers."""
 
-    CODEC: c.ExprAdapter[  # pyright: ignore
-        c.ListContainer[int], c.ListContainer[int], tuple[int, int], list[int]
-    ] = c.ExprAdapter(
+    STRUCT = c.ExprAdapter(
         c.Int16ul[2],
         lambda obj_, *_: tuple(obj_),  # type: ignore
         lambda obj_, *_: list(obj_),  # type: ignore
@@ -329,40 +298,10 @@ class ColorEvent(DWordEventBase[colour.Color]):
         r, g, b = (c / 255 for c in buf[:3])
         return colour.Color(rgb=(r, g, b))
 
-    @staticmethod
-    def encode(color: colour.Color) -> bytes:
-        return bytes(int(c * 255) for c in color.get_rgb()) + b"\x00"
-
-
-class VarintEventBase(EventBase[T]):
-    @staticmethod
-    def _varint_len(buflen: int) -> int:
-        ret = bytearray()
-        while True:
-            towrite = buflen & 0x7F
-            buflen >>= 7
-            towrite |= 0x80
-            ret.append(towrite)
-            if buflen <= 0:
-                break
-        return len(ret)
-
-    @property
-    def size(self) -> int:
-        if self._data:
-            return 1 + self._varint_len(len(self._data)) + len(self._data)
-        return 2
-
-    def __bytes__(self) -> bytes:
-        id = c.Byte.build(self.id)
-
-        if self._data:
-            return id + c.VarInt.build(len(self._data)) + self._data
-        return id + b"\x00"
-
-
-class StrEventBase(VarintEventBase[str]):
+class StrEventBase(EventBase[str]):
     """Base class of events used for storing strings."""
+
+    ALLOWED_IDS = (*range(TEXT, DATA), *NEW_TEXT_IDS)
 
     def __init__(self, id: EventEnum, data: bytes) -> None:
         """
@@ -373,128 +312,69 @@ class StrEventBase(VarintEventBase[str]):
         Raises:
             ValueError: When ``id`` is not in 192-207 or in :attr:`NEW_TEXT_IDS`.
         """
-        if id not in {*range(TEXT, DATA), *NEW_TEXT_IDS}:
-            raise ValueError(f"Unexpected ID{id!r}")
-
         super().__init__(id, data)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}(id={self.id!r}, string={self.value!r})"
 
 
 class AsciiEvent(StrEventBase):
-    @property
-    def value(self) -> str:
-        return self._data.decode("ascii").rstrip("\0")
-
-    @value.setter
-    def value(self, value: str) -> None:
-        if value:
-            self._data = value.encode("ascii") + b"\0"
+    if TYPE_CHECKING:
+        STRUCT: c.ExprAdapter[str, str, str, str]
+    else:
+        STRUCT = c.ExprAdapter(
+            c.GreedyString("ascii"),
+            lambda obj, *_: obj.rstrip("\0"),
+            lambda obj, *_: obj + "\0",
+        )
 
 
 class UnicodeEvent(StrEventBase):
-    @property
-    def value(self) -> str:
-        return self._data.decode("utf-16-le").rstrip("\0")
-
-    @value.setter
-    def value(self, value: str) -> None:
-        if value:
-            self._data = value.encode("utf-16-le") + b"\0\0"
-
-
-class DataEventBase(VarintEventBase[bytes]):
-    def __init__(self, id: EventEnum, data: bytes) -> None:
-        """
-        Args:
-            id: **208** to **255**.
-            data: Event data (no size limit).
-
-        Raises:
-            EventIDOutOfRange: ``id`` is not in the range of 208-255.
-        """
-        if id < DATA:
-            raise EventIDOutOfRange(id, DATA, 256)
-
-        super().__init__(id, data)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}(id={self.id!r}, size={len(self._data)})"
+    if TYPE_CHECKING:
+        STRUCT: c.ExprAdapter[str, str, str, str]
+    else:
+        STRUCT = c.ExprAdapter(
+            c.GreedyString("utf-16-le"),
+            lambda obj, *_: obj.rstrip("\0"),
+            lambda obj, *_: obj + "\0",
+        )
 
 
-# TODO Due to construct's poor implementation of LazyStruct, this is no longer lazy
-class StructEventBase(DataEventBase):
+class StructEventBase(EventBase[c.Container[Any]], UserDict[str, Any]):
     """Base class for events used for storing fixed size structured data.
 
     Consists of a collection of POD types like int, bool, float, but not strings.
     Its size is determined by the event as well as FL version.
     """
 
-    STRUCT: ClassVar[c.Construct[c.Container[Any], Any]]
-
     def __init__(self, id: EventEnum, data: bytes) -> None:
-        super().__init__(id, data)
-        self._struct = self.STRUCT.parse(data, len=len(self._data))
-
-    def __bytes__(self) -> bytes:
-        # pylint: disable=access-member-before-definition
-        # pylint: disable=attribute-defined-outside-init
-        new_data = self.STRUCT.build(self._struct, len=len(self._data))
-        if len(new_data) != len(self._data):
-            warnings.warn(
-                "{} built a stream of incorrect size {}; expected {}.".format(
-                    type(self).__name__, len(new_data), len(self._data)
-                ),
-                BytesWarning,
-                stacklevel=0,
-            )
-        # Effectively, overwrite new data over old one to ensure the stream
-        # size remains unmodified
-        self._data = new_data + self._data[len(new_data) :]
-        return super().__bytes__()
-
-    def __contains__(self, prop: str) -> bool:
-        return prop in self._struct
-
-    def __getitem__(self, key: str):
-        return self._struct[key]
+        super().__init__(id, data, len=len(data))
+        self.data = self.value  # Akin to UserDict.__init__
 
     def __setitem__(self, key: str, value: Any) -> None:
-        if key not in self or self[key] is None:
+        if key not in self:
+            raise KeyError
+
+        if self[key] is None:
             raise PropertyCannotBeSet
-        self._struct[key] = value
 
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}(id={self.id}, size={len(self._data)})"
-
-    @property  # type: ignore[override]
-    def value(self) -> NoReturn:
-        raise NotImplementedError
-
-    @value.setter
-    def value(self, value: bytes) -> NoReturn:
-        raise NotImplementedError
+        self.data[key] = value
 
 
-class ListEventBase(DataEventBase):
+class ListEventBase(EventBase[c.ListContainer[Any]], UserList[c.Container[Any]]):
     """Base class for events storing an array of structured data.
 
     Attributes:
         kwds: Keyword args passed to :meth:`STRUCT.parse` & :meth:`STRUCT.build`.
     """
 
-    STRUCT: ClassVar[c.Construct[c.Container[Any], Any]]
+    STRUCT: c.Subconstruct[Any, Any, Any, Any]
     SIZES: ClassVar[list[int]] = []
     """Manual :meth:`STRUCT.sizeof` override(s)."""
 
     def __init__(self, id: EventEnum, data: bytes, **kwds: Any) -> None:
-        super().__init__(id, data)
+        super().__init__(id, data, **kwds)
         self._struct_size: int | None = None
-        self.kwds = kwds
 
         if not self.SIZES:
-            self._struct_size = self.STRUCT.sizeof()
+            self._struct_size = self.STRUCT.subcon.sizeof()
 
         for size in self.SIZES:
             if not len(data) % size:
@@ -506,59 +386,14 @@ class ListEventBase(DataEventBase):
                 f"Cannot parse event {id} as event size {len(data)} "
                 f"is not a multiple of struct size(s) {self.SIZES}"
             )
-
-    def __len__(self) -> int:
-        if self._struct_size is None:  # pragma: no cover
-            raise ListEventNotParsed
-
-        return len(self._data) // self._struct_size
-
-    def __getitem__(self, index: int) -> c.Container[Any]:
-        if self._struct_size is None:  # pragma: no cover
-            raise ListEventNotParsed
-
-        if index > len(self):
-            raise IndexError(index)
-
-        start = self._struct_size * index
-        count = self._struct_size
-        return self.STRUCT.parse(self._data[start : start + count], **self.kwds)
-
-    def __setitem__(self, index: int, item: c.Container[Any]) -> None:
-        if self._struct_size is None:
-            raise ListEventNotParsed
-
-        if index > len(self):
-            raise IndexError(index)
-
-        start = self._struct_size * index
-        count = self._struct_size
-        self._data = (  # pylint: disable=attribute-defined-outside-init
-            self._data[:start]
-            + self.STRUCT.build(item, **self.kwds)
-            + self._data[start + count :]
-        )
-
-    def __iter__(self) -> Iterator[c.Container[Any]]:
-        for i in range(len(self)):
-            yield self[i]
-
-    def __repr__(self) -> str:
-        return "{}(id={}, size={}, {} items)".format(
-            type(self).__name__, self.id, len(self._data), len(self)
-        )
+        else:
+            self.data = self.value  # Akin to UserList.__init__
 
 
-class UnknownDataEvent(DataEventBase):
+class UnknownDataEvent(EventBase[bytes]):
     """Used for events whose structure is unknown as of yet."""
 
-    @property
-    def value(self) -> bytes:
-        return self._data
-
-    @value.setter
-    def value(self, value: bytes) -> None:
-        self._data = value
+    STRUCT = c.GreedyBytes
 
 
 @dataclass(order=True)
@@ -761,7 +596,7 @@ class EventTree:
                 return
 
             result = select(ie.e)
-            if result is False:  # pylint: disable=compare-to-zero
+            if result is False:
                 yield EventTree(self, el)
                 el = [ie]  # Don't skip current event
                 repeat -= 1

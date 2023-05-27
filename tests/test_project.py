@@ -63,5 +63,5 @@ def test_null_check(project: Project, tmp_path: pathlib.Path):
     pyflp.save(project, tmp_path / "null_check.flp")
     b1 = open(pathlib.Path(__file__).parent / "assets" / "FL 20.8.4.flp", "rb").read()
     b2 = open(tmp_path / "null_check.flp", "rb").read()
-    result = b1 == b2  # ! Don't compare 2 big bytes objects in pytest EVER
-    assert result
+    # result = b1 == b2  # ! Don't compare 2 big bytes objects in pytest EVER
+    assert b1 == b2

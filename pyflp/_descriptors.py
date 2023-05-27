@@ -11,8 +11,6 @@
 # GNU General Public License along with this program. If not, see
 # <https://www.gnu.org/licenses/>.
 
-# pylint: disable=super-init-not-called
-
 """Contains the descriptor and adaptor classes used by models and events."""
 
 from __future__ import annotations
@@ -42,8 +40,8 @@ else:
 import construct as c
 import construct_typed as ct
 
-from ._events import AnyEvent, EventEnum, PODEventBase, StructEventBase
-from ._models import DE, EMT_co, EventModel, ItemModel, ModelBase
+from ._events import AnyEvent, EventEnum, StructEventBase
+from ._models import VE, EMT_co, EventModel, ItemModel, ModelBase
 from .exceptions import PropertyCannotBeSet
 
 T = TypeVar("T")
@@ -86,14 +84,14 @@ class PropBase(abc.ABC, RWProperty[T]):
         self._readonly = readonly
 
     @overload
-    def _get_event(self, ins: ItemModel[DE]) -> ItemModel[DE]:
+    def _get_event(self, ins: ItemModel[VE]) -> ItemModel[VE]:
         ...
 
     @overload
     def _get_event(self, ins: EventModel) -> AnyEvent | None:
         ...
 
-    def _get_event(self, ins: ItemModel[DE] | EventModel):
+    def _get_event(self, ins: ItemModel[VE] | EventModel):
         if isinstance(ins, ItemModel):
             return ins
 
@@ -171,12 +169,10 @@ class FlagProp(PropBase[bool]):
         super().__init__(*ids, default=default)
 
     def _get(self, ev_or_ins: Any) -> bool | None:
-        if isinstance(ev_or_ins, PODEventBase):
-            flags = ev_or_ins.value  # type: ignore
-        elif isinstance(ev_or_ins, (ItemModel, StructEventBase)):
+        if isinstance(ev_or_ins, (ItemModel, StructEventBase)):
             flags = ev_or_ins[self._prop]
         else:
-            raise NotImplementedError  # should not happen, basically
+            flags = ev_or_ins.value  # type: ignore
 
         if flags is not None:
             retbool = self._flag in self._flag_type(flags)
@@ -191,7 +187,7 @@ class FlagProp(PropBase[bool]):
                 ev_or_ins[self._prop] |= self._flag
             else:
                 ev_or_ins[self._prop] &= ~self._flag
-        elif isinstance(ev_or_ins, PODEventBase):
+        else:
             if value:
                 ev_or_ins.value |= self._flag  # type: ignore
             else:

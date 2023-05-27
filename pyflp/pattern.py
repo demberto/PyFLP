@@ -52,14 +52,16 @@ __all__ = ["Note", "Controller", "Pattern", "Patterns"]
 
 
 class ControllerEvent(ListEventBase):
-    STRUCT = c.Struct(
-        "position" / c.Int32ul,  # 4, can be delta as well!
-        "_u1" / c.Byte,  # 5
-        "_u2" / c.Byte,  # 6
-        "channel" / c.Int8ul,  # 7
-        "_flags" / c.Int8ul,  # 8
-        "value" / c.Float32l,  # 12
-    ).compile()
+    STRUCT = c.GreedyRange(
+        c.Struct(
+            "position" / c.Int32ul,  # 4, can be delta as well!
+            "_u1" / c.Byte,  # 5
+            "_u2" / c.Byte,  # 6
+            "channel" / c.Int8ul,  # 7
+            "_flags" / c.Int8ul,  # 8
+            "value" / c.Float32l,  # 12
+        )
+    )
 
 
 @enum.unique
@@ -68,22 +70,24 @@ class _NoteFlags(enum.IntFlag):
 
 
 class NotesEvent(ListEventBase):
-    STRUCT = c.Struct(
-        "position" / c.Int32ul,  # 4
-        "flags" / StdEnum[_NoteFlags](c.Int16ul),  # 6
-        "rack_channel" / c.Int16ul,  # 8
-        "length" / c.Int32ul,  # 12
-        "key" / c.Int16ul,  # 14
-        "group" / c.Int16ul,  # 16
-        "fine_pitch" / c.Int8ul,  # 17
-        "_u1" / c.Byte,  # 18
-        "release" / c.Int8ul,  # 19
-        "midi_channel" / c.Int8ul,  # 20
-        "pan" / c.Int8ul,  # 21
-        "velocity" / c.Int8ul,  # 22
-        "mod_x" / c.Int8ul,  # 23
-        "mod_y" / c.Int8ul,  # 24
-    ).compile()
+    STRUCT = c.GreedyRange(
+        c.Struct(
+            "position" / c.Int32ul,  # 4
+            "flags" / StdEnum[_NoteFlags](c.Int16ul),  # 6
+            "rack_channel" / c.Int16ul,  # 8
+            "length" / c.Int32ul,  # 12
+            "key" / c.Int16ul,  # 14
+            "group" / c.Int16ul,  # 16
+            "fine_pitch" / c.Int8ul,  # 17
+            "_u1" / c.Byte,  # 18
+            "release" / c.Int8ul,  # 19
+            "midi_channel" / c.Int8ul,  # 20
+            "pan" / c.Int8ul,  # 21
+            "velocity" / c.Int8ul,  # 22
+            "mod_x" / c.Int8ul,  # 23
+            "mod_y" / c.Int8ul,  # 24
+        )
+    )
 
 
 class PatternsID(EventEnum):

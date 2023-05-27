@@ -44,8 +44,8 @@ class Error(Exception):
 class EventIDOutOfRange(Error, ValueError):
     """An event is created with an ID out of its allowed range."""
 
-    def __init__(self, id: int, min_i: int, max_e: int) -> None:
-        super().__init__(f"Expected ID in {min_i}-{max_e - 1}; got {id} instead")
+    def __init__(self, id: int, *expected: int) -> None:
+        super().__init__(f"Expected ID in {expected!r}; got {id!r} instead")
 
 
 class InvalidEventChunkSize(Error, BufferError):
@@ -53,10 +53,6 @@ class InvalidEventChunkSize(Error, BufferError):
 
     def __init__(self, expected: int, got: int) -> None:
         super().__init__(f"Expected a bytes object of length {expected}; got {got}")
-
-
-class ListEventNotParsed(Error, AttributeError, IndexError):
-    """`ListEventBase` could not be parsed due to mismatching struct layouts."""
 
 
 class PropertyCannotBeSet(Error, AttributeError):

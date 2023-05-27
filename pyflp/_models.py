@@ -18,33 +18,26 @@ from __future__ import annotations
 import abc
 import dataclasses
 import functools
-import sys
-from typing import Any, Callable, Generic, Iterable, Sequence, TypeVar, overload
-
-if sys.version_info >= (3, 8):
-    from typing import Protocol, runtime_checkable
-else:
-    from typing_extensions import Protocol, runtime_checkable
+from typing import Any, Callable, Generic, Iterable, Sequence, TypeVar, overload, Union
 
 import construct as c
+from typing_extensions import Protocol, runtime_checkable
 
-from ._events import DataEventBase, EventTree, ListEventBase
+from ._events import EventTree, StructEventBase, ListEventBase
 
-DE = TypeVar("DE", bound=DataEventBase)
+VE = TypeVar("VE", bound=Union[StructEventBase, ListEventBase])
 
 
 class ModelBase(abc.ABC):
-    def __init__(
-        self, *args: Any, **kw: Any
-    ) -> None:  # pylint: disable=unused-argument
+    def __init__(self, *args: Any, **kw: Any) -> None:
         self._kw = kw
 
 
-class ItemModel(ModelBase, Generic[DE]):
+class ItemModel(ModelBase, Generic[VE]):
     """Base class for event-less models."""
 
     def __init__(
-        self, item: c.Container[Any], index: int, parent: DE, **kw: Any
+        self, item: c.Container[Any], index: int, parent: VE, **kw: Any
     ) -> None:
         """Create a new item model.
 
@@ -87,9 +80,7 @@ EMT_co = TypeVar("EMT_co", bound=EventModel, covariant=True)
 
 
 @runtime_checkable
-class ModelCollection(  # pylint: disable=abstract-method
-    Iterable[MT_co], Protocol[MT_co]
-):
+class ModelCollection(Iterable[MT_co], Protocol[MT_co]):
     @overload
     def __getitem__(self, i: int | str) -> MT_co:
         ...

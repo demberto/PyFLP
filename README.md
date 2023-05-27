@@ -14,7 +14,6 @@ project and preset files written in Python.
     <tr>
       <th>CI</th>
       <td>
-        <img alt="build" src="https://github.com/demberto/PyFLP/actions/workflows/publish.yml/badge.svg"/>
         <a href="https://pyflp.readthedocs.io/en/latest/">
           <img alt="Documentation Build Status" src="https://img.shields.io/readthedocs/pyflp/latest?logo=read-the-docs"/>
         </a>

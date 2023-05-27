@@ -19,7 +19,7 @@ def get_insert(preset: str):
     # behaviour, however that depends on InsertID.Output as a marker to indicate
     # the end of an Insert, which surprisingly isn't a part of presets.
     params = cast(MixerParamsEvent, mixer.events.first(MixerID.Params))
-    items = tuple(params.items.values())[0]
+    items = tuple(params.items_.values())[0]
     return Insert(mixer.events, iid=0, max_slots=10, params=items)
 
 
