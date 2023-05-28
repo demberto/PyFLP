@@ -51,9 +51,7 @@ def test_track_color(tracks: tuple[Track, ...]):
 def test_track_content_locked(tracks: tuple[Track, ...]):
     for track in tracks:
         assert (
-            track.content_locked
-            if track.name == "Locked to content"
-            else not track.content_locked
+            track.content_locked if track.name == "Locked to content" else not track.content_locked
         )
 
 
@@ -87,12 +85,12 @@ def test_track_items(tracks: tuple[Track, ...]):
         num_items = 0
         if track.name == "Audio track":
             num_items = 16
-            assert set(type(i) for i in track) == set((ChannelPLItem,))
-            assert set(i.channel.iid for i in track) == set((11,))  # type: ignore
+            assert {type(i) for i in track} == {ChannelPLItem}
+            assert {i.channel.iid for i in track} == {11}  # type: ignore
         elif track.name == "MIDI":
             num_items = 4
-            assert set(type(i) for i in track) == set((PatternPLItem,))
-            assert set(i.pattern.iid for i in track) == set((3,))  # type: ignore
+            assert {type(i) for i in track} == {PatternPLItem}
+            assert {i.pattern.iid for i in track} == {3}  # type: ignore
             assert [i.position for i in track] == [p * 384 for p in range(num_items)]
         elif track.name in ("Cut pattern", "Automation"):
             num_items = 1

@@ -21,9 +21,13 @@ def test_pattern_color(patterns: Patterns):
 
 
 def test_pattern_names(patterns: Patterns):
-    assert set(pattern.name for pattern in patterns) == set(
-        ("Default", "Colored", "MIDI", "Timemarkers", "Selected")
-    )
+    assert {pattern.name for pattern in patterns} == {
+        "Default",
+        "Colored",
+        "MIDI",
+        "Timemarkers",
+        "Selected",
+    }
 
 
 def test_pattern_timemarkers(patterns: Patterns):
@@ -73,7 +77,7 @@ def test_note_position():
 
 
 def test_note_rack_channel():
-    assert set(n.rack_channel for n in get_notes("multi-channel.flp")) == set((0, 1))
+    assert {n.rack_channel for n in get_notes("multi-channel.flp")} == {0, 1}
 
 
 def test_note_release():

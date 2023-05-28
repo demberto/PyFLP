@@ -25,13 +25,7 @@ import construct_typed as ct
 from typing_extensions import NotRequired, TypedDict, Unpack
 
 from pyflp._adapters import StdEnum
-from pyflp._descriptors import (
-    EventProp,
-    FlagProp,
-    NamedPropMixin,
-    ROProperty,
-    RWProperty,
-)
+from pyflp._descriptors import EventProp, FlagProp, NamedPropMixin, ROProperty, RWProperty
 from pyflp._events import (
     DATA,
     DWORD,
@@ -47,17 +41,9 @@ from pyflp._events import (
     StructEventBase,
     U16Event,
 )
-from pyflp._models import (
-    EventModel,
-    ModelBase,
-    ModelCollection,
-    ModelReprMixin,
-    supports_slice,
-)
-from pyflp.types import RGBA, FLVersion, T
-
-from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .plugin import (
+from pyflp._models import EventModel, ModelBase, ModelCollection, ModelReprMixin, supports_slice
+from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
+from pyflp.plugin import (
     FruityBalance,
     FruityBloodOverdrive,
     FruityCenter,
@@ -71,6 +57,7 @@ from .plugin import (
     Soundgoodizer,
     VSTPlugin,
 )
+from pyflp.types import RGBA, FLVersion, T
 
 __all__ = ["Insert", "InsertDock", "InsertEQ", "InsertEQBand", "Mixer", "Slot"]
 
@@ -289,23 +276,17 @@ class InsertEQ(ModelBase, ModelReprMixin):
         return 12 * self._kw["param"]  # ! TODO
 
     low = _InsertEQProp(
-        _InsertEQPropArgs(
-            _MixerParamsID.LowFreq, _MixerParamsID.LowGain, _MixerParamsID.LowQ
-        )
+        _InsertEQPropArgs(_MixerParamsID.LowFreq, _MixerParamsID.LowGain, _MixerParamsID.LowQ)
     )
     """Low shelf band. Default frequency - 5777 (90 Hz)."""
 
     mid = _InsertEQProp(
-        _InsertEQPropArgs(
-            _MixerParamsID.MidFreq, _MixerParamsID.MidGain, _MixerParamsID.MidQ
-        )
+        _InsertEQPropArgs(_MixerParamsID.MidFreq, _MixerParamsID.MidGain, _MixerParamsID.MidQ)
     )
     """Middle band. Default frequency - 33145 (1500 Hz)."""
 
     high = _InsertEQProp(
-        _InsertEQPropArgs(
-            _MixerParamsID.HighFreq, _MixerParamsID.HighGain, _MixerParamsID.HighQ
-        )
+        _InsertEQPropArgs(_MixerParamsID.HighFreq, _MixerParamsID.HighGain, _MixerParamsID.HighQ)
     )
     """High shelf band. Default frequency - 55825 (8000 Hz)."""
 
@@ -336,9 +317,7 @@ class Slot(EventModel):
     ![](https://bit.ly/3RUDtTu)
     """
 
-    def __init__(
-        self, events: EventTree, params: list[dict[str, Any]] | None = None
-    ) -> None:
+    def __init__(self, events: EventTree, params: list[dict[str, Any]] | None = None) -> None:
         super().__init__(events, params=params or [])
 
     def __repr__(self) -> str:

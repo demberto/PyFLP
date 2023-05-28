@@ -17,10 +17,20 @@ from __future__ import annotations
 
 import abc
 import functools
-from typing import Any, Callable, Generic, Iterable, Sequence, TypeVar, Union, overload
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Protocol,
+    Sequence,
+    TypeVar,
+    Union,
+    overload,
+    runtime_checkable,
+)
 
 import construct as c
-from typing_extensions import Protocol, runtime_checkable
 
 from pyflp._events import EventTree, ListEventBase, StructEventBase
 
@@ -35,9 +45,7 @@ class ModelBase(abc.ABC):
 class ItemModel(ModelBase, Generic[VE]):
     """Base class for event-less models."""
 
-    def __init__(
-        self, item: c.Container[Any], index: int, parent: VE, **kw: Any
-    ) -> None:
+    def __init__(self, item: c.Container[Any], index: int, parent: VE, **kw: Any) -> None:
         """Create a new item model.
 
         Args:
@@ -103,9 +111,7 @@ def supports_slice(func: Callable[[ModelCollection[MT_co], str | int | slice], M
     @functools.wraps(func)
     def wrapper(self: Any, i: Any) -> MT_co | Sequence[MT_co]:
         if isinstance(i, slice):
-            return [
-                model for idx, model in enumerate(self) if idx in range(i.start, i.stop)
-            ]
+            return [model for idx, model in enumerate(self) if idx in range(i.start, i.stop)]
         return func(self, i)
 
     return wrapper

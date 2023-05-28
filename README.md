@@ -310,7 +310,7 @@ implemented. Click on a link to go to the documentation for that feature.
 
 ## ⏬ Installation
 
-CPython 3.7+ / PyPy 3.8+ required.
+CPython 3.8+ / PyPy 3.8+ required.
 
 ```none
 python -m pip install -U pyflp

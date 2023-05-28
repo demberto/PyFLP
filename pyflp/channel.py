@@ -17,11 +17,10 @@ from __future__ import annotations
 
 import enum
 import pathlib
-from typing import Any, Iterator, Tuple, cast
+from typing import Any, Iterator, Literal, Tuple, cast
 
 import construct as c
 import construct_typed as ct
-from typing_extensions import Literal
 
 from pyflp._adapters import LinearMusical, List2Tuple, Log2, LogNormal, StdEnum
 from pyflp._descriptors import EventProp, FlagProp, NestedProp, StructProp
@@ -41,16 +40,10 @@ from pyflp._events import (
     U16TupleEvent,
     U32Event,
 )
-from pyflp._models import (
-    EventModel,
-    ItemModel,
-    ModelCollection,
-    ModelReprMixin,
-    supports_slice,
-)
+from pyflp._models import EventModel, ItemModel, ModelCollection, ModelReprMixin, supports_slice
 from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from pyflp.plugin import BooBass, FruitKick, Plucked, PluginID, PluginProp, VSTPlugin
-from pyflp.types import MusicalTime, RGBA
+from pyflp.types import RGBA, MusicalTime
 
 __all__ = [
     "ArpDirection",
@@ -114,9 +107,7 @@ class AutomationEvent(StructEventBase):
                 "position"  # TODO Implement a setter
                 / c.IfThenElse(
                     lambda ctx: ctx._index > 0,
-                    c.Computed(
-                        lambda ctx: AutomationEvent._get_position(ctx._io, ctx._index)
-                    ),
+                    c.Computed(lambda ctx: AutomationEvent._get_position(ctx._io, ctx._index)),
                     c.Computed(lambda ctx: ctx["_offset"]),
                 ),
                 "value" / c.Float64l,
@@ -1067,9 +1058,7 @@ class Keyboard(EventModel, ModelReprMixin):
     *New in FL Studio v3.4.0*.
     """
 
-    key_region = StructProp[Tuple[int, int]](
-        ChannelID.Parameters, prop="keyboard.key_region"
-    )
+    key_region = StructProp[Tuple[int, int]](ChannelID.Parameters, prop="keyboard.key_region")
     """A `(start_note, end_note)` tuple representing the playable range."""
 
 
@@ -1124,9 +1113,7 @@ class Content(EventModel, ModelReprMixin):
     ![](https://bit.ly/3TCXFKI)
     """
 
-    declick_mode = StructProp[DeclickMode](
-        ChannelID.Parameters, prop="content.declick_mode"
-    )
+    declick_mode = StructProp[DeclickMode](ChannelID.Parameters, prop="content.declick_mode")
     """Defaults to ``DeclickMode.OutOnly``.
 
     *New in FL Studio v9.0.0*.
@@ -1223,9 +1210,7 @@ class Channel(EventModel):
     """
 
     iid = EventProp[int](ChannelID.New)
-    keyboard = NestedProp(
-        Keyboard, ChannelID.FineTune, ChannelID.RootNote, ChannelID.Parameters
-    )
+    keyboard = NestedProp(Keyboard, ChannelID.FineTune, ChannelID.RootNote, ChannelID.Parameters)
     """Located at the bottom of :menuselection:`Miscellaneous functions (page)`."""
 
     locked = EventProp[bool](ChannelID.IsLocked)
@@ -1406,9 +1391,7 @@ class _SamplerInstrument(Channel):
         To cut itself when retriggered, set the same value for both.
     """
 
-    delay = NestedProp(
-        Delay, ChannelID.Delay, ChannelID.DelayModXY, ChannelID.Parameters
-    )
+    delay = NestedProp(Delay, ChannelID.Delay, ChannelID.DelayModXY, ChannelID.Parameters)
     """:menuselection:`Miscellaneous functions -> Echo delay / fat mode`"""
 
     insert = EventProp[int](ChannelID.RoutedTo)

@@ -26,11 +26,11 @@ from collections import UserDict, UserList
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Tuple, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Final, Generic, Tuple, cast
 
 import construct as c
 from sortedcontainers import SortedList
-from typing_extensions import Concatenate, Final, TypeAlias
+from typing_extensions import Concatenate, TypeAlias
 
 from pyflp.exceptions import (
     EventIDOutOfRange,

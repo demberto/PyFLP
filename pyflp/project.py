@@ -19,11 +19,11 @@ import datetime
 import enum
 import math
 import pathlib
-from typing import cast
+from typing import Final, Literal, cast
 
 import construct as c
 import construct_typed as ct
-from typing_extensions import Final, Literal, TypedDict, Unpack
+from typing_extensions import TypedDict, Unpack
 
 from pyflp._descriptors import EventProp, KWProp
 from pyflp._events import (
@@ -460,13 +460,9 @@ class Project(EventModel):
     @tempo.setter
     def tempo(self, value: int | float) -> None:
         if self.tempo is None:
-            raise PropertyCannotBeSet(
-                ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine
-            )
+            raise PropertyCannotBeSet(ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine)
 
-        max_tempo = (
-            999.0 if FLVersion(1, 4, 2) <= self.version < FLVersion(11) else 522.0
-        )
+        max_tempo = 999.0 if FLVersion(1, 4, 2) <= self.version < FLVersion(11) else 522.0
 
         if isinstance(value, float) and self.version < FLVersion(3, 4, 0):
             raise TypeError("Expected an 'int' object got a 'float' instead")

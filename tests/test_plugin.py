@@ -51,9 +51,7 @@ def test_fruity_balance():
 
 
 def test_fruity_blood_overdrive():
-    fruity_blood_overdrive = get_plugin(
-        "fruity-blood-overdrive.fst", FruityBloodOverdrive
-    )
+    fruity_blood_overdrive = get_plugin("fruity-blood-overdrive.fst", FruityBloodOverdrive)
     assert fruity_blood_overdrive.pre_band == 0
     assert fruity_blood_overdrive.color == 5000
     assert fruity_blood_overdrive.pre_amp == 0
@@ -90,9 +88,7 @@ def test_fruity_soft_clipper():
 
 
 def test_fruity_stereo_enhancer():
-    fruity_stereo_enhancer = get_plugin(
-        "fruity-stereo-enhancer.fst", FruityStereoEnhancer
-    )
+    fruity_stereo_enhancer = get_plugin("fruity-stereo-enhancer.fst", FruityStereoEnhancer)
     assert fruity_stereo_enhancer.stereo_separation == 0
     assert fruity_stereo_enhancer.effect_position == "post"
     assert fruity_stereo_enhancer.phase_offset == 0

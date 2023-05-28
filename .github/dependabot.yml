@@ -11,10 +11,5 @@ updates:
       interval: weekly
     assignees:
       - demberto
-
-  - package-ecosystem: pip
-    directory: /docs
-    schedule:
-      interval: weekly
     ignore:
       - dependency-name: m2r2

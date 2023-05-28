@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import abc
 import enum
-from typing import Any, overload
+from typing import Any, Protocol, overload, runtime_checkable
 
-from typing_extensions import Protocol, Self, final, runtime_checkable
+from typing_extensions import Self, final
 
 from pyflp._events import AnyEvent, EventEnum, StructEventBase
 from pyflp._models import VE, EMT_co, EventModel, ItemModel, ModelBase
@@ -53,9 +53,7 @@ class NamedPropMixin:
 
 
 class PropBase(abc.ABC, RWProperty[T]):
-    def __init__(
-        self, *ids: EventEnum, default: T | None = None, readonly: bool = False
-    ):
+    def __init__(self, *ids: EventEnum, default: T | None = None, readonly: bool = False):
         self._ids = ids
         self._default = default
         self._readonly = readonly

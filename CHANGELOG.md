@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All event parsing happens during `pyflp.parse` itself.
 - `colour.Color` replaced with `pyflp.types.RGBA`.
+- Increase *line-length* of 100.
 
 ### Fixed
 
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Python 3.7 support.
 - Bunch of intermediate `EventBase` subclasses.
 - Removed dependency on `colour` library.
 

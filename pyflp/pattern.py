@@ -38,13 +38,7 @@ from pyflp._events import (
     U16Event,
     U32Event,
 )
-from pyflp._models import (
-    EventModel,
-    ItemModel,
-    ModelCollection,
-    ModelReprMixin,
-    supports_slice,
-)
+from pyflp._models import EventModel, ItemModel, ModelCollection, ModelReprMixin, supports_slice
 from pyflp.exceptions import ModelNotFound, NoModelsFound
 from pyflp.timemarker import TimeMarker, TimeMarkerID
 from pyflp.types import RGBA
@@ -152,7 +146,7 @@ class Note(ItemModel[NotesEvent]):
             ValueError: A value not in between 0-131 is tried to be set.
             ValueError: Invalid note name (not in the format {note-name}{octave}).
         """
-        return self._NOTE_NAMES[self["key"] % 12] + str(self["key"] // 12)
+        return self._NOTE_NAMES[self["key"] % 12] + str(self["key"] // 12)  # pyright: ignore
 
     @key.setter
     def key(self, value: int | str) -> None:

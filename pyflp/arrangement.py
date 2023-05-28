@@ -16,11 +16,11 @@
 from __future__ import annotations
 
 import enum
-from typing import Any, Iterator, Optional, cast
+from typing import Any, Iterator, Literal, Optional, cast
 
 import construct as c
 import construct_typed as ct
-from typing_extensions import Literal, TypedDict, Unpack
+from typing_extensions import TypedDict, Unpack
 
 from pyflp._adapters import FourByteBool, StdEnum
 from pyflp._descriptors import EventProp, NestedProp, StructProp
@@ -64,9 +64,7 @@ __all__ = [
 
 
 class PLSelectionEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "start" / c.Optional(c.Int32ul), "end" / c.Optional(c.Int32ul)
-    ).compile()
+    STRUCT = c.Struct("start" / c.Optional(c.Int32ul), "end" / c.Optional(c.Int32ul)).compile()
 
 
 class PlaylistEvent(ListEventBase):
@@ -76,9 +74,7 @@ class PlaylistEvent(ListEventBase):
             "pattern_base" / c.Int16ul * "Always 20480",  # 6
             "item_index" / c.Int16ul,  # 8
             "length" / c.Int32ul,  # 12
-            "track_rvidx"
-            / c.Int16ul
-            * "Stored reversed i.e. Track 1 would be 499",  # 14
+            "track_rvidx" / c.Int16ul * "Stored reversed i.e. Track 1 would be 499",  # 14
             "group" / c.Int16ul,  # 16
             "_u1" / c.Bytes(2) * "Always (120, 0)",  # 18
             "item_flags" / c.Int16ul * "Always (64, 0)",  # 20
@@ -376,19 +372,21 @@ class Arrangement(EventModel):
 
     @property
     def tracks(self) -> Iterator[Track]:
-        pl_evt = raw_items = None
+        pl_evt = None
         max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
         channels = {channel.iid: channel for channel in self._kw["channels"]}
         patterns = {pattern.iid: pattern for pattern in self._kw["patterns"]}
 
         if ArrangementID.Playlist in self.events.ids:
             pl_evt = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
-            raw_items = tuple(pl_evt)  # Repeating this is quite slow
 
         for track_idx, ed in enumerate(self.events.divide(TrackID.Data, *TrackID)):
+            if pl_evt is None:
+                yield Track(ed, items=[])
+                continue
+
             items: list[PLItemBase] = []
-            for i, item in enumerate(raw_items or []):
-                pl_evt = cast(PlaylistEvent, pl_evt)
+            for i, item in enumerate(pl_evt):
                 if max_idx - item["track_rvidx"] != track_idx:
                     continue
 
@@ -478,10 +476,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             if e.id == ArrangementsID.Current:
                 return False  # Yield out last arrangement
 
-        yield from (
-            Arrangement(ed, **self._kw)
-            for ed in self.events.subtrees(select, len(self))
-        )
+        yield from (Arrangement(ed, **self._kw) for ed in self.events.subtrees(select, len(self)))
 
     def __len__(self) -> int:
         """The number of arrangements present in the project.
@@ -524,9 +519,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         *New in FL Studio v1.3.8*.
         """
         if ArrangementsID.PLSelection in self.events:
-            event = cast(
-                PLSelectionEvent, self.events.first(ArrangementsID.PLSelection)
-            )
+            event = cast(PLSelectionEvent, self.events.first(ArrangementsID.PLSelection))
             return event["start"], event["end"]
 
         if ArrangementsID._LoopPos in self.events:
@@ -535,16 +528,12 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
     @loop_pos.setter
     def loop_pos(self, value: tuple[int, int]) -> None:
         if ArrangementsID.PLSelection in self.events:
-            event = cast(
-                PLSelectionEvent, self.events.first(ArrangementsID.PLSelection)
-            )
+            event = cast(PLSelectionEvent, self.events.first(ArrangementsID.PLSelection))
             event["start"], event["end"] = value
         elif ArrangementsID._LoopPos in self.events:
             self.events.first(ArrangementsID._LoopPos).value = value
         else:
-            raise PropertyCannotBeSet(
-                ArrangementsID.PLSelection, ArrangementsID._LoopPos
-            )
+            raise PropertyCannotBeSet(ArrangementsID.PLSelection, ArrangementsID._LoopPos)
 
     @property
     def max_tracks(self) -> Literal[500, 199]:
