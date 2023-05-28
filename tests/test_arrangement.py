@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Callable
 
-import colour
 import pytest
 
+from pyflp._events import RGBA
 from pyflp.arrangement import (
     Arrangement,
     Arrangements,
@@ -42,9 +42,9 @@ def tracks(arrangement: Callable[[int], Arrangement]):
 def test_track_color(tracks: tuple[Track, ...]):
     for track in tracks:
         assert (
-            track.color == colour.Color("red")
+            track.color == RGBA(1.0, 0.0, 0.0, 0.0)
             if track.name == "Red"
-            else track.color == colour.Color("#485156")
+            else track.color == RGBA.from_bytes(bytes((72, 81, 86, 0)))
         )
 
 

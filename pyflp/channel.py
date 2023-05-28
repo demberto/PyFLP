@@ -25,7 +25,6 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Literal
 
-import colour
 import construct as c
 import construct_typed as ct
 
@@ -56,6 +55,7 @@ from ._events import (
     U16Event,
     U16TupleEvent,
     U32Event,
+    RGBA,
 )
 from ._models import (
     EventModel,
@@ -1202,7 +1202,7 @@ class Channel(EventModel):
     def __repr__(self) -> str:
         return f"{type(self).__name__} (name={self.display_name!r}, iid={self.iid})"
 
-    color = EventProp[colour.Color](PluginID.Color)
+    color = EventProp[RGBA](PluginID.Color)
     """Defaults to #5C656A (granite gray).
 
     ![](https://bit.ly/3SllDsG)

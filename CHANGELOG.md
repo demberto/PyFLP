@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Bunch of intermediate `EventBase` subclasses.
+- Removed dependency on `colour` library.
 
 ## [2.1.1] - 2023-05-24
 

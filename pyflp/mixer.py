@@ -20,7 +20,6 @@ import enum
 from collections import defaultdict
 from typing import Any, DefaultDict, Iterator, NamedTuple, cast
 
-import colour
 import construct as c
 import construct_typed as ct
 from typing_extensions import TypedDict, NotRequired, Unpack
@@ -45,6 +44,7 @@ from ._events import (
     I16Event,
     I32Event,
     ListEventBase,
+    RGBA,
     StructEventBase,
     T,
     U16Event,
@@ -227,7 +227,7 @@ class InsertEQBand(ModelBase, ModelReprMixin):
 
     @property
     def size(self) -> int:
-        return 12 * len(self._kw)   # ! TODO
+        return 12 * len(self._kw)  # ! TODO
 
     gain = _InsertEQBandProp()
     """
@@ -294,7 +294,7 @@ class InsertEQ(ModelBase, ModelReprMixin):
 
     @property
     def size(self) -> int:
-        return 12 * self._kw["param"]   # ! TODO
+        return 12 * self._kw["param"]  # ! TODO
 
     low = _InsertEQProp(
         _InsertEQPropArgs(
@@ -352,7 +352,7 @@ class Slot(EventModel):
     def __repr__(self) -> str:
         return f"Slot (name={self.name}, iid={self.index}, plugin={self.plugin!r})"
 
-    color = EventProp[colour.Color](PluginID.Color)
+    color = EventProp[RGBA](PluginID.Color)
     # TODO controllers = KWProp[List[RemoteController]]()
     iid = EventProp[int](SlotID.Index)
     """A 0-based internal index."""
@@ -453,7 +453,7 @@ class Insert(EventModel, ModelCollection[Slot]):
     channels_swapped = FlagProp(_InsertFlags.SwapLeftRight, InsertID.Flags)
     """Whether the left and right channels are swapped."""
 
-    color = EventProp[colour.Color](InsertID.Color)
+    color = EventProp[RGBA](InsertID.Color)
     """Defaults to #636C71 (granite gray) in FL Studio.
 
     ![](https://bit.ly/3yVKXPc)

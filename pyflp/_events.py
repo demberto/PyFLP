@@ -26,9 +26,17 @@ from collections import UserDict, UserList
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from itertools import zip_longest
-from typing import Any, ClassVar, Generic, Tuple, TypeVar, cast, TYPE_CHECKING
+from typing import (
+    Any,
+    ClassVar,
+    Generic,
+    NamedTuple,
+    Tuple,
+    TypeVar,
+    cast,
+    TYPE_CHECKING,
+)
 
-import colour
 import construct as c
 from sortedcontainers import SortedList
 from typing_extensions import Concatenate, Final, ParamSpec, TypeAlias
@@ -284,19 +292,29 @@ class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
     )
 
 
-class ColorEvent(DWordEventBase[colour.Color]):
-    """A 4 byte event which stores a color."""
-
-    CODEC: c.ExprAdapter[bytes, bytes, colour.Color, colour.Color] = c.ExprAdapter(
-        c.Bytes(4),
-        lambda obj, *_: ColorEvent.decode(obj),  # type: ignore
-        lambda obj, *_: ColorEvent.encode(obj),  # type: ignore
-    )
+class RGBA(NamedTuple):
+    red: float
+    green: float
+    blue: float
+    alpha: float
 
     @staticmethod
-    def decode(buf: bytes | bytes) -> colour.Color:
-        r, g, b = (c / 255 for c in buf[:3])
-        return colour.Color(rgb=(r, g, b))
+    def from_bytes(buf: bytes) -> RGBA:
+        return RGBA(*(c / 255 for c in buf))
+
+    def __bytes__(self) -> bytes:
+        return bytes(round(c * 255) for c in self)
+
+
+class ColorEvent(DWordEventBase[RGBA]):
+    """A 4 byte event which stores a color."""
+
+    STRUCT = c.ExprAdapter(
+        c.Bytes(4),
+        lambda obj, *_: RGBA.from_bytes(obj),  # type: ignore
+        lambda obj, *_: bytes(obj),  # type: ignore
+    )
+
 
 class StrEventBase(EventBase[str]):
     """Base class of events used for storing strings."""

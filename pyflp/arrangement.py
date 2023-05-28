@@ -29,7 +29,6 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Unpack
 
-import colour
 import construct as c
 import construct_typed as ct
 
@@ -37,10 +36,10 @@ from ._descriptors import EventProp, NestedProp, StdEnum, StructProp
 from ._events import (
     DATA,
     DWORD,
+    RGBA,
     TEXT,
     WORD,
     AnyEvent,
-    ColorEvent,
     EventEnum,
     EventTree,
     FourByteBool,
@@ -247,15 +246,14 @@ class PatternPLItem(PLItemBase, ModelReprMixin):
         self["item_index"] = pattern.iid + self["pattern_base"]
 
 
-class _TrackColorProp(StructProp[colour.Color]):
-    def _get(self, ev_or_ins: Any) -> colour.Color | None:
+class _TrackColorProp(StructProp[RGBA]):
+    def _get(self, ev_or_ins: Any) -> RGBA | None:
         value = cast(Optional[int], super()._get(ev_or_ins))
         if value is not None:
-            return ColorEvent.decode(bytearray(value.to_bytes(4, "little")))
+            return RGBA.from_bytes(value.to_bytes(4, "little"))
 
-    def _set(self, ev_or_ins: Any, value: colour.Color) -> None:
-        color_u32 = int.from_bytes(ColorEvent.encode(value), "little")
-        super()._set(ev_or_ins, color_u32)  # type: ignore
+    def _set(self, ev_or_ins: Any, value: RGBA) -> None:
+        super()._set(ev_or_ins, int.from_bytes(bytes(value), "little"))  # type: ignore
 
 
 class _TrackKW(TypedDict):

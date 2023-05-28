@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import colour
-
+from pyflp._events import RGBA
 from pyflp.pattern import Pattern, PatternID, Patterns
 
 from .conftest import get_model
@@ -18,7 +17,7 @@ def test_patterns(patterns: Patterns):
 
 
 def test_pattern_color(patterns: Patterns):
-    assert patterns[2].color == colour.Color("#00FF00")
+    assert patterns[2].color == RGBA(0.0, 1.0, 0.0, 0.0)
 
 
 def test_pattern_names(patterns: Patterns):

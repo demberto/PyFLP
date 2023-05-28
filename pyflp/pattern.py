@@ -19,13 +19,13 @@ import enum
 from collections import defaultdict
 from typing import DefaultDict, Iterator, cast
 
-import colour
 import construct as c
 
 from ._descriptors import EventProp, FlagProp, StdEnum, StructProp
 from ._events import (
     DATA,
     DWORD,
+    RGBA,
     TEXT,
     WORD,
     BoolEvent,
@@ -255,7 +255,7 @@ class Pattern(EventModel):
             f"{num_notes} notes, {num_ctrls} controllers)"
         )
 
-    color = EventProp[colour.Color](PatternID.Color)
+    color = EventProp[RGBA](PatternID.Color)
     """Returns a colour if one is set while saving the project file, else ``None``.
 
     ![](https://bit.ly/3eNeSSW)

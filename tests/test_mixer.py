@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import cast
 
-import colour
-
+from pyflp._events import RGBA
 from pyflp.mixer import Insert, InsertDock, Mixer, MixerID, MixerParamsEvent
 
 from .conftest import get_model
@@ -32,7 +31,7 @@ def test_insert_channels_swapped():
 
 
 def test_insert_color():
-    assert get_insert("colored.fst").color == colour.Color("#FF1414")
+    assert get_insert("colored.fst").color == RGBA.from_bytes(bytes((255, 20, 20, 0)))
 
 
 def test_insert_dock(inserts: tuple[Insert, ...]):
