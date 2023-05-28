@@ -16,14 +16,13 @@
 from __future__ import annotations
 
 import abc
-import dataclasses
 import functools
-from typing import Any, Callable, Generic, Iterable, Sequence, TypeVar, overload, Union
+from typing import Any, Callable, Generic, Iterable, Sequence, TypeVar, Union, overload
 
 import construct as c
 from typing_extensions import Protocol, runtime_checkable
 
-from ._events import EventTree, StructEventBase, ListEventBase
+from pyflp._events import EventTree, ListEventBase, StructEventBase
 
 VE = TypeVar("VE", bound=Union[StructEventBase, ListEventBase])
 
@@ -122,17 +121,3 @@ class ModelReprMixin:
 
         params = ", ".join([f"{k}={v!r}" for k, v in mapping.items()])
         return f"{type(self).__name__}({params})"
-
-
-@dataclasses.dataclass(frozen=True, order=True)
-class FLVersion:
-    major: int
-    minor: int = 0
-    patch: int = 0
-    build: int | None = None
-
-    def __str__(self) -> str:
-        version = f"{self.major}.{self.minor}.{self.patch}"
-        if self.build is not None:
-            return f"{version}.{self.build}"
-        return version

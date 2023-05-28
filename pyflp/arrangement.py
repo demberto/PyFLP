@@ -16,51 +16,40 @@
 from __future__ import annotations
 
 import enum
-import sys
 from typing import Any, Iterator, Optional, cast
-
-if sys.version_info >= (3, 8):
-    from typing import Literal, TypedDict
-else:
-    from typing_extensions import Literal, TypedDict
-
-if sys.version_info >= (3, 11):
-    from typing import Unpack
-else:
-    from typing_extensions import Unpack
 
 import construct as c
 import construct_typed as ct
+from typing_extensions import Literal, TypedDict, Unpack
 
-from ._descriptors import EventProp, NestedProp, StdEnum, StructProp
-from ._events import (
+from pyflp._adapters import FourByteBool, StdEnum
+from pyflp._descriptors import EventProp, NestedProp, StructProp
+from pyflp._events import (
     DATA,
     DWORD,
-    RGBA,
     TEXT,
     WORD,
     AnyEvent,
     EventEnum,
     EventTree,
-    FourByteBool,
     ListEventBase,
     StructEventBase,
     U8Event,
     U16Event,
     U16TupleEvent,
 )
-from ._models import (
+from pyflp._models import (
     EventModel,
-    FLVersion,
     ItemModel,
     ModelCollection,
     ModelReprMixin,
     supports_slice,
 )
-from .channel import Channel, ChannelRack
-from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .pattern import Pattern, Patterns
-from .timemarker import TimeMarker, TimeMarkerID
+from pyflp.channel import Channel, ChannelRack
+from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
+from pyflp.pattern import Pattern, Patterns
+from pyflp.timemarker import TimeMarker, TimeMarkerID
+from pyflp.types import RGBA, FLVersion
 
 __all__ = [
     "Arrangements",

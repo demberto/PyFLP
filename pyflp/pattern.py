@@ -21,11 +21,11 @@ from typing import DefaultDict, Iterator, cast
 
 import construct as c
 
-from ._descriptors import EventProp, FlagProp, StdEnum, StructProp
-from ._events import (
+from pyflp._adapters import StdEnum
+from pyflp._descriptors import EventProp, FlagProp, StructProp
+from pyflp._events import (
     DATA,
     DWORD,
-    RGBA,
     TEXT,
     WORD,
     BoolEvent,
@@ -38,15 +38,16 @@ from ._events import (
     U16Event,
     U32Event,
 )
-from ._models import (
+from pyflp._models import (
     EventModel,
     ItemModel,
     ModelCollection,
     ModelReprMixin,
     supports_slice,
 )
-from .exceptions import ModelNotFound, NoModelsFound
-from .timemarker import TimeMarker, TimeMarkerID
+from pyflp.exceptions import ModelNotFound, NoModelsFound
+from pyflp.timemarker import TimeMarker, TimeMarkerID
+from pyflp.types import RGBA
 
 __all__ = ["Note", "Controller", "Pattern", "Patterns"]
 

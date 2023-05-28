@@ -16,20 +16,16 @@
 from __future__ import annotations
 
 import enum
-import sys
 import warnings
 from typing import Any, ClassVar, Dict, Generic, TypeVar, cast
 
-if sys.version_info >= (3, 8):
-    from typing import Literal, Protocol, runtime_checkable
-else:
-    from typing_extensions import Literal, Protocol, runtime_checkable
-
 import construct as c
 import construct_typed as ct
+from typing_extensions import Literal, Protocol, runtime_checkable
 
-from ._descriptors import FlagProp, NamedPropMixin, RWProperty, StdEnum, StructProp
-from ._events import (
+from pyflp._adapters import FourByteBool, StdEnum
+from pyflp._descriptors import FlagProp, NamedPropMixin, RWProperty, StructProp
+from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
@@ -37,13 +33,12 @@ from ._events import (
     ColorEvent,
     EventEnum,
     EventTree,
-    FourByteBool,
     StructEventBase,
-    T,
     U32Event,
     UnknownDataEvent,
 )
-from ._models import EventModel, ModelReprMixin
+from pyflp._models import EventModel, ModelReprMixin
+from pyflp.types import T
 
 __all__ = [
     "BooBass",

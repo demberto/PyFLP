@@ -26,26 +26,18 @@ from collections import UserDict, UserList
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from itertools import zip_longest
-from typing import (
-    Any,
-    ClassVar,
-    Generic,
-    NamedTuple,
-    Tuple,
-    TypeVar,
-    cast,
-    TYPE_CHECKING,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Tuple, cast
 
 import construct as c
 from sortedcontainers import SortedList
-from typing_extensions import Concatenate, Final, ParamSpec, TypeAlias
+from typing_extensions import Concatenate, Final, TypeAlias
 
-from .exceptions import (
+from pyflp.exceptions import (
     EventIDOutOfRange,
     InvalidEventChunkSize,
     PropertyCannotBeSet,
 )
+from pyflp.types import RGBA, P, T
 
 BYTE: Final = 0
 WORD: Final = 64
@@ -56,13 +48,6 @@ NEW_TEXT_IDS: Final = (
     TEXT + 49,  # ArrangementID.Name
     TEXT + 39,  # DisplayGroupID.Name
     TEXT + 47,  # TrackID.Name
-)
-
-P = ParamSpec("P")
-T = TypeVar("T")
-T_co = TypeVar("T_co", covariant=True)
-FourByteBool: c.ExprAdapter[int, int, bool, int] = c.ExprAdapter(
-    c.Int32ul, lambda obj_, *_: bool(obj_), lambda obj_, *_: int(obj_)  # type: ignore
 )
 
 
@@ -290,20 +275,6 @@ class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
         lambda obj_, *_: tuple(obj_),  # type: ignore
         lambda obj_, *_: list(obj_),  # type: ignore
     )
-
-
-class RGBA(NamedTuple):
-    red: float
-    green: float
-    blue: float
-    alpha: float
-
-    @staticmethod
-    def from_bytes(buf: bytes) -> RGBA:
-        return RGBA(*(c / 255 for c in buf))
-
-    def __bytes__(self) -> bytes:
-        return bytes(round(c * 255) for c in self)
 
 
 class ColorEvent(DWordEventBase[RGBA]):

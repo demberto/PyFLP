@@ -20,8 +20,8 @@ from typing import cast
 
 import construct as c
 
-from ._events import DATA, EventEnum, StructEventBase
-from ._models import EventModel, ModelReprMixin
+from pyflp._events import DATA, EventEnum, StructEventBase
+from pyflp._models import EventModel, ModelReprMixin
 
 __all__ = ["RemoteController"]
 

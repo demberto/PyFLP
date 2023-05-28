@@ -17,30 +17,15 @@ from __future__ import annotations
 
 import enum
 import pathlib
-import sys
 from typing import Any, Iterator, Tuple, cast
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
 
 import construct as c
 import construct_typed as ct
+from typing_extensions import Literal
 
-from ._descriptors import (
-    EventProp,
-    FlagProp,
-    LinearMusical,
-    List2Tuple,
-    Log2,
-    LogNormal,
-    MusicalTime,
-    NestedProp,
-    StdEnum,
-    StructProp,
-)
-from ._events import (
+from pyflp._adapters import LinearMusical, List2Tuple, Log2, LogNormal, StdEnum
+from pyflp._descriptors import EventProp, FlagProp, NestedProp, StructProp
+from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
@@ -55,17 +40,17 @@ from ._events import (
     U16Event,
     U16TupleEvent,
     U32Event,
-    RGBA,
 )
-from ._models import (
+from pyflp._models import (
     EventModel,
     ItemModel,
     ModelCollection,
     ModelReprMixin,
     supports_slice,
 )
-from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .plugin import BooBass, FruitKick, Plucked, PluginID, PluginProp, VSTPlugin
+from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
+from pyflp.plugin import BooBass, FruitKick, Plucked, PluginID, PluginProp, VSTPlugin
+from pyflp.types import MusicalTime, RGBA
 
 __all__ = [
     "ArpDirection",

@@ -22,17 +22,17 @@ from typing import Any, DefaultDict, Iterator, NamedTuple, cast
 
 import construct as c
 import construct_typed as ct
-from typing_extensions import TypedDict, NotRequired, Unpack
+from typing_extensions import NotRequired, TypedDict, Unpack
 
-from ._descriptors import (
+from pyflp._adapters import StdEnum
+from pyflp._descriptors import (
     EventProp,
     FlagProp,
     NamedPropMixin,
     ROProperty,
     RWProperty,
-    StdEnum,
 )
-from ._events import (
+from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
@@ -44,19 +44,18 @@ from ._events import (
     I16Event,
     I32Event,
     ListEventBase,
-    RGBA,
     StructEventBase,
-    T,
     U16Event,
 )
-from ._models import (
+from pyflp._models import (
     EventModel,
-    FLVersion,
     ModelBase,
     ModelCollection,
     ModelReprMixin,
     supports_slice,
 )
+from pyflp.types import RGBA, FLVersion, T
+
 from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from .plugin import (
     FruityBalance,
@@ -73,14 +72,7 @@ from .plugin import (
     VSTPlugin,
 )
 
-__all__ = [
-    "Insert",
-    "InsertDock",
-    "InsertEQ",
-    "InsertEQBand",
-    "Mixer",
-    "Slot",
-]
+__all__ = ["Insert", "InsertDock", "InsertEQ", "InsertEQBand", "Mixer", "Slot"]
 
 
 @enum.unique
