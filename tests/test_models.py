@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pyflp._models import FLVersion
+from pyflp.types import FLVersion
 
 
 def test_flversion():

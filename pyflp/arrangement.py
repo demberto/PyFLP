@@ -16,52 +16,40 @@
 from __future__ import annotations
 
 import enum
-import sys
-from typing import Any, Iterator, Optional, cast
+from typing import Any, Iterator, Literal, Optional, cast
 
-if sys.version_info >= (3, 8):
-    from typing import Literal, TypedDict
-else:
-    from typing_extensions import Literal, TypedDict
-
-if sys.version_info >= (3, 11):
-    from typing import Unpack
-else:
-    from typing_extensions import Unpack
-
-import colour
 import construct as c
 import construct_typed as ct
+from typing_extensions import TypedDict, Unpack
 
-from ._descriptors import EventProp, NestedProp, StdEnum, StructProp
-from ._events import (
+from pyflp._adapters import FourByteBool, StdEnum
+from pyflp._descriptors import EventProp, NestedProp, StructProp
+from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
     WORD,
     AnyEvent,
-    ColorEvent,
     EventEnum,
     EventTree,
-    FourByteBool,
     ListEventBase,
     StructEventBase,
     U8Event,
     U16Event,
     U16TupleEvent,
 )
-from ._models import (
+from pyflp._models import (
     EventModel,
-    FLVersion,
     ItemModel,
     ModelCollection,
     ModelReprMixin,
     supports_slice,
 )
-from .channel import Channel, ChannelRack
-from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .pattern import Pattern, Patterns
-from .timemarker import TimeMarker, TimeMarkerID
+from pyflp.channel import Channel, ChannelRack
+from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
+from pyflp.pattern import Pattern, Patterns
+from pyflp.timemarker import TimeMarker, TimeMarkerID
+from pyflp.types import RGBA, FLVersion
 
 __all__ = [
     "Arrangements",
@@ -76,26 +64,26 @@ __all__ = [
 
 
 class PLSelectionEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "start" / c.Optional(c.Int32ul), "end" / c.Optional(c.Int32ul)
-    ).compile()
+    STRUCT = c.Struct("start" / c.Optional(c.Int32ul), "end" / c.Optional(c.Int32ul)).compile()
 
 
 class PlaylistEvent(ListEventBase):
-    STRUCT = c.Struct(
-        "position" / c.Int32ul,  # 4
-        "pattern_base" / c.Int16ul * "Always 20480",  # 6
-        "item_index" / c.Int16ul,  # 8
-        "length" / c.Int32ul,  # 12
-        "track_rvidx" / c.Int16ul * "Stored reversed i.e. Track 1 would be 499",  # 14
-        "group" / c.Int16ul,  # 16
-        "_u1" / c.Bytes(2) * "Always (120, 0)",  # 18
-        "item_flags" / c.Int16ul * "Always (64, 0)",  # 20
-        "_u2" / c.Bytes(4) * "Always (64, 100, 128, 128)",  # 24
-        "start_offset" / c.Float32l,  # 28
-        "end_offset" / c.Float32l,  # 32
-        "_u3" / c.If(c.this._params["new"], c.Bytes(28)) * "New in FL 21",  # 60
-    ).compile()
+    STRUCT = c.GreedyRange(
+        c.Struct(
+            "position" / c.Int32ul,  # 4
+            "pattern_base" / c.Int16ul * "Always 20480",  # 6
+            "item_index" / c.Int16ul,  # 8
+            "length" / c.Int32ul,  # 12
+            "track_rvidx" / c.Int16ul * "Stored reversed i.e. Track 1 would be 499",  # 14
+            "group" / c.Int16ul,  # 16
+            "_u1" / c.Bytes(2) * "Always (120, 0)",  # 18
+            "item_flags" / c.Int16ul * "Always (64, 0)",  # 20
+            "_u2" / c.Bytes(4) * "Always (64, 100, 128, 128)",  # 24
+            "start_offset" / c.Float32l,  # 28
+            "end_offset" / c.Float32l,  # 32
+            "_u3" / c.If(c.this._params["new"], c.Bytes(28)) * "New in FL 21",  # 60
+        )
+    )
     SIZES = [32, 60]
 
     def __init__(self, id: EventEnum, data: bytes) -> None:
@@ -243,15 +231,14 @@ class PatternPLItem(PLItemBase, ModelReprMixin):
         self["item_index"] = pattern.iid + self["pattern_base"]
 
 
-class _TrackColorProp(StructProp[colour.Color]):
-    def _get(self, ev_or_ins: Any) -> colour.Color | None:
+class _TrackColorProp(StructProp[RGBA]):
+    def _get(self, ev_or_ins: Any) -> RGBA | None:
         value = cast(Optional[int], super()._get(ev_or_ins))
         if value is not None:
-            return ColorEvent.decode(bytearray(value.to_bytes(4, "little")))
+            return RGBA.from_bytes(value.to_bytes(4, "little"))
 
-    def _set(self, ev_or_ins: Any, value: colour.Color) -> None:
-        color_u32 = int.from_bytes(ColorEvent.encode(value), "little")
-        super()._set(ev_or_ins, color_u32)  # type: ignore
+    def _set(self, ev_or_ins: Any, value: RGBA) -> None:
+        super()._set(ev_or_ins, int.from_bytes(bytes(value), "little"))  # type: ignore
 
 
 class _TrackKW(TypedDict):
@@ -385,19 +372,21 @@ class Arrangement(EventModel):
 
     @property
     def tracks(self) -> Iterator[Track]:
-        pl_evt = raw_items = None
+        pl_evt = None
         max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
         channels = {channel.iid: channel for channel in self._kw["channels"]}
         patterns = {pattern.iid: pattern for pattern in self._kw["patterns"]}
 
         if ArrangementID.Playlist in self.events.ids:
             pl_evt = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
-            raw_items = tuple(pl_evt)  # Repeating this is quite slow
 
         for track_idx, ed in enumerate(self.events.divide(TrackID.Data, *TrackID)):
+            if pl_evt is None:
+                yield Track(ed, items=[])
+                continue
+
             items: list[PLItemBase] = []
-            for i, item in enumerate(raw_items or []):
-                pl_evt = cast(PlaylistEvent, pl_evt)
+            for i, item in enumerate(pl_evt):
                 if max_idx - item["track_rvidx"] != track_idx:
                     continue
 
@@ -487,10 +476,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             if e.id == ArrangementsID.Current:
                 return False  # Yield out last arrangement
 
-        yield from (
-            Arrangement(ed, **self._kw)
-            for ed in self.events.subtrees(select, len(self))
-        )
+        yield from (Arrangement(ed, **self._kw) for ed in self.events.subtrees(select, len(self)))
 
     def __len__(self) -> int:
         """The number of arrangements present in the project.
@@ -533,9 +519,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         *New in FL Studio v1.3.8*.
         """
         if ArrangementsID.PLSelection in self.events:
-            event = cast(
-                PLSelectionEvent, self.events.first(ArrangementsID.PLSelection)
-            )
+            event = cast(PLSelectionEvent, self.events.first(ArrangementsID.PLSelection))
             return event["start"], event["end"]
 
         if ArrangementsID._LoopPos in self.events:
@@ -544,16 +528,12 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
     @loop_pos.setter
     def loop_pos(self, value: tuple[int, int]) -> None:
         if ArrangementsID.PLSelection in self.events:
-            event = cast(
-                PLSelectionEvent, self.events.first(ArrangementsID.PLSelection)
-            )
+            event = cast(PLSelectionEvent, self.events.first(ArrangementsID.PLSelection))
             event["start"], event["end"] = value
         elif ArrangementsID._LoopPos in self.events:
             self.events.first(ArrangementsID._LoopPos).value = value
         else:
-            raise PropertyCannotBeSet(
-                ArrangementsID.PLSelection, ArrangementsID._LoopPos
-            )
+            raise PropertyCannotBeSet(ArrangementsID.PLSelection, ArrangementsID._LoopPos)
 
     @property
     def max_tracks(self) -> Literal[500, 199]:

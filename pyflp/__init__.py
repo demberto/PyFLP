@@ -37,7 +37,7 @@ import sys
 
 import construct as c
 
-from ._events import (
+from pyflp._events import (
     DATA,
     DWORD,
     NEW_TEXT_IDS,
@@ -54,9 +54,9 @@ from ._events import (
     UnicodeEvent,
     UnknownDataEvent,
 )
-from .exceptions import HeaderCorrupted, VersionNotDetected
-from .plugin import PluginID, get_event_by_internal_name
-from .project import VALID_PPQS, FileFormat, Project, ProjectID
+from pyflp.exceptions import HeaderCorrupted, VersionNotDetected
+from pyflp.plugin import PluginID, get_event_by_internal_name
+from pyflp.project import VALID_PPQS, FileFormat, Project, ProjectID
 
 __all__ = ["parse", "save"]
 
@@ -69,8 +69,6 @@ if sys.version_info < (3, 11):  # https://github.com/Bobronium/fastenum/issues/2
 
 
 def parse(file: pathlib.Path | str) -> Project:
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-statements
     """Parses an FL Studio project file and returns a parsed :class:`Project`.
 
     Args:

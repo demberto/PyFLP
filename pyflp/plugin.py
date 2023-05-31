@@ -16,20 +16,15 @@
 from __future__ import annotations
 
 import enum
-import sys
 import warnings
-from typing import Any, ClassVar, Dict, Generic, TypeVar, cast
-
-if sys.version_info >= (3, 8):
-    from typing import Literal, Protocol, runtime_checkable
-else:
-    from typing_extensions import Literal, Protocol, runtime_checkable
+from typing import Any, ClassVar, Dict, Generic, Literal, Protocol, TypeVar, cast, runtime_checkable
 
 import construct as c
 import construct_typed as ct
 
-from ._descriptors import FlagProp, NamedPropMixin, RWProperty, StdEnum, StructProp
-from ._events import (
+from pyflp._adapters import FourByteBool, StdEnum
+from pyflp._descriptors import FlagProp, NamedPropMixin, RWProperty, StructProp
+from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
@@ -37,13 +32,12 @@ from ._events import (
     ColorEvent,
     EventEnum,
     EventTree,
-    FourByteBool,
     StructEventBase,
-    T,
     U32Event,
     UnknownDataEvent,
 )
-from ._models import EventModel, ModelReprMixin
+from pyflp._models import EventModel, ModelReprMixin
+from pyflp.types import T
 
 __all__ = [
     "BooBass",
@@ -107,8 +101,7 @@ class FruityBalanceEvent(StructEventBase):
 
 class FruityBloodOverdriveEvent(StructEventBase):
     STRUCT = c.Struct(
-        "plugin_marker"
-        / c.If(c.this._.len == 36, c.Bytes(4)),  # redesigned native plugin marker
+        "plugin_marker" / c.If(c.this._.len == 36, c.Bytes(4)),  # redesigned native plugin marker
         "pre_band" / c.Int32ul,
         "color" / c.Int32ul,
         "pre_amp" / c.Int32ul,
@@ -122,8 +115,7 @@ class FruityBloodOverdriveEvent(StructEventBase):
 
 class FruityCenterEvent(StructEventBase):
     STRUCT = c.Struct(
-        "_u1" / c.If(c.this._.len == 8, c.Bytes(4)),
-        "enabled" / FourByteBool,
+        "_u1" / c.If(c.this._.len == 8, c.Bytes(4)), "enabled" / FourByteBool
     ).compile()
 
 
@@ -300,7 +292,7 @@ class VSTPluginEvent(StructEventBase):
                 "id" / StdEnum[_VSTPluginEventID](c.Int32ul),
                 # ! Using a c.Select or c.IfThenElse doesn't work here
                 # Check https://github.com/construct/construct/issues/993
-                "data"
+                "data"  # pyright: ignore
                 / c.Prefixed(
                     c.Int64ul,
                     c.Switch(
@@ -841,9 +833,7 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     """
 
 
-class FruityBloodOverdrive(
-    _PluginBase[FruityBloodOverdriveEvent], _IPlugin, ModelReprMixin
-):
+class FruityBloodOverdrive(_PluginBase[FruityBloodOverdriveEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3LnS1LE)"""
 
     INTERNAL_NAME = "Fruity Blood Overdrive"
@@ -1042,9 +1032,7 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
     """
 
 
-class FruityStereoEnhancer(
-    _PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin
-):
+class FruityStereoEnhancer(_PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin):
     """![](https://bit.ly/3DoHvji)"""
 
     INTERNAL_NAME = "Fruity Stereo Enhancer"

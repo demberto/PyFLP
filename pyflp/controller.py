@@ -20,8 +20,8 @@ from typing import cast
 
 import construct as c
 
-from ._events import DATA, EventEnum, StructEventBase
-from ._models import EventModel, ModelReprMixin
+from pyflp._events import DATA, EventEnum, StructEventBase
+from pyflp._models import EventModel, ModelReprMixin
 
 __all__ = ["RemoteController"]
 
@@ -57,10 +57,10 @@ class RemoteController(EventModel, ModelReprMixin):
     @property
     def parameter(self) -> int | None:
         """The ID of the plugin parameter to which controller is linked to."""
-        value = cast(StructEventBase, self.events.first(ControllerID.Remote))[
-            "parameter_data"
-        ]
-        if value is not None:
+        if (
+            value := cast(StructEventBase, self.events.first(ControllerID.Remote))["parameter_data"]
+            is not None
+        ):
             return value & 0x7FFF
 
     @property
@@ -69,8 +69,8 @@ class RemoteController(EventModel, ModelReprMixin):
 
         None when linked to a plugin parameter on an insert slot.
         """
-        value = cast(StructEventBase, self.events.first(ControllerID.Remote))[
-            "parameter_data"
-        ]
-        if value is not None:
+        if (
+            value := cast(StructEventBase, self.events.first(ControllerID.Remote))["parameter_data"]
+            is not None
+        ):
             return (value & 0x8000) > 0

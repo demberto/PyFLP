@@ -17,60 +17,33 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import sys
-import warnings
 from collections import defaultdict
 from typing import Any, DefaultDict, Iterator, NamedTuple, cast
 
-if sys.version_info >= (3, 8):
-    from typing import TypedDict
-else:
-    from typing_extensions import TypedDict
-
-if sys.version_info >= (3, 11):
-    from typing import NotRequired, Unpack
-else:
-    from typing_extensions import NotRequired, Unpack
-
-import colour
 import construct as c
 import construct_typed as ct
+from typing_extensions import NotRequired, TypedDict, Unpack
 
-from ._descriptors import (
-    EventProp,
-    FlagProp,
-    NamedPropMixin,
-    ROProperty,
-    RWProperty,
-    StdEnum,
-)
-from ._events import (
+from pyflp._adapters import StdEnum
+from pyflp._descriptors import EventProp, FlagProp, NamedPropMixin, ROProperty, RWProperty
+from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
     WORD,
     AnyEvent,
     ColorEvent,
-    DataEventBase,
     EventEnum,
     EventTree,
     I16Event,
     I32Event,
     ListEventBase,
     StructEventBase,
-    T,
     U16Event,
 )
-from ._models import (
-    EventModel,
-    FLVersion,
-    ModelBase,
-    ModelCollection,
-    ModelReprMixin,
-    supports_slice,
-)
-from .exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from .plugin import (
+from pyflp._models import EventModel, ModelBase, ModelCollection, ModelReprMixin, supports_slice
+from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
+from pyflp.plugin import (
     FruityBalance,
     FruityBloodOverdrive,
     FruityCenter,
@@ -84,15 +57,9 @@ from .plugin import (
     Soundgoodizer,
     VSTPlugin,
 )
+from pyflp.types import RGBA, FLVersion, T
 
-__all__ = [
-    "Insert",
-    "InsertDock",
-    "InsertEQ",
-    "InsertEQBand",
-    "Mixer",
-    "Slot",
-]
+__all__ = ["Insert", "InsertDock", "InsertEQ", "InsertEQBand", "Mixer", "Slot"]
 
 
 @enum.unique
@@ -144,7 +111,7 @@ class InsertFlagsEvent(StructEventBase):
 
 
 class InsertRoutingEvent(ListEventBase):
-    STRUCT = c.Struct("is_routed" / c.Flag).compile()
+    STRUCT = c.GreedyRange(c.Flag)
 
 
 @dataclasses.dataclass
@@ -155,40 +122,31 @@ class _InsertItems:
     own: dict[int, dict[str, Any]] = dataclasses.field(default_factory=dict)
 
 
-class MixerParamsEvent(DataEventBase):
-    STRUCT = c.Struct(
-        "_u4" / c.Bytes(4),  # 4
-        "id" / StdEnum[_MixerParamsID](c.Byte),  # 5
-        "_u1" / c.Byte,  # 6
-        "channel_data" / c.Int16ul,  # 8
-        "msg" / c.Int32sl,  # 12
-    ).compile()
-    STRUCT_SIZE = STRUCT.sizeof()
+class MixerParamsEvent(ListEventBase):
+    STRUCT = c.GreedyRange(
+        c.Struct(
+            "_u4" / c.Bytes(4),  # 4
+            "id" / StdEnum[_MixerParamsID](c.Byte),  # 5
+            "_u1" / c.Byte,  # 6
+            "channel_data" / c.Int16ul,  # 8
+            "msg" / c.Int32sl,  # 12
+        )
+    )
 
     def __init__(self, id: Any, data: bytearray) -> None:
         super().__init__(id, data)
-        self.items: DefaultDict[int, _InsertItems] = defaultdict(_InsertItems)
-        self.unparsed = False
+        self.items_: DefaultDict[int, _InsertItems] = defaultdict(_InsertItems)
 
-        if not len(data) % self.STRUCT_SIZE:
-            for i in range(len(data) // self.STRUCT_SIZE):
-                offset = self.STRUCT_SIZE * i
-                item = self.STRUCT.parse(data[offset : offset + self.STRUCT_SIZE])
-                insert_idx = (item["channel_data"] >> 6) & 0x7F
-                slot_idx = item["channel_data"] & 0x3F
-                insert = self.items[insert_idx]
-                id = item["id"]
+        for item in self.data:
+            insert_idx = (item["channel_data"] >> 6) & 0x7F
+            slot_idx = item["channel_data"] & 0x3F
+            insert = self.items_[insert_idx]
+            id = item["id"]
 
-                if id in (_MixerParamsID.SlotEnabled, _MixerParamsID.SlotMix):
-                    insert.slots[slot_idx][id] = item
-                else:
-                    insert.own[id] = item
-        else:
-            self.unparsed = True
-            warnings.warn(
-                f"Cannot parse event {id} as event "
-                "size is not a multiple of struct size"
-            )
+            if id in (_MixerParamsID.SlotEnabled, _MixerParamsID.SlotMix):
+                insert.slots[slot_idx][id] = item
+            else:
+                insert.own[id] = item
 
 
 @enum.unique
@@ -248,7 +206,7 @@ class InsertEQBand(ModelBase, ModelReprMixin):
 
     @property
     def size(self) -> int:
-        return MixerParamsEvent.STRUCT_SIZE * len(self._kw)
+        return 12 * len(self._kw)  # ! TODO
 
     gain = _InsertEQBandProp()
     """
@@ -315,32 +273,26 @@ class InsertEQ(ModelBase, ModelReprMixin):
 
     @property
     def size(self) -> int:
-        return MixerParamsEvent.STRUCT_SIZE * self._kw["param"]
+        return 12 * self._kw["param"]  # ! TODO
 
     low = _InsertEQProp(
-        _InsertEQPropArgs(
-            _MixerParamsID.LowFreq, _MixerParamsID.LowGain, _MixerParamsID.LowQ
-        )
+        _InsertEQPropArgs(_MixerParamsID.LowFreq, _MixerParamsID.LowGain, _MixerParamsID.LowQ)
     )
     """Low shelf band. Default frequency - 5777 (90 Hz)."""
 
     mid = _InsertEQProp(
-        _InsertEQPropArgs(
-            _MixerParamsID.MidFreq, _MixerParamsID.MidGain, _MixerParamsID.MidQ
-        )
+        _InsertEQPropArgs(_MixerParamsID.MidFreq, _MixerParamsID.MidGain, _MixerParamsID.MidQ)
     )
     """Middle band. Default frequency - 33145 (1500 Hz)."""
 
     high = _InsertEQProp(
-        _InsertEQPropArgs(
-            _MixerParamsID.HighFreq, _MixerParamsID.HighGain, _MixerParamsID.HighQ
-        )
+        _InsertEQPropArgs(_MixerParamsID.HighFreq, _MixerParamsID.HighGain, _MixerParamsID.HighQ)
     )
     """High shelf band. Default frequency - 55825 (8000 Hz)."""
 
 
 class _MixerParamProp(RWProperty[T]):
-    def __init__(self, id: int) -> None:  # pylint: disable=super-init-not-called
+    def __init__(self, id: int) -> None:
         self._id = id
 
     def __get__(self, ins: Insert, owner: object = None) -> T | None:
@@ -365,15 +317,13 @@ class Slot(EventModel):
     ![](https://bit.ly/3RUDtTu)
     """
 
-    def __init__(
-        self, events: EventTree, params: list[dict[str, Any]] | None = None
-    ) -> None:
+    def __init__(self, events: EventTree, params: list[dict[str, Any]] | None = None) -> None:
         super().__init__(events, params=params or [])
 
     def __repr__(self) -> str:
         return f"Slot (name={self.name}, iid={self.index}, plugin={self.plugin!r})"
 
-    color = EventProp[colour.Color](PluginID.Color)
+    color = EventProp[RGBA](PluginID.Color)
     # TODO controllers = KWProp[List[RemoteController]]()
     iid = EventProp[int](SlotID.Index)
     """A 0-based internal index."""
@@ -474,7 +424,7 @@ class Insert(EventModel, ModelCollection[Slot]):
     channels_swapped = FlagProp(_InsertFlags.SwapLeftRight, InsertID.Flags)
     """Whether the left and right channels are swapped."""
 
-    color = EventProp[colour.Color](InsertID.Color)
+    color = EventProp[RGBA](InsertID.Color)
     """Defaults to #636C71 (granite gray) in FL Studio.
 
     ![](https://bit.ly/3yVKXPc)
@@ -567,7 +517,7 @@ class Insert(EventModel, ModelCollection[Slot]):
         for id, item in cast(_InsertItems, self._kw["params"]).own.items():
             if id >= _MixerParamsID.RouteVolStart:
                 try:
-                    cond = next(items)["is_routed"]
+                    cond = next(items)
                 except StopIteration:
                     continue
                 else:
@@ -657,7 +607,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
 
         params: dict[int, _InsertItems] = {}
         if MixerID.Params in self.events.ids:
-            params = cast(MixerParamsEvent, self.events.first(MixerID.Params)).items
+            params = cast(MixerParamsEvent, self.events.first(MixerID.Params)).items_
 
         for i, ed in enumerate(self.events.subtrees(select, self.max_inserts)):
             if i in params:

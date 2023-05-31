@@ -19,24 +19,14 @@ import datetime
 import enum
 import math
 import pathlib
-import sys
-from typing import cast
-
-if sys.version_info >= (3, 8):
-    from typing import Final, Literal, TypedDict
-else:
-    from typing_extensions import Final, Literal, TypedDict
-
-if sys.version_info >= (3, 11):
-    from typing import Unpack
-else:
-    from typing_extensions import Unpack
+from typing import Final, Literal, cast
 
 import construct as c
 import construct_typed as ct
+from typing_extensions import TypedDict, Unpack
 
-from ._descriptors import EventProp, KWProp
-from ._events import (
+from pyflp._descriptors import EventProp, KWProp
+from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
@@ -52,14 +42,15 @@ from ._events import (
     U8Event,
     U32Event,
 )
-from ._models import EventModel, FLVersion
-from .arrangement import ArrangementID, Arrangements, ArrangementsID, TrackID
-from .channel import ChannelID, ChannelRack, DisplayGroupID, RackID
-from .exceptions import PropertyCannotBeSet
-from .mixer import InsertID, Mixer, MixerID, SlotID
-from .pattern import PatternID, Patterns, PatternsID
-from .plugin import PluginID
-from .timemarker import TimeMarkerID
+from pyflp._models import EventModel
+from pyflp.arrangement import ArrangementID, Arrangements, ArrangementsID, TrackID
+from pyflp.channel import ChannelID, ChannelRack, DisplayGroupID, RackID
+from pyflp.exceptions import PropertyCannotBeSet
+from pyflp.mixer import InsertID, Mixer, MixerID, SlotID
+from pyflp.pattern import PatternID, Patterns, PatternsID
+from pyflp.plugin import PluginID
+from pyflp.timemarker import TimeMarkerID
+from pyflp.types import FLVersion
 
 __all__ = ["PanLaw", "Project", "FileFormat", "VALID_PPQS"]
 
@@ -157,9 +148,7 @@ class Project(EventModel):
         super().__init__(events, **kw)
 
     def __repr__(self) -> str:
-        return "Project(format={}, version={}, {} channels)".format(
-            self.format, self.version, self.channel_count
-        )
+        return f"<Project(format={self.format!r}, version={self.version!r}>"
 
     def __str__(self) -> str:
         return f"FL Studio v{self.version!s} {self.format.name}"  # type: ignore
@@ -471,13 +460,9 @@ class Project(EventModel):
     @tempo.setter
     def tempo(self, value: int | float) -> None:
         if self.tempo is None:
-            raise PropertyCannotBeSet(
-                ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine
-            )
+            raise PropertyCannotBeSet(ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine)
 
-        max_tempo = (
-            999.0 if FLVersion(1, 4, 2) <= self.version < FLVersion(11) else 522.0
-        )
+        max_tempo = 999.0 if FLVersion(1, 4, 2) <= self.version < FLVersion(11) else 522.0
 
         if isinstance(value, float) and self.version < FLVersion(3, 4, 0):
             raise TypeError("Expected an 'int' object got a 'float' instead")

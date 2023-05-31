@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import enum
 
-from ._descriptors import EventProp
-from ._events import DWORD, TEXT, EventEnum, U8Event, U32Event
-from ._models import EventModel, ModelReprMixin
+from pyflp._descriptors import EventProp
+from pyflp._events import DWORD, TEXT, EventEnum, U8Event, U32Event
+from pyflp._models import EventModel, ModelReprMixin
 
 __all__ = ["TimeMarkerID", "TimeMarkerType", "TimeMarker"]
 

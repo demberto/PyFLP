@@ -74,6 +74,11 @@ This will create a ZIP file of the structure:
 🔓 Unlocking demo version FLPs
 -------------------------------
 
+.. caution::
+
+   This doesn't work for FL Studio 21 projects.
+   See `#146 <https://github.com/demberto/PyFLP/discussions/146>`
+
 FLPs saved with a trial version of FL Studio cannot be reopened again without
 saving in a registered version. The state of demo versions of native plugins'
 is not retained either.
@@ -97,11 +102,11 @@ It is possible to undo both of these:
    project = pyflp.parse("/path/to/myflp.flp")
 
    # Unlock the FLP itself
-   project.registered = True
+   project.licensed = True
 
    # Unlock trial version native plugins
    for instument in project.channels.instruments:
-       instrument.demo_mode = False
+       instrument.plugin.demo_mode = False
 
    for insert in project.mixer:
        for slot in insert:

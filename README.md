@@ -14,7 +14,6 @@ project and preset files written in Python.
     <tr>
       <th>CI</th>
       <td>
-        <img alt="build" src="https://github.com/demberto/PyFLP/actions/workflows/publish.yml/badge.svg"/>
         <a href="https://pyflp.readthedocs.io/en/latest/">
           <img alt="Documentation Build Status" src="https://img.shields.io/readthedocs/pyflp/latest?logo=read-the-docs"/>
         </a>
@@ -311,7 +310,7 @@ implemented. Click on a link to go to the documentation for that feature.
 
 ## ⏬ Installation
 
-CPython 3.7+ / PyPy 3.8+ required.
+CPython 3.8+ / PyPy 3.8+ required.
 
 ```none
 python -m pip install -U pyflp

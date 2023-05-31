@@ -2,19 +2,16 @@ from __future__ import annotations
 
 import pytest
 
-from pyflp._events import AsciiEvent, DataEventBase, EventEnum, EventTree, U8Event
+from pyflp._events import AsciiEvent, EventEnum, EventTree, U8Event, WORD
 from pyflp.exceptions import EventIDOutOfRange, InvalidEventChunkSize
 
 
 def test_id_out_of_range():
-    with pytest.raises(EventIDOutOfRange, match="0-63"):
+    with pytest.raises(EventIDOutOfRange, match=str(tuple(range(0, WORD)))):
         U8Event(EventEnum(128), b"\x00")
 
     with pytest.raises(ValueError):
         AsciiEvent(EventEnum(0), b"1234-decode-me-baby")
-
-    with pytest.raises(EventIDOutOfRange, match="208-255"):
-        DataEventBase(EventEnum(0), b"")
 
 
 def test_invalid_chunk_size():

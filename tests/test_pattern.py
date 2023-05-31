@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import colour
-
+from pyflp._events import RGBA
 from pyflp.pattern import Pattern, PatternID, Patterns
 
 from .conftest import get_model
@@ -18,13 +17,17 @@ def test_patterns(patterns: Patterns):
 
 
 def test_pattern_color(patterns: Patterns):
-    assert patterns[2].color == colour.Color("#00FF00")
+    assert patterns[2].color == RGBA(0.0, 1.0, 0.0, 0.0)
 
 
 def test_pattern_names(patterns: Patterns):
-    assert set(pattern.name for pattern in patterns) == set(
-        ("Default", "Colored", "MIDI", "Timemarkers", "Selected")
-    )
+    assert {pattern.name for pattern in patterns} == {
+        "Default",
+        "Colored",
+        "MIDI",
+        "Timemarkers",
+        "Selected",
+    }
 
 
 def test_pattern_timemarkers(patterns: Patterns):
@@ -74,7 +77,7 @@ def test_note_position():
 
 
 def test_note_rack_channel():
-    assert set(n.rack_channel for n in get_notes("multi-channel.flp")) == set((0, 1))
+    assert {n.rack_channel for n in get_notes("multi-channel.flp")} == {0, 1}
 
 
 def test_note_release():

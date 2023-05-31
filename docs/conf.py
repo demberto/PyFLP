@@ -9,11 +9,10 @@ import importlib.metadata
 import inspect
 import re
 
-import colour
 import m2r2
 
 from pyflp._descriptors import EventProp, FlagProp, NestedProp, StructProp
-from pyflp._events import EventEnum
+from pyflp._events import EventEnum, RGBA
 from pyflp._models import ModelBase
 from pyflp.arrangement import _TrackColorProp
 
@@ -129,7 +128,7 @@ def add_annotations(app, what, name, obj, options, signature, return_annotation)
         annotations = {}
         for name_, type in vars(obj).items():
             if isinstance(type, _TrackColorProp):
-                annotations[name_] = colour.Color
+                annotations[name_] = RGBA
             elif isinstance(type, NestedProp):
                 annotations[name_] = type._type
             elif isinstance(type, FlagProp):

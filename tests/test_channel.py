@@ -3,8 +3,7 @@ from __future__ import annotations
 import pathlib
 from typing import TypeVar
 
-import colour
-
+from pyflp._events import RGBA
 from pyflp.channel import (
     Automation,
     Channel,
@@ -70,7 +69,7 @@ def test_automation_points():
 
 
 def test_channel_color():
-    assert load_channel("colored.fst").color == colour.Color("#1414FF")
+    assert load_channel("colored.fst").color == RGBA.from_bytes(bytes((20, 20, 255, 0)))
 
 
 def test_channel_enabled():

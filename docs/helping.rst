@@ -80,7 +80,6 @@ how it helped you. I am more than glad to find how PyFLP is getting used.
 Help the tools that power **PyFLP**
 -----------------------------------
 
-- `colour <https://github.com/vaab/colour>`_
 - `construct <https://github.com/construct/construct>`_
 - `f-enum <https://github.com/Bobronium/fastenum>`_
 - `sortedcontainers <https://github.com/grantjenks/python-sortedcontainers>`_

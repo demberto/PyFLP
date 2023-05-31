@@ -19,11 +19,11 @@ import enum
 from collections import defaultdict
 from typing import DefaultDict, Iterator, cast
 
-import colour
 import construct as c
 
-from ._descriptors import EventProp, FlagProp, StdEnum, StructProp
-from ._events import (
+from pyflp._adapters import StdEnum
+from pyflp._descriptors import EventProp, FlagProp, StructProp
+from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
@@ -38,28 +38,25 @@ from ._events import (
     U16Event,
     U32Event,
 )
-from ._models import (
-    EventModel,
-    ItemModel,
-    ModelCollection,
-    ModelReprMixin,
-    supports_slice,
-)
-from .exceptions import ModelNotFound, NoModelsFound
-from .timemarker import TimeMarker, TimeMarkerID
+from pyflp._models import EventModel, ItemModel, ModelCollection, ModelReprMixin, supports_slice
+from pyflp.exceptions import ModelNotFound, NoModelsFound
+from pyflp.timemarker import TimeMarker, TimeMarkerID
+from pyflp.types import RGBA
 
 __all__ = ["Note", "Controller", "Pattern", "Patterns"]
 
 
 class ControllerEvent(ListEventBase):
-    STRUCT = c.Struct(
-        "position" / c.Int32ul,  # 4, can be delta as well!
-        "_u1" / c.Byte,  # 5
-        "_u2" / c.Byte,  # 6
-        "channel" / c.Int8ul,  # 7
-        "_flags" / c.Int8ul,  # 8
-        "value" / c.Float32l,  # 12
-    ).compile()
+    STRUCT = c.GreedyRange(
+        c.Struct(
+            "position" / c.Int32ul,  # 4, can be delta as well!
+            "_u1" / c.Byte,  # 5
+            "_u2" / c.Byte,  # 6
+            "channel" / c.Int8ul,  # 7
+            "_flags" / c.Int8ul,  # 8
+            "value" / c.Float32l,  # 12
+        )
+    )
 
 
 @enum.unique
@@ -68,22 +65,24 @@ class _NoteFlags(enum.IntFlag):
 
 
 class NotesEvent(ListEventBase):
-    STRUCT = c.Struct(
-        "position" / c.Int32ul,  # 4
-        "flags" / StdEnum[_NoteFlags](c.Int16ul),  # 6
-        "rack_channel" / c.Int16ul,  # 8
-        "length" / c.Int32ul,  # 12
-        "key" / c.Int16ul,  # 14
-        "group" / c.Int16ul,  # 16
-        "fine_pitch" / c.Int8ul,  # 17
-        "_u1" / c.Byte,  # 18
-        "release" / c.Int8ul,  # 19
-        "midi_channel" / c.Int8ul,  # 20
-        "pan" / c.Int8ul,  # 21
-        "velocity" / c.Int8ul,  # 22
-        "mod_x" / c.Int8ul,  # 23
-        "mod_y" / c.Int8ul,  # 24
-    ).compile()
+    STRUCT = c.GreedyRange(
+        c.Struct(
+            "position" / c.Int32ul,  # 4
+            "flags" / StdEnum[_NoteFlags](c.Int16ul),  # 6
+            "rack_channel" / c.Int16ul,  # 8
+            "length" / c.Int32ul,  # 12
+            "key" / c.Int16ul,  # 14
+            "group" / c.Int16ul,  # 16
+            "fine_pitch" / c.Int8ul,  # 17
+            "_u1" / c.Byte,  # 18
+            "release" / c.Int8ul,  # 19
+            "midi_channel" / c.Int8ul,  # 20
+            "pan" / c.Int8ul,  # 21
+            "velocity" / c.Int8ul,  # 22
+            "mod_x" / c.Int8ul,  # 23
+            "mod_y" / c.Int8ul,  # 24
+        )
+    )
 
 
 class PatternsID(EventEnum):
@@ -147,7 +146,7 @@ class Note(ItemModel[NotesEvent]):
             ValueError: A value not in between 0-131 is tried to be set.
             ValueError: Invalid note name (not in the format {note-name}{octave}).
         """
-        return self._NOTE_NAMES[self["key"] % 12] + str(self["key"] // 12)
+        return self._NOTE_NAMES[self["key"] % 12] + str(self["key"] // 12)  # pyright: ignore
 
     @key.setter
     def key(self, value: int | str) -> None:
@@ -251,7 +250,7 @@ class Pattern(EventModel):
             f"{num_notes} notes, {num_ctrls} controllers)"
         )
 
-    color = EventProp[colour.Color](PatternID.Color)
+    color = EventProp[RGBA](PatternID.Color)
     """Returns a colour if one is set while saving the project file, else ``None``.
 
     ![](https://bit.ly/3eNeSSW)

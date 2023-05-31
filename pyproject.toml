@@ -7,14 +7,13 @@ name = "pyflp"
 authors = [{ name = "demberto", email = "demberto@protonmail.com" }]
 description = "FL Studio project file parser"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -27,7 +26,6 @@ classifiers = [
 ]
 license = { text = "GPL-3.0" }
 dependencies = [
-  "colour>=0.1.5",
   "f-enum>=0.2.0;python_version<='3.10'",
   "construct-typing>=0.5.6",
   "sortedcontainers>=2.4.0",
@@ -36,7 +34,12 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["coverage >=7.2.6", "pre-commit >= 3.3.2", "pytest >=7.3.1", "tox >=4.5.1"]
+dev = [
+  "coverage >=7.2.6",
+  "pre-commit >= 3.3.2",
+  "pytest >=7.3.1",
+  "tox >=4.5.1",
+]
 # for docs dependencies see docs/requirements.txt
 
 [project.urls]
@@ -44,6 +47,9 @@ Source = "https://github.com/demberto/PyFLP"
 Changelog = "https://github.com/demberto/PyFLP/blob/master/CHANGELOG.md"
 Documentation = "https://pyflp.rtfd.io"
 "Bug Tracker" = "https://github.com/demberto/PyFLP/issues"
+
+[tool.black]
+line-length = 100
 
 [tool.coverage.run]
 branch = true
@@ -62,9 +68,10 @@ ignore_errors = true
 
 [tool.isort]
 profile = "black"
+line-length = 100
 
 [tool.mypy]
-python_version = "3.7"
+python_version = "3.8"
 check_untyped_defs = true
 enable_incomplete_feature = ["Unpack"]
 ignore_missing_imports = true
@@ -83,7 +90,8 @@ addopts = "-ra -q"
 testpaths = "tests"
 
 [tool.ruff]
-target-version = "py37"
+target-version = "py38"
+line-length = 100
 
 [tool.setuptools]
 packages = ["pyflp"]
