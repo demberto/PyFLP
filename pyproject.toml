@@ -78,11 +78,8 @@ ignore_missing_imports = true
 warn_no_return = false
 
 [tool.pyright]
-ignore = ["./venv"]
 reportPrivateUsage = false
 reportMissingTypeStubs = false
-venvPath = "."
-venv = "venv"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
