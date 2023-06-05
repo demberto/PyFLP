@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2023-06-05
+
+### Fixed
+
+- Python 3.8 compatibility.
+
 ## [2.2.0] - 2023-05-28
 
 ### Changed
@@ -691,6 +697,8 @@ Same as in 0.1.1
 - `flpinfo` doesn't output correctly sometimes due to long strings.
 - Extraneous data dumped sometimes by `InsertSlotEvent.Plugin`, why this is caused is not known.
 
+[2.2.1]: https://github.com/demberto/PyFLP/compare/v2.2.0...v2.2.1
+[2.2.0]: https://github.com/demberto/PyFLP/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/demberto/PyFLP/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/demberto/PyFLP/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/demberto/PyFLP/compare/v2.0.0a7.post0...v2.0.0

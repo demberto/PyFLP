@@ -14,11 +14,13 @@
 from __future__ import annotations
 
 import enum
+from collections import UserDict, UserList
 from dataclasses import dataclass
-from typing import NamedTuple, TypeVar, Union
+from typing import Any, NamedTuple, TypeVar, Union, TYPE_CHECKING
 
+import construct
 import construct_typed as ct
-from typing_extensions import ParamSpec
+from typing_extensions import ParamSpec, TypeAlias
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -64,3 +66,15 @@ class RGBA(NamedTuple):
 
     def __bytes__(self) -> bytes:
         return bytes(round(c * 255) for c in self)
+
+
+if TYPE_CHECKING:
+    AnyContainer: TypeAlias = construct.Container[Any]
+    AnyListContainer: TypeAlias = construct.ListContainer[Any]
+    AnyDict: TypeAlias = UserDict[str, Any]
+    AnyList: TypeAlias = UserList[AnyContainer]
+else:
+    AnyContainer = construct.Container
+    AnyListContainer = construct.ListContainer
+    AnyDict = UserDict
+    AnyList = UserList

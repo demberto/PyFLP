@@ -22,7 +22,6 @@ from __future__ import annotations
 import abc
 import enum
 import warnings
-from collections import UserDict, UserList
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from itertools import zip_longest
@@ -37,7 +36,7 @@ from pyflp.exceptions import (
     InvalidEventChunkSize,
     PropertyCannotBeSet,
 )
-from pyflp.types import RGBA, P, T
+from pyflp.types import RGBA, P, T, AnyContainer, AnyListContainer, AnyList, AnyDict
 
 BYTE: Final = 0
 WORD: Final = 64
@@ -326,7 +325,7 @@ class UnicodeEvent(StrEventBase):
         )
 
 
-class StructEventBase(EventBase[c.Container[Any]], UserDict[str, Any]):
+class StructEventBase(EventBase[AnyContainer], AnyDict):
     """Base class for events used for storing fixed size structured data.
 
     Consists of a collection of POD types like int, bool, float, but not strings.
@@ -347,7 +346,7 @@ class StructEventBase(EventBase[c.Container[Any]], UserDict[str, Any]):
         self.data[key] = value
 
 
-class ListEventBase(EventBase[c.ListContainer[Any]], UserList[c.Container[Any]]):
+class ListEventBase(EventBase[AnyListContainer], AnyList):
     """Base class for events storing an array of structured data.
 
     Attributes:
@@ -423,7 +422,7 @@ class EventTree:
     ) -> None:
         """Create a new dictionary with an optional :attr:`parent`."""
         self.children: list[EventTree] = []
-        self.lst: list[IndexedEvent] = SortedList(init or [])
+        self.lst: list[IndexedEvent] = SortedList(init or [])  # type: ignore
 
         self.parent = parent
         if parent is not None:
