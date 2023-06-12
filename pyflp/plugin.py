@@ -34,7 +34,7 @@ from pyflp._events import (
     EventTree,
     StructEventBase,
     U32Event,
-    UnknownDataEvent,
+    UnknownEvent,
 )
 from pyflp._models import EventModel, ModelReprMixin
 from pyflp.types import T
@@ -188,7 +188,7 @@ class SoundgoodizerEvent(StructEventBase):
     ).compile()
 
 
-NativePluginEvent = UnknownDataEvent
+NativePluginEvent = UnknownEvent
 """Placeholder event type for unimplemented native :attr:`PluginID.Data` events."""
 
 
@@ -429,7 +429,7 @@ class PluginProp(RWProperty[AnyPlugin]):
         except KeyError:
             return None
 
-        if isinstance(data_event, UnknownDataEvent):
+        if isinstance(data_event, UnknownEvent):
             return _PluginBase(self._get_plugin_events(ins))
 
         for ptype in self._types:

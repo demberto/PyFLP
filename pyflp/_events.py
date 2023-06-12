@@ -373,7 +373,7 @@ class ListEventBase(EventBase[AnyListContainer], AnyList):
             self.data = self.value  # Akin to UserList.__init__
 
 
-class UnknownDataEvent(EventBase[bytes]):
+class UnknownEvent(EventBase[bytes]):
     """Used for events whose structure is unknown as of yet."""
 
     STRUCT = c.GreedyBytes

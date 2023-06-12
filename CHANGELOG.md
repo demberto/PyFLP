@@ -13,11 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for streams and buffers in `pyflp.parse` and `pyflp.save` [#155].
+- Events that fail to parse now fallback to `UnknownEvent` instead of giving up.
 - `FLVersion.from_str` to parse an FL Studio version string.
 - Basic logging when an event fails to parse.
 
 ### Changed
 
+- `UnknownDataEvent` renamed to `UnknownEvent` and used for all unknown events.
 - `NoModelsFound` replaced with `KeyError`.
 - `PropertyCannotBeSet` replaced with `LookupError`.
 - `_SamplerInstrument.pitch_shift` is now a `StructProp`.

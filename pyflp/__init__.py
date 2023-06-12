@@ -50,7 +50,7 @@ from pyflp._events import (
     EventTree,
     IndexedEvent,
     UnicodeEvent,
-    UnknownDataEvent,
+    UnknownEvent,
 )
 from pyflp.plugin import PluginID, get_event_by_internal_name
 from pyflp.project import VALID_PPQS, FileFormat, Project, ProjectID
@@ -138,14 +138,14 @@ def parse(file: Any) -> Project:
             elif id == PluginID.Data and plug_name is not None:
                 event_type = get_event_by_internal_name(plug_name)
             else:
-                event_type = UnknownDataEvent
+                event_type = UnknownEvent
 
         try:
             event = event_type(id, value)
         except c.ConstructError as exc:
             logger.exception(exc)
             logger.error(f"Failed to parse {id!r} event. Report this issue.")
-            event = UnknownDataEvent(id, value, failed=True)
+            event = UnknownEvent(id, value, failed=True)
         events.append(event)
 
     return Project(
