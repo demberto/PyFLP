@@ -25,7 +25,7 @@ from typing_extensions import ParamSpec, TypeAlias
 P = ParamSpec("P")
 T = TypeVar("T")
 U = TypeVar("U")
-ET = TypeVar("ET", bound=Union[ct.EnumBase, enum.IntFlag])
+ET = TypeVar("ET", bound=Union[ct.EnumBase, enum.IntEnum, enum.IntFlag])
 T_co = TypeVar("T_co", covariant=True)
 
 
@@ -41,6 +41,10 @@ class FLVersion:
         if self.build is not None:
             return f"{version}.{self.build}"
         return version
+
+    @staticmethod
+    def from_str(s: str) -> FLVersion:
+        return FLVersion(*[int(part) for part in s.split(".")])
 
 
 class MusicalTime(NamedTuple):

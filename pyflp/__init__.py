@@ -25,18 +25,19 @@ Save the project:
     >>> pyflp.save(project, "/path/to/save.flp")
 
 Full docs are available at https://pyflp.rtfd.io.
-"""  # noqa
+"""
 
 from __future__ import annotations
 
 import io
 import os
-import pathlib
-import struct
+import logging
 import sys
+from typing import Any, BinaryIO
 
 import construct as c
 
+from pyflp._adapters import StdEnum
 from pyflp._events import (
     DATA,
     DWORD,
@@ -48,79 +49,61 @@ from pyflp._events import (
     EventEnum,
     EventTree,
     IndexedEvent,
-    U8Event,
-    U16Event,
-    U32Event,
     UnicodeEvent,
     UnknownDataEvent,
 )
-from pyflp.exceptions import HeaderCorrupted, VersionNotDetected
 from pyflp.plugin import PluginID, get_event_by_internal_name
 from pyflp.project import VALID_PPQS, FileFormat, Project, ProjectID
-
-__all__ = ["parse", "save"]
-
-FLP_HEADER = struct.Struct("4sIh2H")
+from pyflp.types import FLVersion
 
 if sys.version_info < (3, 11):  # https://github.com/Bobronium/fastenum/issues/2
     import fastenum
 
     fastenum.enable()  # 33% faster parse()
 
+__all__ = ["parse", "save"]
 
-def parse(file: pathlib.Path | str) -> Project:
-    """Parses an FL Studio project file and returns a parsed :class:`Project`.
+logger = logging.getLogger(__package__)
+logger.addHandler(logging.NullHandler())
+
+
+FLP = c.Struct(
+    hdr_magic=c.Const(b"FLhd"),
+    hdr_size=c.Const(c.Int32ul.build(6)),
+    format=StdEnum[FileFormat](c.Int16sl),
+    n_channels=c.Int16ul,
+    ppq=c.OneOf(c.Int16ul, VALID_PPQS),
+    data_magic=c.Const(b"FLdt"),
+    event_data=c.Prefixed(c.Int32ul, c.GreedyBytes),
+    _=c.Terminated,
+).compile()
+
+
+def parse(file: Any) -> Project:
+    """Parses an FL Studio file (projects, presets, scores).
+
+    If you get an error from :module:`construct`, the
+    header is corrupted or there are trailing bytes.
 
     Args:
-        file: Path to the FLP.
-
-    Raises:
-        HeaderCorrupted: When an invalid value is found in the file header.
-        VersionNotDetected: A correct string type couldn't be determined.
+        file: Path / stream / buffer to an FL Studio file.
     """
-    with open(file, "rb") as flp:
-        stream = io.BytesIO(flp.read())
+    if isinstance(file, BinaryIO):
+        flp = FLP.parse_stream(file)
+    elif os.path.isfile(file):
+        flp = FLP.parse_file(file)
+    else:
+        flp = FLP.parse(file)
 
-    events: list[AnyEvent] = []
-    header = stream.read(FLP_HEADER.size)
-
-    try:
-        hdr_magic, hdr_size, fmt, channel_count, ppq = FLP_HEADER.unpack(header)
-    except struct.error as exc:
-        raise HeaderCorrupted("Couldn't read the header entirely") from exc
-
-    if hdr_magic != b"FLhd":
-        raise HeaderCorrupted("Unexpected header chunk magic; expected 'FLhd'")
-
-    if hdr_size != 6:
-        raise HeaderCorrupted("Unexpected header chunk size; expected 6")
-
-    try:
-        file_format = FileFormat(fmt)
-    except ValueError as exc:
-        raise HeaderCorrupted("Unsupported project file format") from exc
-
-    if ppq not in VALID_PPQS:
-        raise HeaderCorrupted("Invalid PPQ")
-
-    if stream.read(4) != b"FLdt":
-        raise HeaderCorrupted("Unexpected data chunk magic; expected 'FLdt'")
-
-    events_size = int.from_bytes(stream.read(4), "little")
-    if not events_size:  # pragma: no cover
-        raise HeaderCorrupted("Data chunk size couldn't be read")
-
-    stream.seek(0, os.SEEK_END)
-    file_size = stream.tell()
-    if file_size != events_size + 22:
-        raise HeaderCorrupted("Data chunk size corrupted")
-
+    stream = io.BytesIO(flp["event_data"])
     plug_name = None
+    event_type: type[AnyEvent] | None = None
     str_type: type[AsciiEvent] | type[UnicodeEvent] | None = None
-    stream.seek(22)  # Back to start of events
-    while stream.tell() < file_size:
-        event_type: type[AnyEvent] | None = None
-        id = EventEnum(int.from_bytes(stream.read(1), "little"))
+    events: list[AnyEvent] = []
+
+    while stream.tell() < len(flp["event_data"]):
+        event_type = None
+        id = EventEnum(c.Int8ul.parse_stream(stream))
 
         if id < WORD:
             value = stream.read(1)
@@ -133,8 +116,8 @@ def parse(file: pathlib.Path | str) -> Project:
             value = stream.read(size)
 
         if id == ProjectID.FLVersion:
-            parts = value.decode("ascii").rstrip("\0").split(".")
-            if [int(part) for part in parts][0:2] >= [11, 5]:
+            string = value.decode("ascii").rstrip("\0")
+            if FLVersion.from_str(string) >= FLVersion(11, 5):
                 str_type = UnicodeEvent
             else:
                 str_type = AsciiEvent
@@ -145,15 +128,9 @@ def parse(file: pathlib.Path | str) -> Project:
                 break
 
         if event_type is None:
-            if id < WORD:
-                event_type = U8Event
-            elif id < DWORD:
-                event_type = U16Event
-            elif id < TEXT:
-                event_type = U32Event
-            elif id < DATA or id.value in NEW_TEXT_IDS:
+            if id in range(TEXT, DATA) or id.value in NEW_TEXT_IDS:
                 if str_type is None:  # pragma: no cover
-                    raise VersionNotDetected  # ! This should never happen
+                    raise TypeError("Failed to determine string encoding")
                 event_type = str_type
 
                 if id == PluginID.InternalName:
@@ -163,37 +140,40 @@ def parse(file: pathlib.Path | str) -> Project:
             else:
                 event_type = UnknownDataEvent
 
-        events.append(event_type(id, value))
+        try:
+            event = event_type(id, value)
+        except c.ConstructError as exc:
+            logger.exception(exc)
+            logger.error(f"Failed to parse {id!r} event. Report this issue.")
+            event = UnknownDataEvent(id, value, failed=True)
+        events.append(event)
 
     return Project(
         EventTree(init=(IndexedEvent(r, e) for r, e in enumerate(events))),
-        channel_count=channel_count,
-        format=file_format,
-        ppq=ppq,
+        channel_count=flp["n_channels"],
+        format=flp["format"],
+        ppq=flp["ppq"],
     )
 
 
-def save(project: Project, file: pathlib.Path | str) -> None:
-    """Save a parsed project back into a file.
+def save(project: Project, file: str | os.PathLike[Any] | BinaryIO) -> None:
+    """Save a :class:`Project` back into a file or stream.
 
     Caution:
         Always have a backup ready, just in case 😉
-
-    Args:
-        project: The object returned by :meth:`parse`.
-        file: The file in which the contents of :attr:`project` are serialised back.
     """
-    buf = bytearray()
-    num_channels = len(project.channels)
-    header = FLP_HEADER.pack(b"FLhd", 6, project.format, num_channels, project.ppq)
-    buf.extend(header)
-    buf.extend(b"FLdt" + (b"\0" * 4))
-    total_size = 0
-    for event in project.events:
-        raw = bytes(event)
-        total_size += len(raw)
-        buf.extend(raw)
-    buf[18:22] = total_size.to_bytes(4, "little")
+    fields: dict[str, Any] = {"ppq": project.ppq, "format": project.format}
 
-    with open(file, "wb") as fp:
-        fp.write(buf)
+    try:
+        fields["n_channels"] = len(project.channels)
+    except Exception as exc:
+        logger.exception(exc)
+        logger.error("Failed to calculate number of channels")
+        fields["n_channels"] = project.channel_count
+
+    fields["event_data"] = b"".join(bytes(event) for event in project.events)
+
+    if isinstance(file, BinaryIO):
+        FLP.build_stream(fields, file)
+    else:
+        FLP.build_file(fields, file)
