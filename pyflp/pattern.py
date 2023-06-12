@@ -39,7 +39,6 @@ from pyflp._events import (
     U32Event,
 )
 from pyflp._models import EventModel, ItemModel, ModelCollection, ModelReprMixin, supports_slice
-from pyflp.exceptions import ModelNotFound, NoModelsFound
 from pyflp.timemarker import TimeMarker, TimeMarkerID
 from pyflp.types import RGBA
 
@@ -323,17 +322,20 @@ class Patterns(EventModel, ModelCollection[Pattern]):
     def __getitem__(self, i: int | str | slice) -> Pattern:
         """Returns the pattern with the specified index or :attr:`Pattern.name`.
 
+        .. versionchanged:: v2.3.0
+
+            Raises :class:`KeyError` on failure.
+
         Args:
             i: A zero-based index, its name or a slice of indexes.
 
         Raises:
-            ModelNotFound: A :class:`Pattern` with the specified name or index
-                isn't found.
+            KeyError: A :class:`Pattern` with the specified name or index isn't found.
         """
         for idx, pattern in enumerate(self):
             if (isinstance(i, int) and idx == i) or i == pattern.name:
                 return pattern
-        raise ModelNotFound(i)
+        raise KeyError(i)
 
     # Doesn't use EventTree delegates since PatternID.New occurs twice.
     # Once for note and controller events and again for the rest of them.
@@ -355,13 +357,7 @@ class Patterns(EventModel, ModelCollection[Pattern]):
             yield Pattern(et)
 
     def __len__(self) -> int:
-        """Returns the number of patterns found in the project.
-
-        Raises:
-            NoModelsFound: No patterns were found.
-        """
-        if PatternID.New not in self.events.ids:
-            raise NoModelsFound
+        """Returns the number of patterns found in the project."""
         return len({e.value for e in self.events.get(PatternID.New)})
 
     play_cut_notes = EventProp[bool](PatternsID.PlayTruncatedNotes)

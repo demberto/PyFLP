@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FLVersion.from_str` to parse an FL Studio version string.
 - Basic logging when an event fails to parse.
 
+### Changed
+
+- `NoModelsFound` replaced with `KeyError`.
+- `PropertyCannotBeSet` replaced with `LookupError`.
+- `_SamplerInstrument.pitch_shift` is now a `StructProp`.
+
+### Removed
+
+- `pyflp.exceptions` - now you get `construct` errors or standard ones.
+
 [#155]: https://github.com/demberto/PyFLP/issues/155
 
 ## [2.2.1] - 2023-06-05

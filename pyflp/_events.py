@@ -31,11 +31,6 @@ import construct as c
 from sortedcontainers import SortedList
 from typing_extensions import Concatenate, TypeAlias
 
-from pyflp.exceptions import (
-    EventIDOutOfRange,
-    InvalidEventChunkSize,
-    PropertyCannotBeSet,
-)
 from pyflp.types import RGBA, P, T, AnyContainer, AnyListContainer, AnyList, AnyDict
 
 BYTE: Final = 0
@@ -107,7 +102,7 @@ class EventBase(Generic[T]):
 
     def __init__(self, id: EventEnum, data: bytes, **kwds: Any) -> None:
         if self.ALLOWED_IDS and id not in self.ALLOWED_IDS:
-            raise EventIDOutOfRange(id, *self.ALLOWED_IDS)
+            raise ValueError(id, *self.ALLOWED_IDS)
 
         if id < TEXT:
             if id < WORD:
@@ -118,7 +113,7 @@ class EventBase(Generic[T]):
                 expected_size = 4
 
             if len(data) != expected_size:
-                raise InvalidEventChunkSize(expected_size, len(data))
+                raise BufferError(expected_size, len(data))
 
         self.id = EventEnum(id)
         self._kwds = kwds
@@ -341,7 +336,7 @@ class StructEventBase(EventBase[AnyContainer], AnyDict):
             raise KeyError
 
         if self[key] is None:
-            raise PropertyCannotBeSet
+            raise KeyError
 
         self.data[key] = value
 

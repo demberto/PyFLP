@@ -46,7 +46,6 @@ from pyflp._models import (
     supports_slice,
 )
 from pyflp.channel import Channel, ChannelRack
-from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from pyflp.pattern import Pattern, Patterns
 from pyflp.timemarker import TimeMarker, TimeMarkerID
 from pyflp.types import RGBA, FLVersion
@@ -436,18 +435,16 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         """Returns an arrangement based either on its index or name.
 
         Args:
-            i: The index of the arrangement in which they occur or
-               :attr:`Arrangement.name` of the arrangement to lookup for or a
-               slice of indexes.
+            i: The index of the arrangement in which they occur or :attr:`Arrangement.name`
+                of the arrangement to lookup for or a slice of indexes.
 
         Raises:
-            ModelNotFound: An :class:`Arrangement` with the specifed name or
-                index isn't found.
+            KeyError: An :class:`Arrangement` with the specifed name or index isn't found.
         """
         for idx, arr in enumerate(self):
             if (isinstance(i, str) and i == arr.name) or idx == i:
                 return arr
-        raise ModelNotFound(i)
+        raise KeyError(i)
 
     # TODO Verify ArrangementsID.Current is the end
     # FL changed event ordering a lot, the latest being the most easiest to
@@ -456,11 +453,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
     # event in initial versions of FL20, making them harder to group.
     # TODO This logic might not work on older versions of FL.
     def __iter__(self) -> Iterator[Arrangement]:
-        """Yields :class:`Arrangement` found in the project.
-
-        Raises:
-            NoModelsFound: When no arrangements are found.
-        """
+        """Yields :class:`Arrangement` found in the project."""
         arrnew_occured = False
 
         def select(e: AnyEvent) -> bool | None:
@@ -479,13 +472,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         yield from (Arrangement(ed, **self._kw) for ed in self.events.subtrees(select, len(self)))
 
     def __len__(self) -> int:
-        """The number of arrangements present in the project.
-
-        Raises:
-            NoModelsFound: When no arrangements are found.
-        """
-        if ArrangementID.New not in self.events.ids:
-            raise NoModelsFound
+        """The number of arrangements present in the project."""
         return self.events.count(ArrangementID.New)
 
     def __repr__(self) -> str:
@@ -493,19 +480,11 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
 
     @property
     def current(self) -> Arrangement | None:
-        """Currently selected arrangement (via FL's interface).
-
-        Raises:
-            ModelNotFound: When the underlying event value points to an
-                invalid arrangement index.
-        """
+        """Currently selected arrangement (via FL's interface)."""
         if ArrangementsID.Current in self.events.ids:
             event = self.events.first(ArrangementsID.Current)
             index: int = event.value
-            try:
-                return list(self)[index]
-            except IndexError as exc:
-                raise ModelNotFound(index) from exc
+            return list(self)[index]
 
     @property
     def loop_pos(self) -> tuple[int, int] | None:
@@ -513,8 +492,16 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
 
         .. versionchanged:: v2.1.0
 
-           :attr:`ArrangementsID.PLSelection` is used by default
-           while :attr:`ArrangementsID._LoopPos` is a fallback.
+            :attr:`ArrangementsID.PLSelection` is used by default
+            while :attr:`ArrangementsID._LoopPos` is a fallback.
+
+        .. versionchanged:: v2.3.0
+
+            Setter raises a :class:`LookupError` when it fails.
+
+        Raises:
+            LookupError: When setter doesn't find an :attr:`ArrangementsID.PLSelection`
+                or :attr:`ArrangementsID._LoopPos` event.
 
         *New in FL Studio v1.3.8*.
         """
@@ -533,7 +520,8 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         elif ArrangementsID._LoopPos in self.events:
             self.events.first(ArrangementsID._LoopPos).value = value
         else:
-            raise PropertyCannotBeSet(ArrangementsID.PLSelection, ArrangementsID._LoopPos)
+            ids = ArrangementsID.PLSelection, ArrangementsID._LoopPos
+            raise LookupError(f"No matching event from {ids!r} found.")
 
     @property
     def max_tracks(self) -> Literal[500, 199]:

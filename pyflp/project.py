@@ -45,7 +45,6 @@ from pyflp._events import (
 from pyflp._models import EventModel
 from pyflp.arrangement import ArrangementID, Arrangements, ArrangementsID, TrackID
 from pyflp.channel import ChannelID, ChannelRack, DisplayGroupID, RackID
-from pyflp.exceptions import PropertyCannotBeSet
 from pyflp.mixer import InsertID, Mixer, MixerID, SlotID
 from pyflp.pattern import PatternID, Patterns, PatternsID
 from pyflp.plugin import PluginID
@@ -259,9 +258,6 @@ class Project(EventModel):
 
     @data_path.setter
     def data_path(self, value: str | pathlib.Path) -> None:
-        if ProjectID.DataPath not in self.events.ids:
-            raise PropertyCannotBeSet(ProjectID.DataPath)
-
         if isinstance(value, pathlib.Path):
             value = str(value)
 
@@ -314,9 +310,6 @@ class Project(EventModel):
     def licensee(self, value: str) -> None:
         if self.version < FLVersion(1, 3, 9):
             pass
-
-        if ProjectID.Licensee not in self.events.ids:
-            raise PropertyCannotBeSet(ProjectID.Licensee)
 
         event = self.events.first(ProjectID.Licensee)
         licensee = bytearray()
@@ -439,7 +432,7 @@ class Project(EventModel):
         Raises:
             TypeError: When a fine-tuned tempo (``float``) isn't
                 supported. Use an ``int`` (coarse tempo) value.
-            PropertyCannotBeSet: If underlying event isn't found.
+            LookupError: When setter doesn't find an underlying event.
             ValueError: When a tempo outside the allowed range is set.
 
         * *Changed in FL Studio v1.4.2*: Max tempo increased to ``999`` (int).
@@ -460,7 +453,8 @@ class Project(EventModel):
     @tempo.setter
     def tempo(self, value: int | float) -> None:
         if self.tempo is None:
-            raise PropertyCannotBeSet(ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine)
+            ids = ProjectID.Tempo, ProjectID._TempoCoarse, ProjectID._TempoFine
+            raise LookupError(f"No matching event from {ids!r} found")
 
         max_tempo = 999.0 if FLVersion(1, 4, 2) <= self.version < FLVersion(11) else 522.0
 
@@ -515,8 +509,6 @@ class Project(EventModel):
             inside FL Studio, as newer events and/or plugins might have been used.
 
         Raises:
-            PropertyCannotBeSet: This error should NEVER occur; if it does,
-                it indicates possible corruption.
             ValueError: When a string with an invalid format is tried to be set.
         """
         event = cast(AsciiEvent, self.events.first(ProjectID.FLVersion))
@@ -524,9 +516,6 @@ class Project(EventModel):
 
     @version.setter
     def version(self, value: FLVersion | str | tuple[int, ...]) -> None:
-        if ProjectID.FLVersion not in self.events.ids:
-            raise PropertyCannotBeSet(ProjectID.FLVersion)
-
         if isinstance(value, FLVersion):
             parts = [value.major, value.minor, value.patch]
             if value.build is not None:

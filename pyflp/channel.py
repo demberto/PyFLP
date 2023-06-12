@@ -41,7 +41,6 @@ from pyflp._events import (
     U32Event,
 )
 from pyflp._models import EventModel, ItemModel, ModelCollection, ModelReprMixin, supports_slice
-from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from pyflp.plugin import BooBass, FruitKick, Plucked, PluginID, PluginProp, VSTPlugin
 from pyflp.types import RGBA, MusicalTime
 
@@ -53,7 +52,6 @@ __all__ = [
     "Instrument",
     "Layer",
     "ChannelRack",
-    "ChannelNotFound",
     "DeclickMode",
     "LFOShape",
     "ReverbType",
@@ -75,10 +73,6 @@ __all__ = [
 
 EnvelopeName = Literal["Panning", "Volume", "Mod X", "Mod Y", "Pitch"]
 LFOName = EnvelopeName
-
-
-class ChannelNotFound(ModelNotFound, KeyError):
-    pass
 
 
 class AutomationEvent(StructEventBase):
@@ -624,14 +618,23 @@ class Reverb(EventModel, ModelReprMixin):
 
     @property
     def type(self) -> ReverbType | None:
-        if ChannelID.Reverb in self.events.ids:
+        """
+        .. versionchanged:: v2.3.0
+
+            Setter raises :class:`AttributeError` on failure.
+
+        Raises:
+            AttributeError: When the setter finds that :attr:`mix` is `None`.
+        """
+
+        if ChannelID.Reverb in self.events:
             event = self.events.first(ChannelID.Reverb)
             return ReverbType.B if event.value >= ReverbType.B else ReverbType.A
 
     @type.setter
     def type(self, value: ReverbType) -> None:
         if self.mix is None:
-            raise PropertyCannotBeSet(ChannelID.Reverb)
+            raise AttributeError(ChannelID.Reverb)
 
         self.events.first(ChannelID.Reverb).value = value.value + self.mix
 
@@ -648,9 +651,6 @@ class Reverb(EventModel, ModelReprMixin):
 
     @mix.setter
     def mix(self, value: int) -> None:
-        if ChannelID.Reverb not in self.events.ids:
-            raise PropertyCannotBeSet(ChannelID.Reverb)
-
         self.events.first(ChannelID.Reverb).value += value
 
 
@@ -1238,6 +1238,14 @@ class Channel(EventModel):
         | Min | Max   | Default |
         |-----|-------|---------|
         | 0   | 12800 | 6400    |
+
+        .. versionchanged:: v2.3.0
+
+            Setter raises :class:`LookupError` on failure.
+
+        Raises:
+            LookupError: By setter when an :attr:`ChannelID.Levels`, :attr:`ChannelID._PanByte`
+                or :attr:`ChannelID._PanWord` event isn't found.
         """
         if ChannelID.Levels in self.events.ids:
             return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pan"]
@@ -1249,7 +1257,8 @@ class Channel(EventModel):
     @pan.setter
     def pan(self, value: int) -> None:
         if self.pan is None:
-            raise PropertyCannotBeSet
+            ids = ChannelID.Levels, ChannelID._PanByte, ChannelID._PanWord
+            raise LookupError(f"No matching event from {ids!r} found")
 
         if ChannelID.Levels in self.events.ids:
             cast(LevelsEvent, self.events.first(ChannelID.Levels))["pan"] = value
@@ -1266,6 +1275,13 @@ class Channel(EventModel):
         | Min | Max   | Default |
         |-----|-------|---------|
         | 0   | 12800 | 10000   |
+
+        .. versionchanged:: v2.3.0
+
+            Setter raises :class:`AttributeError` on failure.
+
+        Raises:
+            AttributeError: By setter when getter returns `None`.
         """
         if ChannelID.Levels in self.events.ids:
             return cast(LevelsEvent, self.events.first(ChannelID.Levels))["volume"]
@@ -1277,7 +1293,7 @@ class Channel(EventModel):
     @volume.setter
     def volume(self, value: int) -> None:
         if self.volume is None:
-            raise PropertyCannotBeSet
+            raise AttributeError
 
         if ChannelID.Levels in self.events.ids:
             cast(LevelsEvent, self.events.first(ChannelID.Levels))["volume"] = value
@@ -1317,10 +1333,15 @@ class Automation(Channel, ModelCollection[AutomationPoint]):
 
     @supports_slice  # type: ignore
     def __getitem__(self, i: int | slice) -> AutomationPoint:
+        """
+        .. versionchanged:: v2.3.0
+
+            Raises :class:`KeyError` on failure.
+        """
         for idx, p in enumerate(self):
             if idx == i:
                 return p
-        raise ModelNotFound(i)
+        raise KeyError(i)
 
     def __iter__(self) -> Iterator[AutomationPoint]:
         """Iterator over the automation points inside the automation clip."""
@@ -1344,17 +1365,20 @@ class Layer(Channel, ModelCollection[Channel]):
     def __getitem__(self, i: int | str | slice) -> Channel:
         """Returns a child :class:`Channel` with an IID of :attr:`Channel.iid`.
 
+        .. versionchanged:: v2.3.0
+
+            Raises :class:`KeyError` on failure.
+
         Args:
             i: IID or 0-based index of the child(ren).
 
         Raises:
-            ChannelNotFound: Child(ren) with the specific index or IID couldn't
-                be found. This exception derives from ``KeyError`` as well.
+            KeyError: Child(ren) with the specific index or IID couldn't be found.
         """
         for child in self:
             if i == child.iid:
                 return child
-        raise ChannelNotFound(i)
+        raise KeyError(i)
 
     def __iter__(self) -> Iterator[Channel]:
         if ChannelID.Children in self.events.ids:
@@ -1363,10 +1387,9 @@ class Layer(Channel, ModelCollection[Channel]):
 
     def __len__(self) -> int:
         """Returns the number of channels whose parent this layer is."""
-        try:
+        if ChannelID.Children in self.events:
             return self.events.count(ChannelID.Children)
-        except KeyError:
-            return 0
+        return 0
 
     def __repr__(self) -> str:
         return f"{super().__repr__()[:-1]}, {len(self)} children)"
@@ -1403,24 +1426,8 @@ class _SamplerInstrument(Channel):
     level_adjusts = NestedProp(LevelAdjusts, ChannelID.LevelAdjusts)
     """:menuselection:`Miscellaneous functions -> Level adjustments`"""
 
-    @property
-    def pitch_shift(self) -> int | None:
-        """-4800 to +4800 (cents).
-
-        Raises:
-            PropertyCannotBeSet: When a `ChannelID.Levels` event is not found.
-        """
-        if ChannelID.Levels in self.events.ids:
-            return cast(LevelsEvent, self.events.first(ChannelID.Levels))["pitch_shift"]
-
-    @pitch_shift.setter
-    def pitch_shift(self, value: int) -> None:
-        try:
-            event = self.events.first(ChannelID.Levels)
-        except KeyError as exc:
-            raise PropertyCannotBeSet(ChannelID.Levels) from exc
-        else:
-            cast(LevelsEvent, event)["pitch_shift"] = value
+    pitch_shift = StructProp[int](ChannelID.Levels)
+    """-4800 to +4800 (cents)."""
 
     polyphony = NestedProp(Polyphony, ChannelID.Polyphony)
     """:menuselection:`Miscellaneous functions -> Polyphony`"""
@@ -1514,16 +1521,13 @@ class Sampler(_SamplerInstrument):
 
         :menuselection:`Sample settings (page) --> File`
 
-        Contains the string ``%FLStudioFactoryData%`` for stock samples.
+        Contains the prefix ``%FLStudioFactoryData%`` for stock samples.
         """
         if ChannelID.SamplePath in self.events.ids:
             return pathlib.Path(self.events.first(ChannelID.SamplePath).value)
 
     @sample_path.setter
     def sample_path(self, value: pathlib.Path) -> None:
-        if self.sample_path is None:
-            raise PropertyCannotBeSet(ChannelID.SamplePath)
-
         path = "" if str(value) == "." else str(value)
         self.events.first(ChannelID.SamplePath).value = path
 
@@ -1545,17 +1549,21 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
     def __getitem__(self, i: str | int | slice) -> Channel:
         """Gets a channel from the rack based on its IID or name.
 
+        .. versionchanged:: v2.3.0
+
+            Raises :class:`KeyError` on failure.
+
         Args:
             i: Compared with :attr:`Channel.iid` if an int or
                slice or with the :attr:`Channel.display_name`.
 
         Raises:
-            ChannelNotFound: A channel with the specified IID or name isn't found.
+            KeyError: A channel with the specified IID or name isn't found.
         """
         for ch in self:
             if (isinstance(i, int) and i == ch.iid) or (i == ch.display_name):
                 return ch
-        raise ChannelNotFound(i)
+        raise KeyError(i)
 
     def __iter__(self) -> Iterator[Channel]:
         """Yields all the channels found in the project."""
@@ -1587,13 +1595,7 @@ class ChannelRack(EventModel, ModelCollection[Channel]):
                 yield cur_ch
 
     def __len__(self) -> int:
-        """Returns the number of channels found in the project.
-
-        Raises:
-            NoModelsFound: No channels could be found in the project.
-        """
-        if ChannelID.New not in self.events.ids:
-            raise NoModelsFound
+        """Returns the number of channels found in the project."""
         return self.events.count(ChannelID.New)
 
     @property

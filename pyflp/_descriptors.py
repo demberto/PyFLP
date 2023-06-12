@@ -23,7 +23,6 @@ from typing_extensions import Self, final
 
 from pyflp._events import AnyEvent, EventEnum, StructEventBase
 from pyflp._models import VE, EMT_co, EventModel, ItemModel, ModelBase
-from pyflp.exceptions import PropertyCannotBeSet
 from pyflp.types import T, T_co
 
 
@@ -109,13 +108,13 @@ class PropBase(abc.ABC, RWProperty[T]):
     @final
     def __set__(self, ins: Any, value: T) -> None:
         if self._readonly:
-            raise PropertyCannotBeSet(*self._ids)
+            raise AttributeError("Cannot set the value of a read-only property")
 
         event: Any = self._get_event(ins)
         if event is not None:
             self._set(event, value)
         else:
-            raise PropertyCannotBeSet(*self._ids)
+            raise LookupError(f"No matching event from {self._ids!r} found")
 
 
 class FlagProp(PropBase[bool]):

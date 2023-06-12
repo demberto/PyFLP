@@ -16,5 +16,3 @@
 .. autoclass:: RackID
    :members:
    :member-order: bysource
-
-.. autoexception:: ChannelNotFound

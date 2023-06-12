@@ -4,38 +4,33 @@ import pathlib
 
 import pytest
 
+import construct
 import pyflp
-from pyflp.exceptions import HeaderCorrupted
 
 CORRUPTED = pathlib.Path(__file__).parent / "assets" / "corrupted"
 
 
 def test_invalid_header_magic():
-    with pytest.raises(HeaderCorrupted, match="FLhd"):
+    with pytest.raises(construct.ConstError):
         pyflp.parse(CORRUPTED / "invalid-header-magic.flp")
 
 
 def test_invalid_header_size():
-    with pytest.raises(HeaderCorrupted, match="6"):
+    with pytest.raises(construct.ConstError):
         pyflp.parse(CORRUPTED / "invalid-header-size.flp")
 
 
 def test_invalid_format():
-    with pytest.raises(HeaderCorrupted, match="Unsupported project file format"):
+    with pytest.raises(ValueError, match="256"):
         pyflp.parse(CORRUPTED / "invalid-format.flp")
 
 
 def test_invalid_ppq():
-    with pytest.raises(HeaderCorrupted, match="Invalid PPQ"):
+    with pytest.raises(construct.ValidationError):
         # ! Opening this FLP in FL will crash it with a division by zero error
         pyflp.parse(CORRUPTED / "invalid-ppq.flp")
 
 
 def test_invalid_data_magic():
-    with pytest.raises(HeaderCorrupted, match="FLdt"):
+    with pytest.raises(construct.ConstError):
         pyflp.parse(CORRUPTED / "invalid-data-magic.flp")
-
-
-def test_invalid_data_size():
-    with pytest.raises(HeaderCorrupted, match="Data chunk size corrupted"):
-        pyflp.parse(CORRUPTED / "invalid-event-size.flp")

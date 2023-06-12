@@ -42,7 +42,6 @@ from pyflp._events import (
     U16Event,
 )
 from pyflp._models import EventModel, ModelBase, ModelCollection, ModelReprMixin, supports_slice
-from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
 from pyflp.plugin import (
     FruityBalance,
     FruityBloodOverdrive,
@@ -308,7 +307,7 @@ class _MixerParamProp(RWProperty[T]):
             if id == self._id:
                 item["msg"] = value
                 return
-        raise PropertyCannotBeSet(self._id)
+        raise KeyError(self._id)
 
 
 class Slot(EventModel):
@@ -389,18 +388,21 @@ class Insert(EventModel, ModelCollection[Slot]):
     def __getitem__(self, i: int | str) -> Slot:
         """Returns an effect slot of the specified index or name.
 
+        .. versionchanged:: v2.3.0
+
+            Raises :class:`KeyError` on failure.
+
         Args:
             i: An index in the range of 0 to :attr:`Mixer.max_slots`
                or the name of the :class:`Slot`.
 
         Raises:
-            ModelNotFound: An effect :class:`Slot` with the specified index
-                or name isn't found.
+            KeyError: An effect :class:`Slot` with the specified index or name isn't found.
         """
         for idx, slot in enumerate(self):
             if (isinstance(i, int) and idx == i) or i == slot.name:
                 return slot
-        raise ModelNotFound(i)
+        raise KeyError(i)
 
     @property
     def iid(self) -> int:
@@ -583,19 +585,22 @@ class Mixer(EventModel, ModelCollection[Insert]):
     def __getitem__(self, i: int | str | slice) -> Insert:
         """Returns an insert with the specified index or name.
 
+        .. versionchanged:: v2.3.0
+
+            Raises :class:`KeyError` on failure.
+
         Args:
             i: An index between 0 to :attr:`Mixer.max_inserts` resembling the
                 one shown by FL Studio or the name of the insert. Use 0 for
                 master and -1 for "current" insert.
 
         Raises:
-            ModelNotFound: An :class:`Insert` with the specifcied name or index
-                isn't found.
+            KeyError: An :class:`Insert` with the specified name or index isn't found.
         """
         for idx, insert in enumerate(self):
             if (isinstance(i, int) and idx == i + 1) or i == insert.name:
                 return insert
-        raise ModelNotFound(i)
+        raise KeyError(i)
 
     def __iter__(self) -> Iterator[Insert]:
         def select(e: AnyEvent) -> bool | None:
@@ -616,13 +621,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
                 yield Insert(ed, iid=i - 1, max_slots=self.max_slots)
 
     def __len__(self) -> int:
-        """Returns the number of inserts present in the project.
-
-        Raises:
-            NoModelsFound: No inserts could be found.
-        """
-        if InsertID.Flags not in self.events.ids:
-            raise NoModelsFound
+        """Returns the number of inserts present in the project."""
         return self.events.count(InsertID.Flags)
 
     def __str__(self) -> str:
