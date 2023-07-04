@@ -42,7 +42,7 @@ from pyflp._events import (
 )
 from pyflp._models import EventModel, ItemModel, ModelCollection, ModelReprMixin, supports_slice
 from pyflp.exceptions import ModelNotFound, NoModelsFound, PropertyCannotBeSet
-from pyflp.plugin import BooBass, FruitKick, Plucked, PluginID, PluginProp, VSTPlugin
+from pyflp.plugin import BooBass, FruitKick, FruitySlicer, Plucked, PluginID, PluginProp, VSTPlugin
 from pyflp.types import RGBA, MusicalTime
 
 __all__ = [
@@ -1442,7 +1442,7 @@ class _SamplerInstrument(Channel):
 class Instrument(_SamplerInstrument):
     """Represents a native or a 3rd party plugin loaded in a channel."""
 
-    plugin = PluginProp(VSTPlugin, BooBass, FruitKick, Plucked)
+    plugin = PluginProp(VSTPlugin, BooBass, FruitKick, FruitySlicer, Plucked)
     """The plugin loaded into the channel."""
 
 

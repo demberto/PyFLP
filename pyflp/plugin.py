@@ -181,7 +181,7 @@ class FruitySlicerEvent(StructEventBase):
         / c.PrefixedArray(
             c.Int32ul,
             c.Struct(
-                "name" / c.PascalString(c.Int8ul, "utf-8"),
+                "name" / c.PascalString(c.Int8ul, "utf-8"),  # TODO: This is a special format
                 "sample_offset" / c.Int32ul,
                 "key" / c.Int32sl,
                 "_u1" / c.Float32l,
@@ -189,7 +189,7 @@ class FruitySlicerEvent(StructEventBase):
             ),
         ),
         "animate" / c.Flag,
-        "starting_note" / c.Int32ul,
+        "start_note" / c.Int32ul,
         "play_to_end" / c.Flag,
         "bitrate" / c.Int32ul,
         "auto_dump" / c.Flag,
@@ -1059,7 +1059,7 @@ class FruitySlicer(_PluginBase[FruitySlicerEvent], _IPlugin, ModelReprMixin):
     """The BPM (beats per minute) of the sample."""
 
     pitch_shift = _NativePluginProp[int]()
-    """Pitch shift, in cents. Linear, 1:1.
+    """Pitch shift, in cents. Linear.
 
     | Type    | Value | Representation |
     |---------|-------|----------------|
@@ -1071,11 +1071,11 @@ class FruitySlicer(_PluginBase[FruitySlicerEvent], _IPlugin, ModelReprMixin):
     time_stretch = _NativePluginProp[int]()
     """Logarithmic.
 
-    | Type    | Value  | Representation           |
-    |---------|--------|--------------------------|
-    | Min     | -20000 | 25%  / 60 bpm to 240 bpm |
-    | Max     | 20000  | 400% / 60 bpm to 15 bpm  |
-    | Default | 0      | 100% / 0 bpm to 0 bpm    |
+    | Type    | Value  | Representation    |
+    |---------|--------|-------------------|
+    | Min     | -20000 | 25%  / 60-240 bpm |
+    | Max     | 20000  | 400% / 60-15 bpm  |
+    | Default | 0      | 100% / 0-0 bpm    |
     """
 
     stretching_method = _NativePluginProp[
@@ -1107,7 +1107,7 @@ class FruitySlicer(_PluginBase[FruitySlicerEvent], _IPlugin, ModelReprMixin):
     animate = _NativePluginProp[bool]()
     """Whether to highlight the slices as they are played."""
 
-    starting_note = _NativePluginProp[int]()
+    start_note = _NativePluginProp[int]()
     """The MIDI note for slicing to start on. Default 60."""
 
     play_to_end = _NativePluginProp[bool]()
