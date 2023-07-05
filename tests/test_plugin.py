@@ -96,16 +96,16 @@ def test_fruity_slicer():
     assert test_slice.name == "1 - Beat 1"
     assert test_slice.sample_offset == 0
     assert test_slice.key == -1
-    assert test_slice.reversed == False
+    assert test_slice.reversed is False
 
-    assert fruity_slicer.animate == False
+    assert fruity_slicer.animate is False
     assert fruity_slicer.start_note == 0
-    assert fruity_slicer.play_to_end == False
+    assert fruity_slicer.play_to_end is False
     assert fruity_slicer.bitrate == 44100
-    assert fruity_slicer.auto_dump == False
-    assert fruity_slicer.declick == True
-    assert fruity_slicer.auto_fit == False
-    assert fruity_slicer.view_spectrum == False
+    assert fruity_slicer.auto_dump is False
+    assert fruity_slicer.declick is True
+    assert fruity_slicer.auto_fit is False
+    assert fruity_slicer.view_spectrum is False
 
 
 def test_fruity_soft_clipper():
