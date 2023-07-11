@@ -47,6 +47,7 @@ __all__ = [
     "FruityFastDist",
     "FruityNotebook2",
     "FruitySend",
+    "FruitySlicer",
     "FruitySoftClipper",
     "FruityStereoEnhancer",
     "Plucked",
@@ -152,6 +153,49 @@ class FruitySendEvent(StructEventBase):
         "dry" / c.Int32ul,
         "volume" / c.Int32ul,
         "send_to" / c.Int32sl,
+    ).compile()
+
+
+class FruitySlicerEvent(StructEventBase):
+    STRUCT = c.Struct(
+        "_u1" / c.Bytes(8),
+        "bpm" / c.Float32l,
+        "pitch_shift" / c.Int32sl,
+        "time_stretch" / c.Int32sl,
+        "stretching_method"
+        / c.Enum(
+            c.Int32ul,
+            fill_gaps=0,
+            alt_fill_gaps=1,
+            pro_default=2,
+            pro_transient=3,
+            transient=4,
+            tonal=5,
+            monophonic=6,
+            speech=7,
+        ),
+        "fade_in" / c.Int32ul,
+        "fade_out" / c.Int32ul,
+        "file_path" / c.PascalString(c.Int8ul, "utf-8"),
+        "slices"
+        / c.PrefixedArray(
+            c.Int32ul,
+            c.Struct(
+                "name" / c.PascalString(c.Int8ul, "utf-8"),  # TODO: This is a special format
+                "sample_offset" / c.Int32ul,
+                "key" / c.Int32sl,
+                "_u1" / c.Float32l,
+                "reversed" / c.Flag,
+            ),
+        ),
+        "animate" / c.Flag,
+        "start_note" / c.Int32ul,
+        "play_to_end" / c.Flag,
+        "bitrate" / c.Int32ul,
+        "auto_dump" / c.Flag,
+        "declick" / c.Flag,
+        "auto_fit" / c.Flag,
+        "view_spectrum" / FourByteBool,
     ).compile()
 
 
@@ -1005,6 +1049,84 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     | Max     | 320   | 5.6dB / 1.90   |
     | Default | 256   | 0.0dB / 1.00   |
     """
+
+
+class FruitySlicer(_PluginBase[FruitySlicerEvent], _IPlugin, ModelReprMixin):
+    """![](https://bit.ly/46mngih)"""
+
+    INTERNAL_NAME = "Fruity Slicer"
+    bpm = _NativePluginProp[float]()
+    """The BPM (beats per minute) of the sample."""
+
+    pitch_shift = _NativePluginProp[int]()
+    """Pitch shift, in cents. Linear.
+
+    | Type    | Value | Representation |
+    |---------|-------|----------------|
+    | Min     | -1200 | -1200 cents    |
+    | Max     | 1200  | +1200 cents    |
+    | Default | 0     | +0 cent        |
+    """
+
+    time_stretch = _NativePluginProp[int]()
+    """Logarithmic.
+
+    | Type    | Value  | Representation    |
+    |---------|--------|-------------------|
+    | Min     | -20000 | 25%  / 60-240 bpm |
+    | Max     | 20000  | 400% / 60-15 bpm  |
+    | Default | 0      | 100% / 0-0 bpm    |
+    """
+
+    stretching_method = _NativePluginProp[
+        Literal[
+            "fill_gaps",
+            "alt_fill_gaps",
+            "pro_default",
+            "pro_transient",
+            "transient",
+            "tonal",
+            "monophonic",
+            "speech",
+        ]
+    ]()
+    """The stretching method to use on the sample when `time_stretch` is not 0."""
+
+    fade_in = _NativePluginProp[int]()
+    """Slice fade in, in milliseconds."""
+
+    fade_out = _NativePluginProp[int]()
+    """Slice fade out, in milliseconds."""
+
+    file_path = _NativePluginProp[str]()
+    """The file path of the sample."""
+
+    slices = _NativePluginProp[list[dict]]()
+    """A list of slices."""
+
+    animate = _NativePluginProp[bool]()
+    """Whether to highlight the slices as they are played."""
+
+    start_note = _NativePluginProp[int]()
+    """The MIDI note for slicing to start on. Default 60."""
+
+    play_to_end = _NativePluginProp[bool]()
+    """Whether to play slices to the end of the sample."""
+
+    bitrate = _NativePluginProp[int]()
+    """The bitrate of the sample."""
+
+    auto_dump = _NativePluginProp[bool]()
+    """Whether to automatically dump slices to the piano roll."""
+
+    declick = _NativePluginProp[bool]()
+    """Whether to prevent clicking on slices."""
+
+    auto_fit = _NativePluginProp[bool]()
+    """Whether to automatically fit the beat to the project tempo on load."""
+
+    view_spectrum = _NativePluginProp[bool]()
+    """Whether to view the slices as a spectrum instead of a waveform."""
 
 
 class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelReprMixin):

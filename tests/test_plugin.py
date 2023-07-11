@@ -11,6 +11,7 @@ from pyflp.plugin import (
     FruityCenter,
     FruityFastDist,
     FruitySend,
+    FruitySlicer,
     FruitySoftClipper,
     FruityStereoEnhancer,
     Plucked,
@@ -79,6 +80,32 @@ def test_fruity_send():
     assert fruity_send.send_to == -1
     assert fruity_send.pan == 0
     assert fruity_send.volume == 256
+
+
+def test_fruity_slicer():
+    fruity_slicer = get_plugin("fruity-slicer.fst", FruitySlicer)
+    assert fruity_slicer.bpm == 60
+    assert fruity_slicer.pitch_shift == 100
+    assert fruity_slicer.time_stretch == 4300
+    assert fruity_slicer.stretching_method == "transient"
+    assert fruity_slicer.fade_in == 56
+    assert fruity_slicer.fade_out == 5
+    assert fruity_slicer.file_path == r"Z:\home\user\Music\audio.wav"
+
+    test_slice = fruity_slicer.slices[0]
+    assert test_slice.name == "1 - Beat 1"
+    assert test_slice.sample_offset == 0
+    assert test_slice.key == -1
+    assert test_slice.reversed is False
+
+    assert fruity_slicer.animate is False
+    assert fruity_slicer.start_note == 0
+    assert fruity_slicer.play_to_end is False
+    assert fruity_slicer.bitrate == 44100
+    assert fruity_slicer.auto_dump is False
+    assert fruity_slicer.declick is True
+    assert fruity_slicer.auto_fit is False
+    assert fruity_slicer.view_spectrum is False
 
 
 def test_fruity_soft_clipper():
