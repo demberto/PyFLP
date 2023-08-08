@@ -13,22 +13,64 @@
 
 from __future__ import annotations
 
+import enum
 import math
 import warnings
-from typing import Any, List, Tuple
+from typing import Any, List, Union, NamedTuple, Tuple, TypeVar
 
 import construct as c
+from construct.core import Construct
 import construct_typed as ct
 from typing_extensions import TypeAlias
 
-from pyflp.types import ET, MusicalTime, T, U
+_T = TypeVar("_T")
+_U = TypeVar("_U")
+_EnumT = TypeVar("_EnumT", bound=Union[ct.EnumBase, enum.IntEnum, enum.IntFlag])
 
-SimpleAdapter: TypeAlias = ct.Adapter[T, T, U, U]
+SimpleAdapter: TypeAlias = ct.Adapter[_T, _T, _U, _U]
 """Duplicates type parameters for `construct.Adapter`."""
 
 FourByteBool: c.ExprAdapter[int, int, bool, int] = c.ExprAdapter(
     c.Int32ul, lambda obj_, *_: bool(obj_), lambda obj_, *_: int(obj_)  # type: ignore
 )
+U16TupleAdapter: SimpleAdapter[tuple[int], list[int]] = c.ExprAdapter(
+    c.Int16ul[2],
+    lambda obj_, *_: tuple(obj_),  # type: ignore
+    lambda obj_, *_: list(obj_),  # type: ignore
+)
+
+
+class RGBA(NamedTuple):
+    red: float
+    green: float
+    blue: float
+    alpha: float
+
+    @staticmethod
+    def from_bytes(buf: bytes) -> RGBA:
+        return RGBA(*(c / 255 for c in buf))
+
+    def __bytes__(self) -> bytes:
+        return bytes(round(c * 255) for c in self)
+
+
+ColorAdapter: SimpleAdapter[bytes, RGBA] = c.ExprAdapter(
+    c.Bytes(4),
+    lambda obj, *_: RGBA.from_bytes(obj),  # type: ignore
+    lambda obj, *_: bytes(obj),  # type: ignore
+)
+
+
+def _make_str_adapter(encoding: str) -> SimpleAdapter[str, str]:
+    return c.ExprAdapter(
+        c.GreedyString(encoding),
+        lambda obj, *_: obj.rstrip("\0"),  # type: ignore
+        lambda obj, *_: obj + "\0",  # type: ignore
+    )
+
+
+AsciiAdapter = _make_str_adapter("ascii")
+UnicodeAdapter = _make_str_adapter("utf-16-le")
 
 
 class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):
@@ -38,6 +80,17 @@ class List2Tuple(SimpleAdapter[Any, Tuple[int, int]]):
 
     def _encode(self, obj: tuple[int, int], *_: Any) -> c.ListContainer[int]:
         return c.ListContainer([*obj])
+
+
+class MusicalTime(NamedTuple):
+    bars: int
+    """1 bar == 16 beats == 768 (internal representation)."""
+
+    beats: int
+    """1 beat == 240 ticks == 48 (internal representation)."""
+
+    ticks: int
+    """5 ticks == 1 (internal representation)."""
 
 
 class LinearMusical(SimpleAdapter[int, MusicalTime]):
@@ -93,9 +146,13 @@ class LogNormal(SimpleAdapter[List[int], float]):
         return max(min(1.0, 2 ** (obj[0] / 2**12) / 2**15), 0.0)
 
 
-class StdEnum(SimpleAdapter[int, ET]):
-    def _encode(self, obj: ET, *_: Any) -> int:
+class StdEnum(SimpleAdapter[int, _EnumT]):
+    def __init__(self, enumcls: type[_EnumT], subcon: Construct[int, int]) -> None:
+        self._enum_cls = enumcls
+        super().__init__(subcon)
+
+    def _encode(self, obj: _EnumT, *_: Any) -> int:
         return obj.value
 
-    def _decode(self, obj: int, *_: Any) -> ET:
-        return self.__orig_class__.__args__[0](obj)  # type: ignore
+    def _decode(self, obj: int, *_: Any) -> _EnumT:
+        return self._enum_cls(obj)

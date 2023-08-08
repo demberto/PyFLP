@@ -17,208 +17,165 @@ from __future__ import annotations
 
 import abc
 import enum
-from typing import Any, Protocol, overload, runtime_checkable
+from collections.abc import Iterable
+from typing import Any, Generic, TypeVar, overload
 
+import attrs
+import construct as c
 from typing_extensions import Self, final
 
-from pyflp._events import AnyEvent, EventEnum, StructEventBase
-from pyflp._models import VE, EMT_co, EventModel, ItemModel, ModelBase
-from pyflp.types import T, T_co
+from pyflp._events import AnyEvent, EventEnum, EventProxy
+
+_T = TypeVar("_T")
+_EPT = TypeVar("_EPT", bound=EventProxy)
 
 
-@runtime_checkable
-class ROProperty(Protocol[T_co]):
-    """Protocol for a read-only descriptor."""
-
-    def __get__(self, ins: Any, owner: Any = None) -> T_co | Self | None:
-        ...
-
-
-@runtime_checkable
-class RWProperty(ROProperty[T], Protocol):
-    """Protocol for a read-write descriptor."""
-
-    def __set__(self, ins: Any, value: T) -> None:
-        ...
-
-
+@attrs.define
 class NamedPropMixin:
-    def __init__(self, prop: str | None = None) -> None:
-        self._prop = prop or ""
+    prop: str = ""
 
     def __set_name__(self, _: Any, name: str) -> None:
-        if not self._prop:
-            self._prop = name
+        if not self.prop:
+            self.prop = name
 
 
-class PropBase(abc.ABC, RWProperty[T]):
-    def __init__(self, *ids: EventEnum, default: T | None = None, readonly: bool = False):
-        self._ids = ids
-        self._default = default
-        self._readonly = readonly
+@attrs.define(kw_only=True)
+class PropBase(abc.ABC, Generic[_T]):
+    ids: Iterable[EventEnum]
+    default: _T | None = None
 
-    @overload
-    def _get_event(self, ins: ItemModel[VE]) -> ItemModel[VE]:
-        ...
+    def _get_event(self, ins: EventProxy) -> AnyEvent | None:
+        # if not self._ids:
+        #     if len(ins.events) > 1:  # Prevent ambiguous situations
+        #         raise LookupError("Event ID not specified")
 
-    @overload
-    def _get_event(self, ins: EventModel) -> AnyEvent | None:
-        ...
-
-    def _get_event(self, ins: ItemModel[VE] | EventModel):
-        if isinstance(ins, ItemModel):
-            return ins
-
-        if not self._ids:
-            if len(ins.events) > 1:  # Prevent ambiguous situations
-                raise LookupError("Event ID not specified")
-
-            return tuple(ins.events)[0]
-
-        for id in self._ids:
-            if id in ins.events:
-                return ins.events.first(id)
-
-    @property
-    def default(self) -> T | None:  # Configure version based defaults here
-        return self._default
+        #     return tuple(ins.events)[0]
+        return next((e for e in ins.events if e.id in self.ids), None)
 
     @abc.abstractmethod
-    def _get(self, ev_or_ins: Any) -> T | None:
+    def _get(self, event: AnyEvent) -> _T | None:
         ...
 
     @abc.abstractmethod
-    def _set(self, ev_or_ins: Any, value: T) -> None:
+    def _set(self, event: AnyEvent, value: _T) -> None:
+        ...
+
+    @overload
+    def __get__(self, obj: None, objtype: Any = None) -> Self:
+        ...
+
+    @overload
+    def __get__(self, obj: EventProxy, objtype: Any = None) -> _T | None:
         ...
 
     @final
-    def __get__(self, ins: Any, owner: Any = None) -> T | Self | None:
-        if ins is None:
+    def __get__(self, obj: EventProxy | None, objtype: Any = None) -> _T | Self | None:
+        if obj is None:
             return self
 
-        if owner is None:
-            return NotImplemented
-
-        event: Any = self._get_event(ins)
+        event = self._get_event(obj)
         if event is not None:
             return self._get(event)
 
         return self.default
 
     @final
-    def __set__(self, ins: Any, value: T) -> None:
-        if self._readonly:
-            raise AttributeError("Cannot set the value of a read-only property")
-
-        event: Any = self._get_event(ins)
+    def __set__(self, obj: EventProxy, value: _T) -> None:
+        # if self.readonly:
+        #     raise AttributeError("Cannot set the value of a read-only property")
+        event = self._get_event(obj)
         if event is not None:
             self._set(event, value)
         else:
-            raise LookupError(f"No matching event from {self._ids!r} found")
+            raise LookupError(f"No matching event from {self.ids!r} found")
 
 
+@attrs.define(kw_only=True)
 class FlagProp(PropBase[bool]):
-    """Properties derived from enum flags."""
+    """Properties derived from enum bitflags.
 
-    def __init__(
-        self,
-        flag: enum.IntFlag,
-        *ids: EventEnum,
-        prop: str = "flags",
-        inverted: bool = False,
-        default: bool | None = None,
-    ) -> None:
-        """
-        Args:
-            flag: The flag which is to be checked for.
-            id: Event ID (required for MultiEventModel).
-            prop: The dict key which contains the flags in a `Struct`.
-            inverted: If this is true, property getter and setters
-                      invert the value to be set / returned.
-        """
-        self._flag = flag
-        self._flag_type = type(flag)
-        self._prop = prop
-        self._inverted = inverted
-        super().__init__(*ids, default=default)
-
-    def _get(self, ev_or_ins: Any) -> bool | None:
-        if isinstance(ev_or_ins, (ItemModel, StructEventBase)):
-            flags = ev_or_ins[self._prop]
-        else:
-            flags = ev_or_ins.value  # type: ignore
-
-        if flags is not None:
-            retbool = self._flag in self._flag_type(flags)
-            return not retbool if self._inverted else retbool
-
-    def _set(self, ev_or_ins: Any, value: bool) -> None:
-        if self._inverted:
-            value = not value
-
-        if isinstance(ev_or_ins, (ItemModel, StructEventBase)):
-            if value:
-                ev_or_ins[self._prop] |= self._flag
-            else:
-                ev_or_ins[self._prop] &= ~self._flag
-        else:
-            if value:
-                ev_or_ins.value |= self._flag  # type: ignore
-            else:
-                ev_or_ins.value &= ~self._flag  # type: ignore
-
-
-class KWProp(NamedPropMixin, RWProperty[T]):
-    """Properties derived from non-local event values.
-
-    These values are passed to the class constructor as keyword arguments.
+    Args:
+        flag: The flag which is to be checked for.
+        prop: The dict key which contains the flags in a `Struct`.
+        inverted: If this is true, property getter and setters
+                    invert the value to be set / returned.
     """
 
-    def __get__(self, ins: ModelBase | None, owner: Any = None) -> T | Self:
-        if ins is None:
-            return self
+    flag: enum.IntFlag
+    prop: str = "flags"
+    inverted: bool = False
 
-        if owner is None:
-            return NotImplemented
-        return ins._kw[self._prop]
+    def _get(self, event: AnyEvent) -> bool | None:
+        if isinstance(event.struct, c.Struct):
+            flags = event.value[self.prop]
+        else:
+            flags = event.value
 
-    def __set__(self, ins: ModelBase, value: T) -> None:
-        if self._prop not in ins._kw:
-            raise KeyError(self._prop)
-        ins._kw[self._prop] = value
+        if flags is not None:
+            type_ = type(self.flag)
+            retbool = self.flag in type_(flags)
+            return not retbool if self.inverted else retbool
+
+    def _set(self, event: AnyEvent, value: bool) -> None:
+        if self.inverted:
+            value = not value
+
+        if isinstance(event.struct, c.Struct):
+            if value:
+                event.value[self.prop] |= self.flag
+            else:
+                event.value[self.prop] &= ~self.flag
+        else:
+            if value:
+                event.value |= self.flag
+            else:
+                event.value &= ~self.flag
 
 
-class EventProp(PropBase[T]):
+@attrs.define(kw_only=True)
+class EventProp(PropBase[_T]):
     """Properties bound directly to one of fixed size or string events."""
 
-    def _get(self, ev_or_ins: AnyEvent) -> T | None:
-        return ev_or_ins.value
+    def _get(self, event: AnyEvent) -> _T | None:
+        return event.value
 
-    def _set(self, ev_or_ins: AnyEvent, value: T) -> None:
-        ev_or_ins.value = value
-
-
-class NestedProp(ROProperty[EMT_co]):
-    def __init__(self, type: type[EMT_co], *ids: EventEnum) -> None:
-        self._ids = ids
-        self._type = type
-
-    def __get__(self, ins: EventModel, owner: Any = None) -> EMT_co:
-        if owner is None:
-            return NotImplemented
-
-        return self._type(ins.events.subtree(lambda e: e.id in self._ids))
+    def _set(self, event: AnyEvent, value: _T) -> None:
+        event.value = value
 
 
-class StructProp(PropBase[T], NamedPropMixin):
+@attrs.define(kw_only=True)
+class StructProp(PropBase[_T], NamedPropMixin):
     """Properties obtained from a :class:`construct.Struct`."""
 
-    def __init__(self, *ids: EventEnum, prop: str | None = None, **kwds: Any) -> None:
-        super().__init__(*ids, **kwds)
-        NamedPropMixin.__init__(self, prop)
+    prop: str = ""
 
-    def _get(self, ev_or_ins: ItemModel[Any]) -> T | None:
-        return ev_or_ins[self._prop]
+    def __attrs_pre_init__(self) -> None:
+        NamedPropMixin.__init__(self, self.prop)
 
-    def _set(self, ev_or_ins: ItemModel[Any], value: T) -> None:
-        ev_or_ins[self._prop] = value
+    def _get(self, event: AnyEvent) -> _T | None:
+        return event.value[self.prop]
+
+    def _set(self, event: AnyEvent, value: _T) -> None:
+        event.value[self.prop] = value
+
+
+@attrs.define
+class NestedProp(Generic[_EPT]):
+    cls: type[_EPT]
+    ids: Iterable[EventEnum] = attrs.field(kw_only=True)
+
+    @overload
+    def __get__(self, obj: None, objtype: Any = None) -> Self:
+        ...
+
+    @overload
+    def __get__(self, obj: EventProxy, objtype: Any = None) -> _EPT | None:
+        ...
+
+    @final
+    def __get__(self, obj: EventProxy | None, objtype: Any = None) -> _EPT | Self | None:
+        if obj is None:
+            return self
+
+        events = [e for e in obj.events if e.id in self.ids]
+        return self.cls(obj, events)

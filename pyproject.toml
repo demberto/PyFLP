@@ -26,10 +26,10 @@ classifiers = [
 ]
 license = { text = "GPL-3.0" }
 dependencies = [
+  "attrs>=23.1.0",
   "f-enum>=0.2.0;python_version<='3.10'",
   "construct-typing>=0.5.6",
-  "sortedcontainers>=2.4.0",
-  "typing_extensions>=4.6.1",
+  "typing_extensions>=4.6.3",
 ]
 dynamic = ["version"]
 
@@ -73,13 +73,10 @@ line-length = 100
 [tool.mypy]
 python_version = "3.8"
 check_untyped_defs = true
-enable_incomplete_feature = ["Unpack"]
-ignore_missing_imports = true
-warn_no_return = false
 
 [tool.pyright]
-reportPrivateUsage = false
-reportMissingTypeStubs = false
+pythonVersion = "3.8"
+typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

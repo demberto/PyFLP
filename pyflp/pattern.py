@@ -29,7 +29,7 @@ from pyflp._events import (
     TEXT,
     WORD,
     BoolEvent,
-    ColorEvent,
+    ColorAdapter,
     EventEnum,
     EventTree,
     I32Event,
@@ -38,9 +38,8 @@ from pyflp._events import (
     U16Event,
     U32Event,
 )
-from pyflp._models import EventModel, ItemModel, ModelCollection, ModelReprMixin, supports_slice
 from pyflp.timemarker import TimeMarker, TimeMarkerID
-from pyflp.types import RGBA
+from pyflp.types import EventProxy, RGBA
 
 __all__ = ["Note", "Controller", "Pattern", "Patterns"]
 
@@ -94,7 +93,7 @@ class PatternsID(EventEnum):
 class PatternID(EventEnum):
     Looped = (26, BoolEvent)
     New = (WORD + 1, U16Event)  # Marks the beginning of a new pattern, twice.
-    Color = (DWORD + 22, ColorEvent)
+    Color = (DWORD + 22, ColorAdapter)
     Name = TEXT + 1
     # _157 = DWORD + 29  #: 12.5+
     # _158 = DWORD + 30  # default: -1
@@ -106,7 +105,7 @@ class PatternID(EventEnum):
     Notes = (DATA + 16, NotesEvent)
 
 
-class Note(ItemModel[NotesEvent]):
+class Note:
     _NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
     def __repr__(self) -> str:
@@ -219,7 +218,7 @@ class Note(ItemModel[NotesEvent]):
     """
 
 
-class Controller(ItemModel[ControllerEvent], ModelReprMixin):
+class Controller:
     def __str__(self) -> str:
         return f"Controller @ {self.position} of channel #{self.channel}"
 
@@ -230,7 +229,7 @@ class Controller(ItemModel[ControllerEvent], ModelReprMixin):
     value = StructProp[float]()
 
 
-class Pattern(EventModel):
+class Pattern(EventProxy):
     """Represents a pattern which can contain notes, controllers and time markers."""
 
     def __repr__(self) -> str:
@@ -313,29 +312,10 @@ class Pattern(EventModel):
         yield from (TimeMarker(et) for et in self.events.group(*TimeMarkerID))
 
 
-class Patterns(EventModel, ModelCollection[Pattern]):
+class Patterns(EventProxy):
     def __str__(self) -> str:
         iids = [pattern.iid for pattern in self]
         return f"{len(iids)} Patterns {iids!r}"
-
-    @supports_slice  # type: ignore
-    def __getitem__(self, i: int | str | slice) -> Pattern:
-        """Returns the pattern with the specified index or :attr:`Pattern.name`.
-
-        .. versionchanged:: v2.3.0
-
-            Raises :class:`KeyError` on failure.
-
-        Args:
-            i: A zero-based index, its name or a slice of indexes.
-
-        Raises:
-            KeyError: A :class:`Pattern` with the specified name or index isn't found.
-        """
-        for idx, pattern in enumerate(self):
-            if (isinstance(i, int) and idx == i) or i == pattern.name:
-                return pattern
-        raise KeyError(i)
 
     # Doesn't use EventTree delegates since PatternID.New occurs twice.
     # Once for note and controller events and again for the rest of them.

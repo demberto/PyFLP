@@ -29,32 +29,17 @@ Full docs are available at https://pyflp.rtfd.io.
 
 from __future__ import annotations
 
-import io
-import os
 import logging
+import os
 import sys
 from typing import Any, BinaryIO
 
 import construct as c
 
-from pyflp._adapters import StdEnum
-from pyflp._events import (
-    DATA,
-    DWORD,
-    NEW_TEXT_IDS,
-    TEXT,
-    WORD,
-    AnyEvent,
-    AsciiEvent,
-    EventEnum,
-    EventTree,
-    IndexedEvent,
-    UnicodeEvent,
-    UnknownEvent,
-)
-from pyflp.plugin import PluginID, get_event_by_internal_name
-from pyflp.project import VALID_PPQS, FileFormat, Project, ProjectID
-from pyflp.types import FLVersion
+from pyflp._adapters import StdEnum, AsciiAdapter, UnicodeAdapter, SimpleAdapter
+from pyflp._events import DATA, DWORD, NEW_TEXT_IDS, TEXT, WORD, AnyEvent, Event, EventEnum
+from pyflp.plugin import INTERNAL_NAMES, PluginID
+from pyflp.project import VALID_PPQS, FileFormat, FLVersion, Project, ProjectID
 
 if sys.version_info < (3, 11):  # https://github.com/Bobronium/fastenum/issues/2
     import fastenum
@@ -68,13 +53,33 @@ logger.addHandler(logging.NullHandler())
 
 
 FLP = c.Struct(
-    hdr_magic=c.Const(b"FLhd"),
-    hdr_size=c.Const(c.Int32ul.build(6)),
-    format=StdEnum[FileFormat](c.Int16sl),
-    n_channels=c.Int16ul,
-    ppq=c.OneOf(c.Int16ul, VALID_PPQS),
-    data_magic=c.Const(b"FLdt"),
-    event_data=c.Prefixed(c.Int32ul, c.GreedyBytes),
+    header=c.Struct(
+        magic=c.Const(b"FLhd"),
+        size=c.Const(c.Int32ul.build(6)),
+        format=StdEnum(FileFormat, c.Int16sl),
+        n_channels=c.Int16ul,
+        ppq=c.OneOf(c.Int16ul, VALID_PPQS),
+    ),
+    data=c.Struct(
+        magic=c.Const(b"FLdt"),
+        events=c.Prefixed(
+            c.Int32ul,
+            c.GreedyRange(
+                c.Struct(
+                    id=StdEnum(EventEnum, c.Int8ul),
+                    data=c.IfThenElse(
+                        c.this.id >= TEXT,
+                        c.Prefixed(c.VarInt, c.GreedyBytes),
+                        c.IfThenElse(
+                            c.this.id >= DWORD,
+                            c.Bytes(4),
+                            c.IfThenElse(c.this.id >= WORD, c.Bytes(2), c.Bytes(1)),
+                        ),
+                    ),
+                )
+            ),
+        ),
+    ),
     _=c.Terminated,
 ).compile()
 
@@ -95,68 +100,55 @@ def parse(file: Any) -> Project:
     else:
         flp = FLP.parse(file)
 
-    stream = io.BytesIO(flp["event_data"])
     plug_name = None
-    event_type: type[AnyEvent] | None = None
-    str_type: type[AsciiEvent] | type[UnicodeEvent] | None = None
+    struct: c.Construct[Any, Any] | None = None
+    str_adapter: SimpleAdapter[str, str] | None = None
     events: list[AnyEvent] = []
 
-    while stream.tell() < len(flp["event_data"]):
-        event_type = None
-        id = EventEnum(c.Int8ul.parse_stream(stream))
-
-        if id < WORD:
-            value = stream.read(1)
-        elif id < DWORD:
-            value = stream.read(2)
-        elif id < TEXT:
-            value = stream.read(4)
-        else:
-            size = c.VarInt.parse_stream(stream)
-            value = stream.read(size)
+    for event in flp["data"]["events"]:
+        struct = None
+        id: EventEnum = event["id"]
+        data: bytes = event["data"]
 
         if id == ProjectID.FLVersion:
-            string = value.decode("ascii").rstrip("\0")
+            string = data.decode("ascii").rstrip("\0")
             if FLVersion.from_str(string) >= FLVersion(11, 5):
-                str_type = UnicodeEvent
+                str_adapter = UnicodeAdapter
             else:
-                str_type = AsciiEvent
+                str_adapter = AsciiAdapter
 
         for enum_ in EventEnum.__subclasses__():
             if id in enum_:
-                event_type = getattr(enum_(id), "type")
+                struct = enum_(id)._struct_  # type: ignore
                 break
 
-        if event_type is None:
+        if struct is None:
             if id in range(TEXT, DATA) or id.value in NEW_TEXT_IDS:
-                if str_type is None:  # pragma: no cover
+                if str_adapter is None:  # pragma: no cover
                     raise TypeError("Failed to determine string encoding")
-                event_type = str_type
+                struct = str_adapter
 
                 if id == PluginID.InternalName:
-                    plug_name = event_type(id, value).value
+                    plug_name = Event[str](id, data, struct).value
             elif id == PluginID.Data and plug_name is not None:
-                event_type = get_event_by_internal_name(plug_name)
-            else:
-                event_type = UnknownEvent
+                struct = INTERNAL_NAMES.get(plug_name, c.GreedyBytes)
+        else:
+            struct = c.GreedyBytes
 
         try:
-            event = event_type(id, value)
+            event = Event(id, data, struct)
         except c.ConstructError as exc:
             logger.exception(exc)
             logger.error(f"Failed to parse {id!r} event. Report this issue.")
-            event = UnknownEvent(id, value, failed=True)
+            event = Event(id, data, c.GreedyBytes)
         events.append(event)
 
     return Project(
-        EventTree(init=(IndexedEvent(r, e) for r, e in enumerate(events))),
-        channel_count=flp["n_channels"],
-        format=flp["format"],
-        ppq=flp["ppq"],
+        events=events, channel_count=flp["n_channels"], format=flp["format"], ppq=flp["ppq"]
     )
 
 
-def save(project: Project, file: str | os.PathLike[Any] | BinaryIO) -> None:
+def save(project: Project, file: str | os.PathLike[str] | BinaryIO) -> None:
     """Save a :class:`Project` back into a file or stream.
 
     Caution:

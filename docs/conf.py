@@ -13,7 +13,7 @@ import m2r2
 
 from pyflp._descriptors import EventProp, FlagProp, NestedProp, StructProp
 from pyflp._events import EventEnum, RGBA
-from pyflp._models import ModelBase
+from pyflp._proxy import ModelBase
 from pyflp.arrangement import _TrackColorProp
 
 BITLY_LINK = re.compile(r"!\[.*\]\((https://bit\.ly/[A-z0-9]*)\)")

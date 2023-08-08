@@ -18,12 +18,12 @@ from __future__ import annotations
 import enum
 from typing import Any, Iterator, Literal, Optional, cast
 
+import attrs
 import construct as c
 import construct_typed as ct
-from typing_extensions import TypedDict, Unpack
 
 from pyflp._adapters import FourByteBool, StdEnum
-from pyflp._descriptors import EventProp, NestedProp, StructProp
+from pyflp._descriptors import EventProp, StructProp, NestedProp
 from pyflp._events import (
     DATA,
     DWORD,
@@ -31,24 +31,17 @@ from pyflp._events import (
     WORD,
     AnyEvent,
     EventEnum,
-    EventTree,
     ListEventBase,
-    StructEventBase,
     U8Event,
     U16Event,
-    U16TupleEvent,
-)
-from pyflp._models import (
-    EventModel,
-    ItemModel,
-    ModelCollection,
-    ModelReprMixin,
-    supports_slice,
+    U16TupleAdapter,
+    make_struct_event,
+    RGBA,
+    EventProxy,
 )
 from pyflp.channel import Channel, ChannelRack
 from pyflp.pattern import Pattern, Patterns
 from pyflp.timemarker import TimeMarker, TimeMarkerID
-from pyflp.types import RGBA, FLVersion
 
 __all__ = [
     "Arrangements",
@@ -62,8 +55,7 @@ __all__ = [
 ]
 
 
-class PLSelectionEvent(StructEventBase):
-    STRUCT = c.Struct("start" / c.Optional(c.Int32ul), "end" / c.Optional(c.Int32ul)).compile()
+PLSelectionEvent = make_struct_event("start" / c.Int32ul, "end" / c.Int32ul)
 
 
 class PlaylistEvent(ListEventBase):
@@ -127,25 +119,24 @@ class HeightAdapter(ct.Adapter[float, float, str, str]):
         return int(obj[:-1]) / 100
 
 
-class TrackEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "iid" / c.Optional(c.Int32ul),  # 4
-        "color" / c.Optional(c.Int32ul),  # 8
-        "icon" / c.Optional(c.Int32ul),  # 12
-        "enabled" / c.Optional(c.Flag),  # 13
-        "height" / c.Optional(HeightAdapter(c.Float32l)),  # 17
-        "locked_height" / c.Optional(c.Int32sl),  # 21
-        "content_locked" / c.Optional(c.Flag),  # 22
-        "motion" / c.Optional(StdEnum[TrackMotion](c.Int32ul)),  # 26
-        "press" / c.Optional(StdEnum[TrackPress](c.Int32ul)),  # 30
-        "trigger_sync" / c.Optional(StdEnum[TrackSync](c.Int32ul)),  # 34
-        "queued" / c.Optional(FourByteBool),  # 38
-        "tolerant" / c.Optional(FourByteBool),  # 42
-        "position_sync" / c.Optional(StdEnum[TrackSync](c.Int32ul)),  # 46
-        "grouped" / c.Optional(c.Flag),  # 47
-        "locked" / c.Optional(c.Flag),  # 48
-        "_u1" / c.Optional(c.GreedyBytes),  # * 66 as of 20.9.1
-    ).compile()
+TrackEvent = make_struct_event(
+    "iid" / c.Int32ul,  # 4
+    "color" / c.Int32ul,  # 8
+    "icon" / c.Int32ul,  # 12
+    "enabled" / c.Flag,  # 13
+    "height" / HeightAdapter(c.Float32l),  # 17
+    "locked_height" / c.Int32sl,  # 21
+    "content_locked" / c.Flag,  # 22
+    "motion" / StdEnum[TrackMotion](c.Int32ul),  # 26
+    "press" / StdEnum[TrackPress](c.Int32ul),  # 30
+    "trigger_sync" / StdEnum[TrackSync](c.Int32ul),  # 34
+    "queued" / FourByteBool,  # 38
+    "tolerant" / FourByteBool,  # 42
+    "position_sync" / StdEnum[TrackSync](c.Int32ul),  # 46
+    "grouped" / c.Flag,  # 47
+    "locked" / c.Flag,  # 48
+    "_u1" / c.GreedyBytes,  # * 66 as of 20.9.1
+)
 
 
 @enum.unique
@@ -153,7 +144,7 @@ class ArrangementsID(EventEnum):
     TimeSigNum = (17, U8Event)
     TimeSigBeat = (18, U8Event)
     Current = (WORD + 36, U16Event)
-    _LoopPos = (DWORD + 24, U16TupleEvent)  #: 1.3.8+
+    _LoopPos = (DWORD + 24, U16TupleAdapter)  #: 1.3.8+
     PLSelection = (DATA + 9, PLSelectionEvent)
     """.. versionadded:: v2.1.0"""
 
@@ -172,7 +163,7 @@ class TrackID(EventEnum):
     Data = (DATA + 30, TrackEvent)
 
 
-class PLItemBase(ItemModel[PlaylistEvent], ModelReprMixin):
+class PLItemBase(EventProxy):
     group = StructProp[int]()
     """Returns 0 for no group, else a group number for clips in the same group."""
 
@@ -188,17 +179,17 @@ class PLItemBase(ItemModel[PlaylistEvent], ModelReprMixin):
 
         An offset is the distance from the item's actual start or end.
         """
-        return (self["start_offset"], self["end_offset"])
+        return value["start_offset"], value["end_offset"]
 
     @offsets.setter
-    def offsets(self, value: tuple[float, float]) -> None:
-        self["start_offset"], self["end_offset"] = value
+    def offsets(self, new: tuple[float, float]) -> None:
+        value["start_offset"], value["end_offset"] = new
 
     position = StructProp[int]()
     """PPQ-dependant quantity."""
 
 
-class ChannelPLItem(PLItemBase, ModelReprMixin):
+class ChannelPLItem(PLItemBase):
     """An audio clip or automation on the playlist of an arrangement.
 
     *New in FL Studio v2.0.1*.
@@ -214,7 +205,7 @@ class ChannelPLItem(PLItemBase, ModelReprMixin):
         self["item_index"] = channel.iid
 
 
-class PatternPLItem(PLItemBase, ModelReprMixin):
+class PatternPLItem(PLItemBase):
     """A pattern block or clip on the playlist of an arrangement.
 
     *New in FL Studio v7.0.0*.
@@ -231,42 +222,36 @@ class PatternPLItem(PLItemBase, ModelReprMixin):
 
 
 class _TrackColorProp(StructProp[RGBA]):
-    def _get(self, ev_or_ins: Any) -> RGBA | None:
-        value = cast(Optional[int], super()._get(ev_or_ins))
+    def _get(self, event: AnyEvent) -> RGBA | None:
+        value = cast(Optional[int], super()._get(event))
         if value is not None:
             return RGBA.from_bytes(value.to_bytes(4, "little"))
 
-    def _set(self, ev_or_ins: Any, value: RGBA) -> None:
-        super()._set(ev_or_ins, int.from_bytes(bytes(value), "little"))  # type: ignore
+    def _set(self, event: AnyEvent, value: RGBA) -> None:
+        super()._set(event, int.from_bytes(bytes(value), "little"))  # type: ignore
 
 
-class _TrackKW(TypedDict):
-    items: list[PLItemBase]
-
-
-class Track(EventModel, ModelCollection[PLItemBase]):
+@attrs.define(kw_only=True)
+class Track(EventProxy):
     """Represents a track in an arrangement on which playlist items are arranged.
 
     ![](https://bit.ly/3de6R8y)
     """
 
-    def __init__(self, events: EventTree, **kw: Unpack[_TrackKW]) -> None:
-        super().__init__(events, **kw)
+    items: list[PLItemBase] = attrs.field(factory=list)
 
-    def __getitem__(self, index: int | slice | str):
-        if isinstance(index, str):
-            return NotImplemented
-        return self._kw["items"][index]
+    # def __getitem__(self, index: int | slice):
+    #     return self.items[index]
 
-    def __iter__(self) -> Iterator[PLItemBase]:
-        """An iterator over :attr:`items`."""
-        yield from self._kw["items"]
+    # def __iter__(self) -> Iterator[PLItemBase]:
+    #     """An iterator over :attr:`items`."""
+    #     yield from self.items
 
-    def __len__(self) -> int:
-        return len(self._kw["items"])
+    # def __len__(self) -> int:
+    #     return len(self._kw["items"])
 
-    def __repr__(self) -> str:
-        return f"Track(name={self.name}, iid={self.iid}, {len(self)} items)"
+    def __str__(self) -> str:
+        return f"Track(name={self.name}, iid={self.iid}, {len(self.items)} items)"
 
     color = _TrackColorProp(TrackID.Data)
     """Defaults to #485156 (dark slate gray).
@@ -334,13 +319,8 @@ class Track(EventModel, ModelCollection[PLItemBase]):
     """:guilabel:`&Performance settings`, defaults to ``False``."""
 
 
-class _ArrangementKW(TypedDict):
-    channels: ChannelRack
-    patterns: Patterns
-    version: FLVersion
-
-
-class Arrangement(EventModel):
+@attrs.define(kw_only=True)
+class Arrangement(EventProxy):
     """Contains the timemarkers and tracks in an arrangement.
 
     ![](https://bit.ly/3B6is1z)
@@ -348,10 +328,11 @@ class Arrangement(EventModel):
     *New in FL Studio v12.9.1*: Support for multiple arrangements.
     """
 
-    def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]) -> None:
-        super().__init__(events, **kw)
+    channels: ChannelRack
+    patterns: Patterns
+    version: FLVersion
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return "Arrangement(iid={}, name={}, {} timemarkers, {} tracks)".format(
             self.iid,
             repr(self.name),
@@ -372,9 +353,9 @@ class Arrangement(EventModel):
     @property
     def tracks(self) -> Iterator[Track]:
         pl_evt = None
-        max_idx = 499 if self._kw["version"] >= FLVersion(12, 9, 1) else 198
-        channels = {channel.iid: channel for channel in self._kw["channels"]}
-        patterns = {pattern.iid: pattern for pattern in self._kw["patterns"]}
+        max_idx = 499 if self.version >= FLVersion(12, 9, 1) else 198
+        channels = {channel.iid: channel for channel in self.channels}
+        patterns = {pattern.iid: pattern for pattern in self.patterns}
 
         if ArrangementID.Playlist in self.events.ids:
             pl_evt = cast(PlaylistEvent, self.events.first(ArrangementID.Playlist))
@@ -399,7 +380,7 @@ class Arrangement(EventModel):
 
 
 # TODO Find whether time is set to signature or division mode.
-class TimeSignature(EventModel, ModelReprMixin):
+class TimeSignature(EventProxy):
     """![](https://bit.ly/3EYiMmy)"""
 
     def __str__(self) -> str:
@@ -424,27 +405,12 @@ class TimeSignature(EventModel, ModelReprMixin):
     """
 
 
-class Arrangements(EventModel, ModelCollection[Arrangement]):
+@attrs.define(kw_only=True)
+class Arrangements(EventProxy):
     """Iterator over arrangements in the project and some related properties."""
 
-    def __init__(self, events: EventTree, **kw: Unpack[_ArrangementKW]) -> None:
-        super().__init__(events, **kw)
-
-    @supports_slice  # type: ignore
-    def __getitem__(self, i: int | str | slice) -> Arrangement:
-        """Returns an arrangement based either on its index or name.
-
-        Args:
-            i: The index of the arrangement in which they occur or :attr:`Arrangement.name`
-                of the arrangement to lookup for or a slice of indexes.
-
-        Raises:
-            KeyError: An :class:`Arrangement` with the specifed name or index isn't found.
-        """
-        for idx, arr in enumerate(self):
-            if (isinstance(i, str) and i == arr.name) or idx == i:
-                return arr
-        raise KeyError(i)
+    channels: ChannelRack
+    patterns: Patterns
 
     # TODO Verify ArrangementsID.Current is the end
     # FL changed event ordering a lot, the latest being the most easiest to
@@ -469,7 +435,10 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
             if e.id == ArrangementsID.Current:
                 return False  # Yield out last arrangement
 
-        yield from (Arrangement(ed, **self._kw) for ed in self.events.subtrees(select, len(self)))
+        yield from (
+            Arrangement(ed, channels=self.channels, patterns=self.patterns, version=self.version)
+            for ed in self.events.subtrees(select, len(self))
+        )
 
     def __len__(self) -> int:
         """The number of arrangements present in the project."""
@@ -481,10 +450,10 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
     @property
     def current(self) -> Arrangement | None:
         """Currently selected arrangement (via FL's interface)."""
-        if ArrangementsID.Current in self.events.ids:
-            event = self.events.first(ArrangementsID.Current)
-            index: int = event.value
-            return list(self)[index]
+        for event in self.events:
+            if event.id == ArrangementsID.Current:
+                index: int = event.value
+                return list(self)[index]
 
     @property
     def loop_pos(self) -> tuple[int, int] | None:
@@ -506,8 +475,8 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
         *New in FL Studio v1.3.8*.
         """
         if ArrangementsID.PLSelection in self.events:
-            event = cast(PLSelectionEvent, self.events.first(ArrangementsID.PLSelection))
-            return event["start"], event["end"]
+            event = self.events.first(ArrangementsID.PLSelection)
+            return event.value["start"], event.value["end"]
 
         if ArrangementsID._LoopPos in self.events:
             return self.events.first(ArrangementsID._LoopPos).value
@@ -515,8 +484,8 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
     @loop_pos.setter
     def loop_pos(self, value: tuple[int, int]) -> None:
         if ArrangementsID.PLSelection in self.events:
-            event = cast(PLSelectionEvent, self.events.first(ArrangementsID.PLSelection))
-            event["start"], event["end"] = value
+            event = self.events.first(ArrangementsID.PLSelection)
+            event.value["start"], event.value["end"] = value
         elif ArrangementsID._LoopPos in self.events:
             self.events.first(ArrangementsID._LoopPos).value = value
         else:
@@ -525,7 +494,7 @@ class Arrangements(EventModel, ModelCollection[Arrangement]):
 
     @property
     def max_tracks(self) -> Literal[500, 199]:
-        return 500 if self._kw["version"] >= FLVersion(12, 9, 1) else 199
+        return 500 if self.version >= FLVersion(12, 9, 1) else 199
 
     time_signature = NestedProp(
         TimeSignature, ArrangementsID.TimeSigNum, ArrangementsID.TimeSigBeat

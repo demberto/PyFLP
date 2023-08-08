@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from pyflp._events import AsciiEvent, EventEnum, EventTree, U8Event, WORD
+from pyflp._events import AsciiAdapter, EventEnum, EventTree, U8Event, WORD
 
 
 def test_id_out_of_range():
@@ -10,7 +10,7 @@ def test_id_out_of_range():
         U8Event(EventEnum(128), b"\x00")
 
     with pytest.raises(ValueError):
-        AsciiEvent(EventEnum(0), b"1234-decode-me-baby")
+        AsciiAdapter(EventEnum(0), b"1234-decode-me-baby")
 
 
 def test_invalid_chunk_size():

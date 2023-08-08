@@ -16,30 +16,25 @@
 from __future__ import annotations
 
 import enum
-from typing import cast
 
 import construct as c
 
-from pyflp._events import DATA, EventEnum, StructEventBase
-from pyflp._models import EventModel, ModelReprMixin
+from pyflp._events import DATA, EventEnum, make_struct_event
+from pyflp.types import EventProxy
 
 __all__ = ["RemoteController"]
 
 
-class MIDIControllerEvent(StructEventBase):
-    STRUCT = c.Struct("_u1" / c.GreedyBytes)
-
-
-class RemoteControllerEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "_u1" / c.Optional(c.Bytes(2)),  # 2
-        "_u2" / c.Optional(c.Byte),  # 3
-        "_u3" / c.Optional(c.Byte),  # 4
-        "parameter_data" / c.Optional(c.Int16ul),  # 6
-        "destination_data" / c.Optional(c.Int16sl),  # 8
-        "_u4" / c.Optional(c.Bytes(8)),  # 16
-        "_u5" / c.Optional(c.Bytes(4)),  # 20
-    ).compile()
+MIDIControllerEvent = make_struct_event("_u1" / c.GreedyBytes)
+RemoteControllerEvent = make_struct_event(
+    "_u1" / c.Bytes(2),  # 2
+    "_u2" / c.Byte,  # 3
+    "_u3" / c.Byte,  # 4
+    "parameter_data" / c.Int16ul,  # 6
+    "destination_data" / c.Int16sl,  # 8
+    "_u4" / c.Bytes(8),  # 16
+    "_u5" / c.Bytes(4),  # 20
+)
 
 
 @enum.unique
@@ -48,7 +43,7 @@ class ControllerID(EventEnum):
     Remote = (DATA + 19, RemoteControllerEvent)
 
 
-class RemoteController(EventModel, ModelReprMixin):
+class RemoteController(EventProxy):
     """![](https://bit.ly/3S0i4Zf)
 
     *New in FL Studio v3.3.0*.
@@ -57,10 +52,7 @@ class RemoteController(EventModel, ModelReprMixin):
     @property
     def parameter(self) -> int | None:
         """The ID of the plugin parameter to which controller is linked to."""
-        if (
-            value := cast(StructEventBase, self.events.first(ControllerID.Remote))["parameter_data"]
-            is not None
-        ):
+        if value := self.events.first(ControllerID.Remote).value["parameter_data"] is not None:
             return value & 0x7FFF
 
     @property
@@ -69,8 +61,5 @@ class RemoteController(EventModel, ModelReprMixin):
 
         None when linked to a plugin parameter on an insert slot.
         """
-        if (
-            value := cast(StructEventBase, self.events.first(ControllerID.Remote))["parameter_data"]
-            is not None
-        ):
+        if value := self.events.first(ControllerID.Remote).value["parameter_data"] is not None:
             return (value & 0x8000) > 0

@@ -8,7 +8,6 @@ import pytest
 import pyflp
 from pyflp import Project
 from pyflp._events import EventEnum
-from pyflp._models import ModelBase
 from pyflp.mixer import Mixer
 
 MT = TypeVar("MT", bound=ModelBase)

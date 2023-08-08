@@ -19,26 +19,27 @@ and unmarshalling.
 
 from __future__ import annotations
 
-import abc
 import enum
 import warnings
-from collections.abc import Callable, Iterable, Iterator, Sequence
-from dataclasses import dataclass, field
-from itertools import zip_longest
-from typing import TYPE_CHECKING, Any, ClassVar, Final, Generic, Tuple, cast
+from functools import partial
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Generic, SupportsIndex, TypeVar
 
+import attrs
 import construct as c
-from sortedcontainers import SortedList
-from typing_extensions import Concatenate, TypeAlias
+import construct_typed as ct
+from typing_extensions import TypeAlias
 
-from pyflp.types import RGBA, P, T, AnyContainer, AnyListContainer, AnyList, AnyDict
+if TYPE_CHECKING:
+    from _typeshed import SupportsItemAccess
 
-BYTE: Final = 0
-WORD: Final = 64
-DWORD: Final = 128
-TEXT: Final = 192
-DATA: Final = 208
-NEW_TEXT_IDS: Final = (
+_T = TypeVar("_T")
+
+BYTE = 0
+WORD = 64
+DWORD = 128
+TEXT = 192
+DATA = 208
+NEW_TEXT_IDS = (
     TEXT + 49,  # ArrangementID.Name
     TEXT + 39,  # DisplayGroupID.Name
     TEXT + 47,  # TrackID.Name
@@ -55,7 +56,7 @@ class _EventEnumMeta(enum.EnumMeta):
         return obj in tuple(self)
 
 
-class EventEnum(int, enum.Enum, metaclass=_EventEnumMeta):
+class EventEnum(ct.EnumBase, metaclass=_EventEnumMeta):
     """IDs used by events.
 
     Event values are stored as a tuple of event ID and its designated type.
@@ -65,283 +66,119 @@ class EventEnum(int, enum.Enum, metaclass=_EventEnumMeta):
     the latest version of FL Studio, *to the best of my knowledge*.
     """
 
-    def __new__(cls, id: int, type: type[AnyEvent] | None = None):
+    def __new__(cls, id: int, struct: c.Construct[Any, Any] | None = None):
         obj = int.__new__(cls, id)
         obj._value_ = id
-        setattr(obj, "type", type)
+        obj._struct_ = struct  # type: ignore
         return obj
 
-    # This allows EventBase.id to actually use EventEnum for representation and
-    # not just equality checks. It will be much simpler to debug problematic
-    # events, if the name of the ID is directly visible.
-    @classmethod
-    def _missing_(cls, value: object) -> EventEnum | None:
-        """Allows unknown IDs in the range of 0-255."""
-        if isinstance(value, int) and 0 <= value <= 255:
-            # First check in existing subclasses
-            for sc in cls.__subclasses__():
-                if value in sc:
-                    return sc(value)
 
-            # Else create a new pseudo member
-            pseudo_member = cls._value2member_map_.get(value, None)
-            if pseudo_member is None:
-                new_member = int.__new__(cls, value)
-                new_member._name_ = str(value)
-                new_member._value_ = value
-                pseudo_member = cls._value2member_map_.setdefault(value, new_member)
-            return cast(EventEnum, pseudo_member)
-        # Raises ValueError in Enum.__new__
+def _check_data_size(event: Any, _: Any, data: bytes) -> None:
+    if event.id < TEXT:
+        if event.id < WORD:
+            expect = 1
+        elif event.id < DWORD:
+            expect = 2
+        else:
+            expect = 4
+
+        if len(data) != expect:
+            raise ValueError(f"Invalid size of 'data' {len(data)}; expected {expect}")
 
 
-class EventBase(Generic[T]):
-    """Generic ABC representing an event."""
+@attrs.define
+class Event(Generic[_T]):
+    id: EventEnum = attrs.field(validator=attrs.validators.in_(range(0, 256)))
+    data: bytes = attrs.field(validator=_check_data_size, repr=False)
+    struct: c.Construct[_T, _T]
+    lazy: bool = attrs.field(default=False, kw_only=True)
 
-    STRUCT: c.Construct[T, T]
-    ALLOWED_IDS: ClassVar[Sequence[int]] = []
-
-    def __init__(self, id: EventEnum, data: bytes, **kwds: Any) -> None:
-        if self.ALLOWED_IDS and id not in self.ALLOWED_IDS:
-            raise ValueError(id, *self.ALLOWED_IDS)
-
-        if id < TEXT:
-            if id < WORD:
-                expected_size = 1
-            elif id < DWORD:
-                expected_size = 2
-            else:
-                expected_size = 4
-
-            if len(data) != expected_size:
-                raise BufferError(expected_size, len(data))
-
-        self.id = EventEnum(id)
-        self._kwds = kwds
-        self.value = self.STRUCT.parse(data, **self._kwds)
-
-    def __eq__(self, o: object) -> bool:
-        if not isinstance(o, EventBase):
-            raise TypeError(f"Cannot find equality of an {type(o)} and {type(self)!r}")
-        return self.id == o.id and self.value == cast(EventBase[T], o).value
-
-    def __ne__(self, o: object) -> bool:
-        if not isinstance(o, EventBase):
-            raise TypeError(f"Cannot find inequality of a {type(o)} and {type(self)!r}")
-        return self.id != o.id or self.value != cast(EventBase[T], o).value
+    def __attrs_post_init__(self) -> None:
+        self._cache: Any = None
+        if not self.lazy:
+            _ = self.value
 
     def __bytes__(self) -> bytes:
         id = c.Byte.build(self.id)
-        data = self.STRUCT.build(self.value, **self._kwds)
+        data = self.struct.build(self.value)
 
         if self.id < TEXT:
             return id + data
-
-        length = c.VarInt.build(len(data))
-        return id + length + data
-
-    def __repr__(self) -> str:
-        return f"<{type(self)!r}(id={self.id!r}, value={self.value!r})>"
+        return id + c.VarInt.build(len(data)) + data
 
     @property
-    def size(self) -> int:
-        """Serialised event size (in bytes)."""
+    def value(self) -> _T:
+        if self._cache is None:
+            value = self.struct.parse(self.data)
+            if isinstance(value, dict) and isinstance(self.struct, c.Struct):
+                self._cache = _ValidatingDict(self.struct, **value)  # type: ignore
+            elif isinstance(value, list):
+                self._cache = _ValidatingList(self.struct, *value)  # type: ignore
+            else:
+                self._cache = value
+        return self._cache
 
-        if self.id >= TEXT:
-            return len(bytes(self))
-        elif self.id >= DWORD:
-            return 5
-        elif self.id >= WORD:
-            return 3
-        else:
-            return 2
+    @value.setter
+    def value(self, value: _T) -> None:
+        self.struct.build(value)
+        self._cache = value
 
-
-AnyEvent: TypeAlias = EventBase[Any]
-
-
-class ByteEventBase(EventBase[T]):
-    """Base class of events used for storing 1 byte data."""
-
-    ALLOWED_IDS = range(BYTE, WORD)
-
-    def __init__(self, id: EventEnum, data: bytes) -> None:
-        """
-        Args:
-            id: **0** to **63**.
-            data: Event data of size 1.
-
-        Raises:
-            EventIDOutOfRangeError: When ``id`` is not in range of 0-63.
-            InvalidEventChunkSizeError: When size of `data` is not 1.
-        """
-        super().__init__(id, data)
+    @value.deleter
+    def value(self) -> None:
+        self._cache = None
 
 
-class BoolEvent(ByteEventBase[bool]):
-    """An event used for storing a boolean."""
+class _ValidationMixin(SupportsItemAccess[_T, Any] if TYPE_CHECKING else object):
+    subcons: SupportsItemAccess[_T, c.Construct[Any, Any]]
 
-    STRUCT = c.Flag
+    def __getitem__(self, key: _T) -> Any:
+        child = super().__getitem__(key)
+        childcon = self.subcons[key]
 
+        if TYPE_CHECKING:
+            assert isinstance(childcon, c.Struct)
 
-class I8Event(ByteEventBase[int]):
-    """An event used for storing a 1 byte signed integer."""
+        if isinstance(child, dict):
+            return _ValidatingDict(childcon, **child)
+        elif isinstance(child, list):
+            return _ValidatingList(childcon, *child)
+        return child
 
-    STRUCT = c.Int8sl
-
-
-class U8Event(ByteEventBase[int]):
-    """An event used for storing a 1 byte unsigned integer."""
-
-    STRUCT = c.Int8ul
-
-
-class WordEventBase(EventBase[int], abc.ABC):
-    """Base class of events used for storing 2 byte data."""
-
-    ALLOWED_IDS = range(WORD, DWORD)
-
-    def __init__(self, id: EventEnum, data: bytes) -> None:
-        """
-        Args:
-            id: **64** to **127**.
-            data: Event data of size 2.
-
-        Raises:
-            EventIDOutOfRangeError: When ``id`` is not in range of 64-127.
-            InvalidEventChunkSizeError: When size of `data` is not 2.
-        """
-        super().__init__(id, data)
+    def __setitem__(self, key: _T, value: Any) -> None:
+        self.subcons[key].build(value)
 
 
-class I16Event(WordEventBase):
-    """An event used for storing a 2 byte signed integer."""
-
-    STRUCT = c.Int16sl
-
-
-class U16Event(WordEventBase):
-    """An event used for storing a 2 byte unsigned integer."""
-
-    STRUCT = c.Int16ul
-
-
-class DWordEventBase(EventBase[T], abc.ABC):
-    """Base class of events used for storing 4 byte data."""
-
-    ALLOWED_IDS = range(DWORD, TEXT)
-
-    def __init__(self, id: EventEnum, data: bytes) -> None:
-        """
-        Args:
-            id: **128** to **191**.
-            data: Event data of size 4.
-
-        Raises:
-            EventIDOutOfRangeError: When ``id`` is not in range of 128-191.
-            InvalidEventChunkSizeError: When size of `data` is not 4.
-        """
-        super().__init__(id, data)
-
-
-class F32Event(DWordEventBase[float]):
-    """An event used for storing 4 byte floats."""
-
-    STRUCT = c.Float32l
-
-
-class I32Event(DWordEventBase[int]):
-    """An event used for storing a 4 byte signed integer."""
-
-    STRUCT = c.Int32sl
-
-
-class U32Event(DWordEventBase[int]):
-    """An event used for storing a 4 byte unsigned integer."""
-
-    STRUCT = c.Int32ul
-
-
-class U16TupleEvent(DWordEventBase[Tuple[int, int]]):
-    """An event used for storing a two-tuple of 2 byte unsigned integers."""
-
-    STRUCT = c.ExprAdapter(
-        c.Int16ul[2],
-        lambda obj_, *_: tuple(obj_),  # type: ignore
-        lambda obj_, *_: list(obj_),  # type: ignore
-    )
-
-
-class ColorEvent(DWordEventBase[RGBA]):
-    """A 4 byte event which stores a color."""
-
-    STRUCT = c.ExprAdapter(
-        c.Bytes(4),
-        lambda obj, *_: RGBA.from_bytes(obj),  # type: ignore
-        lambda obj, *_: bytes(obj),  # type: ignore
-    )
-
-
-class StrEventBase(EventBase[str]):
-    """Base class of events used for storing strings."""
-
-    ALLOWED_IDS = (*range(TEXT, DATA), *NEW_TEXT_IDS)
-
-    def __init__(self, id: EventEnum, data: bytes) -> None:
-        """
-        Args:
-            id: **192** to **207** or in :attr:`NEW_TEXT_IDS`.
-            data: ASCII or UTF16 encoded string data.
-
-        Raises:
-            ValueError: When ``id`` is not in 192-207 or in :attr:`NEW_TEXT_IDS`.
-        """
-        super().__init__(id, data)
-
-
-class AsciiEvent(StrEventBase):
-    if TYPE_CHECKING:
-        STRUCT: c.ExprAdapter[str, str, str, str]
-    else:
-        STRUCT = c.ExprAdapter(
-            c.GreedyString("ascii"),
-            lambda obj, *_: obj.rstrip("\0"),
-            lambda obj, *_: obj + "\0",
-        )
-
-
-class UnicodeEvent(StrEventBase):
-    if TYPE_CHECKING:
-        STRUCT: c.ExprAdapter[str, str, str, str]
-    else:
-        STRUCT = c.ExprAdapter(
-            c.GreedyString("utf-16-le"),
-            lambda obj, *_: obj.rstrip("\0"),
-            lambda obj, *_: obj + "\0",
-        )
-
-
-class StructEventBase(EventBase[AnyContainer], AnyDict):
-    """Base class for events used for storing fixed size structured data.
-
-    Consists of a collection of POD types like int, bool, float, but not strings.
-    Its size is determined by the event as well as FL version.
-    """
-
-    def __init__(self, id: EventEnum, data: bytes) -> None:
-        super().__init__(id, data, len=len(data))
-        self.data = self.value  # Akin to UserDict.__init__
+class _ValidatingDict(Dict[str, Any], _ValidationMixin[str]):
+    def __init__(self, struct: c.Struct[Any, Any], **kwds: Any) -> None:
+        self.subcons = struct._subcons  # Dict[str, c.Construct[Any, Any]]
+        super().__init__(**kwds)
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key not in self:
-            raise KeyError
+            raise KeyError("No new keys allowed")
 
         if self[key] is None:
-            raise KeyError
+            raise AttributeError("Key must already have a value")
 
-        self.data[key] = value
+        _ValidationMixin[str].__setitem__(self, key, value)
+        Dict[str, Any].__setitem__(self, key, value)
+
+    def __delitem__(self, _: str) -> None:
+        raise AttributeError("Keys cannot be deleted")
 
 
-class ListEventBase(EventBase[AnyListContainer], AnyList):
+class _ValidatingList(List[Any], _ValidationMixin[SupportsIndex]):
+    def __init__(self, struct: c.Struct[Any, Any], *args: Any) -> None:
+        self.subcons = struct.subcons  # List[c.Construct[Any, Any]]
+        super().__init__(*args)
+
+
+def make_struct_event(*subcons: c.Construct[Any, Any], optional: bool = True):
+    args = [c.Optional(s) for s in subcons] if optional else subcons
+    return partial(Event[Dict[str, Any]], struct=c.Struct(*args))
+
+
+class ListEventBase(Event[c.ListContainer[Any] if TYPE_CHECKING else c.ListContainer]):
     """Base class for events storing an array of structured data.
 
     Attributes:
@@ -369,228 +206,12 @@ class ListEventBase(EventBase[AnyListContainer], AnyList):
                 f"Cannot parse event {id} as event size {len(data)} "
                 f"is not a multiple of struct size(s) {self.SIZES}"
             )
-        else:
-            self.data = self.value  # Akin to UserList.__init__
 
 
-class UnknownEvent(EventBase[bytes]):
-    """Used for events whose structure is unknown as of yet."""
-
-    STRUCT = c.GreedyBytes
-
-
-@dataclass(order=True)
-class IndexedEvent:
-    r: int
-    """Root index of occurence of :attr:`e`."""
-
-    e: AnyEvent = field(compare=False)
-    """The indexed event."""
+@attrs.define
+class EventProxy:
+    parent: EventProxy | None = None
+    events: list[AnyEvent] = attrs.field(factory=list)
 
 
-def yields_child(func: Callable[Concatenate[EventTree, P], Iterator[EventTree]]):
-    """Adds an :class:`EventTree` to its parent's list of children and yields it."""
-
-    def wrapper(self: EventTree, *args: P.args, **kwds: P.kwargs):
-        for child in func(self, *args, **kwds):
-            self.children.append(child)
-            yield child
-
-    return wrapper
-
-
-class EventTree:
-    """Provides mutable "views" which propagate changes back to parents.
-
-    This tree is analogous to the hierarchy used by models.
-
-    Attributes:
-        parent: Immediate ancestor / parent. Defaults to self.
-        root: Parent of all parent trees.
-        children: List of children.
-    """
-
-    def __init__(
-        self,
-        parent: EventTree | None = None,
-        init: Iterable[IndexedEvent] | None = None,
-    ) -> None:
-        """Create a new dictionary with an optional :attr:`parent`."""
-        self.children: list[EventTree] = []
-        self.lst: list[IndexedEvent] = SortedList(init or [])  # type: ignore
-
-        self.parent = parent
-        if parent is not None:
-            parent.children.append(self)
-
-        while parent is not None and parent.parent is not None:
-            parent = parent.parent
-        self.root = parent or self
-
-    def __contains__(self, id: EventEnum) -> bool:
-        """Whether the key :attr:`id` exists in the list."""
-        return any(ie.e.id == id for ie in self.lst)
-
-    def __eq__(self, o: object) -> bool:
-        """Compares equality of internal lists."""
-        if not isinstance(o, EventTree):
-            return NotImplemented
-
-        return self.lst == o.lst
-
-    def __iadd__(self, *events: AnyEvent) -> None:
-        """Analogous to :meth:`list.extend`."""
-        for event in events:
-            self.append(event)
-
-    def __iter__(self) -> Iterator[AnyEvent]:
-        return (ie.e for ie in self.lst)
-
-    def __len__(self) -> int:
-        return len(self.lst)
-
-    def __repr__(self) -> str:
-        return f"EventTree({len(self.ids)} IDs, {len(self)} events)"
-
-    def _get_ie(self, *ids: EventEnum) -> Iterator[IndexedEvent]:
-        return (ie for ie in self.lst if ie.e.id in ids)
-
-    def _recursive(self, action: Callable[[EventTree], None]) -> None:
-        """Recursively performs :attr:`action` on self and all parents."""
-        action(self)
-        ancestor = self.parent
-        while ancestor is not None:
-            action(ancestor)
-            ancestor = ancestor.parent
-
-    def append(self, event: AnyEvent) -> None:
-        """Appends an event at its corresponding key's list's end."""
-        self.insert(len(self), event)
-
-    def count(self, id: EventEnum) -> int:
-        """Returns the count of the events with :attr:`id`."""
-        return len(list(self._get_ie(id)))
-
-    @yields_child
-    def divide(self, separator: EventEnum, *ids: EventEnum) -> Iterator[EventTree]:
-        """Yields subtrees containing events separated by ``separator`` infinitely."""
-        el: list[IndexedEvent] = []
-        first = True
-        for ie in self.lst:
-            if ie.e.id == separator:
-                if not first:
-                    yield EventTree(self, el)
-                    el = []
-                else:
-                    first = False
-
-            if ie.e.id in ids:
-                el.append(ie)
-        yield EventTree(self, el)  # Yield the last one
-
-    def first(self, id: EventEnum) -> AnyEvent:
-        """Returns the first event with :attr:`id`.
-
-        Raises:
-            KeyError: An event with :attr:`id` isn't found.
-        """
-        try:
-            return next(self.get(id))
-        except StopIteration as exc:
-            raise KeyError(id) from exc
-
-    def get(self, *ids: EventEnum) -> Iterator[AnyEvent]:
-        """Yields events whose ID is one of :attr:`ids`."""
-        return (e for e in self if e.id in ids)
-
-    @yields_child
-    def group(self, *ids: EventEnum) -> Iterator[EventTree]:
-        """Yields EventTrees of zip objects of events with matching :attr:`ids`."""
-        for iet in zip_longest(*(self._get_ie(id) for id in ids)):  # unpack magic
-            yield EventTree(self, [ie for ie in iet if ie])  # filter out None values
-
-    def insert(self, pos: int, e: AnyEvent) -> None:
-        """Inserts :attr:`ev` at :attr:`pos` in this and all parent trees."""
-        rootidx = sorted(self.indexes)[pos] if len(self) else 0
-
-        # Shift all root indexes after rootidx by +1 to prevent collisions
-        # while sorting the entire list by root indexes before serialising.
-        for ie in self.root.lst:
-            if ie.r >= rootidx:
-                ie.r += 1
-
-        self._recursive(lambda et: et.lst.add(IndexedEvent(rootidx, e)))  # type: ignore
-
-    def pop(self, id: EventEnum, pos: int = 0) -> AnyEvent:
-        """Pops the event with ``id`` at ``pos`` in ``self`` and all parents."""
-        if id not in self.ids:
-            raise KeyError(id)
-
-        ie = [ie for ie in self.lst if ie.e.id == id][pos]
-        self._recursive(lambda et: et.lst.remove(ie))
-
-        # Shift all root indexes of events after rootidx by -1.
-        for root_ie in self.root.lst:
-            if root_ie.r >= ie.r:
-                root_ie.r -= 1
-
-        return ie.e
-
-    def remove(self, id: EventEnum, pos: int = 0) -> None:
-        """Removes the event with ``id`` at ``pos`` in ``self`` and all parents."""
-        self.pop(id, pos)
-
-    @yields_child
-    def separate(self, id: EventEnum) -> Iterator[EventTree]:
-        """Yields a separate ``EventTree`` for every event with matching ``id``."""
-        yield from (EventTree(self, [ie]) for ie in self._get_ie(id))
-
-    def subtree(self, select: Callable[[AnyEvent], bool | None]) -> EventTree:
-        """Returns a mutable view containing events for which ``select`` was True.
-
-        Caution:
-            Always use this function to create a mutable view. Maintaining
-            chilren and passing parent to a child are best done here.
-        """
-        el: list[IndexedEvent] = []
-        for ie in self.lst:
-            if select(ie.e):
-                el.append(ie)
-        obj = EventTree(self, el)
-        self.children.append(obj)
-        return obj
-
-    @yields_child
-    def subtrees(
-        self, select: Callable[[AnyEvent], bool | None], repeat: int
-    ) -> Iterator[EventTree]:
-        """Yields mutable views till ``select`` and ``repeat`` are satisfied.
-
-        Args:
-            select: Called for every event in this dictionary by iterating over
-                a chained, sorted list. Returns True if event must be included.
-                Once it returns False, rest of them are ignored and resulting
-                EventTree is returned. Return None to skip an event.
-            repeat: Use -1 for infinite iterations.
-        """
-        el: list[IndexedEvent] = []
-        for ie in self.lst:
-            if not repeat:
-                return
-
-            result = select(ie.e)
-            if result is False:
-                yield EventTree(self, el)
-                el = [ie]  # Don't skip current event
-                repeat -= 1
-            elif result is not None:
-                el.append(ie)
-
-    @property
-    def ids(self) -> frozenset[EventEnum]:
-        return frozenset(ie.e.id for ie in self.lst)
-
-    @property
-    def indexes(self) -> frozenset[int]:
-        """Returns root indexes for all events in ``self``."""
-        return frozenset(ie.r for ie in self.lst)
+AnyEvent: TypeAlias = Event[Any]

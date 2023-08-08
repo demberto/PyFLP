@@ -15,33 +15,32 @@
 
 from __future__ import annotations
 
-import dataclasses
 import enum
 from collections import defaultdict
-from typing import Any, DefaultDict, Iterator, NamedTuple, cast
+from typing import Any, Generic, Iterator, NamedTuple, TypeVar, cast
 
+import attrs
 import construct as c
 import construct_typed as ct
-from typing_extensions import NotRequired, TypedDict, Unpack
 
 from pyflp._adapters import StdEnum
-from pyflp._descriptors import EventProp, FlagProp, NamedPropMixin, ROProperty, RWProperty
+from pyflp._descriptors import EventProp, FlagProp, NamedPropMixin
 from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
     WORD,
     AnyEvent,
-    ColorEvent,
+    ColorAdapter,
     EventEnum,
-    EventTree,
+    EventProxy,
+    RGBA,
     I16Event,
     I32Event,
     ListEventBase,
-    StructEventBase,
+    make_struct_event,
     U16Event,
 )
-from pyflp._models import EventModel, ModelBase, ModelCollection, ModelReprMixin, supports_slice
 from pyflp.plugin import (
     FruityBalance,
     FruityBloodOverdrive,
@@ -56,9 +55,10 @@ from pyflp.plugin import (
     Soundgoodizer,
     VSTPlugin,
 )
-from pyflp.types import RGBA, FLVersion, T
 
 __all__ = ["Insert", "InsertDock", "InsertEQ", "InsertEQBand", "Mixer", "Slot"]
+
+_T = TypeVar("_T")
 
 
 @enum.unique
@@ -101,24 +101,23 @@ class _MixerParamsID(ct.EnumBase):
     HighQ = 226
 
 
-class InsertFlagsEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "_u1" / c.Optional(c.Bytes(4)),  # 4
-        "flags" / c.Optional(StdEnum[_InsertFlags](c.Int32ul)),  # 8
-        "_u2" / c.Optional(c.Bytes(4)),  # 12
-    ).compile()
+InsertFlagsEvent = make_struct_event(
+    "_u1" / c.Bytes(4),  # 4
+    "flags" / StdEnum[_InsertFlags](c.Int32ul),  # 8
+    "_u2" / c.Bytes(4),  # 12
+)
 
 
 class InsertRoutingEvent(ListEventBase):
     STRUCT = c.GreedyRange(c.Flag)
 
 
-@dataclasses.dataclass
+@attrs.define
 class _InsertItems:
-    slots: DefaultDict[int, dict[int, dict[str, Any]]] = dataclasses.field(
-        default_factory=lambda: defaultdict(dict)
+    slots: defaultdict[int, dict[int, dict[str, Any]]] = attrs.field(
+        factory=lambda: defaultdict(dict)
     )
-    own: dict[int, dict[str, Any]] = dataclasses.field(default_factory=dict)
+    own: dict[int, dict[str, Any]] = attrs.field(factory=dict)
 
 
 class MixerParamsEvent(ListEventBase):
@@ -132,11 +131,11 @@ class MixerParamsEvent(ListEventBase):
         )
     )
 
-    def __init__(self, id: Any, data: bytearray) -> None:
+    def __init__(self, id: Any, data: bytes) -> None:
         super().__init__(id, data)
-        self.items_: DefaultDict[int, _InsertItems] = defaultdict(_InsertItems)
+        self.items_: defaultdict[int, _InsertItems] = defaultdict(_InsertItems)
 
-        for item in self.data:
+        for item in self.value:
             insert_idx = (item["channel_data"] >> 6) & 0x7F
             slot_idx = item["channel_data"] & 0x3F
             insert = self.items_[insert_idx]
@@ -152,7 +151,7 @@ class MixerParamsEvent(ListEventBase):
 class InsertID(EventEnum):
     Icon = (WORD + 31, I16Event)
     Output = (DWORD + 19, I32Event)
-    Color = (DWORD + 21, ColorEvent)  #: 4.0+
+    Color = (DWORD + 21, ColorAdapter)  #: 4.0+
     Input = (DWORD + 26, I32Event)
     Name = TEXT + 12  #: 3.5.4+
     Routing = (DATA + 27, InsertRoutingEvent)
@@ -170,7 +169,7 @@ class SlotID(EventEnum):
     Index = (WORD + 34, U16Event)
 
 
-# ? Maybe added in FL Studio v6.0.1
+# ? Maybe, added in FL Studio v6.0.1
 class InsertDock(enum.Enum):
     """![](https://bit.ly/3eLum9D)
 
@@ -183,25 +182,21 @@ class InsertDock(enum.Enum):
     Right = enum.auto()
 
 
-class _InsertEQBandKW(TypedDict, total=False):
-    gain: dict[str, Any]
-    freq: dict[str, Any]
-    reso: dict[str, Any]
-
-
-class _InsertEQBandProp(NamedPropMixin, RWProperty[int]):
+class _InsertEQBandProp(NamedPropMixin):
     def __get__(self, ins: InsertEQBand, owner: Any = None) -> int | None:
         if owner is None:
             return NotImplemented
-        return ins._kw[self._prop]["msg"]
+        return getattr(ins, self.prop)["msg"]
 
     def __set__(self, ins: InsertEQBand, value: int) -> None:
-        ins._kw[self._prop]["msg"] = value
+        getattr(ins, self.prop)["msg"] = value
 
 
-class InsertEQBand(ModelBase, ModelReprMixin):
-    def __init__(self, **kw: Unpack[_InsertEQBandKW]) -> None:
-        super().__init__(**kw)
+@attrs.define
+class InsertEQBand:
+    gain: dict[str, Any]
+    freq: dict[str, Any]
+    reso: dict[str, Any]
 
     @property
     def size(self) -> int:
@@ -237,7 +232,7 @@ class _InsertEQPropArgs(NamedTuple):
     reso: int
 
 
-class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
+class _InsertEQProp(NamedPropMixin):
     def __init__(self, ids: _InsertEQPropArgs) -> None:
         super().__init__()
         self._ids = ids
@@ -246,8 +241,8 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
         if owner is None:
             return NotImplemented
 
-        items: _InsertEQBandKW = {}
-        for id, param in cast(_InsertItems, ins._kw["params"]).own.items():
+        items: dict[str, Any] = {}
+        for id, param in ins.params.own.items():
             if id == self._ids.freq:
                 items["freq"] = param
             elif id == self._ids.gain:
@@ -258,7 +253,8 @@ class _InsertEQProp(NamedPropMixin, ROProperty[InsertEQBand]):
 
 
 # Stored in MixerID.Params event.
-class InsertEQ(ModelBase, ModelReprMixin):
+@attrs.define
+class InsertEQ:
     """Post-effect :class:`Insert` EQ with 3 adjustable bands.
 
     ![](https://bit.ly/3RUCQt6)
@@ -267,12 +263,11 @@ class InsertEQ(ModelBase, ModelReprMixin):
         :attr:`Insert.eq`
     """
 
-    def __init__(self, params: _InsertItems) -> None:
-        super().__init__(params=params)
+    params: _InsertItems
 
     @property
     def size(self) -> int:
-        return 12 * self._kw["param"]  # ! TODO
+        return 12 * self.params  # ! TODO
 
     low = _InsertEQProp(
         _InsertEQPropArgs(_MixerParamsID.LowFreq, _MixerParamsID.LowGain, _MixerParamsID.LowQ)
@@ -290,34 +285,34 @@ class InsertEQ(ModelBase, ModelReprMixin):
     """High shelf band. Default frequency - 55825 (8000 Hz)."""
 
 
-class _MixerParamProp(RWProperty[T]):
+class _MixerParamProp(Generic[_T]):
     def __init__(self, id: int) -> None:
         self._id = id
 
-    def __get__(self, ins: Insert, owner: object = None) -> T | None:
+    def __get__(self, ins: Insert, owner: object = None) -> _T | None:
         if owner is None:
             return NotImplemented
 
-        for id, item in cast(_InsertItems, ins._kw["params"]).own.items():
+        for id, item in ins.params.own.items():
             if id == self._id:
                 return item["msg"]
 
-    def __set__(self, ins: Insert, value: T) -> None:
-        for id, item in cast(_InsertItems, ins._kw["params"]).own.items():
+    def __set__(self, ins: Insert, value: _T) -> None:
+        for id, item in ins.params.own.items():
             if id == self._id:
                 item["msg"] = value
                 return
         raise KeyError(self._id)
 
 
-class Slot(EventModel):
+@attrs.define(kw_only=True)
+class Slot(EventProxy):
     """Represents an effect slot in an `Insert` / mixer channel.
 
     ![](https://bit.ly/3RUDtTu)
     """
 
-    def __init__(self, events: EventTree, params: list[dict[str, Any]] | None = None) -> None:
-        super().__init__(events, params=params or [])
+    params: list[dict[str, Any]] = attrs.field(factory=list)
 
     def __repr__(self) -> str:
         return f"Slot (name={self.name}, iid={self.index}, plugin={self.plugin!r})"
@@ -361,58 +356,27 @@ class Slot(EventModel):
     """The effect loaded into the slot."""
 
 
-class _InsertKW(TypedDict):
-    iid: int
-    max_slots: int
-    params: NotRequired[_InsertItems]
-
-
 # TODO Need to make a `load()` method which will be able to parse preset files
 # (by looking at Project.format) and use `MixerParameterEvent.items` to get
 # remaining data. Normally, the `Mixer` passes this information to the Inserts
 # (and Inserts to the `Slot`s directly).
-class Insert(EventModel, ModelCollection[Slot]):
+@attrs.define(kw_only=True)
+class Insert(EventProxy):
     """Represents a mixer track to which channel from the rack are routed to.
 
     ![](https://bit.ly/3LeGKuN)
     """
 
-    def __init__(self, events: EventTree, **kw: Unpack[_InsertKW]) -> None:
-        super().__init__(events, **kw)
+    iid: int
+    """-1 for "current" insert, 0 for master and upto :attr:`Mixer.max_inserts`."""
 
-    # TODO Add number of used slots
-    def __repr__(self) -> str:
-        return f"Insert(name={self.name!r}, iid={self.iid})"
-
-    @supports_slice  # type: ignore
-    def __getitem__(self, i: int | str) -> Slot:
-        """Returns an effect slot of the specified index or name.
-
-        .. versionchanged:: v2.3.0
-
-            Raises :class:`KeyError` on failure.
-
-        Args:
-            i: An index in the range of 0 to :attr:`Mixer.max_slots`
-               or the name of the :class:`Slot`.
-
-        Raises:
-            KeyError: An effect :class:`Slot` with the specified index or name isn't found.
-        """
-        for idx, slot in enumerate(self):
-            if (isinstance(i, int) and idx == i) or i == slot.name:
-                return slot
-        raise KeyError(i)
-
-    @property
-    def iid(self) -> int:
-        """-1 for "current" insert, 0 for master and upto :attr:`Mixer.max_inserts`."""
-        return self._kw["iid"]
+    max_slots: int
+    params: _InsertItems = attrs.field(factory=_InsertItems)
 
     def __iter__(self) -> Iterator[Slot]:
         """Iterator over the effect empty and used slots."""
         for idx, ed in enumerate(self.events.divide(SlotID.Index, *SlotID, *PluginID)):
-            yield Slot(ed, params=self._kw["params"].slots[idx])
+            yield Slot(ed, params=self.params.slots[idx])
 
     def __len__(self) -> int:
         try:
@@ -445,11 +409,11 @@ class Insert(EventModel, ModelCollection[Slot]):
         ![](https://bit.ly/3eLum9D)
         """
         try:
-            event = cast(InsertFlagsEvent, self.events.first(InsertID.Flags))
+            event = self.events.first(InsertID.Flags)
         except KeyError:
             return None
 
-        flags = _InsertFlags(event["flags"])
+        flags = _InsertFlags(event.value["flags"])
         if _InsertFlags.DockMiddle in flags:
             return InsertDock.Middle
         if _InsertFlags.DockRight in flags:
@@ -468,7 +432,7 @@ class Insert(EventModel, ModelCollection[Slot]):
 
         ![](https://bit.ly/3RUCQt6)
         """
-        return InsertEQ(self._kw["params"])
+        return InsertEQ(self.params)
 
     icon = EventProp[int](InsertID.Icon)
     """Internal ID of the icon shown beside ``name``.
@@ -516,7 +480,7 @@ class Insert(EventModel, ModelCollection[Slot]):
         *New in FL Studio v4.0*.
         """
         items = iter(cast(InsertRoutingEvent, self.events.first(InsertID.Routing)))
-        for id, item in cast(_InsertItems, self._kw["params"]).own.items():
+        for id, item in self.params.own.items():
             if id >= _MixerParamsID.RouteVolStart:
                 try:
                     cond = next(items)
@@ -553,17 +517,16 @@ class Insert(EventModel, ModelCollection[Slot]):
     """
 
 
-class _MixerKW(TypedDict):
-    version: FLVersion
-
-
 # TODO FL Studio version in which slots were increased to 10
 # TODO A move() method to change the placement of Inserts; it's difficult!
-class Mixer(EventModel, ModelCollection[Insert]):
+@attrs.define(kw_only=True)
+class Mixer(EventProxy):
     """Represents the mixer which contains :class:`Insert` instances.
 
     ![](https://bit.ly/3eOsblF)
     """
+
+    version: FLVersion
 
     _MAX_INSERTS = {
         (1, 6, 5): 5,
@@ -576,31 +539,6 @@ class Mixer(EventModel, ModelCollection[Insert]):
     }
 
     _MAX_SLOTS = {(1, 6, 5): 4, (3, 0, 0): 8}
-
-    def __init__(self, events: EventTree, **kw: Unpack[_MixerKW]) -> None:
-        super().__init__(events, **kw)
-
-    # Inserts don't store their index internally.
-    @supports_slice  # type: ignore
-    def __getitem__(self, i: int | str | slice) -> Insert:
-        """Returns an insert with the specified index or name.
-
-        .. versionchanged:: v2.3.0
-
-            Raises :class:`KeyError` on failure.
-
-        Args:
-            i: An index between 0 to :attr:`Mixer.max_inserts` resembling the
-                one shown by FL Studio or the name of the insert. Use 0 for
-                master and -1 for "current" insert.
-
-        Raises:
-            KeyError: An :class:`Insert` with the specified name or index isn't found.
-        """
-        for idx, insert in enumerate(self):
-            if (isinstance(i, int) and idx == i + 1) or i == insert.name:
-                return insert
-        raise KeyError(i)
 
     def __iter__(self) -> Iterator[Insert]:
         def select(e: AnyEvent) -> bool | None:
@@ -644,7 +582,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
         * 9.0.0: 99 inserts, 105 in total.
         * 12.9.0: 125 + master + current.
         """
-        version = dataclasses.astuple(self._kw["version"])
+        version = attrs.astuple(self.version)
         for k, v in self._MAX_INSERTS.items():
             if version <= k:
                 return v
@@ -659,7 +597,7 @@ class Mixer(EventModel, ModelCollection[Insert]):
         * 1.6.5: 4
         * 3.3.0: 8
         """
-        version = dataclasses.astuple(self._kw["version"])
+        version = attrs.astuple(self.version)
         for k, v in self._MAX_SLOTS.items():
             if version <= k:
                 return v

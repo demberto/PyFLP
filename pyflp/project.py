@@ -19,37 +19,30 @@ import datetime
 import enum
 import math
 import pathlib
-from typing import Final, Literal, cast
+from typing import Final, Literal, TYPE_CHECKING
 
+import attrs
 import construct as c
 import construct_typed as ct
-from typing_extensions import TypedDict, Unpack
 
-from pyflp._descriptors import EventProp, KWProp
+from pyflp._adapters import SimpleAdapter
+from pyflp._descriptors import EventProp, StructProp
 from pyflp._events import (
     DATA,
     DWORD,
     TEXT,
     WORD,
     AnyEvent,
-    AsciiEvent,
-    BoolEvent,
     EventEnum,
-    EventTree,
-    I16Event,
-    I32Event,
-    StructEventBase,
-    U8Event,
-    U32Event,
+    EventProxy,
+    make_struct_event,
 )
-from pyflp._models import EventModel
 from pyflp.arrangement import ArrangementID, Arrangements, ArrangementsID, TrackID
 from pyflp.channel import ChannelID, ChannelRack, DisplayGroupID, RackID
 from pyflp.mixer import InsertID, Mixer, MixerID, SlotID
 from pyflp.pattern import PatternID, Patterns, PatternsID
 from pyflp.plugin import PluginID
 from pyflp.timemarker import TimeMarkerID
-from pyflp.types import FLVersion
 
 __all__ = ["PanLaw", "Project", "FileFormat", "VALID_PPQS"]
 
@@ -60,9 +53,27 @@ MIN_TEMPO: Final = 10.000
 VALID_PPQS: Final = (24, 48, 72, 96, 120, 144, 168, 192, 384, 768, 960)
 """PPQs / timebase supported by FL Studio as of its latest version."""
 
+if TYPE_CHECKING:
+    Float2DateTime = SimpleAdapter[float, datetime.datetime]
+    Float2TimeDelta = SimpleAdapter[float, datetime.timedelta]
+else:
+    Float2DateTime = Float2TimeDelta = c.ExprAdapter
 
-class TimestampEvent(StructEventBase):
-    STRUCT = c.Struct("created_on" / c.Float64l, "time_spent" / c.Float64l).compile()
+TimestampEvent = make_struct_event(
+    "created_on"
+    / Float2DateTime(
+        c.Float64l,
+        lambda obj, *_: _DELPHI_EPOCH + datetime.timedelta(days=obj),  # type: ignore
+        lambda obj, *_: (obj - _DELPHI_EPOCH).total_seconds() / 86400,  # type: ignore
+    ),
+    "time_spent"
+    / Float2TimeDelta(
+        c.Float64l,
+        lambda obj, *_: datetime.timedelta(days=obj),  # type: ignore
+        lambda obj, *_: (obj).total_seconds() / 86400,  # type: ignore
+    ),
+    optional=False,
+)
 
 
 @enum.unique
@@ -126,7 +137,7 @@ class ProjectID(EventEnum):
     Comments = TEXT + 3
     Url = TEXT + 5
     _RTFComments = TEXT + 6  #: 1.2.10+
-    FLVersion = (TEXT + 7, AsciiEvent)
+    FLVersion = (TEXT + 7, AsciiAdapter)
     Licensee = TEXT + 8  #: 1.3.9+
     DataPath = TEXT + 10  #: 9.0+
     Genre = TEXT + 14  #: 5.0+
@@ -134,50 +145,87 @@ class ProjectID(EventEnum):
     Timestamp = (DATA + 29, TimestampEvent)
 
 
-class _ProjectKW(TypedDict):
-    channel_count: int
-    ppq: int
-    format: FileFormat
-
-
-class Project(EventModel):
-    """Represents an FL Studio project."""
-
-    def __init__(self, events: EventTree, **kw: Unpack[_ProjectKW]) -> None:
-        super().__init__(events, **kw)
-
-    def __repr__(self) -> str:
-        return f"<Project(format={self.format!r}, version={self.version!r}>"
+@attrs.define(frozen=True, order=True)
+class FLVersion:
+    major: int
+    minor: int = 0
+    patch: int = 0
+    build: int | None = None
 
     def __str__(self) -> str:
-        return f"FL Studio v{self.version!s} {self.format.name}"  # type: ignore
+        version = f"{self.major}.{self.minor}.{self.patch}"
+        if self.build is not None:
+            return f"{version}.{self.build}"
+        return version
+
+    @staticmethod
+    def from_str(s: str) -> FLVersion:
+        return FLVersion(*[int(part) for part in s.split(".")])
+
+
+@attrs.define(kw_only=True)
+class Project(EventProxy):
+    """Represents an FL Studio project."""
+
+    channel_count: int
+    """Number of channels in the rack.
+
+    For Patcher presets, the total number of plugins used inside it.
+
+    Raises:
+        ValueError: When a value less than zero is tried to be set.
+    """
+
+    ppq: int
+    """Pulses per quarter.
+
+    ![](https://bit.ly/3F0UrMT)
+
+    :menuselection:`Options --> &Project general settings --> Timebase (PPQ)`.
+
+    Note:
+        All types of lengths, positions and offsets internally use the PPQ
+        as a multiplying factor.
+
+    Danger:
+        Don't try to set this property, it affects all the length, position
+        and offset calculations used for deciding the placement of playlist,
+        automations, timemarkers and patterns.
+
+        When you change this in FL, it recalculates all the above. It is
+        beyond PyFLP's scope to properly recalculate the timings.
+
+    Raises:
+        ValueError: When a value not in ``VALID_PPQS`` is tried to be set.
+
+    *Changed in FL Studio v2.1.1*: Defaults to ``96``.
+    """
+
+    format: FileFormat
+    """Internal format marker used by FL Studio to distinguish between types."""
+
+    def __str__(self) -> str:
+        return f"FL Studio v{self.version!s} {self.format.name}"
 
     @property
     def arrangements(self) -> Arrangements:
         """Provides an iterator over arrangements and other related properties."""
         arrnew_occured = False
-
-        def select(e: AnyEvent) -> Literal[True] | None:
-            nonlocal arrnew_occured
-
-            if e.id == ArrangementID.New:
+        events: list[AnyEvent] = []
+        for event in self.events:
+            if event.id == ArrangementID.New:
                 arrnew_occured = True
 
             # * Prevents accidentally passing on Pattern's timemarkers
             # TODO This logic will still be incorrect if arrangement's
             # timemarkers occur before ArrangementID.New event.
-            if e.id in TimeMarkerID and arrnew_occured:
-                return True
+            if event.id in TimeMarkerID and not arrnew_occured:
+                continue
 
-            if e.id in (*ArrangementID, *ArrangementsID, *TrackID):
-                return True
+            if event.id in (*ArrangementID, *ArrangementsID, *TimeMarkerID, *TrackID):
+                events.append(event)
 
-        return Arrangements(
-            self.events.subtree(select),
-            channels=self.channels,
-            patterns=self.patterns,
-            version=self.version,
-        )
+        return Arrangements(self, events, channels=self.channels, patterns=self.patterns)
 
     artists = EventProp[str](ProjectID.Artists)
     """Authors / artists info. to be embedded in exported WAV & MP3.
@@ -186,17 +234,6 @@ class Project(EventModel):
 
     *New in FL Studio v5.0.*
     """
-
-    @property
-    def channel_count(self) -> int:
-        """Number of channels in the rack.
-
-        For Patcher presets, the total number of plugins used inside it.
-
-        Raises:
-            ValueError: When a value less than zero is tried to be set.
-        """
-        return self._kw["channel_count"]
 
     @channel_count.setter
     def channel_count(self, value: int) -> None:
@@ -207,18 +244,15 @@ class Project(EventModel):
     @property
     def channels(self) -> ChannelRack:
         """Provides an iterator over channels and channel rack properties."""
+        events: list[AnyEvent] = []
+        for event in self.events:
+            if event.id == InsertID.Flags:
+                break
 
-        def select(e: AnyEvent) -> bool | None:
-            if e.id == InsertID.Flags:
-                return False
+            if event.id in (*ChannelID, *DisplayGroupID, *PluginID, *RackID):
+                events.append(event)
 
-            if e.id in (*ChannelID, *DisplayGroupID, *PluginID, *RackID):
-                return True
-
-        return ChannelRack(
-            self.events.subtree(select),
-            channel_count=self.channel_count,
-        )
+        return ChannelRack(self, events=events)
 
     comments = EventProp[str](ProjectID.Comments, ProjectID._RTFComments)
     """Comments / project description / summary.
@@ -232,18 +266,11 @@ class Project(EventModel):
     """
 
     # Stored as a duration in days since the Delphi epoch (30 Dec, 1899).
-    @property
-    def created_on(self) -> datetime.datetime | None:
-        """The local date and time on which this project was created.
+    created_on = StructProp[datetime.datetime](ProjectID.Timestamp)
+    """The local date and time on which this project was created.
 
-        Located at the bottom of :menuselection:`Options --> &Project info` page.
-        """
-        if ProjectID.Timestamp in self.events.ids:
-            event = cast(TimestampEvent, self.events.first(ProjectID.Timestamp))
-            return _DELPHI_EPOCH + datetime.timedelta(days=event["created_on"])
-
-    format = KWProp[FileFormat]()
-    """Internal format marker used by FL Studio to distinguish between types."""
+    Located at the bottom of :menuselection:`Options --> &Project info` page.
+    """
 
     @property
     def data_path(self) -> pathlib.Path | None:
@@ -335,18 +362,17 @@ class Project(EventModel):
     def mixer(self) -> Mixer:
         """Provides an iterator over inserts and other mixer related properties."""
         inserts_began = False
+        events: list[AnyEvent] = []
 
-        def select(e: AnyEvent) -> Literal[True] | None:
-            nonlocal inserts_began
-            if e.id in (*MixerID, *InsertID, *SlotID):
-                # TODO Find a more reliable to detect when inserts start.
-                inserts_began = True
-                return True
+        for event in self.events:
+            if event.id in (*MixerID, *InsertID, *SlotID):
+                inserts_began = True  # TODO Find a more reliable to detect when inserts start.
+                events.append(event)
 
-            if inserts_began and e.id in PluginID:
-                return True
+            if inserts_began and event.id in PluginID:
+                events.append(event)
 
-        return Mixer(self.events.subtree(select), version=self.version)
+        return Mixer(self, events, version=self.version)
 
     @property
     def patterns(self) -> Patterns:
@@ -373,33 +399,6 @@ class Project(EventModel):
 
     :menuselection:`Options -> &Project general settings -> Advanced -> Panning law`
     """
-
-    @property
-    def ppq(self) -> int:
-        """Pulses per quarter.
-
-        ![](https://bit.ly/3F0UrMT)
-
-        :menuselection:`Options --> &Project general settings --> Timebase (PPQ)`.
-
-        Note:
-            All types of lengths, positions and offsets internally use the PPQ
-            as a multiplying factor.
-
-        Danger:
-            Don't try to set this property, it affects all the length, position
-            and offset calculations used for deciding the placement of playlist,
-            automations, timemarkers and patterns.
-
-            When you change this in FL, it recalculates all the above. It is
-            beyond PyFLP's scope to properly recalculate the timings.
-
-        Raises:
-            ValueError: When a value not in ``VALID_PPQS`` is tried to be set.
-
-        *Changed in FL Studio v2.1.1*: Defaults to ``96``.
-        """
-        return self._kw["ppq"]
 
     @ppq.setter
     def ppq(self, value: int) -> None:
@@ -474,17 +473,13 @@ class Project(EventModel):
         if ProjectID._TempoCoarse in self.events.ids:
             self.events.first(ProjectID._TempoCoarse).value = math.floor(value)
 
-    @property
-    def time_spent(self) -> datetime.timedelta | None:
-        """Time spent on the project since its creation.
+    time_spent = StructProp[datetime.timedelta](ProjectID.Timestamp)
+    """Time spent on the project since its creation.
 
-        ![](https://bit.ly/3TsBzdM)
+    ![](https://bit.ly/3TsBzdM)
 
-        Located at the bottom of :menuselection:`Options --> &Project info` page.
-        """
-        if ProjectID.Timestamp in self.events.ids:
-            event = cast(TimestampEvent, self.events.first(ProjectID.Timestamp))
-            return datetime.timedelta(days=event["time_spent"])
+    Located at the bottom of :menuselection:`Options --> &Project info` page.
+    """
 
     url = EventProp[str](ProjectID.Url)
     """:menuselection:`Options --> &Project info --> Web link`."""
@@ -511,8 +506,8 @@ class Project(EventModel):
         Raises:
             ValueError: When a string with an invalid format is tried to be set.
         """
-        event = cast(AsciiEvent, self.events.first(ProjectID.FLVersion))
-        return FLVersion(*tuple(int(part) for part in event.value.split(".")))
+        value: str = self.events.first(ProjectID.FLVersion).value
+        return FLVersion(*tuple(int(part) for part in value.split(".")))
 
     @version.setter
     def version(self, value: FLVersion | str | tuple[int, ...]) -> None:

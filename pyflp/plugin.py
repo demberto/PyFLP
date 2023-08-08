@@ -16,28 +16,14 @@
 from __future__ import annotations
 
 import enum
-import warnings
-from typing import Any, ClassVar, Dict, Generic, Literal, Protocol, TypeVar, cast, runtime_checkable
+from typing import Any, Dict, Literal, Generic, TypeVar, cast
 
 import construct as c
 import construct_typed as ct
 
-from pyflp._adapters import FourByteBool, StdEnum
-from pyflp._descriptors import FlagProp, NamedPropMixin, RWProperty, StructProp
-from pyflp._events import (
-    DATA,
-    DWORD,
-    TEXT,
-    AnyEvent,
-    ColorEvent,
-    EventEnum,
-    EventTree,
-    StructEventBase,
-    U32Event,
-    UnknownEvent,
-)
-from pyflp._models import EventModel, ModelReprMixin
-from pyflp.types import T
+from pyflp._adapters import FourByteBool, StdEnum, ColorAdapter
+from pyflp._descriptors import FlagProp, NamedPropMixin, StructProp
+from pyflp._events import DATA, DWORD, TEXT, AnyEvent, EventEnum, make_struct_event, EventProxy
 
 __all__ = [
     "BooBass",
@@ -56,170 +42,7 @@ __all__ = [
     "VSTPlugin",
 ]
 
-
-@enum.unique
-class _WrapperFlags(enum.IntFlag):
-    Visible = 1 << 0
-    _Disabled = 1 << 1
-    Detached = 1 << 2
-    # _U3 = 1 << 3
-    Generator = 1 << 4
-    SmartDisable = 1 << 5
-    ThreadedProcessing = 1 << 6
-    DemoMode = 1 << 7  # saved with a demo version
-    HideSettings = 1 << 8
-    Minimized = 1 << 9
-    _DirectX = 1 << 16  # indicates the plugin is a DirectX plugin
-    _EditorSize = 2 << 16
-
-
-class BooBassEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "_u1" / c.If(c.this._.len == 16, c.Bytes(4)),
-        "bass" / c.Int32ul,
-        "mid" / c.Int32ul,
-        "high" / c.Int32ul,
-    ).compile()
-
-
-class FruitKickEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "_u1" / c.Bytes(4),
-        "max_freq" / c.Int32sl,
-        "min_freq" / c.Int32sl,
-        "freq_decay" / c.Int32ul,
-        "amp_decay" / c.Int32ul,
-        "click" / c.Int32ul,
-        "distortion" / c.Int32ul,
-        "_u2" / c.Bytes(4),
-    ).compile()
-
-
-class FruityBalanceEvent(StructEventBase):
-    STRUCT = c.Struct("pan" / c.Int32ul, "volume" / c.Int32ul).compile()
-
-
-class FruityBloodOverdriveEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "plugin_marker" / c.If(c.this._.len == 36, c.Bytes(4)),  # redesigned native plugin marker
-        "pre_band" / c.Int32ul,
-        "color" / c.Int32ul,
-        "pre_amp" / c.Int32ul,
-        "x100" / FourByteBool,
-        "post_filter" / c.Int32ul,
-        "post_gain" / c.Int32ul,
-        "_u1" / c.Bytes(4),
-        "_u2" / c.Bytes(4),
-    ).compile()
-
-
-class FruityCenterEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "_u1" / c.If(c.this._.len == 8, c.Bytes(4)), "enabled" / FourByteBool
-    ).compile()
-
-
-class FruityFastDistEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "pre" / c.Int32ul,
-        "threshold" / c.Int32ul,
-        "kind" / c.Enum(c.Int32ul, A=0, B=1),
-        "mix" / c.Int32ul,
-        "post" / c.Int32ul,
-    ).compile()
-
-
-class FruityNotebook2Event(StructEventBase):
-    STRUCT = c.Struct(
-        "_u1" / c.Bytes(4),
-        "active_page" / c.Int32ul,
-        "pages"
-        / c.GreedyRange(
-            c.Struct(
-                "index" / c.Int32sl,
-                c.StopIf(lambda ctx: ctx["index"] == -1),
-                "length" / c.VarInt,
-                "value" / c.PaddedString(lambda ctx: ctx["length"] * 2, "utf-16-le"),
-            ),
-        ),
-        "editable" / c.Flag,
-    )
-
-
-class FruitySendEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "pan" / c.Int32sl,
-        "dry" / c.Int32ul,
-        "volume" / c.Int32ul,
-        "send_to" / c.Int32sl,
-    ).compile()
-
-
-class FruitySoftClipperEvent(StructEventBase):
-    STRUCT = c.Struct("threshold" / c.Int32ul, "post" / c.Int32ul).compile()
-
-
-class FruityStereoEnhancerEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "pan" / c.Int32sl,
-        "volume" / c.Int32ul,
-        "stereo_separation" / c.Int32ul,
-        "phase_offset" / c.Int32ul,
-        "effect_position" / c.Enum(c.Int32ul, pre=0, post=1),
-        "phase_inversion" / c.Enum(c.Int32ul, none=0, left=1, right=2),
-    ).compile()
-
-
-class PluckedEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "decay" / c.Int32ul,
-        "color" / c.Int32ul,
-        "normalize" / FourByteBool,
-        "gate" / FourByteBool,
-        "widen" / FourByteBool,
-    ).compile()
-
-
-class SoundgoodizerEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "_u1" / c.If(c.this._.len == 12, c.Bytes(4)),
-        "mode" / c.Enum(c.Int32ul, A=0, B=1, C=2, D=3),
-        "amount" / c.Int32ul,
-    ).compile()
-
-
-NativePluginEvent = UnknownEvent
-"""Placeholder event type for unimplemented native :attr:`PluginID.Data` events."""
-
-
-class WrapperPage(ct.EnumBase):
-    Editor = 0
-    """:guilabel:`Plugin editor`."""
-
-    Settings = 1
-    """:guilabel:`VST wrapper settings`."""
-
-    Sample = 3
-    """:guilabel:`Sample settings`."""
-
-    Envelope = 4
-    """:guilabel:`Envelope / instrument settings`."""
-
-    Miscellaneous = 5
-    """:guilabel:`Miscallenous functions`."""
-
-
-class WrapperEvent(StructEventBase):
-    STRUCT = c.Struct(
-        "_u1" / c.Optional(c.Bytes(16)),  # 16
-        "flags" / c.Optional(StdEnum[_WrapperFlags](c.Int16ul)),  # 18
-        "_u2" / c.Optional(c.Bytes(2)),  # 20
-        "page" / c.Optional(StdEnum[WrapperPage](c.Int8ul)),  # 21
-        "_u3" / c.Optional(c.Bytes(23)),  # 44
-        "width" / c.Optional(c.Int32ul),  # 48
-        "height" / c.Optional(c.Int32ul),  # 52
-        "_extra" / c.GreedyBytes,  # None as of 20.9.2
-    ).compile()
+_T = TypeVar("_T")
 
 
 @enum.unique
@@ -267,68 +90,202 @@ class _VSTFlags2(enum.IntFlag):
     UseMaxFromHost = 1 << 1
 
 
-class VSTPluginEvent(StructEventBase):
-    _MIDIStruct = c.Struct(
-        "input" / c.Optional(c.Int32sl),  # 4
-        "output" / c.Optional(c.Int32sl),  # 8
-        "pb_range" / c.Optional(c.Int32ul),  # 12
-        "_extra" / c.GreedyBytes,  # upto 20
-    ).compile()
+@enum.unique
+class _WrapperFlags(enum.IntFlag):
+    Visible = 1 << 0
+    _Disabled = 1 << 1
+    Detached = 1 << 2
+    # _U3 = 1 << 3
+    Generator = 1 << 4
+    SmartDisable = 1 << 5
+    ThreadedProcessing = 1 << 6
+    DemoMode = 1 << 7  # saved with a demo version
+    HideSettings = 1 << 8
+    Minimized = 1 << 9
+    _DirectX = 1 << 16  # indicates the plugin is a DirectX plugin
+    _EditorSize = 2 << 16
 
-    _FlagsStruct = c.Struct(
-        "_u1" / c.Optional(c.Bytes(9)),  # 9
-        "flags" / c.Optional(StdEnum[_VSTFlags](c.Int32ul)),  # 13
-        "flags2" / c.Optional(StdEnum[_VSTFlags2](c.Int32ul)),  # 17
-        "_u2" / c.Optional(c.Bytes(5)),  # 22
-        "fast_idle" / c.Optional(c.Flag),  # 23
-        "_extra" / c.GreedyBytes,
-    ).compile()
 
-    STRUCT = c.Struct(
-        "type" / c.Int32ul,  # * 8 or 10 for VSTs, but I am not forcing it
-        "events"
-        / c.GreedyRange(
-            c.Struct(
-                "id" / StdEnum[_VSTPluginEventID](c.Int32ul),
-                # ! Using a c.Select or c.IfThenElse doesn't work here
-                # Check https://github.com/construct/construct/issues/993
-                "data"  # pyright: ignore
-                / c.Prefixed(
-                    c.Int64ul,
-                    c.Switch(
-                        c.this["id"],
-                        {
-                            _VSTPluginEventID.MIDI: _MIDIStruct,
-                            _VSTPluginEventID.Flags: _FlagsStruct,
-                            _VSTPluginEventID.FourCC: c.GreedyString("utf8"),
-                            _VSTPluginEventID.Name: c.GreedyString("utf8"),  # See #150
-                            _VSTPluginEventID.Vendor: c.GreedyString("utf8"),
-                            _VSTPluginEventID.PluginPath: c.GreedyString("utf8"),
-                        },
-                        default=c.GreedyBytes,
-                    ),
+class WrapperPage(ct.EnumBase):
+    Editor = 0
+    """:guilabel:`Plugin editor`."""
+
+    Settings = 1
+    """:guilabel:`VST wrapper settings`."""
+
+    Sample = 3
+    """:guilabel:`Sample settings`."""
+
+    Envelope = 4
+    """:guilabel:`Envelope / instrument settings`."""
+
+    Miscellaneous = 5
+    """:guilabel:`Miscallenous functions`."""
+
+
+BooBassEvent = make_struct_event(
+    "_u1" / c.If(c.this._.len == 16, c.Bytes(4)),
+    "bass" / c.Int32ul,
+    "mid" / c.Int32ul,
+    "high" / c.Int32ul,
+    optional=False,
+)
+FruitKickEvent = make_struct_event(
+    "_u1" / c.Bytes(4),
+    "max_freq" / c.Int32sl,
+    "min_freq" / c.Int32sl,
+    "freq_decay" / c.Int32ul,
+    "amp_decay" / c.Int32ul,
+    "click" / c.Int32ul,
+    "distortion" / c.Int32ul,
+    "_u2" / c.Bytes(4),
+    optional=True,
+)
+FruityBalanceEvent = make_struct_event("pan" / c.Int32ul, "volume" / c.Int32ul, optional=False)
+FruityBloodOverdriveEvent = make_struct_event(
+    "plugin_marker" / c.If(c.this._.len == 36, c.Bytes(4)),  # redesigned native plugin marker
+    "pre_band" / c.Int32ul,
+    "color" / c.Int32ul,
+    "pre_amp" / c.Int32ul,
+    "x100" / FourByteBool,
+    "post_filter" / c.Int32ul,
+    "post_gain" / c.Int32ul,
+    "_u1" / c.Bytes(4),
+    "_u2" / c.Bytes(4),
+    optional=False,
+)
+FruityCenterEvent = make_struct_event(
+    "_u1" / c.If(c.this._.len == 8, c.Bytes(4)), "enabled" / FourByteBool, optional=False
+)
+FruityFastDistEvent = make_struct_event(
+    "pre" / c.Int32ul,
+    "threshold" / c.Int32ul,
+    "kind" / c.Enum(c.Int32ul, A=0, B=1),
+    "mix" / c.Int32ul,
+    "post" / c.Int32ul,
+    optional=False,
+)
+FruityNotebook2Event = make_struct_event(
+    "_u1" / c.Bytes(4),
+    "active_page" / c.Int32ul,
+    "pages"
+    / c.GreedyRange(
+        c.Struct(
+            "index" / c.Int32sl,
+            c.StopIf(lambda ctx: ctx["index"] == -1),
+            "length" / c.VarInt,
+            "value" / c.PaddedString(c.this.length * 2, "utf-16-le"),
+        ),
+    ),
+    "editable" / c.Flag,
+    optional=False,
+)
+FruitySendEvent = make_struct_event(
+    "pan" / c.Int32sl,
+    "dry" / c.Int32ul,
+    "volume" / c.Int32ul,
+    "send_to" / c.Int32sl,
+    optional=False,
+)
+FruitySoftClipperEvent = make_struct_event(
+    "threshold" / c.Int32ul, "post" / c.Int32ul, optional=False
+)
+FruityStereoEnhancerEvent = make_struct_event(
+    "pan" / c.Int32sl,
+    "volume" / c.Int32ul,
+    "stereo_separation" / c.Int32ul,
+    "phase_offset" / c.Int32ul,
+    "effect_position" / c.Enum(c.Int32ul, pre=0, post=1),
+    "phase_inversion" / c.Enum(c.Int32ul, none=0, left=1, right=2),
+    optional=False,
+)
+PluckedEvent = make_struct_event(
+    "decay" / c.Int32ul,
+    "color" / c.Int32ul,
+    "normalize" / FourByteBool,
+    "gate" / FourByteBool,
+    "widen" / FourByteBool,
+    optional=False,
+)
+SoundgoodizerEvent = make_struct_event(
+    "_u1" / c.If(c.this._.len == 12, c.Bytes(4)),
+    "mode" / c.Enum(c.Int32ul, A=0, B=1, C=2, D=3),
+    "amount" / c.Int32ul,
+)
+WrapperEvent = make_struct_event(
+    "_u1" / c.Optional(c.Bytes(16)),  # 16
+    "flags" / c.Optional(StdEnum[_WrapperFlags](c.Int16ul)),  # 18
+    "_u2" / c.Optional(c.Bytes(2)),  # 20
+    "page" / c.Optional(StdEnum[WrapperPage](c.Int8ul)),  # 21
+    "_u3" / c.Optional(c.Bytes(23)),  # 44
+    "width" / c.Optional(c.Int32ul),  # 48
+    "height" / c.Optional(c.Int32ul),  # 52
+    "_extra" / c.GreedyBytes,  # None as of 20.9.2
+    optional=False,
+)
+VSTPluginEvent = make_struct_event(
+    "type" / c.Int32ul,  # * 8 or 10 for VSTs, but I am not forcing it
+    "events"
+    / c.GreedyRange(
+        c.Struct(
+            "id" / StdEnum[_VSTPluginEventID](c.Int32ul),
+            # ! Using a c.Select or c.IfThenElse doesn't work here
+            # Check https://github.com/construct/construct/issues/993
+            "data"  # pyright: ignore
+            / c.Prefixed(
+                c.Int64ul,
+                c.Switch(
+                    c.this["id"],
+                    {
+                        _VSTPluginEventID.MIDI: c.Struct(
+                            "input" / c.Optional(c.Int32sl),  # 4
+                            "output" / c.Optional(c.Int32sl),  # 8
+                            "pb_range" / c.Optional(c.Int32ul),  # 12
+                            "_extra" / c.GreedyBytes,  # upto 20
+                        ),
+                        _VSTPluginEventID.Flags: c.Struct(
+                            "_u1" / c.Optional(c.Bytes(9)),  # 9
+                            "flags" / c.Optional(StdEnum[_VSTFlags](c.Int32ul)),  # 13
+                            "flags2" / c.Optional(StdEnum[_VSTFlags2](c.Int32ul)),  # 17
+                            "_u2" / c.Optional(c.Bytes(5)),  # 22
+                            "fast_idle" / c.Optional(c.Flag),  # 23
+                            "_extra" / c.GreedyBytes,
+                        ),
+                        _VSTPluginEventID.FourCC: c.GreedyString("utf8"),
+                        _VSTPluginEventID.Name: c.GreedyString("utf8"),  # See #150
+                        _VSTPluginEventID.Vendor: c.GreedyString("utf8"),
+                        _VSTPluginEventID.PluginPath: c.GreedyString("utf8"),
+                    },
+                    default=c.GreedyBytes,
                 ),
             ),
         ),
-    ).compile()
+    ),
+    optional=False,
+)
 
-    def __init__(self, id: Any, data: bytearray) -> None:
-        if data[0] not in (8, 10):
-            warnings.warn(
-                f"VSTPluginEvent: Unknown marker {data[0]} detected. "
-                "Open an issue at https://github.com/demberto/PyFLP/issues "
-                "if you are seeing this!",
-                RuntimeWarning,
-                stacklevel=3,
-            )
-        super().__init__(id, data)
+INTERNAL_NAMES = {
+    "BooBass": BooBassEvent,
+    "Fruit Kick": FruitKickEvent,
+    "Fruity Balance": FruityBalanceEvent,
+    "Fruity Blood Overdrive": FruityBloodOverdriveEvent,
+    "Fruity Fast Dist": FruityFastDistEvent,
+    "Fruity Center": FruityCenterEvent,
+    "Fruity NoteBook 2": FruityNotebook2Event,
+    "Fruity Send": FruitySendEvent,
+    "Fruity Soft Clipper": FruitySoftClipperEvent,
+    "Fruity Stereo Enhancer": FruityStereoEnhancerEvent,
+    "Fruity Wrapper": VSTPluginEvent,
+    "Plucked!": PluckedEvent,
+    "Soundgoodizer": SoundgoodizerEvent,
+}
 
 
 @enum.unique
 class PluginID(EventEnum):
     """IDs shared by :class:`pyflp.channel.Channel` and :class:`pyflp.mixer.Slot`."""
 
-    Color = (DWORD, ColorEvent)
+    Color = (DWORD, ColorAdapter)
     Icon = (DWORD + 27, U32Event)
     InternalName = TEXT + 9
     Name = TEXT + 11  #: 3.3.0+ for :class:`pyflp.mixer.Slot`.
@@ -339,24 +296,12 @@ class PluginID(EventEnum):
     Data = DATA + 5  #: 1.6.5+
 
 
-@runtime_checkable
-class _IPlugin(Protocol):
-    INTERNAL_NAME: ClassVar[str]
-    """The name used internally by FL to decide the type of plugin data."""
-
-
-_PE_co = TypeVar("_PE_co", bound=AnyEvent, covariant=True)
-
-
 class _WrapperProp(FlagProp):
     def __init__(self, flag: _WrapperFlags, **kw: Any) -> None:
         super().__init__(flag, PluginID.Wrapper, **kw)
 
 
-class _PluginBase(EventModel, Generic[_PE_co]):
-    def __init__(self, events: EventTree, **kw: Any) -> None:
-        super().__init__(events, **kw)
-
+class _PluginBase(EventProxy):
     compact = _WrapperProp(_WrapperFlags.HideSettings)
     """Whether plugin page toolbar (:guilabel:`Detailed settings`) is hidden.
 
@@ -409,18 +354,15 @@ class _PluginBase(EventModel, Generic[_PE_co]):
     """Width of the plugin editor (in pixels)."""
 
 
-AnyPlugin = _PluginBase[AnyEvent]  # TODO alias to _IPlugin + _PluginBase (both)
-
-
-class PluginProp(RWProperty[AnyPlugin]):
-    def __init__(self, *types: type[AnyPlugin]) -> None:
+class PluginProp:
+    def __init__(self, *types: type[_PluginBase]) -> None:
         self._types = types
 
     @staticmethod
-    def _get_plugin_events(ins: EventModel) -> EventTree:
+    def _get_plugin_events(ins: EventProxy) -> EventTree:
         return ins.events.subtree(lambda e: e.id in (PluginID.Wrapper, PluginID.Data))
 
-    def __get__(self, ins: EventModel, owner: Any = None) -> AnyPlugin | None:
+    def __get__(self, ins: EventProxy, owner: Any = None) -> _PluginBase | None:
         if owner is None:
             return NotImplemented
 
@@ -437,41 +379,39 @@ class PluginProp(RWProperty[AnyPlugin]):
             if isinstance(data_event, event_type):
                 return ptype(self._get_plugin_events(ins))
 
-    def __set__(self, ins: EventModel, value: AnyPlugin) -> None:
-        if isinstance(value, _IPlugin):
-            setattr(ins, "internal_name", value.INTERNAL_NAME)
-
+    def __set__(self, ins: EventProxy, value: _PluginBase) -> None:
+        setattr(ins, "internal_name", INTERNAL_NAMES[type(value).__name__])
         for id in (PluginID.Data, PluginID.Wrapper):
             for ie in ins.events.lst:
                 if ie.e.id == id:
                     ie.e = value.events.first(id)
 
 
-class _NativePluginProp(StructProp[T]):
+class _NativePluginProp(StructProp[_T]):
     def __init__(self, prop: str | None = None, **kwds: Any) -> None:
         super().__init__(PluginID.Data, prop=prop, **kwds)
 
 
-class _VSTPluginProp(RWProperty[T], NamedPropMixin):
+class _VSTPluginProp(NamedPropMixin, Generic[_T]):
     def __init__(self, id: _VSTPluginEventID, prop: str | None = None) -> None:
         self._id = id
         NamedPropMixin.__init__(self, prop)
 
-    def __get__(self, ins: EventModel, _=None) -> T:
-        event = cast(VSTPluginEvent, ins.events.first(PluginID.Data))
-        for e in event["events"]:
+    def __get__(self, ins: EventProxy, _=None) -> _T:
+        event = ins.events.first(PluginID.Data)
+        for e in event.value["events"]:
             if e["id"] == self._id:
                 return self._get(e["data"])
         raise AttributeError(self._id)
 
-    def _get(self, value: Any) -> T:
-        return cast(T, value if isinstance(value, (str, bytes)) else value[self._prop])
+    def _get(self, value: Any) -> _T:
+        return cast(_T, value if isinstance(value, (str, bytes)) else value[self._prop])
 
-    def __set__(self, ins: EventModel, value: T) -> None:
-        self._set(cast(VSTPluginEvent, ins.events.first(PluginID.Data)), value)
+    def __set__(self, ins: EventProxy, value: _T) -> None:
+        self._set(ins.events.first(PluginID.Data), value)
 
-    def _set(self, event: VSTPluginEvent, value: T) -> None:
-        for e in event["events"]:
+    def _set(self, event: AnyEvent, value: _T) -> None:
+        for e in event.value["events"]:
             if e["id"] == self._id:
                 e["data"] = value
                 break
@@ -489,11 +429,11 @@ class _VSTFlagProp(_VSTPluginProp[bool]):
         retbool = self._flag in value[self._prop]
         return retbool if not self._inverted else not retbool
 
-    def _set(self, event: VSTPluginEvent, value: bool) -> None:
+    def _set(self, event: AnyEvent, value: bool) -> None:
         if self._inverted:
             value = not value
 
-        for e in event["events"]:
+        for e in event.value["events"]:
             if e["id"] == self._id:
                 if value:
                     e["data"][self._prop] |= value
@@ -502,12 +442,12 @@ class _VSTFlagProp(_VSTPluginProp[bool]):
                 break
 
 
-class PluginIOInfo(EventModel):
+class PluginIOInfo(EventProxy):
     mixer_offset = StructProp[int]()
     flags = StructProp[int]()
 
 
-class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
+class VSTPlugin(_PluginBase):
     """Represents a VST2 or a VST3 generator or effect.
 
     *New in FL Studio v1.5.23*: VST2 support (beta).
@@ -519,7 +459,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     def __repr__(self) -> str:
         return f"VSTPlugin(name={self.name!r}, vendor={self.vendor!r})"
 
-    class _AutomationOptions(EventModel):
+    class _AutomationOptions(EventProxy):
         """See :attr:`VSTPlugin.automation`."""
 
         notify_changes = _VSTFlagProp(_VSTFlags.DontNotifyChanges, inverted=True)
@@ -528,7 +468,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
         :guilabel:`Notify about parameter changes`. Defaults to ``True``.
         """
 
-    class _CompatibilityOptions(EventModel):
+    class _CompatibilityOptions(EventProxy):
         """See :attr:`VSTPlugin.compatibility`."""
 
         buffers_maxsize = _VSTFlagProp(_VSTFlags2.UseMaxFromHost, prop="flags2")
@@ -566,7 +506,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
         :guilabel:`Use time offset`. Defaults to ``False``.
         """
 
-    class _MIDIOptions(EventModel):
+    class _MIDIOptions(EventProxy):
         """See :attr:`VSTPlugin.midi`.
 
         ![](https://bit.ly/3NbGr4U)
@@ -600,7 +540,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
         :guilabel:`Send note release velocity`. Defaults to ``True``.
         """
 
-    class _ProcessingOptions(EventModel):
+    class _ProcessingOptions(EventProxy):
         """See :attr:`VSTPlugin.processing`."""
 
         allow_sd = _VSTFlagProp(_VSTFlags.AllowSmartDisable)
@@ -650,7 +590,7 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
         :guilabel:`Process inactive inputs and outputs`. Defaults to ``True``.
         """
 
-    class _UIOptions(EventModel):
+    class _UIOptions(EventProxy):
         """See :attr:`VSTPlugin.ui`.
 
         ![](https://bit.ly/3Nb3dtP)
@@ -715,10 +655,9 @@ class VSTPlugin(_PluginBase[VSTPluginEvent], _IPlugin):
     # vst_number = _VSTPluginProp[int]()  # TODO
 
 
-class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
+class BooBass(_PluginBase):
     """![](https://bit.ly/3Bk3aGK)"""
 
-    INTERNAL_NAME = "BooBass"
     bass = _NativePluginProp[int]()
     """Volume of the bass region.
 
@@ -744,10 +683,9 @@ class BooBass(_PluginBase[BooBassEvent], _IPlugin, ModelReprMixin):
     """
 
 
-class FruitKick(_PluginBase[FruitKickEvent], _IPlugin, ModelReprMixin):
+class FruitKick(_PluginBase):
     """![](https://bit.ly/41fIPxE)"""
 
-    INTERNAL_NAME = "Fruit Kick"
     amp_decay = _NativePluginProp[int]()
     """Amplitude (volume) decay length. Linear.
 
@@ -808,10 +746,9 @@ class FruitKick(_PluginBase[FruitKickEvent], _IPlugin, ModelReprMixin):
     """
 
 
-class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
+class FruityBalance(_PluginBase):
     """![](https://bit.ly/3RWItqU)"""
 
-    INTERNAL_NAME = "Fruity Balance"
     pan = _NativePluginProp[int]()
     """Linear.
 
@@ -833,10 +770,8 @@ class FruityBalance(_PluginBase[FruityBalanceEvent], _IPlugin, ModelReprMixin):
     """
 
 
-class FruityBloodOverdrive(_PluginBase[FruityBloodOverdriveEvent], _IPlugin, ModelReprMixin):
+class FruityBloodOverdrive(_PluginBase):
     """![](https://bit.ly/3LnS1LE)"""
-
-    INTERNAL_NAME = "Fruity Blood Overdrive"
 
     pre_band = _NativePluginProp[int]()
     """Linear.
@@ -899,10 +834,9 @@ class FruityBloodOverdrive(_PluginBase[FruityBloodOverdriveEvent], _IPlugin, Mod
     """
 
 
-class FruityCenter(_PluginBase[FruityCenterEvent], _IPlugin, ModelReprMixin):
+class FruityCenter(_PluginBase):
     """![](https://bit.ly/3TA9IIv)"""
 
-    INTERNAL_NAME = "Fruity Center"
     enabled = _NativePluginProp[bool]()
     """Removes DC offset if True; effectively behaving like a bypass button.
 
@@ -910,10 +844,9 @@ class FruityCenter(_PluginBase[FruityCenterEvent], _IPlugin, ModelReprMixin):
     """
 
 
-class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin):
+class FruityFastDist(_PluginBase):
     """![](https://bit.ly/3qT6Jil)"""
 
-    INTERNAL_NAME = "Fruity Fast Dist"
     kind = _NativePluginProp[Literal["A", "B"]]()
     mix = _NativePluginProp[int]()
     """Linear. Defaults to maximum value.
@@ -953,10 +886,9 @@ class FruityFastDist(_PluginBase[FruityFastDistEvent], _IPlugin, ModelReprMixin)
     """
 
 
-class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixin):
+class FruityNotebook2(_PluginBase):
     """![](https://bit.ly/3RHa4g5)"""
 
-    INTERNAL_NAME = "Fruity NoteBook 2"
     active_page = _NativePluginProp[int]()
     """Active page number of the notebook. Min: 0, Max: 100."""
 
@@ -970,10 +902,9 @@ class FruityNotebook2(_PluginBase[FruityNotebook2Event], _IPlugin, ModelReprMixi
     """A dict of page numbers to their contents."""
 
 
-class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
+class FruitySend(_PluginBase):
     """![](https://bit.ly/3DqjvMu)"""
 
-    INTERNAL_NAME = "Fruity Send"
     dry = _NativePluginProp[int]()
     """Linear. Defaults to maximum value.
 
@@ -1007,10 +938,9 @@ class FruitySend(_PluginBase[FruitySendEvent], _IPlugin, ModelReprMixin):
     """
 
 
-class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelReprMixin):
+class FruitySoftClipper(_PluginBase):
     """![](https://bit.ly/3BCWfJX)"""
 
-    INTERNAL_NAME = "Fruity Soft Clipper"
     post = _NativePluginProp[int]()
     """Linear.
 
@@ -1032,10 +962,9 @@ class FruitySoftClipper(_PluginBase[FruitySoftClipperEvent], _IPlugin, ModelRepr
     """
 
 
-class FruityStereoEnhancer(_PluginBase[FruityStereoEnhancerEvent], _IPlugin, ModelReprMixin):
+class FruityStereoEnhancer(_PluginBase):
     """![](https://bit.ly/3DoHvji)"""
 
-    INTERNAL_NAME = "Fruity Stereo Enhancer"
     effect_position = _NativePluginProp[Literal["pre", "post"]]()
     """Defaults to ``post``."""
 
@@ -1083,10 +1012,9 @@ class FruityStereoEnhancer(_PluginBase[FruityStereoEnhancerEvent], _IPlugin, Mod
     """
 
 
-class Plucked(_PluginBase[PluckedEvent], _IPlugin, ModelReprMixin):
+class Plucked(_PluginBase):
     """![](https://bit.ly/3GuFz9k)"""
 
-    INTERNAL_NAME = "Plucked!"
     color = _NativePluginProp[int]()
     """Linear.
 
@@ -1116,10 +1044,9 @@ class Plucked(_PluginBase[PluckedEvent], _IPlugin, ModelReprMixin):
     """Enriches the stereo panorama of the sound."""
 
 
-class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
+class Soundgoodizer(_PluginBase):
     """![](https://bit.ly/3dip70y)"""
 
-    INTERNAL_NAME = "Soundgoodizer"
     amount = _NativePluginProp[int]()
     """Logarithmic.
 
@@ -1130,10 +1057,3 @@ class Soundgoodizer(_PluginBase[SoundgoodizerEvent], _IPlugin, ModelReprMixin):
 
     mode = _NativePluginProp[Literal["A", "B", "C", "D"]]()
     """4 preset modes (A, B, C and D). Defaults to ``A``."""
-
-
-def get_event_by_internal_name(name: str) -> type[AnyEvent]:
-    for cls in _PluginBase.__subclasses__():
-        if getattr(cls, "INTERNAL_NAME", None) == name:
-            return cls.__orig_bases__[0].__args__[0]  # type: ignore
-    return NativePluginEvent

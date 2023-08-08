@@ -76,11 +76,6 @@ EventTree
 .. autoclass:: EventTree
    :members:
 
-Models
-------
-
-.. automodule:: pyflp._models
-
 Implementing a model
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -95,7 +90,6 @@ points that must be kept in mind when Implementing a model:
       subclasses to get a very good idea of this.
 
 2. Are ``__dunder__`` methods provided by Python used whenever possible?
-3. Is either :class:`ModelReprMixin` subclassed or ``__repr__`` implemented?
 
 Descriptors
 -----------
