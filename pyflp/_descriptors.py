@@ -31,16 +31,14 @@ from pyflp.types import T, T_co
 class ROProperty(Protocol[T_co]):
     """Protocol for a read-only descriptor."""
 
-    def __get__(self, ins: Any, owner: Any = None) -> T_co | Self | None:
-        ...
+    def __get__(self, ins: Any, owner: Any = None) -> T_co | Self | None: ...
 
 
 @runtime_checkable
 class RWProperty(ROProperty[T], Protocol):
     """Protocol for a read-write descriptor."""
 
-    def __set__(self, ins: Any, value: T) -> None:
-        ...
+    def __set__(self, ins: Any, value: T) -> None: ...
 
 
 class NamedPropMixin:
@@ -59,12 +57,10 @@ class PropBase(abc.ABC, RWProperty[T]):
         self._readonly = readonly
 
     @overload
-    def _get_event(self, ins: ItemModel[VE]) -> ItemModel[VE]:
-        ...
+    def _get_event(self, ins: ItemModel[VE]) -> ItemModel[VE]: ...
 
     @overload
-    def _get_event(self, ins: EventModel) -> AnyEvent | None:
-        ...
+    def _get_event(self, ins: EventModel) -> AnyEvent | None: ...
 
     def _get_event(self, ins: ItemModel[VE] | EventModel):
         if isinstance(ins, ItemModel):
@@ -85,12 +81,10 @@ class PropBase(abc.ABC, RWProperty[T]):
         return self._default
 
     @abc.abstractmethod
-    def _get(self, ev_or_ins: Any) -> T | None:
-        ...
+    def _get(self, ev_or_ins: Any) -> T | None: ...
 
     @abc.abstractmethod
-    def _set(self, ev_or_ins: Any, value: T) -> None:
-        ...
+    def _set(self, ev_or_ins: Any, value: T) -> None: ...
 
     @final
     def __get__(self, ins: Any, owner: Any = None) -> T | Self | None:
