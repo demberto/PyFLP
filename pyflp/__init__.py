@@ -120,8 +120,11 @@ def parse(file: pathlib.Path | str) -> Project:
     stream.seek(22)  # Back to start of events
     while stream.tell() < file_size:
         event_type: type[AnyEvent] | None = None
-        id = EventEnum(int.from_bytes(stream.read(1), "little"))
-
+        # Conditional fix for Windows with Python 3.13+
+        if platform.system() == "Windows" and sys.version_info >= (3, 13):
+            id = int.from_bytes(stream.read(1))  # Workaround for affected environments
+            else:
+            id = EventEnum(int.from_bytes(stream.read(1), "little"))  # Default behavior
         if id < WORD:
             value = stream.read(1)
         elif id < DWORD:
@@ -151,9 +154,16 @@ def parse(file: pathlib.Path | str) -> Project:
                 event_type = U16Event
             elif id < TEXT:
                 event_type = U32Event
-            elif id < DATA or id.value in NEW_TEXT_IDS:
-                if str_type is None:  # pragma: no cover
-                    raise VersionNotDetected  # ! This should never happen
+            # Conditional fix for Windows with Python 3.13+
+            elif platform.system() == "Windows" and sys.version_info >= (3, 13):
+                 if id < DATA or id in NEW_TEXT_IDS:  # Workaround for affected environments
+                     if str_type is None:  # pragma: no cover
+                         raise VersionNotDetected  # ! This should never happen
+                     event_type = str_type
+             # Default behavior for unaffected users
+             elif id < DATA or id.value in NEW_TEXT_IDS:  # Original logic retained
+                 if str_type is None:  # pragma: no cover
+                     raise VersionNotDetected  # ! This should never happen
                 event_type = str_type
 
                 if id == PluginID.InternalName:
