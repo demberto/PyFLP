@@ -89,24 +89,20 @@ EMT_co = TypeVar("EMT_co", bound=EventModel, covariant=True)
 @runtime_checkable
 class ModelCollection(Iterable[MT_co], Protocol[MT_co]):
     @overload
-    def __getitem__(self, i: int | str) -> MT_co:
-        ...
+    def __getitem__(self, i: int | str) -> MT_co: ...
 
     @overload
-    def __getitem__(self, i: slice) -> Sequence[MT_co]:
-        ...
+    def __getitem__(self, i: slice) -> Sequence[MT_co]: ...
 
 
 def supports_slice(func: Callable[[ModelCollection[MT_co], str | int | slice], MT_co]):
     """Wraps a :meth:`ModelCollection.__getitem__` to return a sequence if required."""
 
     @overload
-    def wrapper(self: ModelCollection[MT_co], i: int | str) -> MT_co:
-        ...
+    def wrapper(self: ModelCollection[MT_co], i: int | str) -> MT_co: ...
 
     @overload
-    def wrapper(self: ModelCollection[MT_co], i: slice) -> Sequence[MT_co]:
-        ...
+    def wrapper(self: ModelCollection[MT_co], i: slice) -> Sequence[MT_co]: ...
 
     @functools.wraps(func)
     def wrapper(self: Any, i: Any) -> MT_co | Sequence[MT_co]:

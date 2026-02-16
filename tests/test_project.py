@@ -13,10 +13,7 @@ from pyflp.project import VALID_PPQS, FileFormat, FLVersion, PanLaw, Project
 def test_project(project: Project):
     assert project.artists == "demberto"
     assert project.channel_count == 19
-    assert (
-        project.comments
-        == textwrap.dedent(
-            """\
+    assert project.comments == textwrap.dedent("""\
     This is a testing FLP used by PyFLP - An FL Studio project file parser.
 
     Notes for contributors:
@@ -25,9 +22,7 @@ def test_project(project: Project):
 
     Terms:
     "item(s)": Refers to a channel, insert, slot, track, pattern, timemarker, etc.
-    """
-        ).replace("\n", "\r")
-    )  # Who the hell uses \r?
+    """).replace("\n", "\r")  # Who the hell uses \r?
     assert project.created_on == datetime.datetime(2022, 9, 16, 20, 47, 12, 746000)
     assert project.data_path == pathlib.Path("")
     assert project.format == FileFormat.Project
