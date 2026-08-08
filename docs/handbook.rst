@@ -105,7 +105,7 @@ It is possible to undo both of these:
    project.licensed = True
 
    # Unlock trial version native plugins
-   for instument in project.channels.instruments:
+   for instrument in project.channels.instruments:
        instrument.plugin.demo_mode = False
 
    for insert in project.mixer:
