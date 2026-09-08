@@ -195,12 +195,26 @@ def test_fl2025_80byte_playlist_records_parse():
 
     def rec(pos: int, iid: int, length: int, track: int, uid: int) -> bytes:
         core = struct.pack(
-            "<IHHIHH2sH4sff", pos, 20480, iid, length, 499 - track, 0,
-            b"\x78\x00", 0x40, b"\x40\x64\x80\x80", -1.0, -1.0,
+            "<IHHIHH2sH4sff",
+            pos,
+            20480,
+            iid,
+            length,
+            499 - track,
+            0,
+            b"\x78\x00",
+            0x40,
+            b"\x40\x64\x80\x80",
+            -1.0,
+            -1.0,
         )
         trailer = (
-            struct.pack("<I", uid) + b"\x00" * 16 + struct.pack("<f", 1.0)
-            + b"\x00" * 8 + struct.pack("<d", 1.0) + b"\x00" * 8
+            struct.pack("<I", uid)
+            + b"\x00" * 16
+            + struct.pack("<f", 1.0)
+            + b"\x00" * 8
+            + struct.pack("<d", 1.0)
+            + b"\x00" * 8
         )
         return core + trailer  # 32 + 48 = 80 bytes
 

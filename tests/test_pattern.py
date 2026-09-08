@@ -90,3 +90,35 @@ def test_note_slide():
 
 def test_note_velocity():
     assert [n.velocity for n in get_notes("velocity-min-max.fsc")] == [0, 128]
+
+
+def test_notes_before_first_pattern_id_are_not_a_pattern():
+    """A NotesEvent in the project header must not surface as a phantom pattern.
+
+    FL 2025+ can write a small ``PatternID.Notes`` into the project header, before
+    any ``PatternID.New``. ``Patterns.__iter__`` buckets events by the last-seen
+    ``New``, so such an event lands in the ``cur_pat_id = 0`` bucket and used to be
+    yielded as a pattern - one whose every property raises, because ``Pattern.iid``
+    reads ``PatternID.New`` and that bucket has none. It also made ``__iter__``
+    disagree with ``__len__``. Reported on #205 by @Meowrium; reproduced on a real
+    FL 25.2.5 save where iteration yielded 1000 patterns while ``len()`` said 999.
+    """
+    from pyflp._events import EventTree, IndexedEvent
+    from pyflp.pattern import NotesEvent, PatternID, Patterns
+    from pyflp._events import U16Event
+
+    note = b"\x00" * 24  # a single all-zero note struct
+    events = [
+        # header NotesEvent, before any PatternID.New
+        NotesEvent(PatternID.Notes, note),
+        # one real pattern
+        U16Event(PatternID.New, b"\x01\x00"),
+        NotesEvent(PatternID.Notes, note),
+    ]
+    tree = EventTree(init=(IndexedEvent(r, e) for r, e in enumerate(events)))
+    patterns = Patterns(tree)
+
+    found = list(patterns)
+    assert len(found) == 1, "the header NotesEvent must not become a pattern"
+    assert found[0].iid == 1
+    assert len(found) == len(patterns), "__iter__ and __len__ must agree"

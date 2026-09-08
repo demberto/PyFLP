@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (a 20-byte tail after FL 21's 28-byte tail). Previously these events failed the size
   check and their clips were dropped (#177, #199, #200). Detection prefers the 60-byte
   reading on a 60/80 common multiple, so existing files are unaffected.
+- Stop surfacing a phantom pattern when a `NotesEvent` appears in the project header
+  before any `PatternID.New`, as FL 2025+ can write. The event landed in the `id = 0`
+  bucket and was yielded as a pattern whose `iid` raised `KeyError`, and it made
+  `Patterns.__iter__` disagree with `Patterns.__len__`.
 
 ## [2.2.1] - 2023-06-05
 
