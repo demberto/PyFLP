@@ -350,6 +350,15 @@ class Patterns(EventModel, ModelCollection[Pattern]):
                 tmp_dict[cur_pat_id].append(ie)
 
         for events in tmp_dict.values():
+            # FL 2025+ can write a NotesEvent into the project header, before any
+            # PatternID.New. Those events land in the ``cur_pat_id = 0`` bucket and
+            # would surface as a phantom pattern whose every property raises, since
+            # Pattern.iid reads PatternID.New. Buckets keyed by a real pattern always
+            # contain the New that keyed them, so a bucket without one is not a
+            # pattern. Reported on #205 by @Meowrium; reproduced on a FL 25.2.5 save.
+            if not any(ie.e.id == PatternID.New for ie in events):
+                continue
+
             et = EventTree(self.events, events)
             self.events.children.append(et)
             yield Pattern(et)

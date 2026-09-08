@@ -68,6 +68,23 @@ class PLSelectionEvent(StructEventBase):
 
 
 class PlaylistEvent(ListEventBase):
+    # Each playlist item is a fixed-size record whose length grew across FL versions:
+    #   * 32 bytes - up to FL 20.
+    #   * 60 bytes - FL 21 added a 28-byte tail (``_u3``).
+    #   * 80 bytes - FL 2024/2025 (21.2+ / 25.x) added a further 20-byte tail (``_u4``).
+    #                Verified byte-for-byte against FL Studio 2025 saves; see #177, #199, #200.
+    #
+    # ``item_index`` selects the item type: ``< pattern_base`` (20480) references a channel
+    # by its iid - an audio clip if that channel's ``ChannelID.Type`` is 4, an automation
+    # clip if it is 5 - while ``>= pattern_base`` is a pattern clip (pattern number =
+    # ``item_index - pattern_base``). ``length`` is in PPQ ticks.
+    #
+    # NOTE: a *freshly placed* clip is exactly one of the sizes above, but clips edited in
+    # FL (fades, slices, resizes) carry extra per-clip data and grow beyond it, so a real
+    # project's Playlist event can be variable-length and match none of ``SIZES``. Payload
+    # lengths that are a common multiple (e.g. 240 = 3*80 = 4*60) are ambiguous without the
+    # project's FL version; the heuristic below prefers the FL 21 (60-byte) reading for
+    # backwards compatibility, so this change never regresses files that parsed before.
     STRUCT = c.GreedyRange(
         c.Struct(
             "position" / c.Int32ul,  # 4
@@ -82,12 +99,18 @@ class PlaylistEvent(ListEventBase):
             "start_offset" / c.Float32l,  # 28
             "end_offset" / c.Float32l,  # 32
             "_u3" / c.If(c.this._params["new"], c.Bytes(28)) * "New in FL 21",  # 60
+            "_u4" / c.If(c.this._params["fl2025"], c.Bytes(20)) * "New in FL 2024/2025",  # 80
         )
     )
-    SIZES = [32, 60]
+    # Ordered so the fixed size that divides the payload matches the parsed record size:
+    # 60 wins a 60/80 common multiple (back-compat), 80 before 32 for FL 2024/2025 events.
+    SIZES = [60, 80, 32]
 
     def __init__(self, id: EventEnum, data: bytes) -> None:
-        super().__init__(id, data, new=not len(data) % 60)
+        # 80-byte records are FL 2024/2025; 60-byte are FL 21; 32-byte are older. Detect by
+        # the fixed size that divides the payload, preferring 60 on a 60/80 common multiple.
+        fl2025 = len(data) % 80 == 0 and len(data) % 60 != 0
+        super().__init__(id, data, new=fl2025 or not len(data) % 60, fl2025=fl2025)
 
 
 @enum.unique

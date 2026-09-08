@@ -180,3 +180,52 @@ def test_second_arrangement(arrangement: Callable[[int], Arrangement]):
     assert arr.name == "Just timemarkers"
     assert len(tuple(arr.timemarkers)) == 11
     assert len(tuple(arr.tracks)) == 500
+
+
+def test_fl2025_80byte_playlist_records_parse():
+    """FL 2024/2025 (21.2+ / 25.x) stores each playlist item as an 80-byte record.
+
+    Before this, ``PlaylistEvent`` only knew the 32- and 60-byte layouts, so FL 2024/2025
+    playlist events failed the size check and their clips were dropped (see #177, #199, #200).
+    Build a synthetic two-clip FL 2025 event and assert it parses and round-trips.
+    """
+    import struct
+
+    from pyflp.arrangement import ArrangementID, PlaylistEvent
+
+    def rec(pos: int, iid: int, length: int, track: int, uid: int) -> bytes:
+        core = struct.pack(
+            "<IHHIHH2sH4sff",
+            pos,
+            20480,
+            iid,
+            length,
+            499 - track,
+            0,
+            b"\x78\x00",
+            0x40,
+            b"\x40\x64\x80\x80",
+            -1.0,
+            -1.0,
+        )
+        trailer = (
+            struct.pack("<I", uid)
+            + b"\x00" * 16
+            + struct.pack("<f", 1.0)
+            + b"\x00" * 8
+            + struct.pack("<d", 1.0)
+            + b"\x00" * 8
+        )
+        return core + trailer  # 32 + 48 = 80 bytes
+
+    data = rec(0, 0, 40119, 1, 0x10) + rec(1536, 1, 29000, 2, 0x11)
+    assert len(data) == 160
+
+    event = PlaylistEvent(ArrangementID.Playlist, data)
+    items = list(event.value)
+    assert len(items) == 2
+    assert [i["item_index"] for i in items] == [0, 1]
+    assert [i["position"] for i in items] == [0, 1536]
+    assert [i["length"] for i in items] == [40119, 29000]
+    # byte-for-byte round-trip
+    assert PlaylistEvent.STRUCT.build(event.value, **event._kwds) == data

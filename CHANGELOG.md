@@ -8,6 +8,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Parse FL Studio 2024/2025 (21.2+ / 25.x) playlist items, stored as 80-byte records
+  (a 20-byte tail after FL 21's 28-byte tail). Previously these events failed the size
+  check and their clips were dropped (#177, #199, #200). Detection prefers the 60-byte
+  reading on a 60/80 common multiple, so existing files are unaffected.
+- Stop surfacing a phantom pattern when a `NotesEvent` appears in the project header
+  before any `PatternID.New`, as FL 2025+ can write. The event landed in the `id = 0`
+  bucket and was yielded as a pattern whose `iid` raised `KeyError`, and it made
+  `Patterns.__iter__` disagree with `Patterns.__len__`.
+
 ## [2.2.1] - 2023-06-05
 
 ### Fixed
