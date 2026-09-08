@@ -59,6 +59,34 @@ class _EventEnumMeta(enum.EnumMeta):
         """
         return obj in tuple(self)
 
+    def __call__(cls, value: object, *args: object, **kwds: object) -> object:
+        """Look up ``value`` even when ``cls`` (typically the base
+        ``EventEnum`` itself) defines no members of its own.
+
+        ``EventEnum`` is intentionally empty -- real event IDs only exist on
+        its subclasses (``ChannelID``, ``PluginID``, etc) -- and callers are
+        expected to be able to do ``EventEnum(raw_id)`` and have
+        :meth:`EventEnum._missing_` dispatch to whichever subclass defines
+        that value. Since Python 3.12, ``enum.EnumMeta.__call__`` raises
+        ``TypeError`` before ever reaching ``_missing_`` when called on an
+        aggregate enum class with zero direct members, which breaks this
+        pattern. Detect exactly that case and route to ``_missing_``
+        ourselves; everything else (name-based construction, lookups on
+        non-empty subclasses, etc.) is left to the normal enum machinery.
+        """
+        if (
+            not args
+            and not kwds
+            and not len(cls)
+            and isinstance(value, int)
+            and hasattr(cls, "_missing_")
+        ):
+            member = cls._missing_(value)
+            if member is not None:
+                return member
+            raise ValueError(f"{value!r} is not a valid {cls.__qualname__}")
+        return super().__call__(value, *args, **kwds)
+
 
 class EventEnum(int, enum.Enum, metaclass=_EventEnumMeta):
     """IDs used by events.
